@@ -123,6 +123,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'testGround',
+    'players',
+    'cron',
+    'mop'
 )
 
 # A sample logging configuration. The only tangible logging

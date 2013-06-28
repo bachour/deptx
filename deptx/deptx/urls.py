@@ -16,5 +16,6 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^testGround/', include('testGround.urls')),
+    url(r'^cron/', include('cron.urls')),
 
 )

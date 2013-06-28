@@ -1,0 +1,6 @@
+<h1>Welcome {{user.username}}! These are the CRON men and women</h1>
+<ul>
+	{% for player in player_list %}
+		<li>{{player.cron_user.username}}</li> 
+	{% endfor %}
+</ul>
