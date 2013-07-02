@@ -1,15 +1,34 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-#TODO: Every player should probably be able to create more than just one mop user
-
 class Player(models.Model):
-    cron_user = models.OneToOneField(User, related_name="cron_player")
-    mop_user = models.OneToOneField(User, related_name="mop_player")
-    
-    color = models.CharField(max_length=100)
-    level = models.IntegerField()
+    firstName = models.CharField(max_length=50)
+    lastName = models.CharField(max_length=50)
+    address = models.CharField(max_length=256)
+    phone = models.CharField(max_length=50)
     
     def __unicode__(self):
-        return self.cron_user.username + " / " + self.mop_user.username
+        return self.firstName + " " + self.lastName
+
+  
+class Cron(models.Model):
+    player = models.OneToOneField(Player)
+    user = models.OneToOneField(User)
+    
+    credits = models.IntegerField()
+    
+    def __unicode__(self):
+        return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + ")"
+    
+class Mop(models.Model):
+    player = models.ForeignKey(Player)
+    user = models.OneToOneField(User)
+    active = models.BooleanField()
+    
+    score = models.IntegerField()
+    
+    def __unicode__(self):
+        return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + " / active: " + self.active.__str__() + ")"
+    
+      
     

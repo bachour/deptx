@@ -17,5 +17,5 @@ urlpatterns = patterns('',
     
     url(r'^testGround/', include('testGround.urls')),
     url(r'^cron/', include('cron.urls')),
-
+    url(r'^mop/', include('mop.urls')),
 )

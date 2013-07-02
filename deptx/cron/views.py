@@ -5,14 +5,19 @@ from django.core.urlresolvers import reverse
 
 from django.template import RequestContext
 from django.contrib import auth
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.context_processors import csrf
 from django.views.decorators.csrf import csrf_protect
 
-from players.models import Player
+from players.models import Player, Cron
 from django.contrib.auth.models import User
+
+def isCron(user):
+    if user:
+        return Cron.objects.filter(user=user).exists()
+    return False
 
 
 def custom_proc(request):
@@ -23,10 +28,11 @@ def custom_proc(request):
         'ip_address': request.META['REMOTE_ADDR'],
     }
 
-@login_required(login_url='login')
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
 def index(request):
-    player_list = Player.objects.all()
-    context = {'player_list': player_list, 'user': request.user}
+    crons = Cron.objects.all()
+    context = {'crons': crons, 'user': request.user}
     return render(request, 'cron/index.html', context)
 
 def login(request):
@@ -37,14 +43,11 @@ def login(request):
         password = request.POST.get('password', '')
         user = auth.authenticate(username=username, password=password)
         
-        # this is used to check if the user is a cron user or a mop user
-        # (also in if-clause
-        # TODO: could probably be done nicer as a decorator or a "group"
+        # this is used to check if the user is a cron user
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
-        myUser = User.objects.get_by_natural_key(username)
-        if user is not None and user.is_active and Player.objects.filter(cron_user=myUser).exists():
+        if user is not None and user.is_active and isCron(user):
             auth.login(request, user)
-            return HttpResponseRedirect(reverse('index'))
+            return HttpResponseRedirect(reverse('cron_index'))
             
         else:
             return render_to_response('cron/login.html', {'form' : form,}, context_instance=RequestContext(request, processors=[custom_proc]))

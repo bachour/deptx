@@ -1,0 +1,13 @@
+<h1>Welcome {{user.username}}!</h1>
+<h2>These are the active MOP men and women</h2>
+<ul>
+	{% for mop in activeMops %}
+		<li>{{mop.user.username}}</li> 
+	{% endfor %}
+</ul>
+<h2>And these have been retired</h2>
+<ul>
+	{% for mop in inactiveMops %}
+		<li>{{mop.user.username}}</li> 
+	{% endfor %}
+</ul>
