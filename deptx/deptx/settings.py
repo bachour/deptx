@@ -122,10 +122,14 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
-    'testGround',
+    
+    'persistence', # for provenance
+    'south', # for db migration
     'players',
     'cron',
-    'mop'
+    'mop',
+    
+    
 )
 
 # A sample logging configuration. The only tangible logging

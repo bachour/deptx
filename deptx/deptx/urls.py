@@ -15,7 +15,7 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     
-    url(r'^testGround/', include('testGround.urls')),
     url(r'^cron/', include('cron.urls')),
     url(r'^mop/', include('mop.urls')),
+    url(r'^players/', include('players.urls')),
 )

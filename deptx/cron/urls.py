@@ -5,4 +5,6 @@ from cron import views
 urlpatterns = patterns('',
     url(r'^$', views.index, name='cron_index'),
     url(r'login/', views.login, name='cron_login'),
+    url(r'mopmaker/', views.mopmaker, name='cron_mopmaker'),
+   
 )

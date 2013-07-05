@@ -1,4 +1,4 @@
-<h1>Welcome {{user.username}}!</h1>
+<h1>Welcome agent {{user.username}}!</h1>
 <h2>These are the active MOP men and women</h2>
 <ul>
 	{% for mop in activeMops %}
@@ -10,4 +10,13 @@
 	{% for mop in inactiveMops %}
 		<li>{{mop.user.username}}</li> 
 	{% endfor %}
+</ul>
+<h2>What do you want to do today?</h2>
+<ul>
+	<li><a href="{% url 'mop_rules' %}">Guidebook</a></li>
+	<li><a href="{% url 'mop_tasks' %}">Tasks</a></li>
+	<li><a href="{% url 'mop_documents' %}">Documents</a></li>
+	<li><a href="{% url 'mop_forms' %}">Forms</a></li>
+	<li><a href="{% url 'mop_inbox' %}">Inbox</a></li>
+	<li><a href="{% url 'mop_outbox' %}">Outbox</a></li>
 </ul>

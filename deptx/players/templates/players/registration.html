@@ -1,0 +1,14 @@
+<h1>Please create an account</h1>
+
+{% if success %}
+	<h2>Wohoo, you registered!</h2>
+
+{% else %}
+	<h2>Personal:</h2>
+	<form action="/players/registration/" method="post">{% csrf_token %}
+	{{ player_form.as_p }}
+	<h2>Cron:</h2>
+	{{ user_form.as_p }}
+	<input type="submit" value="Submit" />
+	</form>
+{% endif %}
