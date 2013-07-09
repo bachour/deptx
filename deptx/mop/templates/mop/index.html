@@ -1,22 +1,18 @@
 <h1>Welcome agent {{user.username}}!</h1>
-<h2>These are the active MOP men and women</h2>
+<h2>What do you want to go today?</h2>
 <ul>
-	{% for mop in activeMops %}
-		<li>{{mop.user.username}}</li> 
-	{% endfor %}
-</ul>
-<h2>And these have been retired</h2>
-<ul>
-	{% for mop in inactiveMops %}
-		<li>{{mop.user.username}}</li> 
-	{% endfor %}
-</ul>
-<h2>What do you want to do today?</h2>
-<ul>
-	<li><a href="{% url 'mop_rules' %}">Guidebook</a></li>
+	<li>Mail
+		<ul>
+			<li><a href="{% url 'mop_mail_inbox' %}">Inbox ({{ inbox_unread }})</a></li>
+			<li><a href="{% url 'mop_mail_outbox' %}">Outbox ({{ outbox_unread }})</a></li>
+			<li><a href="{% url 'mop_mail_trash' %}">Trash ({{ trash_unread }})</a></li>
+			<li><a href="{% url 'mop_mail_draft' %}">Drafts ({{ draft_unread }})</a></li>
+			<li><a href="{% url 'mop_mail_compose' %}">Compose</a></li>
+		</ul>
+	</li>
 	<li><a href="{% url 'mop_tasks' %}">Tasks</a></li>
 	<li><a href="{% url 'mop_documents' %}">Documents</a></li>
 	<li><a href="{% url 'mop_forms' %}">Forms</a></li>
-	<li><a href="{% url 'mop_inbox' %}">Inbox</a></li>
-	<li><a href="{% url 'mop_outbox' %}">Outbox</a></li>
+	<li><a href="{% url 'mop_rules' %}">Guidebook</a></li>
+	
 </ul>

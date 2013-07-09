@@ -77,10 +77,10 @@ def mopmaker(request):
             cron = request.user.cron
             cron.progress = 1
             cron.save()
-            return render_to_response('cron/mopmaker.html', {"success": True, "user": request.user})
+            return render_to_response('cron/mopmaker_created.html', {"user": request.user})
         else:
             return render_to_response(   'cron/mopmaker.html',
-                                        {"success": False, "mop_form": mop_form, "user_form": user_form, "user": request.user},
+                                        {"mop_form": mop_form, "user_form": user_form, "user": request.user},
                                         context_instance=RequestContext(request)
                                         )
     

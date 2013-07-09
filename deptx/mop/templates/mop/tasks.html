@@ -1,7 +1,11 @@
-<h1>Tasks</h1>
-<ul>
-{% for task in task_list %}
-	<li>{{ task.name }} <button type="submit">choose</button></li>
-{% endfor %}
-</ul>
+<h1>Select a task to work on</h1>
+
+<form method="post" action="{% url 'mop_tasks' %}">
+	{% csrf_token %}
+	{% for task in task_list %}
+		<input type="radio" name="task" value="{{ task.id }}">{{ task.name }}</input>
+	{% endfor %}
+	<input type="submit" value="select" />
+</form>
+
 

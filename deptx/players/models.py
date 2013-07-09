@@ -23,41 +23,70 @@ class Cron(models.Model):
         return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + ")"
 
 
-GENDER_CHOICES = ( 
-('M', 'male'), 
-('F', 'female'), 
-) 
 
-MARITAL_CHOICES = (
-('S', 'single'),
-('M', 'married'),
-('D', 'divorced'),
-('W', 'widowed'),
-)
-
-HAIR_CHOICES = (
-('BLO', 'blonde'),
-('BRO', 'brown'),
-('BLA', 'black'),
-('GRE', 'grey'),
-('WHI', 'white'),
-('RED', 'red'),
-('AUB', 'auburn'),
-('CHE', 'chestnut'),
-)
-
-EYES_CHOICES = (
-('AMB', 'amber'),
-('BLU', 'blue'),
-('BRO', 'brown'),
-('GRA', 'gray'),
-('GRE', 'green'),
-('HAZ', 'hazel'),
-('RED', 'red'),
-('VIO', 'violet'),
-)
     
 class Mop(models.Model):
+    
+    GENDER_MALE = 0
+    GENDER_FEMALE = 1
+        
+    GENDER_CHOICES = ( 
+        (GENDER_MALE, 'male'), 
+        (GENDER_FEMALE, 'female'), 
+    ) 
+    
+    MARITAL_SINGLE = 0
+    MARITAL_MARRIED = 1
+    MARITAL_DIVORCED = 2
+    MARITAL_WIDOWED = 3
+    
+    MARITAL_CHOICES = (
+        (MARITAL_SINGLE, 'single'),
+        (MARITAL_MARRIED, 'married'),
+        (MARITAL_DIVORCED, 'divorced'),
+        (MARITAL_WIDOWED, 'widowed'),
+    )
+    
+    HAIR_BLONDE = 0
+    HAIR_BROWN = 1
+    HAIR_BLACK = 2
+    HAIR_GREY = 3
+    HAIR_WHITE = 4
+    HAIR_RED = 5
+    HAIR_AUBURN = 6
+    HAIR_CHESTNUT = 7
+    
+    HAIR_CHOICES = (
+        (HAIR_BLONDE, 'blonde'),
+        (HAIR_BROWN, 'brown'),
+        (HAIR_BLACK, 'black'),
+        (HAIR_GREY, 'grey'),
+        (HAIR_WHITE, 'white'),
+        (HAIR_RED, 'red'),
+        (HAIR_AUBURN, 'auburn'),
+        (HAIR_CHESTNUT, 'chestnut'),
+    )
+    
+    EYE_BLUE = 0
+    EYE_BROWN = 1
+    EYE_GREEN = 2
+    EYE_GREY = 3
+    EYE_AMBER = 4
+    EYE_HAZEL = 5
+    EYE_RED = 6
+    EYE_VIOLET = 7
+    
+    EYES_CHOICES = (
+        (EYE_BLUE, 'blue'),
+        (EYE_BROWN, 'brown'),
+        (EYE_GREEN, 'green'),
+        (EYE_GREY, 'grey'),
+        (EYE_AMBER, 'amber'),
+        (EYE_HAZEL, 'hazel'),
+        (EYE_RED, 'red'),
+        (EYE_VIOLET, 'violet'),
+    )
+    
     player = models.ForeignKey(Player)
     user = models.OneToOneField(User)
     active = models.BooleanField(default=True)
@@ -65,12 +94,12 @@ class Mop(models.Model):
     firstname = models.CharField(max_length=100)
     lastname = models.CharField(max_length=100)
     dob = models.DateField()
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.IntegerField(choices=GENDER_CHOICES)
     weight = models.IntegerField()
     height = models.IntegerField()
-    marital = models.CharField(max_length=1, choices=MARITAL_CHOICES)
-    hair = models.CharField(max_length=3, choices=HAIR_CHOICES)
-    eyes = models.CharField(max_length=3, choices=EYES_CHOICES)
+    marital = models.IntegerField(choices=MARITAL_CHOICES)
+    hair = models.IntegerField(choices=HAIR_CHOICES)
+    eyes = models.IntegerField(choices=EYES_CHOICES)
     
     trust = models.IntegerField(default=30)
 

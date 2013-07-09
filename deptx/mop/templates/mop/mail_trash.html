@@ -1,0 +1,8 @@
+<h1>Trash</h1>
+<table>
+<tr><th></th><th>Subject</th><th>From/To</th><th>Date</th><th></th></tr>
+{% for mail in mail_list %}
+	<tr {% if not mail.read %} style="font-weight:bold" {% endif %}><td><a href="{% url 'mop_mail_view' mail.id %}">(view)</a></td><td>{{ mail.get_subject_display }}</td><td>{{ mail.get_unit_display }}</td><td>{{ mail.date }}</td><td><a href="{% url 'mop_mail_deleting' mail.id %}">(delete)</a></td><td><a href="{% url 'mop_mail_untrashing' mail.id %}">(untrash)</a></td></tr>
+{% endfor %}
+</table>
+
