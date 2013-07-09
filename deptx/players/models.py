@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from deptx.helpers import generateUUID
+
 class Player(models.Model):
     firstName = models.CharField(max_length=50)
     lastName = models.CharField(max_length=50)
@@ -102,6 +104,7 @@ class Mop(models.Model):
     eyes = models.IntegerField(choices=EYES_CHOICES)
     
     trust = models.IntegerField(default=30)
+    serial = models.CharField(max_length=36, default=generateUUID)
 
     
     

@@ -7,7 +7,10 @@ urlpatterns = patterns('',
     url(r'login/', views.login, name='mop_login'),
     url(r'rules/', views.rules, name='mop_rules'),
     url(r'tasks/', views.tasks, name='mop_tasks'),
-    url(r'forms/', views.forms, name='mop_forms'),
+    url(r'forms/$', views.forms, name='mop_forms'),
+    url(r'forms/task', views.forms_task, name='mop_forms_task'),
+    
+    
     url(r'documents/', views.documents, name='mop_documents'),
     url(r'mail/inbox/', views.mail_inbox, name='mop_mail_inbox'),
     url(r'mail/outbox/', views.mail_outbox, name='mop_mail_outbox'),

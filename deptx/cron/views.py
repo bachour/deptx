@@ -16,6 +16,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
 from players.forms import MopForm
+from mop.models import Task, TaskState
 
 def isCron(user):
     if user:
@@ -74,6 +75,13 @@ def mopmaker(request):
             mop.player = player
             mop.user = new_user
             mop.save()
+            
+            #TODO at the moment all tasks get copied for every new user
+            tasks = Task.objects.all()
+            for task in tasks:
+                taskState = TaskState(mop=mop, state=TaskState.STATE_ACCESSIBLE, task=task)
+                taskState.save()
+            
             cron = request.user.cron
             cron.progress = 1
             cron.save()
