@@ -2,21 +2,13 @@ from django.db import models
 from datetime import datetime   
 
 from players.models import Mop
+from assets.models import Unit, Task, Requisition
 
 from deptx.helpers import generateUUID
 
-class Task(models.Model):
-    name = models.CharField(max_length=256)
-    description = models.TextField()
-    episode = models.IntegerField(default=-1)
-    trust = models.IntegerField(default=20)
-    value = models.IntegerField(default=1)
-
-    def __unicode__(self):
-        return self.name
 
 
-class TaskState(models.Model):
+class TaskInstance(models.Model):
     STATE_ACCESSIBLE = 0
     STATE_REQUESTED = 1
     STATE_ACTIVE = 2
@@ -36,37 +28,25 @@ class TaskState(models.Model):
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_ACCESSIBLE)
-    serial = models.CharField(max_length=36, default=generateUUID)
     
     def __unicode__(self):
         return self.task.name + " / " + self.mop.user.username
 
-class Document(models.Model):
-    name = models.CharField(max_length=256)
+class RequisitionBlank(models.Model):
+    mop = models.ForeignKey(Mop)
+    requisition = models.ForeignKey(Requisition)
     
     def __unicode__(self):
-        return self.name
+        return self.requisition.name + " - " + self.mop.user.username 
 
-
-class Requisition(models.Model):
-    TYPE_FORM = 0
-    TYPE_TASK = 1
-    TYPE_DOCUMENT = 2
-    
-    TYPE_CHOICES = (
-        (TYPE_FORM, "form for a form"),
-        (TYPE_TASK, "form for a task"),
-        (TYPE_DOCUMENT, "form for a document")
-    )
-    
-    mop = models.ForeignKey(Mop)
-    type = models.IntegerField(choices=TYPE_CHOICES)
+class RequisitionInstance(models.Model):
+    blank = models.ForeignKey(RequisitionBlank)
     data = models.CharField(max_length=256)
     date = models.DateTimeField(default=datetime.now)
     used = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return self.get_type_display()
+        return self.blank.mop.user.username + " " + self.blank.requisition.shortname + " " + self.data
     
 
 class Mail(models.Model):
@@ -88,21 +68,6 @@ class Mail(models.Model):
         (STATE_NORMAL, "normal"),
         (STATE_TRASHED, "trashed"),
         (STATE_DELETED, "deleted")
-    )
-    
-    
-    UNIT_POLICE = 1
-    UNIT_MEDICAL = 2
-    UNIT_TRANSPORTATION = 3
-    UNIT_FOREIGN = 4
-    UNIT_ADMINISTRATION = 5
-    
-    UNIT_CHOICES = (
-        (UNIT_POLICE, "Unit of Criminal Offense"),
-        (UNIT_MEDICAL, "Unit of Health"),
-        (UNIT_TRANSPORTATION, "Unit of Mobility"),
-        (UNIT_FOREIGN, "Unit of Foreign Affairs"),
-        (UNIT_ADMINISTRATION, "Unit of Administration"),
     )
     
     SUBJECT_REQUEST_FORM = 101
@@ -129,7 +94,7 @@ class Mail(models.Model):
     
     
     mop = models.ForeignKey(Mop)
-    unit = models.IntegerField(choices=UNIT_CHOICES, null=True, blank=True)
+    unit = models.ForeignKey(Unit)
     date = models.DateTimeField(default=datetime.now)
     subject = models.IntegerField(choices=SUBJECT_CHOICES, null=True, blank=True)
     body = models.TextField()
@@ -137,9 +102,7 @@ class Mail(models.Model):
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_NORMAL)
     type = models.IntegerField(choices=TYPE_CHOICES)
     
-    requisition = models.ForeignKey(Requisition, null=True, blank=True)
-    document = models.ForeignKey(Document, null=True, blank=True)
-    
+    requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)  
     
     def __unicode__(self):
         return self.get_subject_display()

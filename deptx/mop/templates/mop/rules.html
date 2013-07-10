@@ -1,3 +1,29 @@
 <h1>Rules</h1>
-<p>In order to follow MOP-procedure, you first need to kill a chicken.</p>
+<h2>Tasks</h2>
+<p>
+Your job is it to finish tasks.<br/>
+You find the available tasks under "Tasks".<br/>
+Depending on your trust level there will be more tasks available for you.<br/>
+If you want to work on a task, note down its task identification number.<br/>
+Fill in all necessary data into the appropriate form (depending on the MOP unit handing out the task)<br/>
+Compose a new message.<br/>
+Send the message to the appropriate unit<br/>
+Select "Sending Form" as the subject<br/>
+Attach the appropriate form to the message.<br/>
+Send the message.<br/>
+After a while you should get a notification message.<br/>
+If everything was correct with your form, the task will now be assigned to you.<br/>
+Go back to "Tasks" and start working!
+</p>
+<h2>Forms</h2>
+<p>
+Every MOP Unit requires a different form for different requests<br/>
+The following forms are available:
+</p>
+<table>
+<tr><th>responsible unit</th><th>form</th><th>usage</th><th>code</th><th>trust level</th></tr>
+{% for req in requisition_list %}
+	<tr><td>{{req.unit.name}}</td><td>{{req.name}}</td><td>{{req.description}}</td><td>{{req.shortname}}</td><td>{{req.trust}}</td></tr>
+{% endfor %}
+</table>
 

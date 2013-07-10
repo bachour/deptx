@@ -2,13 +2,15 @@
 <h3>Friendly advice: Gain more trust to gain more tasks!</h3>
 <h2>Active tasks</h2>
 <table>
-{% for taskState in taskState_active_list %}
-	<tr><td>{{taskState.task.name}}</td><td>{{taskState.task.description}}</td><td>{{taskState.task.value}}</td><td>{{ taskState.serial}}</td></tr>
+<tr><th>Unit</th><th>Task</th><th>Description</th><th>Identification Code</th></tr>
+{% for taskInstance in active_taskInstance_list %}
+	<tr><td>{{taskInstance.task.unit.name}}</td><td>{{taskInstance.task.name}}</td><td>{{taskInstance.task.description}}</td><td>{{taskInstance.task.serial}}</td></tr>
 {% endfor %}
 </table>
 <h2>Available tasks</h2>
 <table>
-{% for taskState in taskState_accessible_list %}
-	<tr><td>{{taskState.task.name}}</td><td>{{taskState.task.description}}</td><td>{{taskState.task.value}}</td><td>{{ taskState.serial}}</td></tr>
+<tr><th>Unit</th><th>Task</th><th>Description</th><th>Identification Code</th></tr>
+{% for taskInstance in accessible_taskInstance_list %}
+	<tr><td>{{taskInstance.task.unit.name}}</td><td>{{taskInstance.task.name}}</td><td>{{taskInstance.task.description}}</td><td>{{taskInstance.task.serial}}</td></tr>
 {% endfor %}
 </table>

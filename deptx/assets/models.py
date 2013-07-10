@@ -1,0 +1,44 @@
+from django.db import models
+
+from deptx.helpers import generateUUID
+
+class Unit(models.Model):
+    name = models.CharField(max_length=256)
+    shortname = models.CharField(max_length=16, unique=True)
+    description = models.TextField()
+    
+    def __unicode__(self):
+        return self.name
+    
+class Requisition(models.Model):
+    CATEGORY_FORM = 0
+    CATEGORY_TASK = 1
+    CATEGORY_DOCUMENT = 2
+    
+    CATEGORY_CHOICES = (
+        (CATEGORY_FORM, "form for form"),
+        (CATEGORY_TASK, "form for task"),
+        (CATEGORY_DOCUMENT, "form for document")
+    )
+    
+    
+    name = models.CharField(max_length=256)
+    shortname = models.CharField(max_length=16, unique=True)
+    description = models.TextField()
+    unit = models.ForeignKey(Unit)
+    category = models.IntegerField(choices=CATEGORY_CHOICES)
+    trust = models.IntegerField(default=25)
+    
+    
+    def __unicode__(self):
+        return self.name
+
+class Task(models.Model):
+    name = models.CharField(max_length=256)
+    description = models.TextField()
+    unit = models.ForeignKey(Unit)
+    serial = models.CharField(max_length=36, default=generateUUID)
+    trust = models.IntegerField(default=25)
+
+    def __unicode__(self):
+        return self.name

@@ -12,7 +12,12 @@
 	</li>
 	<li><a href="{% url 'mop_tasks' %}">Tasks</a></li>
 	<li><a href="{% url 'mop_documents' %}">Documents</a></li>
-	<li><a href="{% url 'mop_forms' %}">Forms</a></li>
+	<li>Forms
+		<ul>
+			<li><a href="{% url 'mop_forms_blank' %}">Blank Forms</a></li>
+			<li><a href="{% url 'mop_forms_signed' %}">Signed Forms</a></li>
+		</ul>
+	</li>
 	<li><a href="{% url 'mop_rules' %}">Guidebook</a></li>
 	
 </ul>

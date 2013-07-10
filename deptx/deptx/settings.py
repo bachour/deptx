@@ -128,6 +128,7 @@ INSTALLED_APPS = (
     'players',
     'cron',
     'mop',
+    'assets',
     
     
 )

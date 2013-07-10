@@ -1,0 +1,6 @@
+<h1>Blank Forms</h1>
+<table>
+{% for blank in blank_list %}
+	<tr><td><a href="{% url 'mop_forms_fill' blank.id %}">(fill in)</a></td><td>{{blank.requisition.name}}</td><td>{{blank.requisition.shortname}}</td><td>{{blank.requisition.unit.name}}</td></tr>
+{% endfor %}
+</table>

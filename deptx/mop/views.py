@@ -14,8 +14,10 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from models import Task, TaskState, Document, Mail, Requisition
-from forms import MailForm
+from assets.models import Task, Requisition
+from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank
+from mop.forms import MailForm, RequisitionInstanceForm
+
 
 def isMop(user):
     if user:
@@ -65,41 +67,31 @@ def login(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
-    return render(request, 'mop/rules.html')
+    requisition_list = Requisition.objects.all()
+    return render(request, 'mop/rules.html', {"requisition_list": requisition_list})
+
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def tasks(request):
-    taskState_accessible_list = TaskState.objects.filter(mop=request.user.mop).filter(state=TaskState.STATE_ACCESSIBLE)
-    taskState_active_list = TaskState.objects.filter(mop=request.user.mop).filter(state=TaskState.STATE_ACTIVE)
-    return render(request, 'mop/tasks.html', {"taskState_accessible_list": taskState_accessible_list, "taskState_active_list": taskState_active_list})
-# def tasks(request):
-#     if request.method == 'POST':
-#         task_id = request.POST.get('task')
-#         task = Task.objects.get(id=task_id)
-#         mop = request.user.mop
-#         taskStatus = TaskStatus()
-#         taskStatus.task = task
-#         taskStatus.mop = mop
-#         taskStatus.status = TaskStatus.STATUS_CURRENT
-#         taskStatus.save()
-#         return render(request, 'mop/tasks_current.html', {"task": task })
-#     
-#     else:
-#         try:
-#             taskStatus = TaskStatus.objects.get(mop=request.user.mop, status=TaskStatus.STATUS_CURRENT)
-#         except TaskStatus.DoesNotExist:
-#             taskStatus = None
-#         if (taskStatus is not None):
-#             task = taskStatus.task
-#             return render(request, 'mop/tasks_current.html', {"task": task })
-#         else:
-#             #TODO should the generic tasks be filtered by trust level?
-#             generic_task_list = Task.objects.filter(episode=-1).filter(trust__lte=request.user.mop.trust)
-#             #TODO should the episode specific tasks be filtered by trust level?
-#             episode_task_list = Task.objects.filter(episode=request.user.mop.player.cron.episode)
-#             task_list = generic_task_list | episode_task_list
-#             return render(request, 'mop/tasks.html', {"task_list": task_list})
+    #Creating TaskInstances for all Tasks
+    #TODO: make it more elegant
+    
+    tasks = Task.objects.all()
+    for task in tasks:
+        try:
+            taskInstance = TaskInstance.objects.get(task=task, mop=request.user.mop)
+        except TaskInstance.DoesNotExist:
+            taskInstance = None
+        
+        if taskInstance is None:
+            taskInstance = TaskInstance(task=task, mop=request.user.mop, state=TaskInstance.STATE_ACCESSIBLE)
+            taskInstance.save()
+        
+    active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACTIVE)
+    accessible_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACCESSIBLE)
+        
+    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "accessible_taskInstance_list": accessible_taskInstance_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -190,7 +182,7 @@ def mail_deleting(request, mail_id):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_compose(request):
     if request.method == 'POST':
-        mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT, read=True)
+        mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
         elif 'draft' in request.POST:
@@ -202,12 +194,12 @@ def mail_compose(request):
             analyzeMail(mail)
             return redirect('mop_mail_outbox')
         else:
-            form.fields["requisition"].queryset = Requisition.objects.filter(mop=request.user.mop)
+            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
-        form.fields["requisition"].queryset = Requisition.objects.filter(mop=request.user.mop)
+        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
     
 @login_required(login_url='mop_login')
@@ -231,14 +223,15 @@ def mail_edit(request, mail_id):
             analyzeMail(mail)
             return redirect('mop_mail_outbox')
         else:
-            form.fields["requisition"].queryset = Requisition.objects.filter(mop=request.user.mop)
+            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm(instance=mail)
         #TODO same with documents at all occurences
-        form.fields["requisition"].queryset = Requisition.objects.filter(mop=request.user.mop)
+        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
+
 
 def analyzeMail(mail):
     
@@ -246,21 +239,23 @@ def analyzeMail(mail):
     newMail.type = Mail.TYPE_RECEIVED
     newMail.unit = mail.unit
     newMail.mop = mail.mop
-    
+  
     #Check if task was requested properly
-    if mail.subject is Mail.SUBJECT_SEND_FORM and mail.unit is Mail.UNIT_ADMINISTRATION and mail.requisition is not None:
+    if mail.subject is Mail.SUBJECT_SEND_FORM and mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
         try:
-            taskState = TaskState.objects.get(serial=mail.requisition.data, mop=mail.mop)
-        except TaskState.DoesNotExist:
-            taskState = None
+            #TODO check trust level
+            task = Task.objects.get(serial=mail.requisitionInstance.data)
+        except Task.DoesNotExist:
+            task = None
         #TODO set requisition to used
-        if taskState is not None:
+        if task is not None and task.unit == mail.unit:
+            print "inside2"
             #TODO also check for trust level
             newMail.subject = Mail.SUBJECT_ASSIGNED_TASK
-            newMail.body = "You have been assigned task " + taskState.serial + "."
+            newMail.body = "You have been assigned task " + task.serial + "."
             newMail.save()
-            taskState.state = TaskState.STATE_ACTIVE
-            taskState.save()
+            taskInstance = TaskInstance(state=TaskInstance.STATE_ACTIVE, task=task, mop=mail.mop)
+            taskInstance.save()
         else:
             newMail.subject = Mail.SUBJECT_ERROR
             newMail.body = "There was an error in your form."
@@ -280,13 +275,13 @@ def forms_task(request):
     if request.method == 'POST':
         serial = request.POST['serial']
         try:
-            taskState = TaskState.objects.get(serial=serial)
-        except TaskState.DoesNotExist:
+            taskInstance = TaskInstance.objects.get(serial=serial)
+        except TaskInstance.DoesNotExist:
             #TODO error handling
-            taskState = None
-        if taskState is not None:
-            req = Requisition()
-            req.type = Requisition.TYPE_TASK
+            taskInstance = None
+        if taskInstance is not None:
+            req = RequisitionInstance()
+            #req.type = RequisitionInstance.CATEGORY_TASK
             req.mop = request.user.mop
             req.data = serial
             req.save()
@@ -296,6 +291,31 @@ def forms_task(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def forms(request):
-    req_list = Requisition.objects.filter(mop=request.user.mop).order_by('-date')
-    return render(request, 'mop/forms.html', {"req_list": req_list})
+def forms_blank(request):
+    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop)
+    return render(request, 'mop/forms_blank.html', {"blank_list": blank_list})
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def forms_fill(request, reqBlank_id):
+    #TODO check if user has rights to access the requisition in the first place
+    try:
+        reqBlank = RequisitionBlank.objects.get(id=reqBlank_id)
+    except RequisitionBlank.DoesNotExist:
+        reqBlank=None
+        
+    if request.method == 'POST':
+        requisitionInstance = RequisitionInstance(blank=reqBlank)
+        form = RequisitionInstanceForm(data=request.POST, instance=requisitionInstance)
+        if form.is_valid():
+            form.save()
+            return redirect('mop_forms_signed')
+    else:
+        form = RequisitionInstanceForm()
+        return render(request, 'mop/forms_fill.html', {"reqBlank": reqBlank, "form": form}, context_instance=RequestContext(request))
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def forms_signed(request):
+    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).order_by("-date")
+    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
