@@ -1,2 +1,8 @@
 <h1>Documents</h1>
+<table>
+<tr><th></th><th>Name</th><th>Identification Code</th></tr>
+{% for documentInstance in documentInstance_list %}
+	<tr><td><a href="{% url 'mop_documents_view' documentInstance.id %}">(view)</a> <a href="{% url 'mop_documents_provenance' documentInstance.id %}">(provenance)</a></td><td>{{documentInstance.document.name}}</td><td>{{documentInstance.document.serial}}</td></tr>
+{% endfor %}
+</table>
 

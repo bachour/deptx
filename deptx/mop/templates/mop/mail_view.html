@@ -3,3 +3,5 @@ Subject: {{ mail.get_subject_display }}<br/>
 Unit: {{ mail.unit.name }} <br/>
 Date: {{ mail.date }}<br/>
 Body: {{ mail.body }}<br/>
+Form: {{ mail.requisitionInstance.blank.requisition.unit.serial}}<br />
+Data: {{ mail.requisitionInstance.data}}

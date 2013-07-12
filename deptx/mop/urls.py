@@ -9,11 +9,10 @@ urlpatterns = patterns('',
     url(r'tasks/', views.tasks, name='mop_tasks'),
     url(r'forms/blank', views.forms_blank, name='mop_forms_blank'),
     url(r'forms/signed', views.forms_signed, name='mop_forms_signed'),
-    url(r'forms/fill/(\d+)', views.forms_fill, name='mop_forms_fill'),
-    
-    
-    
-    url(r'documents/', views.documents, name='mop_documents'),
+    url(r'forms/fill/(\d+)', views.form_fill, name='mop_forms_fill'),
+    url(r'documents/$', views.documents, name='mop_documents'),
+    url(r'documents/view/(\d+)', views.document_view, name='mop_documents_view'),
+    url(r'documents/provenance/(\d+)', views.document_provenance, name='mop_documents_provenance'),
     url(r'mail/inbox/', views.mail_inbox, name='mop_mail_inbox'),
     url(r'mail/outbox/', views.mail_outbox, name='mop_mail_outbox'),
     url(r'mail/trash/', views.mail_trash, name='mop_mail_trash'),
@@ -24,5 +23,5 @@ urlpatterns = patterns('',
     url(r'mail/deleting/(\d+)', views.mail_deleting, name='mop_mail_deleting'),
     url(r'mail/compose/$', views.mail_compose, name='mop_mail_compose'),
     url(r'mail/compose/(\d+)', views.mail_edit, name='mop_mail_edit'),
-        
+          
 )

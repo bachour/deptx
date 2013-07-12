@@ -14,8 +14,8 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Task, Requisition
-from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank
+from assets.models import Task, Requisition, Document
+from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
 
@@ -95,7 +95,28 @@ def tasks(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    return render(request, 'mop/documents.html')
+    documentInstance_list = DocumentInstance.objects.filter(mop=request.user.mop)
+    return render(request, 'mop/documents.html', {"documentInstance_list": documentInstance_list})
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def document_view(request, documentInstance_id):
+    try:
+        documentInstance = DocumentInstance.objects.get(id=documentInstance_id, mop=request.user.mop)
+        documentInstance.save()
+    except DocumentInstance.DoesNotExist:
+        documentInstance = None
+    return render(request, 'mop/documents_view.html', {'documentInstance': documentInstance})
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def document_provenance(request, documentInstance_id):
+    try:
+        documentInstance = DocumentInstance.objects.get(id=documentInstance_id, mop=request.user.mop)
+        documentInstance.save()
+    except DocumentInstance.DoesNotExist:
+        documentInstance = None
+    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -181,7 +202,7 @@ def mail_deleting(request, mail_id):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_compose(request):
     if request.method == 'POST':
-        mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
+        mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT, read=True)
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
         elif 'draft' in request.POST:
@@ -190,17 +211,21 @@ def mail_compose(request):
         
         if form.is_valid():
             mail = form.save()
-            analyzeMail(mail)
+            if mail.type is Mail.TYPE_SENT:
+                analyzeSentMail(mail)
             return redirect('mop_mail_outbox')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+            form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+        form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
-    
+
+#TODO code duplication between mail_edit and mail_compose    
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_edit(request, mail_id):
@@ -215,11 +240,13 @@ def mail_edit(request, mail_id):
             mail.type = Mail.TYPE_SENT
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
+        
         form = MailForm(data=request.POST, instance=mail)
         
         if form.is_valid():
             mail = form.save()
-            analyzeMail(mail)
+            if mail.type is Mail.TYPE_SENT:
+                analyzeSentMail(mail)
             return redirect('mop_mail_outbox')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
@@ -232,7 +259,7 @@ def mail_edit(request, mail_id):
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
 
 
-def analyzeMail(mail):
+def analyzeSentMail(mail):
     
     newMail = Mail()
     newMail.type = Mail.TYPE_RECEIVED
@@ -252,8 +279,7 @@ def analyzeMail(mail):
                 newMail.subject = Mail.SUBJECT_RECEIVE_FORM
                 newMail.body = "Here is a magnificient form for you: " + requisition.serial + "."
                 newMail.save()
-                requisitionBlank = RequisitionBlank(requisition=requisition, mop=mail.mop)
-                requisitionBlank.save()
+                RequisitionBlank.objects.get_or_create(requisition=requisition, mop=mail.mop)
             else:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = "We cannot help you with requesting form " + mail.requisitionInstance.data
@@ -269,11 +295,26 @@ def analyzeMail(mail):
                 newMail.subject = Mail.SUBJECT_RECEIVE_TASK
                 newMail.body = "You have been assigned task " + task.serial + "."
                 newMail.save()
-                taskInstance = TaskInstance(state=TaskInstance.STATE_ACTIVE, task=task, mop=mail.mop)
-                taskInstance.save()
+                TaskInstance.objects.get_or_create(state=TaskInstance.STATE_ACTIVE, task=task, mop=mail.mop)
             else:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = "We cannot help you with requesting task " + mail.requisitionInstance.data
+                newMail.save()
+        elif mail.subject is Mail.SUBJECT_REQUEST_DOCUMENT and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_DOCUMENT:
+            #Check if requested document exists
+            #TODO check more conditions (e.g. trust level)
+            try:
+                document = Document.objects.get(serial=mail.requisitionInstance.data)
+            except Document.DoesNotExist:
+                document = None
+            if document is not None and document.unit == mail.unit:
+                newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
+                newMail.body = "You have been assigned document " + document.serial + "."
+                newMail.save()
+                DocumentInstance.objects.get_or_create(document=document, mop=mail.mop)
+            else:
+                newMail.subject = Mail.SUBJECT_ERROR
+                newMail.body = "We cannot help you with requesting document " + mail.requisitionInstance.data
                 newMail.save()
         else:
             newMail.subject = Mail.SUBJECT_ERROR
@@ -323,7 +364,7 @@ def forms_blank(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def forms_fill(request, reqBlank_id):
+def form_fill(request, reqBlank_id):
     #TODO check if user has rights to access the requisition in the first place
     try:
         reqBlank = RequisitionBlank.objects.get(id=reqBlank_id)

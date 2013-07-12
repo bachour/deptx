@@ -14,10 +14,12 @@ class Unit(models.Model):
 class Requisition(models.Model):
     CATEGORY_FORM = 0
     CATEGORY_TASK = 1
+    CATEGORY_DOCUMENT = 2
     
     CATEGORY_CHOICES = (
         (CATEGORY_FORM, "form for form"),
         (CATEGORY_TASK, "form for task"),
+        (CATEGORY_DOCUMENT, "form for document"),
     )
     
     
@@ -39,5 +41,15 @@ class Task(models.Model):
     serial = models.CharField(max_length=36, default=generateUUID)
     trust = models.IntegerField(default=25)
 
+    def __unicode__(self):
+        return self.name
+
+class Document(models.Model):
+    name = models.CharField(max_length=256)
+    serial = models.CharField(max_length=36, default=generateUUID)
+    content = models.TextField()
+    task = models.ForeignKey(Task)
+    unit = models.ForeignKey(Unit)
+    
     def __unicode__(self):
         return self.name
