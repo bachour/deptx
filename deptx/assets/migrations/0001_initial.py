@@ -12,8 +12,9 @@ class Migration(SchemaMigration):
         db.create_table(u'assets_unit', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=256)),
-            ('shortname', self.gf('django.db.models.fields.CharField')(unique=True, max_length=16)),
+            ('serial', self.gf('django.db.models.fields.CharField')(default='573874ba-eafe-11e2-9ab6-14109fe17ee1', max_length=36)),
             ('description', self.gf('django.db.models.fields.TextField')()),
+            ('isAdministrative', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal(u'assets', ['Unit'])
 
@@ -21,7 +22,7 @@ class Migration(SchemaMigration):
         db.create_table(u'assets_requisition', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=256)),
-            ('shortname', self.gf('django.db.models.fields.CharField')(unique=True, max_length=16)),
+            ('serial', self.gf('django.db.models.fields.CharField')(default='5737a711-eafe-11e2-951d-14109fe17ee1', max_length=36)),
             ('description', self.gf('django.db.models.fields.TextField')()),
             ('unit', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Unit'])),
             ('category', self.gf('django.db.models.fields.IntegerField')()),
@@ -35,7 +36,7 @@ class Migration(SchemaMigration):
             ('name', self.gf('django.db.models.fields.CharField')(max_length=256)),
             ('description', self.gf('django.db.models.fields.TextField')()),
             ('unit', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Unit'])),
-            ('serial', self.gf('django.db.models.fields.CharField')(default='9ed4b138-eaf4-11e2-b591-14109fe17ee1', max_length=36)),
+            ('serial', self.gf('django.db.models.fields.CharField')(default='57388b0a-eafe-11e2-aaf0-14109fe17ee1', max_length=36)),
             ('trust', self.gf('django.db.models.fields.IntegerField')(default=25)),
         ))
         db.send_create_signal(u'assets', ['Task'])
@@ -59,7 +60,7 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'shortname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '16'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5738e4f3-eafe-11e2-b6fe-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
@@ -68,7 +69,7 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'9ed5dca3-eaf4-11e2-9e6f-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5739103a-eafe-11e2-a080-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
@@ -76,8 +77,9 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Unit'},
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'isAdministrative': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'shortname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '16'})
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5738fad4-eafe-11e2-af1d-14109fe17ee1'", 'max_length': '36'})
         }
     }
 

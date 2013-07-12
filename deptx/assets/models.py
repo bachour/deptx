@@ -4,8 +4,9 @@ from deptx.helpers import generateUUID
 
 class Unit(models.Model):
     name = models.CharField(max_length=256)
-    shortname = models.CharField(max_length=16, unique=True)
+    serial = models.CharField(max_length=36, default=generateUUID)
     description = models.TextField()
+    isAdministrative = models.BooleanField()
     
     def __unicode__(self):
         return self.name
@@ -13,22 +14,20 @@ class Unit(models.Model):
 class Requisition(models.Model):
     CATEGORY_FORM = 0
     CATEGORY_TASK = 1
-    CATEGORY_DOCUMENT = 2
     
     CATEGORY_CHOICES = (
         (CATEGORY_FORM, "form for form"),
         (CATEGORY_TASK, "form for task"),
-        (CATEGORY_DOCUMENT, "form for document")
     )
     
     
     name = models.CharField(max_length=256)
-    shortname = models.CharField(max_length=16, unique=True)
+    serial = models.CharField(max_length=36, default=generateUUID)
     description = models.TextField()
     unit = models.ForeignKey(Unit)
     category = models.IntegerField(choices=CATEGORY_CHOICES)
     trust = models.IntegerField(default=25)
-    
+    isInitial = models.BooleanField()
     
     def __unicode__(self):
         return self.name

@@ -46,7 +46,7 @@ class RequisitionInstance(models.Model):
     used = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return self.blank.mop.user.username + " " + self.blank.requisition.shortname + " " + self.data
+        return self.blank.mop.user.username + " " + self.blank.requisition.serial + " " + self.data
     
 
 class Mail(models.Model):
@@ -73,28 +73,23 @@ class Mail(models.Model):
     SUBJECT_NONE = 1
   
     SUBJECT_REQUEST_FORM = 101
-    SUBJECT_REQUEST_DOCUMENT = 102
-    SUBJECT_SEND_FORM = 103
-    SUBJECT_SEND_DOCUMENT = 104
-    
+    SUBJECT_REQUEST_TASK = 102
+        
     SUBJECT_RECEIVE_FORM = 201
-    SUBJECT_RECEIVE_DOCUMENT = 202
-    SUBJECT_ASSIGNED_TASK = 203
-    SUBJECT_ERROR = 204
-    SUBJECT_INFORMATION = 205
+    SUBJECT_RECEIVE_TASK = 202
+    
+    SUBJECT_ERROR = 211
+    SUBJECT_INFORMATION = 212
     
     
     SUBJECT_CHOICES = (
         (SUBJECT_NONE, "(no subject)"),
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
-        (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
-        (SUBJECT_SEND_FORM, "Sending Form"),
-        (SUBJECT_SEND_DOCUMENT, "Sending Document"),
-        (SUBJECT_RECEIVE_FORM, "Requested Form"),
-        (SUBJECT_RECEIVE_DOCUMENT, "Requested Document"),
-        (SUBJECT_ASSIGNED_TASK, "Task assigned"),
+        (SUBJECT_REQUEST_TASK, "Requesting Task"),
+        (SUBJECT_RECEIVE_FORM, "Assigning Form"),
+        (SUBJECT_RECEIVE_TASK, "Assigning Task"),
         (SUBJECT_ERROR, "Error"),
-        (SUBJECT_INFORMATION, "Information")
+        (SUBJECT_INFORMATION, "Information"),
     )
     
     

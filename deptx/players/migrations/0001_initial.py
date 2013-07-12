@@ -45,7 +45,7 @@ class Migration(SchemaMigration):
             ('hair', self.gf('django.db.models.fields.IntegerField')()),
             ('eyes', self.gf('django.db.models.fields.IntegerField')()),
             ('trust', self.gf('django.db.models.fields.IntegerField')(default=30)),
-            ('serial', self.gf('django.db.models.fields.CharField')(default='adfd5fa3-eaf4-11e2-9e4d-14109fe17ee1', max_length=36)),
+            ('serial', self.gf('django.db.models.fields.CharField')(default='65423d17-eafe-11e2-b3e3-14109fe17ee1', max_length=36)),
         ))
         db.send_create_signal(u'players', ['Mop'])
 
@@ -119,7 +119,7 @@ class Migration(SchemaMigration):
             'lastname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'marital': ('django.db.models.fields.IntegerField', [], {}),
             'player': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Player']"}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'adffbcde-eaf4-11e2-af22-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'65445b26-eafe-11e2-b9b3-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '30'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'}),
             'weight': ('django.db.models.fields.IntegerField', [], {})

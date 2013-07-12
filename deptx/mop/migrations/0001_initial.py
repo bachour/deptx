@@ -72,7 +72,7 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'shortname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '16'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd7d119-eafe-11e2-9d9d-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
@@ -81,7 +81,7 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'a660b214-eaf4-11e2-ba81-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd88edc-eafe-11e2-a32f-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
@@ -89,8 +89,9 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Unit'},
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'isAdministrative': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'shortname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '16'})
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd7e535-eafe-11e2-bce0-14109fe17ee1'", 'max_length': '36'})
         },
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
@@ -175,7 +176,7 @@ class Migration(SchemaMigration):
             'lastname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'marital': ('django.db.models.fields.IntegerField', [], {}),
             'player': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Player']"}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'a6603ee1-eaf4-11e2-9f83-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd83a80-eafe-11e2-9bcb-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '30'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'}),
             'weight': ('django.db.models.fields.IntegerField', [], {})

@@ -10,7 +10,7 @@
 <h2>Available tasks</h2>
 <table>
 <tr><th>Unit</th><th>Task</th><th>Description</th><th>Identification Code</th></tr>
-{% for taskInstance in accessible_taskInstance_list %}
-	<tr><td>{{taskInstance.task.unit.name}}</td><td>{{taskInstance.task.name}}</td><td>{{taskInstance.task.description}}</td><td>{{taskInstance.task.serial}}</td></tr>
+{% for task in new_task_list %}
+	<tr><td>{{task.unit.name}}</td><td>{{task.name}}</td><td>{{task.description}}</td><td>{{task.serial}}</td></tr>
 {% endfor %}
 </table>

@@ -23,7 +23,7 @@ The following forms are available:
 <table>
 <tr><th>responsible unit</th><th>form</th><th>usage</th><th>code</th><th>trust level</th></tr>
 {% for req in requisition_list %}
-	<tr><td>{{req.unit.name}}</td><td>{{req.name}}</td><td>{{req.description}}</td><td>{{req.shortname}}</td><td>{{req.trust}}</td></tr>
+	<tr><td>{{req.unit.name}}</td><td>{{req.name}}</td><td>{{req.description}}</td><td>{{req.serial}}</td><td>{{req.trust}}</td></tr>
 {% endfor %}
 </table>
 

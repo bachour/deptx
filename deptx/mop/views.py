@@ -74,9 +74,13 @@ def rules(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def tasks(request):
-    #Creating TaskInstances for all Tasks
-    #TODO: make it more elegant
+
+    #TODO handle the other states of the task instances as well
+    active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACTIVE)
+    
+    new_task_list = []
     tasks = Task.objects.all()
+    
     for task in tasks:
         try:
             taskInstance = TaskInstance.objects.get(task=task, mop=request.user.mop)
@@ -84,13 +88,9 @@ def tasks(request):
             taskInstance = None
         
         if taskInstance is None:
-            taskInstance = TaskInstance(task=task, mop=request.user.mop, state=TaskInstance.STATE_ACCESSIBLE)
-            taskInstance.save()
-        
-    active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACTIVE)
-    accessible_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACCESSIBLE)
-        
-    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "accessible_taskInstance_list": accessible_taskInstance_list})
+            new_task_list.append(task)
+       
+    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "new_task_list": new_task_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -238,30 +238,51 @@ def analyzeMail(mail):
     newMail.type = Mail.TYPE_RECEIVED
     newMail.unit = mail.unit
     newMail.mop = mail.mop
-  
-    #Check if task was requested properly
-    if mail.subject is Mail.SUBJECT_SEND_FORM and mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
-        try:
-            #TODO check trust level
-            task = Task.objects.get(serial=mail.requisitionInstance.data)
-        except Task.DoesNotExist:
-            task = None
-        #TODO set requisition to used
-        if task is not None and task.unit == mail.unit:
-            print "inside2"
-            #TODO also check for trust level
-            newMail.subject = Mail.SUBJECT_ASSIGNED_TASK
-            newMail.body = "You have been assigned task " + task.serial + "."
-            newMail.save()
-            taskInstance = TaskInstance(state=TaskInstance.STATE_ACTIVE, task=task, mop=mail.mop)
-            taskInstance.save()
+   
+    #TODO Send proper error messages for all potential errors. 
+    if mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
+        if mail.subject is Mail.SUBJECT_REQUEST_FORM and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
+            #Check if requested requisition exists
+            #TODO check more conditions (e.g. trust level)
+            try:
+                requisition = Requisition.objects.get(serial=mail.requisitionInstance.data)
+            except Requisition.DoesNotExist:
+                requisition = None
+            if requisition is not None and mail.unit.isAdministrative:
+                newMail.subject = Mail.SUBJECT_RECEIVE_FORM
+                newMail.body = "Here is a magnificient form for you: " + requisition.serial + "."
+                newMail.save()
+                requisitionBlank = RequisitionBlank(requisition=requisition, mop=mail.mop)
+                requisitionBlank.save()
+            else:
+                newMail.subject = Mail.SUBJECT_ERROR
+                newMail.body = "We cannot help you with requesting form " + mail.requisitionInstance.data
+                newMail.save()
+        elif mail.subject is Mail.SUBJECT_REQUEST_TASK and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_TASK:
+            #Check if requested task exists
+            #TODO check more conditions (e.g. trust level)
+            try:
+                task = Task.objects.get(serial=mail.requisitionInstance.data)
+            except Task.DoesNotExist:
+                task = None
+            if task is not None and task.unit == mail.unit:
+                newMail.subject = Mail.SUBJECT_RECEIVE_TASK
+                newMail.body = "You have been assigned task " + task.serial + "."
+                newMail.save()
+                taskInstance = TaskInstance(state=TaskInstance.STATE_ACTIVE, task=task, mop=mail.mop)
+                taskInstance.save()
+            else:
+                newMail.subject = Mail.SUBJECT_ERROR
+                newMail.body = "We cannot help you with requesting task " + mail.requisitionInstance.data
+                newMail.save()
         else:
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = "There was an error in your form."
+            newMail.body = "Your form is not applicable for this request."
             newMail.save()
+        
     else:
         newMail.subject = Mail.SUBJECT_ERROR
-        newMail.body = "Please rewrite your message."
+        newMail.body = "Denied."
         newMail.save()
         
             
@@ -291,7 +312,13 @@ def forms_task(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def forms_blank(request):
-    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop)
+    
+    # Create a blank form for all Forms that the mop user should have at start
+    initialRequisitions = Requisition.objects.filter(isInitial=True)
+    for initial in initialRequisitions:
+        RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
+            
+    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop)            
     return render(request, 'mop/forms_blank.html', {"blank_list": blank_list})
 
 @login_required(login_url='mop_login')
