@@ -76,7 +76,6 @@ def rules(request):
 def tasks(request):
     #Creating TaskInstances for all Tasks
     #TODO: make it more elegant
-    
     tasks = Task.objects.all()
     for task in tasks:
         try:
@@ -319,3 +318,5 @@ def forms_fill(request, reqBlank_id):
 def forms_signed(request):
     requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).order_by("-date")
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
+
+

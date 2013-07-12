@@ -123,11 +123,12 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     
-    'persistence', # for provenance
     'south', # for db migration
+    
+    'persistence', # for provenance
     'players',
-    'cron',
     'mop',
+    'cron',
     'assets',
     
     

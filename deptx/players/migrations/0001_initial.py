@@ -25,6 +25,7 @@ class Migration(SchemaMigration):
             ('player', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['players.Player'], unique=True)),
             ('user', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['auth.User'], unique=True)),
             ('episode', self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('progress', self.gf('django.db.models.fields.IntegerField')(default=0)),
         ))
         db.send_create_signal(u'players', ['Cron'])
 
@@ -34,7 +35,17 @@ class Migration(SchemaMigration):
             ('player', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Player'])),
             ('user', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['auth.User'], unique=True)),
             ('active', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('score', self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('firstname', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('lastname', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('dob', self.gf('django.db.models.fields.DateField')()),
+            ('gender', self.gf('django.db.models.fields.IntegerField')()),
+            ('weight', self.gf('django.db.models.fields.IntegerField')()),
+            ('height', self.gf('django.db.models.fields.IntegerField')()),
+            ('marital', self.gf('django.db.models.fields.IntegerField')()),
+            ('hair', self.gf('django.db.models.fields.IntegerField')()),
+            ('eyes', self.gf('django.db.models.fields.IntegerField')()),
+            ('trust', self.gf('django.db.models.fields.IntegerField')(default=30)),
+            ('serial', self.gf('django.db.models.fields.CharField')(default='adfd5fa3-eaf4-11e2-9e4d-14109fe17ee1', max_length=36)),
         ))
         db.send_create_signal(u'players', ['Mop'])
 
@@ -92,15 +103,26 @@ class Migration(SchemaMigration):
             'episode': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'player': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['players.Player']", 'unique': 'True'}),
+            'progress': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'})
         },
         u'players.mop': {
             'Meta': {'object_name': 'Mop'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'dob': ('django.db.models.fields.DateField', [], {}),
+            'eyes': ('django.db.models.fields.IntegerField', [], {}),
+            'firstname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'gender': ('django.db.models.fields.IntegerField', [], {}),
+            'hair': ('django.db.models.fields.IntegerField', [], {}),
+            'height': ('django.db.models.fields.IntegerField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'lastname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'marital': ('django.db.models.fields.IntegerField', [], {}),
             'player': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Player']"}),
-            'score': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'})
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'adffbcde-eaf4-11e2-af22-14109fe17ee1'", 'max_length': '36'}),
+            'trust': ('django.db.models.fields.IntegerField', [], {'default': '30'}),
+            'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'}),
+            'weight': ('django.db.models.fields.IntegerField', [], {})
         },
         u'players.player': {
             'Meta': {'object_name': 'Player'},

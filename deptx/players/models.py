@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 from deptx.helpers import generateUUID
+from django.dispatch import receiver
 
 class Player(models.Model):
     firstName = models.CharField(max_length=50)
@@ -110,6 +111,4 @@ class Mop(models.Model):
     
     def __unicode__(self):
         return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + " / active: " + self.active.__str__() + ")"
-    
-      
-    
+

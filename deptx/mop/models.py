@@ -69,7 +69,9 @@ class Mail(models.Model):
         (STATE_TRASHED, "trashed"),
         (STATE_DELETED, "deleted")
     )
-    
+
+    SUBJECT_NONE = 1
+  
     SUBJECT_REQUEST_FORM = 101
     SUBJECT_REQUEST_DOCUMENT = 102
     SUBJECT_SEND_FORM = 103
@@ -79,9 +81,11 @@ class Mail(models.Model):
     SUBJECT_RECEIVE_DOCUMENT = 202
     SUBJECT_ASSIGNED_TASK = 203
     SUBJECT_ERROR = 204
+    SUBJECT_INFORMATION = 205
     
     
     SUBJECT_CHOICES = (
+        (SUBJECT_NONE, "(no subject)"),
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
         (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
         (SUBJECT_SEND_FORM, "Sending Form"),
@@ -90,13 +94,14 @@ class Mail(models.Model):
         (SUBJECT_RECEIVE_DOCUMENT, "Requested Document"),
         (SUBJECT_ASSIGNED_TASK, "Task assigned"),
         (SUBJECT_ERROR, "Error"),
+        (SUBJECT_INFORMATION, "Information")
     )
     
     
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit)
     date = models.DateTimeField(default=datetime.now)
-    subject = models.IntegerField(choices=SUBJECT_CHOICES, null=True, blank=True)
+    subject = models.IntegerField(choices=SUBJECT_CHOICES, default=SUBJECT_NONE)
     body = models.TextField()
     read = models.BooleanField()
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_NORMAL)
@@ -105,10 +110,14 @@ class Mail(models.Model):
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)  
     
     def __unicode__(self):
-        return self.get_subject_display()
+        if self.subject is None:
+            return "no subject"
+        else:
+            return self.get_subject_display()
 
     
     
     
+
     
     
