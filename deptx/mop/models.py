@@ -110,7 +110,8 @@ class Mail(models.Model):
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_NORMAL)
     type = models.IntegerField(choices=TYPE_CHOICES)
     
-    requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)  
+    requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
+    documentInstance = models.ForeignKey(DocumentInstance, null=True, blank=True)  
     
     def __unicode__(self):
         if self.subject is None:

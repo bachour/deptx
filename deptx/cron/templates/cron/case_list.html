@@ -1,0 +1,5 @@
+<h1>{{mission.name}}</h1>
+{% for case in case_list %}
+	<a href="{% url "cron_case_detail" case.serial %}">{{ case.name }}</a> {% if case.solved %} SOLVED {% endif %}<br/>
+{% endfor %}
+

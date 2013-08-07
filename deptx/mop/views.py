@@ -14,10 +14,17 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Task, Requisition, Document
+from assets.models import Task, Requisition, Document, GRAPH_FOLDER
 from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
+from prov.model import ProvBundle, Namespace, Literal, PROV, XSD, Identifier
+import datetime
+from persistence.models import save_bundle
+from prov.model.graph import prov_to_file
+from deptx.helpers import generateUUID
+from deptx.settings import MEDIA_ROOT
+from cron.models import CronDocumentInstance
 
 def isMop(user):
     if user:
@@ -116,7 +123,23 @@ def document_provenance(request, documentInstance_id):
         documentInstance.save()
     except DocumentInstance.DoesNotExist:
         documentInstance = None
-    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance})
+    #prov_test()
+    
+    #TODO: Currently the graph is newly generated everytime this view is called
+    #TODO: Put this code where the Provenance is being created
+    provenance = documentInstance.document.provenance
+    g = provenance.pdBundle.get_prov_bundle()
+            
+    filename = generateUUID() + ".png"
+    path = MEDIA_ROOT + "/" + GRAPH_FOLDER
+    prov_to_file(g, path + filename, use_labels=True)
+    provenance.imagefile = GRAPH_FOLDER + filename
+    provenance.save()
+    
+    json_str = g.get_provjson(indent=4)
+    
+    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'json_str':json_str})
+
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -213,15 +236,19 @@ def mail_compose(request):
             mail = form.save()
             if mail.type is Mail.TYPE_SENT:
                 analyzeSentMail(mail)
-            return redirect('mop_mail_outbox')
+            elif mail.type is Mail.TYPE_DRAFT:
+                analyzeDraftMail(mail)
+            return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
             form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
         form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
 
@@ -247,16 +274,28 @@ def mail_edit(request, mail_id):
             mail = form.save()
             if mail.type is Mail.TYPE_SENT:
                 analyzeSentMail(mail)
-            return redirect('mop_mail_outbox')
+            elif mail.type is Mail.TYPE_DRAFT:
+                analyzeDraftMail(mail)
+            return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm(instance=mail)
         #TODO same with documents at all occurences
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
+
+#TODO time delay
+#TODO risk
+def analyzeDraftMail(mail):
+    if mail.documentInstance is not None:
+        cron = mail.mop.player.cron
+        document = mail.documentInstance.document
+        cronDocumentInstance = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
 
 
 def analyzeSentMail(mail):

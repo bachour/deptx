@@ -5,7 +5,7 @@ from models import Mail, RequisitionInstance
 class MailForm(ModelForm):
     class Meta:
         model = Mail
-        fields = ['unit', 'subject', 'requisitionInstance' ]
+        fields = ['unit', 'subject', 'requisitionInstance', 'documentInstance' ]
         
 class RequisitionInstanceForm(ModelForm):
     class Meta:

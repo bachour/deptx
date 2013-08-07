@@ -1,8 +1,6 @@
 <h1>CRON HQ</h1>
 <p>logged in as {{user.username}}</p>
-<h2>These are the CRON men and women</h2>
 <ul>
-	{% for cron in crons %}
-		<li>{{cron.user.username}}</li> 
-	{% endfor %}
+	<li><a href="{% url 'cron_mission' %}">Current Mission</a></li>
+	<li><a href="">Archive</a></li>
 </ul>

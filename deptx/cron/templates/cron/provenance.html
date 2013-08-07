@@ -1,0 +1,16 @@
+<h1>Provenance Investigation in Progress...</h1>
+
+{% for document in document_list %}
+	Name: {{ document.name }}<br/>
+	Identification Number: {{ document.serial }} <br/>
+	{% if document.available %}
+		<img src="{{document.provenance.imagefile.url}}" width=200px><br/>
+	{% else %}
+		Document not available
+	{% endif %}
+	<hr/>
+{% endfor %}
+
+<form action="{% url 'cron_provenance' case.serial %}" method="post">{% csrf_token %}
+<input type="submit" value="Submit Report" name="submit" />
+</form>

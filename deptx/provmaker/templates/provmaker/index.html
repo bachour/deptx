@@ -1,0 +1,15 @@
+<h1>Play around with Prov</h1>
+<a href='{% url 'provmaker_example' 1 %}'>Episode 1: Overview</a><br/>
+<a href='{% url 'provmaker_example' 2 %}'>Episode 1: Emergency Call</a><br/>
+<a href='{% url 'provmaker_example' 3 %}'>Other test 1</a><br/>
+<a href='{% url 'provmaker_example' 4 %}'>Other test 2</a><br/>
+<h1>Documents with or without Prov</h1>
+{% for document in document_list %}
+	{{document.name}} - {% if document.provenance.pdBundle %}
+							<a href='{% url 'provmaker_provenance' 1 %}'>{{document.provenance.pdBundle}}</a>
+						{% endif %}<br/>
+{% endfor %}
+<h1>Existing Prov</h1>
+{% for pdbundle in pdbundle_list %}
+	<a href='{% url 'provmaker_provenance' pdbundle.id %}'>{{pdbundle}}</a><br/>
+{% endfor %}

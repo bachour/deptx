@@ -1,0 +1,18 @@
+<h1>{{ case.name }}</h1>
+<h2>Background</h2>
+{% include template_url %}
+<h2>Required Documents:</h2>
+<table>
+{% for document in document_list %}
+	<tr><td>
+		{% if document.available %}
+			available
+		{% else %}
+			required
+		{% endif %}		
+	</td>
+	<td>{{document.name}}</td><td>{{document.serial}}</td></tr>
+{% endfor %}
+</table>
+<h2>Investigate</h2>
+<a href="{% url "cron_provenance" case.serial %}">Check da provenance!</a>
