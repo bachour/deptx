@@ -18,7 +18,7 @@ from django.contrib.auth.forms import UserCreationForm
 from players.forms import MopForm
 
 from assets.models import Case, Mission
-from cron.models import CaseInstance, CronDocumentInstance
+from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 from mop.models import DocumentInstance
 
 def isCron(user):
@@ -102,8 +102,13 @@ def mopmaker(request):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission(request):
-    crontracker = request.user.cron.crontracker
-        
+    try:
+        crontracker = CronTracker.objects.get(cron=request.user.cron)
+    except CronTracker.DoesNotExist:
+        firstMission = Mission.objects.get(rank=0)
+        crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
+        crontracker.save()
+       
     #TODO remove magic numbers
     if request.method == 'POST':
         #progress 2 means the player needs to solve the cases and cannot progress just by pressing a button

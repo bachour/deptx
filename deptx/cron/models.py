@@ -6,10 +6,12 @@ from assets.models import Mission, Case, Document
 class CronTracker(models.Model):
     cron = models.OneToOneField(Cron)
     mission = models.ForeignKey(Mission)
-    progress = models.IntegerField()
+    progress = models.IntegerField(default=0)
     
     def __unicode__(self):
         return self.cron.user.username + " (" + self.mission.name + " " + str(self.progress) + ")"
+    
+    
 
 class CaseInstance(models.Model):
     case = models.ForeignKey(Case)
