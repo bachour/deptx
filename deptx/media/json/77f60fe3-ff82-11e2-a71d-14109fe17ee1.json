@@ -1,0 +1,162 @@
+{
+    "wasAssociatedWith": {
+        "_:id7": {
+            "prov:agent": "ex:derek", 
+            "prov:activity": "ex:compose"
+        }, 
+        "_:id8": {
+            "prov:agent": "ex:derek", 
+            "prov:activity": "ex:illustrate"
+        }
+    }, 
+    "wasDerivedFrom": {
+        "_:id15": {
+            "prov:usedEntity": "ex:article", 
+            "prov:generatedEntity": "ex:blogEntry", 
+            "prov:type": {
+                "type": "xsd:QName", 
+                "$": "prov:Quotation"
+            }
+        }, 
+        "_:id14": {
+            "prov:usedEntity": "ex:dataSet2", 
+            "prov:generatedEntity": "ex:chart2"
+        }, 
+        "_:id17": {
+            "prov:usedEntity": "ex:dataSet1", 
+            "prov:generatedEntity": "ex:articleV1"
+        }, 
+        "_:id19": {
+            "prov:usedEntity": "ex:dataSet2", 
+            "prov:generatedEntity": "ex:articleV2"
+        }, 
+        "_:id13": {
+            "prov:usedEntity": "ex:dataSet1", 
+            "prov:generatedEntity": "ex:dataSet2", 
+            "prov:type": {
+                "type": "xsd:QName", 
+                "$": "prov:Revision"
+            }
+        }
+    }, 
+    "used": {
+        "_:id4": {
+            "prov:entity": "ex:composition", 
+            "prov:activity": "ex:illustrate"
+        }, 
+        "_:id12": {
+            "prov:entity": "ex:dataSet1", 
+            "prov:activity": "ex:correct"
+        }, 
+        "_:id1": {
+            "prov:role": {
+                "type": "xsd:QName", 
+                "$": "ex:dataToCompose"
+            }, 
+            "prov:entity": "ex:dataSet1", 
+            "prov:activity": "ex:compose"
+        }, 
+        "_:id2": {
+            "prov:role": {
+                "type": "xsd:QName", 
+                "$": "ex:regionsToAggregateBy"
+            }, 
+            "prov:entity": "ex:regionList", 
+            "prov:activity": "ex:compose"
+        }
+    }, 
+    "actedOnBehalfOf": {
+        "_:id9": {
+            "prov:responsible": "ex:chartgen", 
+            "prov:delegate": "ex:derek", 
+            "prov:activity": "ex:compose"
+        }
+    }, 
+    "wasAttributedTo": {
+        "_:id10": {
+            "prov:entity": "ex:chart1", 
+            "prov:agent": "ex:derek"
+        }
+    }, 
+    "agent": {
+        "ex:derek": {
+            "foaf:givenName": "Derek", 
+            "prov:type": {
+                "type": "xsd:QName", 
+                "$": "prov:Person"
+            }, 
+            "foaf:mbox": "mailto:derek@example.org"
+        }, 
+        "ex:chartgen": {
+            "foaf:name": "Chart Generators Inc", 
+            "prov:type": {
+                "type": "xsd:QName", 
+                "$": "prov:Organization"
+            }
+        }
+    }, 
+    "entity": {
+        "ex:article": {
+            "dcterms:title": "Crime rises in cities"
+        }, 
+        "ex:blogEntry": {}, 
+        "ex:chart2": {}, 
+        "ex:chart1": {}, 
+        "ex:dataSet1": {}, 
+        "ex:dataSet2": {}, 
+        "ex:composition": {}, 
+        "ex:regionList": {}, 
+        "ex:articleV1": {}, 
+        "ex:articleV2": {}
+    }, 
+    "prefix": {
+        "foaf": "http://xmlns.com/foaf/0.1/", 
+        "dcterms": "http://purl.org/dc/terms/", 
+        "ex": "http://example/"
+    }, 
+    "alternateOf": {
+        "_:id20": {
+            "prov:alternate1": "ex:articleV2", 
+            "prov:alternate2": "ex:articleV1"
+        }
+    }, 
+    "activity": {
+        "ex:compile": {}, 
+        "ex:correct": {
+            "prov:startTime": "2012-03-31T09:21:00", 
+            "prov:endTime": "2012-04-01T15:21:00"
+        }, 
+        "ex:compose": {}, 
+        "ex:illustrate": {}, 
+        "ex:compile2": {}
+    }, 
+    "specializationOf": {
+        "_:id16": {
+            "prov:generalEntity": "ex:article", 
+            "prov:specificEntity": "ex:articleV1"
+        }, 
+        "_:id18": {
+            "prov:generalEntity": "ex:article", 
+            "prov:specificEntity": "ex:articleV2"
+        }
+    }, 
+    "wasGeneratedBy": {
+        "_:id5": {
+            "prov:entity": "ex:chart1", 
+            "prov:activity": "ex:illustrate"
+        }, 
+        "_:id6": {
+            "prov:time": "2012-03-02T10:30:00", 
+            "prov:entity": "ex:chart1", 
+            "prov:activity": "ex:compile"
+        }, 
+        "_:id11": {
+            "prov:entity": "ex:dataSet2", 
+            "prov:activity": "ex:correct"
+        }, 
+        "_:id3": {
+            "prov:entity": "ex:composition", 
+            "prov:activity": "ex:compose"
+        }
+    }
+}

@@ -7,12 +7,14 @@ from django.template import RequestContext
 from assets.models import Document, Provenance
 from persistence.models import PDBundle
 
-from assets.models import GRAPH_FOLDER
+from assets.models import GRAPH_FOLDER, JSON_FOLDER
 from deptx.settings import MEDIA_ROOT
 from prov.model.graph import prov_to_file
 from deptx.helpers import generateUUID
 from prov_tests import *
 
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
 
 def index(request):
     document_list = Document.objects.all()
@@ -47,12 +49,19 @@ def example(request, test_id):
 def render_prov(request, g):
     
     #TODO file is regenerated every time under a different name
-    filename = generateUUID() + ".png"
+    
+    fileid = generateUUID()
+    imagename = fileid + ".png"
     path = MEDIA_ROOT + "/" + GRAPH_FOLDER
-    prov_to_file(g, path + filename, use_labels=False, show_element_attributes=False, show_relation_attributes=False)
-    imageurl = GRAPH_FOLDER + filename
+    prov_to_file(g, path + imagename, use_labels=False, show_element_attributes=False, show_relation_attributes=False)
+    imageurl = GRAPH_FOLDER + imagename
     
     json_str = g.get_provjson(indent=4)
     
-    return render(request, 'provmaker/provenance.html', {'pdbundle':g, 'json_str':json_str, 'imageurl':imageurl},
+    jsonname = fileid + ".json"
+    jsonurl = JSON_FOLDER + jsonname
+    with open(MEDIA_ROOT + "/" + JSON_FOLDER + jsonname, "w") as text_file:
+        text_file.write(json_str)
+    
+    return render(request, 'provmaker/provenance.html', {'pdbundle':g, 'json_str':json_str, 'imageurl':imageurl, 'jsonurl':jsonurl},
                   context_instance=RequestContext(request))

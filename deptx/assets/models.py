@@ -4,6 +4,7 @@ from deptx.helpers import generateUUID
 from persistence.models import PDBundle
 
 GRAPH_FOLDER = "graphs/"
+JSON_FOLDER = "json/"
 
 class Unit(models.Model):
     name = models.CharField(max_length=256)
