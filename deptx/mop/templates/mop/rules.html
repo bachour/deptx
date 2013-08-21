@@ -1,3 +1,7 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>Rules</h1>
 <h2>Tasks</h2>
 <p>
@@ -33,4 +37,6 @@ The following forms are currently available:
 	<tr><td>{{req.unit.name}} ({{req.unit.serial}})</td><td>{{req.name}}</td><td>{{req.description}}</td><td>{{req.serial}}</td><td>{{req.trust}}</td></tr>
 {% endfor %}
 </table>
+
+{% endblock %}
 

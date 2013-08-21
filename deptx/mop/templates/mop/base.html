@@ -1,0 +1,26 @@
+{% load staticfiles %}
+<head>
+<link rel="stylesheet" type="text/css" href="{% static "mop/mop.css" %}">
+</head>
+
+<body>
+
+<div class="header">
+<marquee behavior="scroll" direction="left">
+<span class="marquee"></span>
+<span class="marquee">MoP - Proudly watching you since 1872</span>
+<span class="marquee">MoP - Putting the form back into information</span>
+<span class="marquee">MoP - He who controls the past controls the future. He who controls the present controls the past.</span>
+<span class="marquee">MoP - War is peace. Freedom is slavery. Ignorance is strength.</span>
+<span class="marquee">MoP - Keep calm and carry on.</span>
+<span class="marquee">MoP - The need is great, the time is short, PROVENANCE must be the watchword.</span>
+</marquee>
+</div>
+
+<div class="main">
+
+{% block content %}
+{% endblock %}
+
+</div>
+</body>

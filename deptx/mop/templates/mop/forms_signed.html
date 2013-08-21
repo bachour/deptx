@@ -1,6 +1,12 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>Signed Forms</h1>
 <table>
 {% for reqInstance in requisitionInstance_list %}
 	<tr><td>{{reqInstance.blank.requisition.name}}</td><td>{{recInstance.blank.requisition.serial}}</td><td>{{reqInstance.blank.requisition.unit.name}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
 {% endfor %}
 </table>
+
+{% endblock %}

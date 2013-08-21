@@ -1,5 +1,23 @@
 body {
+	background-color:#333;
 	font-family:courier, sans-serif;
-	background-color:black;
 	color:#0f0;
+}
+
+div.main {
+	background-color:black;
+	margin:25px;
+	padding:25px;
+	padding-top:10px;
+	border:8px double #0f0;
+}
+
+div.footer {
+	text-align:right;
+	margin-top:-20px;
+	margin-right:25px;
+}
+
+a {
+	color:inherit;
 }

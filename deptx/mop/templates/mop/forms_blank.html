@@ -1,3 +1,7 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>Blank Forms</h1>
 <h2>There's no inFORMation without a form</h2>
 <table>
@@ -5,3 +9,5 @@
 	<tr><td><a href="{% url 'mop_forms_fill' blank.id %}">(fill in)</a></td><td>{{blank.requisition.name}}</td><td>{{blank.requisition.serial}}</td><td>{{blank.requisition.unit.name}}</td></tr>
 {% endfor %}
 </table>
+
+{% endblock %}

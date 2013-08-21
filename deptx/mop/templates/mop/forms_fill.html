@@ -1,3 +1,7 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>{{reqBlank.requisition.name}}</h1>
 <h2>{{reqBlank.requisition.unit.name}}</h2>
 <form method="post" action="">
@@ -6,3 +10,5 @@
 	
 	<input type="submit" value="Sign form" />	
 </form>
+
+{% endblock %}

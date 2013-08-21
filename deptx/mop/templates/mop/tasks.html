@@ -1,3 +1,7 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>Current Tasks</h1>
 <h3>Friendly advice: Gain more trust to gain more tasks!</h3>
 <h2>Active tasks</h2>
@@ -22,3 +26,5 @@
 	<tr><td>{{task.unit.name}}</td><td>{{task.name}}</td><td>{{task.description}}</td><td>{{task.serial}}</td></tr>
 {% endfor %}
 </table>
+
+{% endblock %}

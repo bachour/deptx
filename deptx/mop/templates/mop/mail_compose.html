@@ -1,5 +1,11 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h2>Compose Message:</h2>
 <form action="{% url 'mop_mail_compose' %}" method="post">{% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Send" name="send" /><input type="submit" value="Save as draft" name="draft" />
 </form>
+
+{% endblock %}

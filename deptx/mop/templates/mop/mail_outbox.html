@@ -1,3 +1,7 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>Outbox</h1>
 <table>
 <tr><th></th><th>Subject</th><th>From</th><th>Date</th><th></th></tr>
@@ -6,3 +10,4 @@
 {% endfor %}
 </table>
 
+{% endblock %}

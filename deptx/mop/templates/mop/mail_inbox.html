@@ -1,3 +1,7 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
 <h1>Inbox</h1>
 <table>
 <tr><th></th><th>Subject</th><th>From</th><th>Date</th><th></th></tr>
@@ -5,4 +9,6 @@
 	<tr {% if not mail.read %} style="font-weight:bold" {% endif %}><td><a href="{% url 'mop_mail_view' mail.id %}">(view)</a></td><td>{{ mail.get_subject_display }}</td><td>{{ mail.unit.name }}</td><td>{{ mail.date }}</td><td><a href="{% url 'mop_mail_trashing' mail.id %}">(trash)</a></td></tr>
 {% endfor %}
 </table>
+
+{% endblock %}
 

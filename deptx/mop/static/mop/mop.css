@@ -1,0 +1,41 @@
+body {
+	background-color:white;
+	font-family:Georgia, serif;
+	color:#006;
+}
+
+div.main {
+	background-color:#ddd;
+	margin:25px;
+	padding:25px;
+	padding-top:10px;
+	border:4px solid #006;
+	border-radius:25px;
+	background-image:url(logo-mop-bg.png);
+	background-size:320px;
+	background-repeat:no-repeat;
+	background-position:98% 2%;
+	min-height:600px; 
+}
+
+div.header {
+	text-align:right;
+	margin-right:50px;
+	margin-bottom:-20px;
+}
+
+span.marquee {
+	margin-right:666px;
+}
+
+div.logo {
+	text-align:right;
+}
+
+img.logo {
+	width:300px;
+}
+
+a {
+	color:inherit;
+}
