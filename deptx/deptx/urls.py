@@ -7,7 +7,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Examples:
-    # url(r'^$', 'deptx.views.home', name='home'),
+    url(r'^$', 'deptx.views.index', name='deptx_index'),
     # url(r'^deptx/', include('deptx.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:

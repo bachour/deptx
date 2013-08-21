@@ -7,6 +7,9 @@ from forms import PlayerForm
 from django.contrib.auth.forms import UserCreationForm
 from models import Cron
 
+def index(request):
+    return render(request, 'players/index.html')
+
 def register(request):
     if request.method == 'POST':
         player_form = PlayerForm(request.POST, prefix="player")
