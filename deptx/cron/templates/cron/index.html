@@ -1,6 +1,12 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
 <h1>CRON HQ</h1>
 <p>logged in as {{user.username}}</p>
 <ul>
 	<li><a href="{% url 'cron_mission' %}">Current Mission</a></li>
 	<li><a href="">Archive</a></li>
 </ul>
+
+{% endblock %}

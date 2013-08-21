@@ -7,3 +7,4 @@ local_settings.py
 *.db
 deptx/media
 deptx/assets/fixtures
+deptx/static

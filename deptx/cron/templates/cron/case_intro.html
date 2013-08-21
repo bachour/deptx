@@ -1,3 +1,7 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
 <h1>{{ case.name }}</h1>
 <h2>Background</h2>
 {% include template_url %}
@@ -16,3 +20,5 @@
 </table>
 <h2>Investigate</h2>
 <a href="{% url "cron_provenance" case.serial %}">Check da provenance!</a>
+
+{% endblock %}

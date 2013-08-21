@@ -1,3 +1,7 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
 <h1>{{mission.name}}</h1>
 
 {% include template_url %}
@@ -5,3 +9,5 @@
 <form action="{% url 'cron_mission' %}" method="post">{% csrf_token %}
 <input type="submit" value="Proceed" name="proceed" />
 </form>
+
+{% endblock %}

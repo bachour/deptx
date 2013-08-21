@@ -102,6 +102,8 @@ def mopmaker(request):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission(request):
+    
+    #TODO: mission texts should come from the database and not from the file system! As otherwise they would need to be checked in...
     try:
         crontracker = CronTracker.objects.get(cron=request.user.cron)
     except CronTracker.DoesNotExist:
