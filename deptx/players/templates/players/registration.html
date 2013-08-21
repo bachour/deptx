@@ -5,7 +5,7 @@
 
 {% else %}
 	<h2>Personal:</h2>
-	<form action="/players/registration/" method="post">{% csrf_token %}
+	<form action="{% url 'players_registration' %}" method="post">{% csrf_token %}
 	{{ player_form.as_p }}
 	<h2>Cron:</h2>
 	{{ user_form.as_p }}
