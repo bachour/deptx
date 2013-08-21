@@ -8,12 +8,20 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'DocumentInstance'
+        db.create_table(u'mop_documentinstance', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('document', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Document'])),
+            ('mop', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Mop'])),
+        ))
+        db.send_create_signal(u'mop', ['DocumentInstance'])
+
         # Adding model 'TaskInstance'
         db.create_table(u'mop_taskinstance', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('task', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Task'])),
             ('mop', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Mop'])),
-            ('state', self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('state', self.gf('django.db.models.fields.IntegerField')(default=2)),
         ))
         db.send_create_signal(u'mop', ['TaskInstance'])
 
@@ -47,11 +55,15 @@ class Migration(SchemaMigration):
             ('state', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('type', self.gf('django.db.models.fields.IntegerField')()),
             ('requisitionInstance', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['mop.RequisitionInstance'], null=True, blank=True)),
+            ('documentInstance', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['mop.DocumentInstance'], null=True, blank=True)),
         ))
         db.send_create_signal(u'mop', ['Mail'])
 
 
     def backwards(self, orm):
+        # Deleting model 'DocumentInstance'
+        db.delete_table(u'mop_documentinstance')
+
         # Deleting model 'TaskInstance'
         db.delete_table(u'mop_taskinstance')
 
@@ -66,13 +78,38 @@ class Migration(SchemaMigration):
 
 
     models = {
+        u'assets.case': {
+            'Meta': {'object_name': 'Case'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'mission': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Mission']"}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'rank': ('django.db.models.fields.IntegerField', [], {}),
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'da8b56cf-0a6f-11e3-808b-14109fe17ee1'", 'max_length': '36'})
+        },
+        u'assets.document': {
+            'Meta': {'object_name': 'Document'},
+            'case': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Case']"}),
+            'content': ('django.db.models.fields.TextField', [], {}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'da8b61e6-0a6f-11e3-b671-14109fe17ee1'", 'max_length': '36'}),
+            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Task']"}),
+            'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
+        },
+        u'assets.mission': {
+            'Meta': {'object_name': 'Mission'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'rank': ('django.db.models.fields.IntegerField', [], {})
+        },
         u'assets.requisition': {
             'Meta': {'object_name': 'Requisition'},
             'category': ('django.db.models.fields.IntegerField', [], {}),
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'isInitial': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd7d119-eafe-11e2-9d9d-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'da8c44c7-0a6f-11e3-a360-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
@@ -81,7 +118,7 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd88edc-eafe-11e2-a32f-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'da8c0d59-0a6f-11e3-9455-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
@@ -91,7 +128,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'isAdministrative': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd7e535-eafe-11e2-bce0-14109fe17ee1'", 'max_length': '36'})
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'da8bf75c-0a6f-11e3-a317-14109fe17ee1'", 'max_length': '36'})
         },
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
@@ -129,10 +166,17 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
+        u'mop.documentinstance': {
+            'Meta': {'object_name': 'DocumentInstance'},
+            'document': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Document']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"})
+        },
         u'mop.mail': {
             'Meta': {'object_name': 'Mail'},
             'body': ('django.db.models.fields.TextField', [], {}),
             'date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'documentInstance': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['mop.DocumentInstance']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
             'read': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -160,7 +204,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'TaskInstance'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
-            'state': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'state': ('django.db.models.fields.IntegerField', [], {'default': '2'}),
             'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Task']"})
         },
         u'players.mop': {
@@ -176,7 +220,7 @@ class Migration(SchemaMigration):
             'lastname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'marital': ('django.db.models.fields.IntegerField', [], {}),
             'player': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Player']"}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'5fd83a80-eafe-11e2-9bcb-14109fe17ee1'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'da8b4328-0a6f-11e3-bfaf-14109fe17ee1'", 'max_length': '36'}),
             'trust': ('django.db.models.fields.IntegerField', [], {'default': '30'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'}),
             'weight': ('django.db.models.fields.IntegerField', [], {})

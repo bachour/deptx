@@ -20,7 +20,7 @@ from mop.forms import MailForm, RequisitionInstanceForm
 
 from prov.model import ProvBundle, Namespace, Literal, PROV, XSD, Identifier
 import datetime
-from persistence.models import save_bundle
+#from persistence.models import save_bundle
 from prov.model.graph import prov_to_file
 from deptx.helpers import generateUUID
 from deptx.settings import MEDIA_ROOT

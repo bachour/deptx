@@ -1,7 +1,6 @@
 from django.db import models
 
 from deptx.helpers import generateUUID
-from persistence.models import PDBundle
 
 GRAPH_FOLDER = "graphs/"
 JSON_FOLDER = "json/"
@@ -79,12 +78,12 @@ class Document(models.Model):
     def __unicode__(self):
         return self.name
 
-class Provenance(models.Model):
-    document = models.OneToOneField(Document)
-    pdBundle = models.OneToOneField(PDBundle)
-    imagefile = models.ImageField(upload_to="graphs/", blank=True, null=True)
-    
-    def __unicode__(self):
-        return "Provenance of " + self.document.name
+#class Provenance(models.Model):
+#    document = models.OneToOneField(Document)
+#    pdBundle = models.OneToOneField(PDBundle)
+#    imagefile = models.ImageField(upload_to="graphs/", blank=True, null=True)
+#   
+#    def __unicode__(self):
+#        return "Provenance of " + self.document.name
         
 

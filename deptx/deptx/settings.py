@@ -14,7 +14,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '/Users/rvw/Documents/Nottingham/deptx/deptx/deptx/sqlite.db',                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(os.path.dirname(__file__), 'deptx.db'),                       # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': 'admin',
         'PASSWORD': '123',
@@ -35,7 +35,7 @@ TIME_ZONE = 'Europe/London'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
 SITE_ID = 1
 
@@ -64,7 +64,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = os.path.join(os.path.dirname(__file__), '../static')
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -127,14 +127,12 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     
     'south', # for db migration
-    
-    'persistence', # for provenance
+
     'players',
     'mop',
     'cron',
     'assets',
-    'provmaker',
-    
+        
     
 )
 
