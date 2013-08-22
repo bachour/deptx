@@ -240,14 +240,14 @@ def mail_compose(request):
                 analyzeDraftMail(mail)
             return redirect('mop_index')
         else:
-            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
             form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
             form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
-        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
         form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
         form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
@@ -278,14 +278,14 @@ def mail_edit(request, mail_id):
                 analyzeDraftMail(mail)
             return redirect('mop_index')
         else:
-            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
             form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm(instance=mail)
         #TODO same with documents at all occurences
-        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
         form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
 
@@ -304,6 +304,10 @@ def analyzeSentMail(mail):
     newMail.type = Mail.TYPE_RECEIVED
     newMail.unit = mail.unit
     newMail.mop = mail.mop
+    
+    if mail.requisitionInstance is not None:
+        mail.requisitionInstance.used = True
+        mail.requisitionInstance.save()
    
     #TODO Send proper error messages for all potential errors. 
     if mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
@@ -423,7 +427,8 @@ def form_fill(request, reqBlank_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def forms_signed(request):
-    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).order_by("-date")
-    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
+    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-date")
+    requisitionInstance_used_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-date")
+    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
 
 

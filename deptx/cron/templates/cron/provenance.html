@@ -8,15 +8,30 @@
 	Name: {{ document.name }}<br/>
 	Identification Number: {{ document.serial }} <br/>
 	{% if document.available %}
+		Document available<br/>
 		<img src="{{document.provenance.imagefile.url}}" width=200px><br/>
 	{% else %}
-		Document not available
+		<span style="color:red">Document not available</span>
 	{% endif %}
 	<hr/>
 {% endfor %}
 
-<form action="{% url 'cron_provenance' case.serial %}" method="post">{% csrf_token %}
-<input type="submit" value="Submit Report" name="submit" />
-</form>
+{% if canSubmitReport %}
+	<form action="{% url 'cron_provenance' case.serial %}" method="post">{% csrf_token %}
+	<input type="submit" value="Submit Report" name="submit" />
+	</form>
+{% else %}
+	<p>
+	You first neeed all documents before you can submit a report. Please login to MoP, request the missing documents, create a draft message and attach the document for each of them.<br/>
+	Our secret hackers will then be able to acquire the documents and provide them for you here.<br/>
+	Good luck!
+	</p>
+	<p>
+	Or you could cheat, for now...
+	<form action="{% url 'cron_provenance' case.serial %}" method="post">{% csrf_token %}
+	<input type="submit" value="Cheat" name="submit" />
+	</form>
+	</p>
+{% endif %}
 
 {% endblock %}

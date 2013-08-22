@@ -1,0 +1,27 @@
+body {
+	background-color:#630;
+	font-family:Palatino, serif;
+	color:#630;
+}
+
+div.main {
+	background-color:#ff9900;
+	margin:25px;
+	padding:25px;
+	padding-top:10px;
+	border:8px dotted #630;
+	border-radius:25px;
+	width:500px;
+
+}
+
+div.header {
+	text-align:right;
+	margin-right:50px;
+	margin-bottom:-20px;
+}
+
+
+a {
+	color:inherit;
+}

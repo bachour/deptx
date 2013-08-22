@@ -110,6 +110,8 @@ def mission(request):
         firstMission = Mission.objects.get(rank=0)
         crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
         crontracker.save()
+    
+    print crontracker.progress
        
     #TODO remove magic numbers
     if request.method == 'POST':
@@ -132,6 +134,8 @@ def mission(request):
             try:
                 caseInstance = CaseInstance.objects.get(case=case)
                 case.solved = caseInstance.solved
+                if not case.solved:
+                    unfinished = True
             except CaseInstance.DoesNotExist:
                 unfinished = True
         
@@ -202,8 +206,14 @@ def provenance(request, serial):
         return redirect('cron_case_detail', serial)
     
     document_list = getAllDocumentStates(request.user.cron, case)
+    canSubmitReport = True
+    for document in document_list:
+        if not document.available:
+            canSubmitReport = False
+            break
+            
     
-    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list },
+    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "canSubmitReport": canSubmitReport },
                                         context_instance=RequestContext(request)
                                 )
 
@@ -213,8 +223,10 @@ def getAllDocumentStates(cron, case):
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
             
     for required in requiredDocuments:
+        required.available = False
         for available in availableDocumentInstances:
             if (required==available.document):
                 required.available = True
+
     
     return requiredDocuments

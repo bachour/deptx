@@ -9,4 +9,11 @@
 {% endfor %}
 </table>
 
+<h1>Used Forms</h1>
+<table>
+{% for reqInstance in requisitionInstance_used_list %}
+	<tr><td>{{reqInstance.blank.requisition.name}}</td><td>{{recInstance.blank.requisition.serial}}</td><td>{{reqInstance.blank.requisition.unit.name}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
+{% endfor %}
+</table>
+
 {% endblock %}
