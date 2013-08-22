@@ -1,3 +1,7 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
 <h1>{{user.username}}!</h1>
 <p>Please create your MOP account!</p>
 <form action="{% url 'cron_mopmaker' %}" method="post">{% csrf_token %}
@@ -5,3 +9,5 @@
 {{ user_form.as_p }}	
 <input type="submit" value="Submit" />
 </form>
+
+{% endblock content %}

@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     url(r'^cron/', include('cron.urls')),
     url(r'^mop/', include('mop.urls')),
     url(r'^players/', include('players.urls')),
+    url(r'^gamecity/', include('gamecity.urls')),
     #url(r'^provmaker/', include('provmaker.urls')),
     
 )
