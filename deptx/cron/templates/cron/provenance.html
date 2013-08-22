@@ -8,7 +8,9 @@
 	Name: {{ document.name }}<br/>
 	Identification Number: {{ document.serial }} <br/>
 	{% if document.available %}
-		Document available<br/>
+		<div>
+		{{document.content|linebreaksbr}}
+		</div>
 		<img src="{{document.provenance.imagefile.url}}" width=200px><br/>
 	{% else %}
 		<span style="color:red">Document not available</span>

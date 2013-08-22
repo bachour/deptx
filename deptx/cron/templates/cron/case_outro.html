@@ -3,7 +3,9 @@
 {% block content %}
 
 <h1>{{ case.name }}</h1>
-{% include template_url %}
+
+{{text}}
+
 <a href="{% url 'cron_mission' %}">Mission overview</a>
 
 {% endblock %}

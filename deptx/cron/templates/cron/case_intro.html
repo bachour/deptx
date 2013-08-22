@@ -4,18 +4,17 @@
 
 <h1>{{ case.name }}</h1>
 <h2>Background</h2>
-{% include template_url %}
+{{ text }}
 <h2>Required Documents:</h2>
 <table>
 {% for document in document_list %}
-	<tr><td>
-		{% if document.available %}
-			available
-		{% else %}
-			required
-		{% endif %}		
-	</td>
-	<td>{{document.name}}</td><td>{{document.serial}}</td></tr>
+	<tr>
+		<th>document</th>
+		<th>responsible unit</th>
+		<th>identification number</th>
+	</tr>
+	<tr>
+	<td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
 {% endfor %}
 </table>
 <h2>Investigate</h2>

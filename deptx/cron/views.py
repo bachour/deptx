@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Cron, Mop
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.template import Context, Template
 
 from players.forms import MopForm
 
@@ -85,7 +86,7 @@ def mopmaker(request):
             crontracker.save()
             return redirect('cron_mission')
         else:
-            return render_to_response(   'cron/mission_0/2.html',
+            return render_to_response(   'cron/mopmaker.html',
                                         {"mop_form": mop_form, "user_form": user_form, "user": request.user},
                                         context_instance=RequestContext(request)
                                         )
@@ -93,7 +94,7 @@ def mopmaker(request):
     else:
         mop_form = MopForm(prefix="mop")
         user_form = UserCreationForm(prefix="user")
-        return render_to_response(  'cron/mission_0/2.html',
+        return render_to_response(  'cron/mopmaker.html',
                                     {"mop_form": mop_form, "user_form": user_form, "user": request.user},
                                     context_instance=RequestContext(request)
                                 )
@@ -110,8 +111,6 @@ def mission(request):
         firstMission = Mission.objects.get(rank=0)
         crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
         crontracker.save()
-    
-    print crontracker.progress
        
     #TODO remove magic numbers
     if request.method == 'POST':
@@ -152,13 +151,30 @@ def mission(request):
         finishMission(crontracker)
         return redirect('cron_index')
     else:
-        folder = "mission_" + str(crontracker.mission.rank) + "/"
-        snippet = str(crontracker.progress) + ".html"
-        template_url = "cron/" + folder + snippet
+        if crontracker.progress == 0:
+            content = crontracker.mission.intro
+        elif crontracker.progress == 1:
+            content = crontracker.mission.briefing
+        elif crontracker.progress == 3:
+            content = crontracker.mission.debriefing
+        elif crontracker.progress == 4:
+            content = crontracker.mission.outro
+        
+        text = renderContent(content, request.user)
+                   
+        return render_to_response('cron/mission.html', {"user": request.user, "mission": crontracker.mission, "text":text},
+                                         context_instance=RequestContext(request)
+                                 )
+
+def renderContent(content, user):
+
+    name = user.cron.user.username
     
-        return render_to_response('cron/mission.html', {"user": request.user, "mission": crontracker.mission, "template_url": template_url},
-                                        context_instance=RequestContext(request)
-                                )
+    t = Template(content)
+    c = Context({"name":name})
+    
+    return t.render(c)
+
 def finishMission(crontracker):
     currentMission = crontracker.mission
     newRank = currentMission.rank + 1
@@ -174,18 +190,21 @@ def case(request, serial):
     case = Case.objects.get(serial=serial)
     crontracker = request.user.cron.crontracker
     caseInstance, created = CaseInstance.objects.get_or_create(case=case, crontracker=crontracker)
-    
-    url = "cron/mission_" + str(case.mission.rank) + "/cases/" + str(case.rank) + "_"
+
     
     if not (caseInstance.solved):
-        template_url = url + "intro.html"
+        content = case.intro
+        text = renderContent(content, request.user)
+        
         requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-        return render_to_response('cron/case_intro.html', {"user": request.user, "case": case, "template_url": template_url, "document_list": requiredDocuments },
+        return render_to_response('cron/case_intro.html', {"user": request.user, "case": case, "document_list": requiredDocuments, "text":text },
                                         context_instance=RequestContext(request))
     else:
-        template_url = url + "outro.html"
-        return render_to_response('cron/case_outro.html', {"user": request.user, "case": case, "template_url": template_url, },
+        content = case.outro
+        text = renderContent(content, request.user)
+
+        return render_to_response('cron/case_outro.html', {"user": request.user, "case": case, "text": text},
                                         context_instance=RequestContext(request))
     
     
