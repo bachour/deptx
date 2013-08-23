@@ -132,8 +132,7 @@ INSTALLED_APPS = (
     'mop',
     'cron',
     'assets',
-    'gamecity',
-        
+       
     
 )
 

@@ -1,8 +1,10 @@
 from django.conf.urls import patterns, url
 
 from cron import views
+from players import views as players_views
 
 urlpatterns = patterns('',
+    url(r'registration/', players_views.register, name='players_registration'),
     url(r'^$', views.index, name='cron_index'),
     url(r'login/', views.login, name='cron_login'),
     url(r'mopmaker/', views.mopmaker, name='cron_mopmaker'),

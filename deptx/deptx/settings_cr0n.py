@@ -1,6 +1,7 @@
 from deptx.settings_production import *
 
-DEBUG = False 
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG 
 
 ROOT_URLCONF = 'deptx.urls_cr0n'
 
