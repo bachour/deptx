@@ -131,7 +131,7 @@ def document_provenance(request, documentInstance_id):
     #TODO: Put this code where the Provenance is being created
     provenance = documentInstance.document.provenance
     
-    json_str = getProvJson()
+    json_str = getProvJson(provenance)
     
     #g = provenance.pdBundle.get_prov_bundle()
             
