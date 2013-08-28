@@ -132,7 +132,7 @@ def mission(request):
         unfinished = False
         for case in case_list:
             try:
-                caseInstance = CaseInstance.objects.get(case=case)
+                caseInstance = CaseInstance.objects.get(case=case, crontracker=crontracker)
                 case.solved = caseInstance.solved
                 if not case.solved:
                     unfinished = True
