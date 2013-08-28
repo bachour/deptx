@@ -132,6 +132,7 @@ INSTALLED_APPS = (
     'mop',
     'cron',
     'assets',
+    'provmanager',
        
     
 )

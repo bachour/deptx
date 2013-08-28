@@ -26,6 +26,8 @@ from deptx.helpers import generateUUID
 from deptx.settings import MEDIA_ROOT
 from cron.models import CronDocumentInstance
 
+from provmanager.views import getProvJson
+
 def isMop(user):
     if user:
         for mop in Mop.objects.filter(user=user):
@@ -128,15 +130,18 @@ def document_provenance(request, documentInstance_id):
     #TODO: Currently the graph is newly generated everytime this view is called
     #TODO: Put this code where the Provenance is being created
     provenance = documentInstance.document.provenance
-    g = provenance.pdBundle.get_prov_bundle()
-            
-    filename = generateUUID() + ".png"
-    path = MEDIA_ROOT + "/" + GRAPH_FOLDER
-    prov_to_file(g, path + filename, use_labels=True)
-    provenance.imagefile = GRAPH_FOLDER + filename
-    provenance.save()
     
-    json_str = g.get_provjson(indent=4)
+    json_str = getProvJson()
+    
+    #g = provenance.pdBundle.get_prov_bundle()
+            
+    #filename = generateUUID() + ".png"
+    #path = MEDIA_ROOT + "/" + GRAPH_FOLDER
+    #prov_to_file(g, path + filename, use_labels=True)
+    #provenance.imagefile = GRAPH_FOLDER + filename
+    #provenance.save()
+    
+    #json_str = g.get_provjson(indent=4)
     
     return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'json_str':json_str})
 

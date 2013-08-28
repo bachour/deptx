@@ -1,0 +1,11 @@
+<h1>PROVmanager</h1>
+<a href="{% url 'provmanager_create' %}">create new provenance</a>
+<table>
+{% for provenance in provenance_list %}
+	<tr>
+		<td>
+			<a href="{% url 'provmanager_view' provenance.store_id %}">{{provenance.store_id}}</a>
+		</td>
+	</tr>
+{% endfor %}
+</table>

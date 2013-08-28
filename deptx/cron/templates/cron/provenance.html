@@ -11,7 +11,8 @@
 		<div>
 		{{document.content|linebreaksbr}}
 		</div>
-		<img src="{{document.provenance.imagefile.url}}" width=200px><br/>
+		<hr/>
+		{{document.json | linebreaks }}
 	{% else %}
 		<span style="color:red">Document not available</span>
 	{% endif %}

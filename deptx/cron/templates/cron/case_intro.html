@@ -7,13 +7,13 @@
 {{ text }}
 <h2>Required Documents:</h2>
 <table>
-{% for document in document_list %}
 	<tr>
 		<th>document</th>
 		<th>responsible unit</th>
 		<th>identification number</th>
 	</tr>
-	<tr>
+{% for document in document_list %}
+	<tr {% if not document.available %}class="missing"{% endif %}>
 	<td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
 {% endfor %}
 </table>

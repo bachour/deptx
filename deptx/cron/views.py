@@ -20,7 +20,8 @@ from players.forms import MopForm
 
 from assets.models import Case, Mission
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
-from mop.models import DocumentInstance
+
+from provmanager.views import getProvJson
 
 def isCron(user):
     if user:
@@ -230,6 +231,8 @@ def provenance(request, serial):
         if not document.available:
             canSubmitReport = False
             break
+        else:
+            document.json = getProvJson(document.provenance)
             
     
     return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "canSubmitReport": canSubmitReport },
@@ -238,8 +241,10 @@ def provenance(request, serial):
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()
+    print requiredDocuments
     #TODO when document is put in draft, add it to CronDocumentInstance
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
+    print availableDocumentInstances
             
     for required in requiredDocuments:
         required.available = False

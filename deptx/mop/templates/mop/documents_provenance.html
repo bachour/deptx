@@ -6,8 +6,9 @@
 
 Name: {{ documentInstance.document.name }}<br/>
 Identification Number: {{ documentInstance.document.serial }} <br/>
+<hr/>
 {{ json_str }}<br/>
-<img src="{{documentInstance.document.provenance.imagefile.url}}"><br/>
+
 
 {% endblock %}
 
