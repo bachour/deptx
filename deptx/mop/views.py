@@ -26,7 +26,7 @@ from deptx.helpers import generateUUID
 from deptx.settings import MEDIA_ROOT
 from cron.models import CronDocumentInstance
 
-from provmanager.views import getProvJson
+from provmanager.views import getProvJson, getProvSvg
 
 def isMop(user):
     if user:
@@ -131,7 +131,8 @@ def document_provenance(request, documentInstance_id):
     #TODO: Put this code where the Provenance is being created
     provenance = documentInstance.document.provenance
     
-    json_str = getProvJson(provenance)
+    json = getProvJson(provenance)
+    svg = getProvSvg(provenance)
     
     #g = provenance.pdBundle.get_prov_bundle()
             
@@ -143,7 +144,7 @@ def document_provenance(request, documentInstance_id):
     
     #json_str = g.get_provjson(indent=4)
     
-    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'json_str':json_str})
+    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'json':json, 'svg':svg})
 
 
 @login_required(login_url='mop_login')

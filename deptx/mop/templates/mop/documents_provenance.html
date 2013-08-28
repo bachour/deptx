@@ -2,13 +2,14 @@
 
 {% block content %}
 
-<h1>Provenance! The Holy Grail!</h1>
+<h1>Behold, Provenance!</h1>
 
 Name: {{ documentInstance.document.name }}<br/>
 Identification Number: {{ documentInstance.document.serial }} <br/>
 <hr/>
-{{ json_str }}<br/>
-
+<pre>{{svg|safe}}</pre>
+<hr/>
+<pre>{{json}}</pre>
 
 {% endblock %}
 

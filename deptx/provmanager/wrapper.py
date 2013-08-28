@@ -12,7 +12,7 @@ Example usage:
 
     # Writing a document
     prov_bundle = [some ProvBundle object]
-    document_id = api.submit_document(prov_bundle [, identifier="identifier for document", public=True])
+    document_id = api.submit_document(prov_bundle, identifier="identifier for document"[, public=True])
 
     # Reading a document as a prov.model.ProvBundle
     prov_bundle = api.get_document(document_id)
@@ -54,6 +54,10 @@ class ApiNotFoundError(ApiError):
     pass
 
 
+class ApiCannotConvertToTheRequestedFormat(ApiError):
+    pass
+
+
 class Api(object):
 
     def __init__(self, api_location=None, api_username=None, api_key=None):
@@ -81,14 +85,20 @@ class Api(object):
         if method:
             request.get_method = lambda: method
 
-        response = urllib2.urlopen(request)
-        response_code = response.getcode()
-        if response_code == 401:
-            raise ApiUnauthorizedError()
-        elif response_code == 400:
-            raise ApiBadRequestError()
-        elif response_code == 404:
-            raise ApiNotFoundError()
+        try:
+            response = urllib2.urlopen(request)
+        except urllib2.HTTPError as e:
+            response_code = e.code
+            if response_code == 401:
+                raise ApiUnauthorizedError()
+            elif response_code == 400:
+                raise ApiBadRequestError()
+            elif response_code == 404:
+                raise ApiNotFoundError()
+            elif response_code == 422:
+                raise ApiNotFoundError()
+            else:
+                raise
 
         response_string = response.read()
         if response_string or raw:
@@ -99,7 +109,7 @@ class Api(object):
         else:
             return True
 
-    def submit_document(self, prov_document, identifier=None, public=False):
+    def submit_document(self, prov_document, identifier, public=False):
         """Returns the ID of the newly inserted document"""
 
         data = {
@@ -111,18 +121,20 @@ class Api(object):
         response = self.request("documents/", data)
         return response['id']
 
-    def get_document(self, doc_id, format='json', raw=False):
+    def get_document(self, doc_id, format=None):
         """Returns a ProvBundle object of the document with the ID provided or raises ApiNotFoundError"""
 
-        response = self.request("documents/" + str(doc_id) + "." + format, raw=True)
+        extension = format if format is not None else 'json'
+        response = self.request("documents/%d.%s" % (doc_id, extension), raw=True)
 
-        if format == 'json' and not raw:
+        if format is None:
             # Try to decode it as a ProvBundle
             prov_document = ProvBundle()
             prov_document._decode_JSON_container(json.loads(response))
             return prov_document
-
-        return response
+        else:
+            # return the raw response
+            return response
 
     def get_document_meta(self, doc_id):
         """Returns a JSON object containing information about the document or raises ApiNotFoundError"""
@@ -138,7 +150,7 @@ class Api(object):
                  'rec_id': identifier
                }
 
-        self.request("documents/" + str(doc_id) + "/", data)
+        self.request("documents/" + str(doc_id) + "/bundles/", data)
         return True
 
     def delete_document(self, doc_id):

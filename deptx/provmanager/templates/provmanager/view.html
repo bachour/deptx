@@ -1,4 +1,8 @@
-<h1>{{provenance.store_id}}</h1>
-{{bundle | linebreaks}}
+<h1>{{provenance.name}} - {{provenance.store_id}}</h1>
+<pre>{{bundle}}</pre>
 <hr/>
-{{json_str | linebreaks}}
+<pre>{{xml}}</pre>
+<hr/>
+{{svg | safe}}
+<hr/>
+<pre>{{json}}</pre>

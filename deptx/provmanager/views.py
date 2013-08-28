@@ -8,6 +8,8 @@ from prov.model import ProvBundle
 
 from deptx.api import api_location, api_username, api_key
 
+import json
+
 api = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 
 
@@ -20,8 +22,11 @@ def index(request):
 def view(request, store_id):
     provenance = Provenance.objects.get(store_id=store_id)
     bundle = api.get_document(provenance.store_id)
-    json_str = bundle.get_provjson(indent=4)
-    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json_str':json_str})
+    svg = getProvSvg(provenance)
+    xml = api.get_document(provenance.store_id, format="xml")
+    json_str = getProvJson(provenance)
+
+    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg, 'xml':xml})
 
 def create(request):
     name = "random name"
@@ -34,8 +39,11 @@ def create(request):
     return HttpResponseRedirect(reverse('provmanager_index'))
 
 def getProvJson(provenance):
-    bundle = api.get_document(provenance.store_id)
-    json_str = bundle.get_provjson(indent=4)
-    return json_str
+    json_str = api.get_document(provenance.store_id, format="json")
+    parsed = json.loads(json_str)
+    return json.dumps(parsed, indent=4, sort_keys=True)
 
+def getProvSvg(provenance):
+    svg = api.get_document(provenance.store_id, format="svg")
+    return svg
     

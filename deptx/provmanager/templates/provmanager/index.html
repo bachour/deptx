@@ -4,7 +4,7 @@
 {% for provenance in provenance_list %}
 	<tr>
 		<td>
-			<a href="{% url 'provmanager_view' provenance.store_id %}">{{provenance.store_id}}</a>
+			<a href="{% url 'provmanager_view' provenance.store_id %}">{{provenance.name}} - {{provenance.store_id}}</a>
 		</td>
 	</tr>
 {% endfor %}

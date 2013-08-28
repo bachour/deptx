@@ -12,7 +12,9 @@
 		{{document.content|linebreaksbr}}
 		</div>
 		<hr/>
-		{{document.json | linebreaks }}
+		<pre>{{document.svg | safe}}</pre>
+		<hr/>
+		<pre>{{document.json}}</pre>
 	{% else %}
 		<span style="color:red">Document not available</span>
 	{% endif %}
