@@ -24,17 +24,14 @@ def view(request, store_id):
     return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json_str':json_str})
 
 def create(request):
+    name = "random name"
     bundle = ProvBundle()
     bundle.entity('crashed_car')
-    store_id = api.submit_document(bundle)
+    store_id = api.submit_document(bundle, name, public=False)
     
-    
-    provenance = Provenance(store_id=store_id)
+    provenance = Provenance(store_id=store_id, name=name)
     provenance.save()
     return HttpResponseRedirect(reverse('provmanager_index'))
-
-def getDefaultBundle():
-    return api.get_document(154)  
 
 def getProvJson(provenance):
     bundle = api.get_document(provenance.store_id)
