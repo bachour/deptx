@@ -8,3 +8,4 @@ local_settings.py
 deptx/media
 deptx/assets/fixtures
 deptx/static
+api.py
