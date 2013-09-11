@@ -7,9 +7,8 @@
 Name: {{ documentInstance.document.name }}<br/>
 Identification Number: {{ documentInstance.document.serial }} <br/>
 <hr/>
-<pre>{{svg|safe}}</pre>
-<hr/>
-<pre>{{json}}</pre>
+
+{% include 'provmanager/improve.html' %}
 
 {% endblock %}
 

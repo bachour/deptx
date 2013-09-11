@@ -144,7 +144,7 @@ def document_provenance(request, documentInstance_id):
     
     #json_str = g.get_provjson(indent=4)
     
-    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'json':json, 'svg':svg})
+    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'provenance': documentInstance.document.provenance, 'json':json, 'svg':svg})
 
 
 @login_required(login_url='mop_login')

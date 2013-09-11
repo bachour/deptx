@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 
 from provmanager.wrapper import Api
@@ -21,12 +21,14 @@ def index(request):
 
 def view(request, store_id):
     provenance = Provenance.objects.get(store_id=store_id)
-    bundle = api.get_document(provenance.store_id)
-    svg = getProvSvg(provenance)
-    xml = api.get_document(provenance.store_id, format="xml")
-    json_str = getProvJson(provenance)
+    #bundle = api.get_document(provenance.store_id)
+    #svg = getProvSvg(provenance)
+    #xml = api.get_document(provenance.store_id, format="xml")
+    #json_str = getProvJson(provenance)
 
-    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg, 'xml':xml})
+    #return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg, 'xml':xml})
+    return render(request, 'provmanager/improve.html', {'provenance': provenance})
+
 
 def create(request):
     name = "random name"
@@ -46,4 +48,11 @@ def getProvJson(provenance):
 def getProvSvg(provenance):
     svg = api.get_document(provenance.store_id, format="svg")
     return svg
+
+
+def improve(request, serial):
+    provenance = Provenance.objects.get(serial=serial)
+    json_str = getProvJson(provenance)
+    return HttpResponse(json_str, content_type="application/json")
+
     

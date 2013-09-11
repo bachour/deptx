@@ -225,18 +225,21 @@ def provenance(request, serial):
         caseInstance.save()
         return redirect('cron_case_detail', serial)
     
+    #TODO Each case can only have one document / provenance!
     document_list = getAllDocumentStates(request.user.cron, case)
     canSubmitReport = True
+    provenance_list = []
     for document in document_list:
         if not document.available:
             canSubmitReport = False
             break
         else:
-            document.json = getProvJson(document.provenance)
-            document.svg = getProvSvg(document.provenance)
+            #document.json = getProvJson(document.provenance)
+            #document.svg = getProvSvg(document.provenance)
+            provenance_list.append(document.provenance)
             
     
-    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "canSubmitReport": canSubmitReport },
+    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "provenance_list": provenance_list, "canSubmitReport": canSubmitReport },
                                         context_instance=RequestContext(request)
                                 )
 

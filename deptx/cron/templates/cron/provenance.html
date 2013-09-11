@@ -9,7 +9,7 @@
 	Identification Number: {{ document.serial }} <br/>
 	{% if document.available %}
 		<div>
-		{{document.content|linebreaksbr}}
+		Content: {{document.content|linebreaksbr}}
 		</div>
 		<hr/>
 		<pre>{{document.svg | safe}}</pre>
@@ -19,6 +19,10 @@
 		<span style="color:red">Document not available</span>
 	{% endif %}
 	<hr/>
+{% endfor %}
+
+{% for provenance in provenance_list %}
+	{% include 'provmanager/improve.html' %}
 {% endfor %}
 
 {% if canSubmitReport %}

@@ -1,0 +1,21 @@
+{% load staticfiles %}
+
+<div style="background-image:url({% static "provmanager/paper.jpg" %}); width:100%">
+   <audio id="click" preload="auto">
+    <source src="https://dl.dropboxusercontent.com/u/17451725/63532__florian-reinke__click2.wav" />  
+   </audio>
+ <p id="loading">Loading...</p>
+	<div id="container" ></div>
+    <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="{% static "provmanager/imPROVe.js"%}"></script>
+    <script>
+    
+      $.getJSON("{% url 'provmanager_improve' provenance.serial %}", function(json) {
+    	   loadJSONProv(json);
+    	   loadImages(initStage);
+    	 });
+      
+    </script>
+  </div>
+
