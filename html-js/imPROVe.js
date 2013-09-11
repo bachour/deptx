@@ -1,20 +1,23 @@
-// variable declarations
+// global variable declarations
+
+// graph nodes and edges
 var nodes = {}; // INPUT: collection of ProvNode objects indexed by name
 var edges = []; // INPUT: array of ProvLink objects.
 var sources = {}; // TEMP: collection of image URLs used for loading all images at once
 var images = {}; // TEMP: collection of images before being imported into nodes{}
 var lines = []; // PROCESS: array of connectors;
 
-
-
+//constants
 var MAX_TRANSLATE = 100; // default max for random horizontal and vertical shift in starting location
 var MAX_ANGLE = 20;		// default max for random starting angle for nodes
-var DEFAULT_WIDTH = 200; // default width for nodes
-var DEFAULT_SIZE = 40000;
 var STAGE_WIDTH = window.innerWidth;
 var STAGE_HEIGHT = window.innerHeight;
-var DEFAULT_X = STAGE_WIDTH/2 - DEFAULT_WIDTH/2;	// default starting location for nodes
+var DEFAULT_SIZE = STAGE_WIDTH*STAGE_HEIGHT/70;
+var DEFAULT_THUMB_SIZE = STAGE_WIDTH*STAGE_HEIGHT/90;
+var DEFAULT_X = 0.8*STAGE_WIDTH/2;	// default starting location for nodes
 var DEFAULT_Y = STAGE_HEIGHT/3;	// default starting location for nodes
+var LARGE_FONT = STAGE_WIDTH/60;
+var SMALL_FONT = LARGE_FONT*0.6;
 
 //zoom variables
 var currentZoom = 0;
@@ -24,7 +27,16 @@ var MIN_ZOOM = -0.5;
 //sounds
 var clickSound = document.getElementById('click');
 
+//main active layer.
+var layer;
+
+//selected Nodes
+var selectedNodes = {};
+var selectedNodeAttributes = {};
+var selectedAttributes = {};
+
 //Object declarations
+// graph node
 function ProvNode (type, id, ressource, attributes)
 {
 	this.type = type;
@@ -35,10 +47,16 @@ function ProvNode (type, id, ressource, attributes)
 	this.image = null;
 	this.edges = [];
 	
+	this.attribImage = null;
+	this.attribName = null;
+	this.attribValues = {};
+	this.attribNames = {};
+	
 	sources[id] = ressource;
 	nodes[id] = this;
 }
 
+// graph edge
 function ProvLink (id, from, to, type, role, attributes)
 {
 	this.id = id;
@@ -61,14 +79,15 @@ function ProvLink (id, from, to, type, role, attributes)
 	edges.push(this);
 }
 
+//Functions
 function loadImages(callback) { // and sounds
-    var loadedImages = 0;
-    var numImages = 0;
+     loadedImages = 0;
+     numImages = 0;
     
-    for(var name in sources) {
+    for(name in sources) {
       numImages++;
     }
-    for(var name in sources) {
+    for(name in sources) {
       images[name] = new Image();
       images[name].onload = function() {
         if(++loadedImages >= numImages) {
@@ -89,7 +108,7 @@ function initStage()
       });
 
 	// create Kinetic Images for all objects and put them in nodes
-	for (var name in sources)
+	for (name in sources)
 		{
 		  nodes[name].image = new Kinetic.Image({
 	        image: images[name],
@@ -106,27 +125,15 @@ function initStage()
 	        strokeWidth:5,
 	      });
 		  
-		  /*if (nodes[name].image.getWidth() > nodes[name].image.getHeight())
-			  {
-				  old_width = nodes[name].image.getWidth();
-				  nodes[name].image.setWidth(DEFAULT_WIDTH);
-				  nodes[name].image.setHeight(nodes[name].image.getHeight()*DEFAULT_WIDTH/old_width);
-			  }
-		  else
-		  {
-			  old_height = nodes[name].image.getHeight();
-			  nodes[name].image.setHeight(DEFAULT_WIDTH);
-			  nodes[name].image.setWidth(nodes[name].image.getWidth()*DEFAULT_WIDTH/old_height);
-		  }*/
 		  scale = Math.sqrt(1.0 * DEFAULT_SIZE / (nodes[name].image.getWidth()*nodes[name].image.getHeight()));
 		  nodes[name].image.setWidth(nodes[name].image.getWidth()*scale);
 		  nodes[name].image.setHeight(nodes[name].image.getHeight()*scale);
 		}
 	// create connectors for all edges
-	for (var i in edges)
+	for (i in edges)
 		{
-		   var edge = edges[i];
-		   var colour = 'black';
+		   edge = edges[i];
+		   colour = 'black';
 		   switch(edge.type)
 		   {
 		   case 'attributedTo':
@@ -138,7 +145,7 @@ function initStage()
 		   
 		   }
 		   
-		   var connector = new Kinetic.Line(
+		   connector = new Kinetic.Line(
             {
             	//set starting point for connector to by center points of linked images
   /*          	points: [edge.from.image.getX() + edge.from.image.getWidth()/2,
@@ -160,13 +167,16 @@ function initStage()
 		}
 	
 	// create layer and add all objects to layer
-	var layer = new Kinetic.Layer();
-	var attribLayer = new Kinetic.Layer();
+	layer = new Kinetic.Layer();
+	attribLayer = {};
+	attribLayer['1'] = new Kinetic.Layer();
+	attribLayer['2'] = new Kinetic.Layer();
+	allLayers = [layer,attribLayer['1'],attribLayer['2']];
 	// connectors first so they are behind images
-	for (var k in lines)
+	for (k in lines)
 		layer.add(lines[k]);
 	// add the nodes, and set up onDrag functions
-	for (var j in nodes)
+	for (j in nodes)
 	{
 		node = nodes[j];
 		layer.add(node.image);
@@ -177,8 +187,8 @@ function initStage()
         	offset =  this.getWidth()/Math.abs(Math.cos(this.getRotation()));
         	if (this.getRotation > 0)
         		offset += this.getHeight()*Math.abs(Math.sin(this.getRotation()));
-        	if (this.getX() + offset > 1600 - 1600*currentZoom)
-        		this.setX(1600 - 1600*currentZoom - offset);
+        	if (this.getX() + offset > 0.8*STAGE_WIDTH)
+        		this.setX( 0.8*STAGE_WIDTH - offset);
         	if (this.getRotation() > 0)
         		offset = this.getHeight()*Math.abs(Math.sin(this.getRotation()));
         	else offset = 0;
@@ -196,36 +206,38 @@ function initStage()
         	offset = this.getHeight()/Math.abs(Math.cos(this.getRotation()))
         	if (this.getRotation() > 0)	
         		offset += this.getWidth()*Math.abs(Math.sin(this.getRotation()));      
-        	if (this.getY() + offset > 950 - 950*currentZoom)
-        		this.setY(950 - 950*currentZoom - offset);
+        	if (this.getY() + offset > 0.95*STAGE_HEIGHT)
+        		this.setY(0.97*STAGE_HEIGHT - offset);
         	
-        	for (var n in nodes)
+        	for ( n in nodes)
         		if (nodes[n].image == evt.targetNode)
         			{
-        				var targetNode = nodes[n];
+        				 targetNode = nodes[n];
         			}
-        	for (var l in targetNode.edges)
+        	for ( l in targetNode.edges)
         		{
         			edge = targetNode.edges[l];
                 	edge.line.setPoints(getLinePoints(edge.from.image, edge.to.image));
         		}
         	layer.draw();
-        	attribLayer.draw();
+        	//attribLayer['1'].draw();
+        	//attribLayer['2'].draw();
         });
 	}
 		
 	// add mouseover effect for objects pointed at
     layer.on('mouseover', function(evt) {
-        var shape = evt.targetNode;
+         shape = evt.targetNode;
         if (shape && shape.isDraggable())
         {
         	document.body.style.cursor = 'pointer'; 
         	toggleHighlightShape(shape,true);
+
         	layer.draw();
         }
       });
       layer.on('mouseout', function(evt) {
-        var shape = evt.targetNode;
+         shape = evt.targetNode;
         if (shape && shape.isDraggable())
         {
 	          document.body.style.cursor = 'default';
@@ -236,35 +248,62 @@ function initStage()
         }
       });
       
-      layer.on('dblclick', function(evt) {
-          var shape = evt.targetNode;
-          if (shape.isDraggable())
-          {
-	          if(shape.getStroke()=='red')
-	          {
-	        	  shape.setStroke('black');
-	        	  shape.setStrokeWidth(5);
-	          }
-	          else
-	          {
-	        	  shape.setStroke('red');
-	        	  shape.setStrokeWidth(10);
-	          }
-          	  layer.draw();
-          }
+      /*layer.on('dblclick', function(evt) {
+           shape = evt.targetNode;
+        	  toggleNodeSelection(shape);
+          	  redraw();
         });
+      */
+      for (l in attribLayer)
+      {
+    	 /* attribLayer[l].on('dblclick', function(evt) {
+           shape = evt.targetNode;
+        	  toggleAttributeSelection(shape);
+			}); */
+          attribLayer[l].on('mousedown', function(evt) {
+              shape = evt.targetNode;
+              shapePosition = shape.getX()*shape.getY();
+            });
+          attribLayer[l].on('mouseup', function(evt) {
+              shape = evt.targetNode;
+              if (shapePosition == shape.getX()*shape.getY())
+            	  toggleAttributeSelection(shape);
+            });
+          attribLayer[l].on('mouseover', function(evt) {
+                shape = evt.targetNode;
+             	toggleHighlightAttribute(shape,true);
+           });
+          attribLayer[l].on('mouseout', function(evt) {
+              shape = evt.targetNode;
+     	          toggleHighlightAttribute(shape,false);
+           });
+      }
+ 
       
       layer.on('mousedown', function(evt) {
-          var shape = evt.targetNode;
+          shape = evt.targetNode;
           if (shape.isDraggable())
           {
 	          shape.moveToTop();
           	  layer.draw();
           }
+          shapePosition = shape.getX()*shape.getY();
+        });
+     
+      layer.on('mouseup', function(evt) {
+          shape = evt.targetNode;
+          //if (shape.isDraggable())
+          //{
+	          shape.moveToTop();
+          	  layer.draw();
+          //}
+          d = new Date();
+          if (shapePosition == shape.getX()*shape.getY())
+        	  toggleNodeSelection(shape);
         });
       
-      var zoom = function(e) {
-      	  var zoomAmount = e.wheelDeltaY*0.0001;
+       zoom = function(e) {
+      	   zoomAmount = e.wheelDeltaY*0.0001;
       	  if (currentZoom + zoomAmount > MAX_ZOOM || currentZoom + zoomAmount < MIN_ZOOM)
       		  return;
       	  if ((currentZoom < MAX_ZOOM && zoomAmount > 0) || ((currentZoom > MIN_ZOOM && zoomAmount < 0)))
@@ -275,12 +314,21 @@ function initStage()
       		  }
       	}
 
-     document.getElementById("container").addEventListener("mousewheel", zoom, false);
+     //showAttributes(nodes['helen_blank'], '1');
+     //showAttributes(nodes['french_transcript'], '2');
+      
+     //document.getElementById("container").addEventListener("mousewheel", zoom, false);
      document.getElementById("loading").innerHTML = "";
      stage.add(layer);
+     stage.add(attribLayer['1']);
+     stage.add(attribLayer['2']);
      
    } // end of function init stage
 
+// toggle highlighting for shapes when mouse over
+// if on, triggers highlight for target node and all
+// adjacent nodes and edges.
+// otherwise, removes all highlights from target and adjacent nodes.
 function toggleHighlightShape(target, on)
 {
 	/*	        
@@ -288,10 +336,9 @@ function toggleHighlightShape(target, on)
 	   stroke: 'black',
 	   strokeWidth:5,
 	 */
-	if (on)
-		clickSound.play();
+	
 	// first find the ProvNode holding this image
-	for (var n in nodes)
+	for ( n in nodes)
 		if (nodes[n].image == target)
 			{
 				targetNode = nodes[n];
@@ -308,17 +355,17 @@ function toggleHighlightShape(target, on)
 		}
 	
 	// now find all nodes linked to that target node
-	for (var e in targetNode.edges)
+	for ( e in targetNode.edges)
 		{
 			targetNode.edges[e].line.setStrokeWidth(5);
 			targetNode.edges[e].line.setStroke('yellow');
-			if (targetNode.edges[e].from != targetNode)
+		if (targetNode.edges[e].from != targetNode)
 			{
 				if (targetNode.edges[e].from.image.getStroke() != 'red')
 				{
 					targetNode.edges[e].from.image.setStrokeEnabled(true);
 					targetNode.edges[e].from.image.setStrokeWidth(7);
-					targetNode.edges[e].from.image.setStroke('blue');
+					//targetNode.edges[e].from.image.setStroke('blue');
 				}
 			}
 			else
@@ -326,7 +373,7 @@ function toggleHighlightShape(target, on)
 				{
 					targetNode.edges[e].to.image.setStrokeEnabled(true);
 					targetNode.edges[e].to.image.setStrokeWidth(7);
-					targetNode.edges[e].to.image.setStroke('green');
+					//targetNode.edges[e].to.image.setStroke('green');
 				}
 		}
 	
@@ -341,7 +388,7 @@ function toggleHighlightShape(target, on)
 		}
 	
 	// now find all nodes linked to that target node
-	for (var e in targetNode.edges)
+	for ( e in targetNode.edges)
 		{
 			targetNode.edges[e].line.setStrokeWidth(5);
 			targetNode.edges[e].line.setStroke('grey');
@@ -352,7 +399,7 @@ function toggleHighlightShape(target, on)
 				{
 					targetNode.edges[e].from.image.setStrokeEnabled(false);
 					targetNode.edges[e].from.image.setStrokeWidth(5);
-					targetNode.edges[e].from.image.setStroke('black');
+					//targetNode.edges[e].from.image.setStroke('black');
 				}
 			}
 			else
@@ -360,7 +407,7 @@ function toggleHighlightShape(target, on)
 				{
 					targetNode.edges[e].to.image.setStrokeEnabled(false);
 					targetNode.edges[e].to.image.setStrokeWidth(5);
-					targetNode.edges[e].to.image.setStroke('black');
+					//targetNode.edges[e].to.image.setStroke('black');
 				}
 		}
 	}
@@ -374,17 +421,7 @@ function toggleHighlightShape(target, on)
  */
 function loadJSONProv (json)
 {
-	// first load all agents
-	/*for (i in json.agent)
-		node = new Node("agent", i, "http://dummyimage.com/600x400/fed37f/000.jpg&text=" + i,{});
-	// next load all entities
-	for (i in json.agent)
-		node = new Node("entity", i, "http://dummyimage.com/600x400/fffc87/000.jpg&text=" + i,{});
-	// next load all activities
-	for (i in json)
-		node = new Node("activity", i, "http://dummyimage.com/600x400/9fb1fc/000.jpg&text=" + i,{});
-	*/
-	for (var i in json)
+	for ( i in json)
 		switch (i)
 		{
 		case "agent":
@@ -404,7 +441,7 @@ function loadJSONProv (json)
 			}
 			break;
 		case "entity":
-			for (var j in json[i])
+			for ( j in json[i])
 			{
 				nodeName = json[i][j]["prov:label"];
 				if (!nodeName)
@@ -413,14 +450,14 @@ function loadJSONProv (json)
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/fffc87/000.jpg&text=" + nodeName;
 				attribs = {"name":nodeName}
-				for (var k in json[i][j])
+				for ( k in json[i][j])
 					if (k != "prov:label")
 						attribs[k]=json[i][j][k];
 				node = new ProvNode("entity", j, nodeImage,attribs);
 			}
 			break;
 		case "activity":
-			for (var j in json[i])
+			for ( j in json[i])
 			{
 				nodeName = json[i][j]["prov:label"];
 				if (!nodeName)
@@ -429,7 +466,7 @@ function loadJSONProv (json)
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/9fb1fc/000.jpg&text=" + nodeName;
 				attribs = {"name":nodeName}				
-				for (var k in json[i][j])
+				for ( k in json[i][j])
 					if (k != "prov:label")
 						attribs[k]=json[i][j][k];				
 				node = new ProvNode("activity", j, nodeImage,attribs);
@@ -439,7 +476,7 @@ function loadJSONProv (json)
 		default:
 			break;
 		}
-	for (var i in json)
+	for ( i in json)
 	{
 		switch (i)
 		{
@@ -506,11 +543,11 @@ function loadJSONProv (json)
 			default:
 				continue;
 		}
-		for (var j in json[i])
+		for ( j in json[i])
 		{
 			role = json[i][j]["prov:role"];
 			attribs = {};
-			for (var k in json[i][j])
+			for (k in json[i][j])
 				if (k != "prov:role" && k != from && k != to)
 					attribs[k]=json[i][j][k];
 			link = new ProvLink(j, nodes[json[i][j][from]], nodes[json[i][j][to]], i, role, attribs);
@@ -520,8 +557,8 @@ function loadJSONProv (json)
 
 function arrowPoints(fromx, fromy, tox, toy)
 {
-    var headlen = 30;// Math.sqrt(Math.sqrt((fromx-tox)*(fromx-tox) - (fromy-toy)*(fromy-toy)));   // how long you want the head of the arrow to be, you could calculate this as a fraction of the distance between the points as well.
-    var angle = Math.atan2(toy-fromy,tox-fromx);
+     headlen = 30;// Math.sqrt(Math.sqrt((fromx-tox)*(fromx-tox) - (fromy-toy)*(fromy-toy)));   // how long you want the head of the arrow to be, you could calculate this as a fraction of the distance between the points as well.
+     angle = Math.atan2(toy-fromy,tox-fromx);
 
     points = [fromx, fromy, tox, toy, tox-headlen*Math.cos(angle-Math.PI/6),toy-headlen*Math.sin(angle-Math.PI/6),tox, toy, tox-headlen*Math.cos(angle+Math.PI/6),toy-headlen*Math.sin(angle+Math.PI/6)];
     return points;
@@ -555,11 +592,12 @@ function getLinePoints(fromImage, toImage)
 	return arrowPoints(lineX1,lineY1,lineX2,lineY2);
 }
 
+
 function getCenter(x, y, width, height, angle_rad) {
-    var cosa = Math.cos(angle_rad);
-    var sina = Math.sin(angle_rad);
-    var wp = width/2;
-    var hp = height/2;
+     cosa = Math.cos(angle_rad);
+     sina = Math.sin(angle_rad);
+     wp = width/2;
+     hp = height/2;
     return { x: ( x + wp * cosa - hp * sina ),
              y: ( y + wp * sina + hp * cosa ) };
 }
@@ -597,4 +635,318 @@ function getOffset(width, height, shapeAngle, x1,y1,x2,y2)
 	return offset + 5;
 }
 
+//display attributes of node, at location x,y
+function showAttributes(node, position)
+{
+	X = 0.83 * STAGE_WIDTH;
+	if (position == '1')
+		Y = 5;
+	else
+		Y = 0.45*STAGE_HEIGHT;
+	
+	 rect = new Kinetic.Rect({
+        x: X,
+        y: Y,
+        stroke: '#000',
+        strokeWidth: 2,
+        fill: '#fafafa',
+        width: 0.16 * STAGE_WIDTH,
+        height: 0.43 * STAGE_HEIGHT,
+        shadowColor: 'black',
+        shadowBlur: 10,
+        shadowOffset: [10, 10],
+        shadowOpacity: 0.2,
+        cornerRadius: 10
+      });
 
+	 if (node.attribImage == null) // first time creating attributes
+	 {
+		 node.attribImage = new Kinetic.Image({
+	        image: images[node.id],
+	        x: X+10,
+	        y: Y+10,
+	        draggable: false,
+	        shadowColor: 'black',
+	        shadowBlur: 3,
+	        shadowOffset: 2,
+	        shadowOpacity: 1,
+	        rotationDeg: 0,
+	        strokeEnabled: false,
+	        stroke: 'red',
+	        strokeWidth:5
+	      });
+		 
+		  scale = Math.sqrt(1.0 * DEFAULT_THUMB_SIZE / (node.attribImage.getWidth()*node.attribImage.getHeight()));
+		  node.attribImage.setWidth(node.attribImage.getWidth()*scale);
+		  node.attribImage.setHeight(node.attribImage.getHeight()*scale);
+		  
+		  node.attribName = new Kinetic.Text({
+		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
+		        y: Y + 20,
+		        text: wordWrap(node.attributes['name'], 10),
+		        fontSize: LARGE_FONT,
+		        fontFamily: 'Calibri',
+		        fontStyle: 'normal',
+		        fill: 'Black'
+		  });
+		  
+		  totalY = Y + node.attribImage.getHeight() + 15;
+		  for (i in node.attributes)
+			  {
+			  	if (i != 'name' && i != 'image')
+			  	{
+			  		node.attribNames[i] = new Kinetic.Text({
+			  			x: node.attribImage.getX(),
+				        y: totalY,
+				        text: i + ": ",
+				        fontSize: SMALL_FONT,
+				        fontFamily: 'Calibri',
+				        fontStyle: 'bold',
+				        fill: 'blue'
+			  		});		  		
+			  		node.attribValues[i] = new Kinetic.Text({
+				        x: node.attribNames[i].getX() + node.attribNames[i].getWidth(),
+				        y: totalY,
+				        text: wordWrap(node.attributes[i], 25 - i.length),
+				        fontSize: SMALL_FONT,
+				        fontFamily: 'Calibri',
+				        fontStyle: 'normal',
+				        fill: 'black'
+				  });
+				  totalY += node.attribValues[i].getHeight() + 5;
+			  	}
+			  }
+	 }
+	 else
+	 {
+		 node.attribImage.setY(Y+10);
+		 node.attribImage.setStrokeEnabled(false);
+		 for (i in node.attribValues)
+		 {
+			 node.attribValues[i].setFill('black');
+			 if (position == '1' && node.attribValues[i].getY() > 0.45*STAGE_HEIGHT)
+			 {
+				 node.attribValues[i].setY(node.attribValues[i].getY() - 0.45*STAGE_HEIGHT + 5);
+				 if (node.attribNames[i])
+					 node.attribNames[i].setY(node.attribNames[i].getY() - 0.45*STAGE_HEIGHT + 5);
+			 }
+			 else if (position == '2' && node.attribValues[i].getY() < 0.45*STAGE_HEIGHT)
+			 {
+				 node.attribValues[i].setY(node.attribValues[i].getY() + 0.45*STAGE_HEIGHT - 5);
+				 if (node.attribNames[i])
+					 node.attribNames[i].setY(node.attribNames[i].getY() + 0.45*STAGE_HEIGHT - 5);
+			 }
+			 
+		 }
+	 }
+	  
+	  attribLayer[position].add(rect);
+	  //layer.add(textName);
+	  for (i in node.attribNames)
+		  {
+		  attribLayer[position].add(node.attribNames[i]);
+		  attribLayer[position].add(node.attribValues[i]);
+		  }
+	  attribLayer[position].add(node.attribImage);
+	  if (node.type != 'activity')
+		  attribLayer[position].add(node.attribName);
+	  attribLayer[position].draw();
+	  
+	  node.attribValues['name'] = node.attribName;
+	  node.attribValues['image'] = node.attribImage;
+}
+
+function wordWrap(string, maxChars)
+{
+	words = string.split(" ");
+	newString = words[0];
+	currentLength = newString.length;
+	for (w=1; w<words.length; w++)
+		{
+			if (currentLength + words[w].length + 1 > maxChars)
+			{
+				newString += "\n" + words[w];
+				currentLength = 0;
+			}
+			else
+			{
+				newString += " " + words[w];
+				currentLength += words[w].length + 1;
+			}
+		}
+	return newString;
+}
+
+function toggleNodeSelection(shape)
+{
+	// find node that was clicked on
+	clickedNode = null;
+	for (n in nodes)
+		if (nodes[n].image == shape)
+			clickedNode = nodes[n];
+	if (clickedNode == null)
+		toggleAttributeSelection(shape);
+	
+	// see if this node already selected
+	if (selectedNodes['1'] == clickedNode)
+	{
+		selectedNodes['1'] = null;
+		attribLayer['1'].removeChildren();
+		attribLayer['1'].draw();
+		selectedAttributes['1'] = null;
+	    shape.setStroke('black');
+	    shape.setStrokeWidth(5);
+	    redraw();
+	    clickSound.play();
+		return;
+	}
+	else if (selectedNodes['2'] == clickedNode)
+	{
+		selectedNodes['2'] = null;
+		attribLayer['2'].removeChildren();
+		attribLayer['2'].draw();
+		selectedAttributes['2'] = null;
+	    shape.setStroke('black');
+	    shape.setStrokeWidth(5);
+	    redraw();
+	    clickSound.play();
+		return;
+	}
+
+	
+	// if 2 nodes already selected, return
+	if (selectedNodes['1'] != null && selectedNodes['2'] != null)
+		return;
+	
+	// finally, if one of two selected nodes is empty place clickedNode in it.
+	// First check selectednode[1], then selectednode[2]
+	if (selectedNodes['1'] == null)
+	{
+		selectedNodes['1'] = clickedNode;
+		showAttributes(clickedNode,'1');
+		shape.setStroke('red');
+	  	shape.setStrokeWidth(10);
+	}
+	else
+	{
+		selectedNodes['2'] = clickedNode;
+		showAttributes(clickedNode,'2');
+		shape.setStroke('red');
+	  	shape.setStrokeWidth(10);
+	}
+	clickSound.play();
+	redraw();
+}
+
+function toggleHighlightAttribute(shape,on)
+{
+	// if already selected, ignore
+	for (i in selectedAttributes)
+		if (selectedAttributes[i] && selectedNodes[i].attribValues[selectedAttributes[i]] == shape)
+		{
+			if (on)
+				document.body.style.cursor = 'pointer';
+			else
+				document.body.style.cursor = 'default';
+				
+			return;
+		}
+	
+	// if this is an attribute shape, highlight it
+	for (i in selectedNodes)
+		if (selectedNodes[i] != null)
+			for (j in selectedNodes[i].attribValues)
+				if (selectedNodes[i].attribValues[j] == shape)
+				{
+					if (on)
+					{
+						document.body.style.cursor = 'pointer';
+						if (shape == selectedNodes[i].attribImage)
+						{
+							shape.setStrokeEnabled(true);
+							shape.setStroke('black');
+						}
+						else
+						{
+							shape.setFill('black');
+							shape.setFontStyle('bold');
+						}
+					}
+					else
+					{
+		     	          document.body.style.cursor = 'default';
+						if (shape == selectedNodes[i].attribImage)
+						{
+							shape.setStrokeEnabled(false);
+							shape.setStroke('red');
+						}
+						else
+						{
+							shape.setFill('black');
+							shape.setFontStyle('normal');
+						}
+					}
+					redraw();
+					return;
+				}
+}
+
+function toggleAttributeSelection(shape)
+{
+	// if already selected, deselect it
+	for (i in selectedAttributes)
+		if (selectedAttributes[i] && selectedNodes[i].attribValues[selectedAttributes[i]] == shape)
+		{
+			selectedAttributes[i] = null;
+			if (shape == selectedNodes[i].attribImage)
+				shape.setStrokeEnabled(false);
+			else
+			{
+				shape.setFill('black');
+				shape.setFontStyle('normal');
+			}
+			clickSound.play();
+			redraw();
+			return;
+		}
+	
+	// match shape to attribute and store attribute
+	for (i in selectedNodes)
+		if (selectedNodes[i] != null)
+			for (j in selectedNodes[i].attribValues)
+				if (selectedNodes[i].attribValues[j] == shape)
+				{
+					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
+					{
+						if (selectedNodes[i].attribValues[selectedAttributes[i]] == selectedNodes[i].attribImage)
+							selectedNodes[i].attribValues[selectedAttributes[i]].setStrokeEnabled(false);
+						else
+						{
+							selectedNodes[i].attribValues[selectedAttributes[i]].setFill('black');
+							selectedNodes[i].attribValues[selectedAttributes[i]].setFontStyle('normal');
+						}
+					}
+					selectedAttributes[i] = j;
+					if (shape == selectedNodes[i].attribImage)
+					{
+						shape.setStrokeEnabled(true);
+						shape.setStroke('red');
+					}
+					else
+					{
+						shape.setFill('red');
+						//shape.setFontStyle('bold');
+					}
+					clickSound.play();
+					redraw();
+					return;
+				}
+	// do nothing is shape does not match any selectable object
+ }
+
+function redraw()
+{
+	layer.draw();
+	attribLayer['1'].draw();
+	attribLayer['2'].draw();
+}

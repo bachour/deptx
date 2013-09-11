@@ -8,49 +8,17 @@
       }
     </style>
   </head>
-  <body>
+  <body style="overflow: hidden">
    <audio id="click" preload="auto">
     <source src="https://dl.dropboxusercontent.com/u/17451725/63532__florian-reinke__click2.wav" />  
- </audio>
+   </audio>
  <p id="loading">Loading...</p>
 	<div id="container" ></div>
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="imPROVe.js"></script>
     <script>
-		/*var node1 = new ProvNode("agent", "khaled", "http://m.c.lnkd.licdn.com/mpr/mpr/shrink_200_200/p/8/000/21f/3be/16d84d8.jpg", {});
-		var node2 = new ProvNode("entity", "book", "http://blog.scanr.com/scanr_blog/images/2008/07/18/nokia_e71_document_scanned_2.jpg", {});
-		var node3 = new ProvNode("agent", "martin", "https://fbcdn-sphotos-h-a.akamaihd.net/hphotos-ak-ash4/2578_65309581289_5883291_n.jpg", {});
-		var node4 = new ProvNode("entity","steak", "http://www.farmerjacks.co.uk/uploads/c53a13698a1709addd50d850370c0b8f38215f73.jpg", {});
-		var node5 = new ProvNode("agent","richard", "https://fbcdn-sphotos-g-a.akamaihd.net/hphotos-ak-ash4/999676_10152947865380384_1311618119_n.jpg", {});
-		
-		var edge = new ProvLink("wrote", node2, node1,"attributedTo");
-		var edge2 = new ProvLink("friendWith", node3, node1, "actedOnBehalfOf");
-		var edge3 = new ProvLink("ate", node4, node1, "associatedWith");
-		var edge4 = new ProvLink("ate", node4, node5, "associatedWith");
-		
-		 /*node1 = new ProvNode("agent", "khaled2", "http://m.c.lnkd.licdn.com/mpr/mpr/shrink_200_200/p/8/000/21f/3be/16d84d8.jpg", {});
-		 node2 = new ProvNode("entity", "book2", "http://blog.scanr.com/scanr_blog/images/2008/07/18/nokia_e71_document_scanned_2.jpg", {});
-		 node3 = new ProvNode("agent", "martin2", "http://m.c.lnkd.licdn.com/mpr/mpr/shrink_200_200/p/7/000/1f2/0d5/33f2274.jpg", {});
-		 node4 = new ProvNode("entity","steak2", "http://www.farmerjacks.co.uk/uploads/c53a13698a1709addd50d850370c0b8f38215f73.jpg", {});
-		
-		 edge = new ProvLink("wrote2", node2, node1,"attributedTo");
-		 edge2 = new ProvLink("friendWith2", node3, node1, "actedOnBehalfOf");
-		 edge3 = new ProvLink("ate2", node4, node1, "associatedWith");
-		 edge4 = new ProvLink("ate2", node4, node3, "associatedWith");
-		 
-		 loadImages(initStage);
-		 */
-		/*jsonText = '{' +
-	  '"wasAssociatedWith":{"_:id33":{"prov:agent":"Paul Smith","prov:activity":"police interview"}},'+
-      '"used":{"_:id24":{"prov:entity":"blood report 1","prov:activity":"police interview"}},'+
-      '"agent":{"Paul Smith":{}},'+
-   	  '"entity":{"blood report 1":{}},'+
-      '"activity":{"police interview":{}}}';
-      
-      loadJSONProv(eval('(' + jsonText + ')'));
-      loadImages(initStage);*/
-            
+    
       $.getJSON("https://dl.dropboxusercontent.com/u/17451725/episode1_emergency_call.json", function(json) {
     	   loadJSONProv(json);
     	   loadImages(initStage);
