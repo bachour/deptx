@@ -1,5 +1,5 @@
 var STAGE_WIDTH = document.getElementById("container").offsetWidth;
-var STAGE_HEIGHT = STAGE_WIDTH*9/16;
+var STAGE_HEIGHT = STAGE_WIDTH*9/18;
 
 //--------------------------------
 //       NODES
@@ -206,10 +206,35 @@ var ATTRIBBOX_ATTNAME_FONT_OUTLINE = false;
 var ATTRIBBOX_ATTNAME_FONT_OUTLINE_COLOUR = 'black';
 
 
+//-----------------------------------------------
+// BUTTONS
+//-----------------------------------------------
+var BUTTON_BORDER_COLOUR = 'black'; 
+var BUTTON_BORDER_WIDTH = 2;       
+var BUTTON_WIDTH = ATTRIBBOX_WIDTH; 
+var BUTTON_HEIGHT = ATTRIBBOX_HEIGHT/10; 
+var BUTTON_SHADOW = true; 
+var BUTTON_SHADOW_COLOUR = 'black';
+var BUTTON_SHADOW_BLUR = 10;
+var BUTTON_SHADOW_OFFSET = 10;
+var BUTTON_SHADOW_OPACITY = 0.2;
+var BUTTON_CORNER_RADIUS = 10;
+var BUTTON_FONT_SIZE = ATTRIBBOX_SMALL_FONT;
+var BUTTON_FONT_STYLE = 'normal';
+var BUTTON_FONT_FILL = 'Black';
+var BUTTON_FONT_FAMILY = 'Calibri';
 
 
+//Submit Button
+var SUBMIT_FILL =  '9fb1fc';       
+var SUBMIT_HIGHLIGHTED_FILL = 'b0c2ff';
+var SUBMIT_PRESSED_FILL = '7d89da';
 
+var RESET_FILL = 'fed37f';
+var RESET_HIGHLIGHTED_FILL = 'ffe490';
+var RESET_PRESSED_FILL = 'edc26e';
 
+//PRESSED BUTTON
 
 
 

@@ -8,14 +8,25 @@
 	<div id="container" ></div>
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    
+    <script>
+    	var SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %}
+    	var SUBMIT_URL = "{% url 'provmanager_cron_submit' %}"
+    </script>
     <script src="{% static "provmanager/defaultKss.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>
+    
     <script>
     
-      $.getJSON("{% url 'provmanager_improve' provenance.serial %}", function(json) {
-    	   loadJSONProv(json);
-    	   loadImages(initStage);
-    	 });
+      {% if provenance %}
+	      $.getJSON("{% url 'provmanager_improve' provenance.serial %}", function(json) {
+	    	   loadJSONProv(json);
+	    	   loadImages(initStage);
+	    	 });
+	  {% else %}
+	  	loadJSONProv({{json_str|safe}});
+	  	loadImages(initStage);
+	  {% endif %}
       
     </script>
   </div>

@@ -18,9 +18,14 @@ var clickSound = document.getElementById('click');
 //main active layer.
 var layer;
 
+//buttons
+var submitButton;
+var submitText;
+var resetButton;
+var resetText;
+
 //selected Nodes
 var selectedNodes = {};
-var selectedNodeAttributes = {};
 var selectedAttributes = {};
 
 //Object declarations
@@ -206,6 +211,8 @@ function initStage()
         	//attribLayer['2'].draw();
         });
 	}
+	
+	createButtons();
 		
 	// add mouseover effect for objects pointed at
     layer.on('mouseover', function(evt) {
@@ -217,9 +224,17 @@ function initStage()
 
         	layer.draw();
         }
+        else 
+        	if (shape && (shape == submitButton || shape == submitText))
+        	{
+                submitButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
+                document.body.style.cursor = 'pointer';
+                layer.draw();
+        	}
+        	
       });
       layer.on('mouseout', function(evt) {
-         shape = evt.targetNode;
+        shape = evt.targetNode;
         if (shape && shape.isDraggable())
         {
 	          document.body.style.cursor = 'default';
@@ -228,6 +243,13 @@ function initStage()
 	          //shape.setShadowColor('black');
         	  layer.draw();
         }
+        else 
+        	if (shape && (shape == submitButton || shape == submitText))
+        	{
+                submitButton.setFill(SUBMIT_FILL);
+                document.body.style.cursor = 'pointer';
+                layer.draw();
+        	}
       });
       
       /*layer.on('dblclick', function(evt) {
@@ -264,24 +286,47 @@ function initStage()
       
       layer.on('mousedown', function(evt) {
           shape = evt.targetNode;
-          if (shape.isDraggable())
+          if (shape && shape.isDraggable())
           {
 	          shape.moveToTop();
           	  layer.draw();
+          
+          	  shapePosition = shape.getX()*shape.getY();
           }
-          shapePosition = shape.getX()*shape.getY();
+          else 
+          	if (shape && (shape == submitButton || shape == submitText))
+          	{
+                  submitButton.setFill(SUBMIT_PRESSED_FILL);
+                  //submitButton.setX(submitButton.getX()+10);
+                  //submitButton.setY(submitButton.getY()+10);
+                  //submitText.setX(submitButton.getX());
+                  //submitText.setY(submitButton.getY());
+                  
+                  layer.draw();
+          	}
         });
      
       layer.on('mouseup', function(evt) {
           shape = evt.targetNode;
-          //if (shape.isDraggable())
-          //{
+          if (shape && shape.isDraggable())
+          {
 	          shape.moveToTop();
           	  layer.draw();
-          //}
-          d = new Date();
-          if (shapePosition == shape.getX()*shape.getY())
-        	  toggleNodeSelection(shape);
+	          if (shapePosition == shape.getX()*shape.getY())
+	        	  toggleNodeSelection(shape);
+          }
+          else 
+          	if (shape && (shape == submitButton || shape == submitText))
+          	{
+                  submitButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
+                  //submitButton.setX(submitButton.getX()-10);
+                  //submitButton.setY(submitButton.getY()-10);
+                  //submitText.setX(submitButton.getX());
+                  //submitText.setY(submitButton.getY());
+                  layer.draw();
+                  submitPushed();
+          	}
+          
         });
       
        zoom = function(e) {
@@ -296,6 +341,8 @@ function initStage()
       		  }
       	}
 
+     setupAttribPanes();
+       
      //showAttributes(nodes['helen_blank'], '1');
      //showAttributes(nodes['french_transcript'], '2');
       
@@ -694,21 +741,7 @@ function showAttributes(node, position)
 	else
 		Y = 0.45*STAGE_HEIGHT;
 	
-	 rect = new Kinetic.Rect({
-        x: X,
-        y: Y,
-        stroke: ATTRIBBOX_BORDER_COLOUR,
-        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
-        fill: ATTRIBBOX_FILL,
-        width: ATTRIBBOX_WIDTH,
-        height: ATTRIBBOX_HEIGHT,
-        shadowEnabled: ATTRIBBOX_SHADOW,
-        shadowColor: ATTRIBBOX_SHADOW_COLOUR,
-        shadowBlur: ATTRIBBOX_SHADOW_BLUR,
-        shadowOffset: ATTRIBBOX_SHADOW_OFFSET,
-        shadowOpacity: ATTRIBBOX_SHADOW_OPACITY,
-        cornerRadius: ATTRIBBOX_CORNER_RADIUS
-      });
+	attribLayer[position].removeChildren();
 
 	 if (node.attribImage == null) // first time creating attributes
 	 {
@@ -744,7 +777,7 @@ function showAttributes(node, position)
 		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 		  });
 		  
-		  totalY = Y + node.attribImage.getHeight() + 15;
+		  totalY = Y + node.attribImage.getHeight() + 20;
 		  for (i in node.attributes)
 			  {
 			  	if (i != 'name' && i != 'image')
@@ -799,7 +832,7 @@ function showAttributes(node, position)
 		 }
 	 }
 	  
-	  attribLayer[position].add(rect);
+	  //attribLayer[position].add(rect);
 	  //layer.add(textName);
 	  for (i in node.attribNames)
 		  {
@@ -850,8 +883,7 @@ function toggleNodeSelection(shape)
 	if (selectedNodes['1'] == clickedNode)
 	{
 		selectedNodes['1'] = null;
-		attribLayer['1'].removeChildren();
-		attribLayer['1'].draw();
+		clearAttributePane('1');
 		selectedAttributes['1'] = null;
 		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
@@ -860,8 +892,7 @@ function toggleNodeSelection(shape)
 	else if (selectedNodes['2'] == clickedNode)
 	{
 		selectedNodes['2'] = null;
-		attribLayer['2'].removeChildren();
-		attribLayer['2'].draw();
+		clearAttributePane('2');
 		selectedAttributes['2'] = null;
 	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
@@ -1009,6 +1040,151 @@ function setTextHighlight(shape, selected, highlighted)
 		shape.setStroke(ATTRIBBOX_FONT_OUTLINE_COLOUR);
 	}
 	redraw();
+}
+
+function createButtons()
+{
+	 submitButton = new Kinetic.Rect({
+	        x: 0.83 * STAGE_WIDTH,
+	        y: 0.90 * STAGE_HEIGHT,
+	        stroke: BUTTON_BORDER_COLOUR,
+	        strokeWidth: BUTTON_BORDER_WIDTH,
+	        fill: SUBMIT_FILL,
+	        width: BUTTON_WIDTH,
+	        height: BUTTON_HEIGHT,
+	        shadowEnabled: BUTTON_SHADOW,
+	        shadowColor: BUTTON_SHADOW_COLOUR,
+	        shadowBlur: BUTTON_SHADOW_BLUR,
+	        shadowOffset: BUTTON_SHADOW_OFFSET,
+	        shadowOpacity: BUTTON_SHADOW_OPACITY,
+	        cornerRadius: BUTTON_CORNER_RADIUS
+	      });
+	 submitText = new Kinetic.Text({
+		    x: submitButton.getX(),
+	        y: submitButton.getY(),
+	        text: 'Submit!',
+	        fontSize: BUTTON_FONT_SIZE,
+	        fontFamily: BUTTON_FONT_FAMILY,
+	        fontStyle: BUTTON_FONT_STYLE,
+	        fill: BUTTON_FONT_FILL,
+	        padding: submitButton.getHeight()*0.25,
+	        width: submitButton.getWidth(),
+	        height: submitButton.getHeight(),
+	        align: 'center'
+	 });
+	 
+	 layer.add(submitButton);
+	 layer.add(submitText);
+	 
+}
+
+function resetPushed()
+{
+	r = confirm("Are you sure you want to reset the current graph?");
+	if (r==true)
+	  {
+			x="You pressed OK!";
+	  }
+	else
+	  {
+			x="You pressed Cancel!";
+	  }
+}
+
+function submitPushed()
+{
+	if (selectedAttributes['1'] && selectedAttributes['2'])
+	{
+		alert("You think there is something wrong with:\n" +
+			"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
+					"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");
+		validateSubmit();
+	}
+	else
+		alert("You need to select two attributes before submitting.");
+}
+
+function validateSubmit()
+{
+	var xmlhttp;
+	if (window.XMLHttpRequest)
+	{// code for IE7+, Firefox, Chrome, Opera, Safari
+		xmlhttp=new XMLHttpRequest();
+	}
+	else
+	{// code for IE6, IE5
+	  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	
+	xmlhttp.onreadystatechange=function()
+	{
+	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+	    {
+	       alert("Server says:" + xmlhttp.responseText);
+	    }
+	 };
+	xmlhttp.open("POST",SUBMIT_URL,true);
+	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	xmlhttp.send("node1=" + selectedNodes['1'] + 
+					"&node2=" + selectedNodes['2'] + 
+					"&attribute1=" + selectedAttributes['1'] +
+					"&attribute2=" +selectedAttributes['2'] +
+					"&serial=" + SERIAL);
+}
+
+function setupAttribPanes()
+{
+	X = 0.83 * STAGE_WIDTH;
+	y = {'1':5, '2':0.45*STAGE_HEIGHT};
+	
+	for (i in y)
+	{
+		Y = y[i];
+		rect = new Kinetic.Rect({
+	        x: X,
+	        y: Y,
+	        stroke: ATTRIBBOX_BORDER_COLOUR,
+	        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
+	        fill: ATTRIBBOX_FILL,
+	        width: ATTRIBBOX_WIDTH,
+	        height: ATTRIBBOX_HEIGHT,
+	        shadowEnabled: ATTRIBBOX_SHADOW,
+	        shadowColor: ATTRIBBOX_SHADOW_COLOUR,
+	        shadowBlur: ATTRIBBOX_SHADOW_BLUR,
+	        shadowOffset: ATTRIBBOX_SHADOW_OFFSET,
+	        shadowOpacity: ATTRIBBOX_SHADOW_OPACITY,
+	        cornerRadius: ATTRIBBOX_CORNER_RADIUS
+	      });
+		layer.add(rect);
+		clearAttributePane(i);
+	}
+	
+}
+
+function clearAttributePane(position)
+{
+	X = 0.83 * STAGE_WIDTH;
+	y = {'1':5, '2':0.45*STAGE_HEIGHT};
+	Y = y[position];
+	
+	text = new Kinetic.Text({
+        x: X,
+        y: Y,
+        text: "\n\n\nClick on a node\nto inspect it.",
+        fontSize: ATTRIBBOX_LARGE_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: ATTRIBBOX_FONT_STYLE,
+        fill: '#aaaaaa',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        padding: ATTRIBBOX_WIDTH*0.1,
+        width: ATTRIBBOX_WIDTH,
+        height: ATTRIBBOX_HEIGHT
+	});
+	attribLayer[position].removeChildren();
+	attribLayer[position].add(text);
+	attribLayer[position].draw();
 }
 
 function redraw()
