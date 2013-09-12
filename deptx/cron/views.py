@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.context_processors import csrf
 from django.views.decorators.csrf import csrf_protect
@@ -49,15 +49,20 @@ def login(request):
         form =  AuthenticationForm()
         return render_to_response('cron/login.html', {'form' : form,}, context_instance=RequestContext(request))
 
-@login_required(login_url='cron_login')
-@user_passes_test(isCron, login_url='cron_login')
+def logout_view(request):
+    logout(request)
+    return redirect('cron_index')
+
+#@login_required(login_url='cron_login')
+#@user_passes_test(isCron, login_url='cron_login')
 def index(request):
-    user = request.user
-    cron = user.cron
-    context = { "cront": cron, "user":user }
-    
-    return render(request, 'cron/index.html', context)
-    
+    if request.user.is_authenticated():
+        user = request.user
+        cron = user.cron
+        context = { "cron": cron, "user":user }
+        return render(request, 'cron/index.html', context)
+    else:
+        return login(request)
 #     if (cron.crontracker.mission.rank==0 and cron.crontracker.progress==0):
 #         return render(request, 'cron/episode0.html', context)
 #     elif (cron.crontracker.mission.rank==0 and cron.crontracker.progress==1):

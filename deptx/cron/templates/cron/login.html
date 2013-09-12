@@ -1,11 +1,76 @@
 {% extends 'cron/base.html' %}
+{% load static %}
+
 
 {% block content %}
 
-<h1>cr0n</h1>
 
-{% if form.errors %}
-	<p>Your username and password didn't match. Please try again.</p>
+      	<div class="grid_12">
+      	  <p>&nbsp;</p>
+      	  <p>&nbsp;</p>
+      	</div>
+          <div class="grid_3 box-border">
+          	<div class="box-1">
+              <div class="box-1-1">
+                <h3 class="clr-4">FIGHTING</h3>
+                  <p class="clr-5">&nbsp;</p>
+              </div>
+            </div>
+</div> 
+          <div class="grid_3 box-border">
+          	<div class="box-2">
+              <div class="box-2-2">
+                <h3 class="clr-4">FOR</h3>
+                  <p class="clr-6">&nbsp;</p>
+              </div>
+            </div>
+          </div> 
+          <div class="grid_3 box-border">
+          	<div class="box-3">
+              <div class="box-3-3">
+                <h3 class="clr-4">YOUR</h3>
+                  <p class="clr-7">&nbsp;</p>
+              </div>
+            </div>
+          </div> 
+          <div class="grid_3 box-border">
+          	<div class="box-4">
+              <div class="box-4-4">
+                <h3 class="clr-4">FREEDOM</h3>
+                    <p class="clr-8">&nbsp;</p>
+              </div>
+            </div>
+</div> 
+        <div class="grid_12">
+          	<div class="line-1"></div>
+        </div>
+        <div class="grid_12">
+       	  <div class="banner-1">
+          	  <h2>Together we can <span class="clr-0">stop</span> the Ministry of provenance<span class="clr-1"></span></h2></div>
+        </div>
+        <div class="grid_4">
+          <h6 class="clr-9">Connect with cr0n</h6>
+            <ul class="tooltips">
+              <li><a href="https://twitter.com/cr0ns"><img src="{% static "cron/images/icon-3.png" %}" alt="Twitter @cr0ns"><span>Follow us on Twitter</span></a></li>
+              <li></li>
+              <li><a href="http://www.youtube.com/channel/UCNla9YGrgpkiSe0ZIlkAuGA"><img src="{% static "cron/images/icon-1.png" %}" alt="YouTube"><span>Watch on YouTube</span></a></li>
+              <li></li>
+            </ul>
+        </div>
+        <div class="grid_4">
+          <h6 class="clr-9 p5">The time is now</h6>
+          <div class="tweet">
+            <p>Our future is in danger and we must fight this danger together. This is the time to act. Across the globe a legion of people just like you are  working together to expose the <a href="http://mofp.net">Ministry of Provenance</a>.</p>
+          </div>
+        </div>
+        <div class="grid_4">
+          <h6 class="clr-9"> agent Login</h6>
+          <div class="grid_3">
+            <table width="100%" border="0">
+              <tr>
+                <td><ul class="tooltips">
+                  {% if form.errors %}
+	<p style="color:red">Your username and password didn't match. Please try again.</p>
 {% endif %}
 
 <form method="post" action="{% url 'cron_login' %}">
@@ -24,5 +89,16 @@
 	<input type="submit" value="login" />
 	<input type="hidden" name="next" value="{{ next }}" />
 </form>
+                </ul></td>
+              </tr>
+            </table>
+          </div>
+          <ul class="tooltips">
+            <li></li>
+          </ul>
+        </div>
+        <div class="clear"></div>
+
+
 
 {% endblock %}
