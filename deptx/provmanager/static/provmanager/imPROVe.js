@@ -1125,8 +1125,8 @@ function validateSubmit()
 	 };
 	xmlhttp.open("POST",SUBMIT_URL,true);
 	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-	xmlhttp.send("node1=" + selectedNodes['1'] + 
-					"&node2=" + selectedNodes['2'] + 
+	xmlhttp.send("node1=" + selectedNodes['1'].id + 
+					"&node2=" + selectedNodes['2'].id + 
 					"&attribute1=" + selectedAttributes['1'] +
 					"&attribute2=" +selectedAttributes['2'] +
 					"&serial=" + SERIAL);
