@@ -1,8 +1,8 @@
 <h1>{{provenance.name}} - {{provenance.store_id}}</h1>
-<pre>{{bundle}}</pre>
-<hr/>
-<pre>{{xml}}</pre>
+{% include 'provmanager/improve.html' %}
 <hr/>
 {{svg | safe}}
+<hr/>
+<pre>{{bundle}}</pre>
 <hr/>
 <pre>{{json}}</pre>

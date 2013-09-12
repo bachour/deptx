@@ -1,11 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>Das style-Element</title>
+<style type="text/css">
+<!--
+table { border-collapse:collapse; }
+td { border:2px black solid; padding:4px;}
+-->
+</style>
+</head>
+<body>
 <h1>PROVmanager</h1>
 <a href="{% url 'provmanager_create' %}">create new provenance</a>
+<br/><br/>
 <table>
+<tr>
+	<th></th>
+	<th></th>
+	<th>Used in cases</th>
+	<th>Used in tasks</th>
+</tr>
 {% for provenance in provenance_list %}
 	<tr>
-		<td>
-			<a href="{% url 'provmanager_view' provenance.store_id %}">{{provenance.name}} - {{provenance.store_id}}</a> <a href="{% url 'provmanager_improve' provenance.serial %}">(imPROVe)</a>
-		</td>
+		<td>{% if provenance.store_id %}<a href="{% url 'provmanager_view' provenance.id %}">view</a>{% endif %}</td>
+		<td>{{provenance.name}}</td>
+		<td>{% for document in provenance.cron_document_list %}{{document.name}} ({{document.case.name}})<br/>{% endfor %}</td>
+		<td>{% for document in provenance.mop_document_list %}{{document.name}} ({{document.task.name}})<br/>{% endfor %}</td>		
 	</tr>
 {% endfor %}
 </table>
+</body>
+</html>
