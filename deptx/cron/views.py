@@ -57,7 +57,7 @@ def logout_view(request):
 #@user_passes_test(isCron, login_url='cron_login')
 def index(request):
     
-    if request.user is not None and request.user.is_active and isMop(request.user):
+    if request.user is not None and request.user.is_active and isCron(request.user):
         user = request.user
         cron = user.cron
         context = { "cron": cron, "user":user }
