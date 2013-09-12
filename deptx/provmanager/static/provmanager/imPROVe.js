@@ -7,18 +7,6 @@ var sources = {}; // TEMP: collection of image URLs used for loading all images 
 var images = {}; // TEMP: collection of images before being imported into nodes{}
 var lines = []; // PROCESS: array of connectors;
 
-//constants
-var MAX_TRANSLATE = 100; // default max for random horizontal and vertical shift in starting location
-var MAX_ANGLE = 20;		// default max for random starting angle for nodes
-var STAGE_WIDTH = document.getElementById("container").offsetWidth * 0.99;
-var STAGE_HEIGHT = STAGE_WIDTH / 16 * 9;
-var DEFAULT_SIZE = STAGE_WIDTH*STAGE_HEIGHT/70;
-var DEFAULT_THUMB_SIZE = STAGE_WIDTH*STAGE_HEIGHT/90;
-var DEFAULT_X = 0.8*STAGE_WIDTH/2;	// default starting location for nodes
-var DEFAULT_Y = STAGE_HEIGHT/3;	// default starting location for nodes
-var LARGE_FONT = STAGE_WIDTH/60;
-var SMALL_FONT = LARGE_FONT*0.6;
-
 //zoom variables
 var currentZoom = 0;
 var MAX_ZOOM = 0.0;
@@ -103,7 +91,7 @@ function initStage()
 	// create stage
 	var stage = new Kinetic.Stage({
         container: 'container',
-        width: STAGE_WIDTH,
+        width: STAGE_WIDTH, 
         height: STAGE_HEIGHT
       });
 
@@ -114,18 +102,19 @@ function initStage()
 	        image: images[name],
 	        x: DEFAULT_X + Math.floor(Math.random()*(2*MAX_TRANSLATE+1)-MAX_TRANSLATE),
 	        y: DEFAULT_Y+ Math.floor(Math.random()*(2*MAX_TRANSLATE+1)-MAX_TRANSLATE),
-	        draggable: true,
-	        shadowColor: 'black',
-	        shadowBlur: 10,
-	        shadowOffset: 3,
-	        shadowOpacity: 1,
-	        rotationDeg: Math.floor(Math.random()*(2*MAX_ANGLE + 1)-MAX_ANGLE),
-	        strokeEnabled: false,
-	        stroke: 'black',
-	        strokeWidth:5,
+	        draggable: NODE_DRAGGABLE,
+	        shadowEnabled: NODE_SHADOWS,
+	        shadowColor: NODE_SHADOW_COLOUR,
+	        shadowBlur: NODE_SHADOW_BLUR,
+	        shadowOffset: NODE_SHADOW_OFFSET,
+	        shadowOpacity: NODE_SHADOW_OPACITY,
+	        rotationDeg: Math.floor(Math.random()*(NODE_MAX_ANGLE - NODE_MIN_ANGLE) + NODE_MIN_ANGLE),
+	        strokeEnabled: NODE_OUTLINE,
+	        stroke: NODE_OUTLINE_COLOUR,
+	        strokeWidth:NODE_OUTLINE_WIDTH,
 	      });
 		  
-		  scale = Math.sqrt(1.0 * DEFAULT_SIZE / (nodes[name].image.getWidth()*nodes[name].image.getHeight()));
+		  scale = Math.sqrt(1.0 * NODE_DEFAULT_SIZE / (nodes[name].image.getWidth()*nodes[name].image.getHeight()));
 		  nodes[name].image.setWidth(nodes[name].image.getWidth()*scale);
 		  nodes[name].image.setHeight(nodes[name].image.getHeight()*scale);
 		}
@@ -133,18 +122,10 @@ function initStage()
 	for (i in edges)
 		{
 		   edge = edges[i];
-		   colour = 'black';
-		   switch(edge.type)
-		   {
-		   case 'attributedTo':
-			   colour = 'black';
-		   	   break;
-		   case 'actedOnBehalfOf':
-			   colour = 'black';
-		       break;
-		   
-		   }
-		   
+		   colour = DEFAULT_EDGE_COLOUR;
+		   if (EDGE_COLOURS[edge.type])
+			   colour = EDGE_COLOURS[edge.type];
+
 		   connector = new Kinetic.Line(
             {
             	//set starting point for connector to by center points of linked images
@@ -155,11 +136,12 @@ function initStage()
                          */
             	points: getLinePoints(edge.from.image, edge.to.image),
             	stroke: colour,
-            	strokeWidth: 5,
-                shadowColor: 'black',
-                shadowBlur: 3,
-                shadowOffset: 1,
-                shadowOpacity: 1
+            	strokeWidth: EDGE_WIDTH,
+            	shadowEnabled: EDGE_SHADOWS,
+                shadowColor: EDGE_SHADOW_COLOUR,
+                shadowBlur: EDGE_SHADOW_BLUR,
+                shadowOffset: EDGE_SHADOW_OFFSET,
+                shadowOpacity: EDGE_SHADOW_OPACITY
             });
 		   
 		   edge.line = connector;
@@ -345,73 +327,141 @@ function toggleHighlightShape(target, on)
 				break;
 			}
 	// now highlight the image if it is not already highlighted
-	if (on)
+	if (!isSelected(targetNode))
 	{
-		if (target.getStroke() != 'red')
-		{
-			target.setStrokeEnabled(true);
-			target.setStrokeWidth(10);
-
-		}
+		setImageHighlight(targetNode.image, false, on, false);
+	}
 	
 	// now find all nodes linked to that target node
 	for ( e in targetNode.edges)
 		{
-			targetNode.edges[e].line.setStrokeWidth(5);
-			targetNode.edges[e].line.setStroke('yellow');
+			setEdgeHighlight(targetNode.edges[e], on);
+			
 		if (targetNode.edges[e].from != targetNode)
 			{
-				if (targetNode.edges[e].from.image.getStroke() != 'red')
+				if (!isSelected(targetNode.edges[e].from))
 				{
-					targetNode.edges[e].from.image.setStrokeEnabled(true);
-					targetNode.edges[e].from.image.setStrokeWidth(7);
-					//targetNode.edges[e].from.image.setStroke('blue');
+					setImageHighlight(targetNode.edges[e].from.image, false, on, false);
 				}
 			}
 			else
-				if (targetNode.edges[e].to.image.getStroke() != 'red')
+				if (!isSelected(targetNode.edges[e].to))
 				{
-					targetNode.edges[e].to.image.setStrokeEnabled(true);
-					targetNode.edges[e].to.image.setStrokeWidth(7);
-					//targetNode.edges[e].to.image.setStroke('green');
+					setImageHighlight(targetNode.edges[e].to.image, false, on, false);
 				}
 		}
-	
-	}
-	else // if off
+}
+
+function setImageHighlight(image, selected, highlight, isThumb)
+{
+	if (isThumb)
 	{
-		if (target.getStroke() != 'red')
+		if (selected)
 		{
-			target.setStrokeEnabled(false);
-			target.setStrokeWidth(5);
-
+			image.setStrokeEnabled(THUMB_SELECTED_OUTLINE);
+			image.setStroke(THUMB_SELECTED_OUTLINE_COLOUR);
+			image.setStrokeWidth(THUMB_SELECTED_OUTLINE_WIDTH);
+			image.setShadowEnabled(THUMB_SELECTED_SHADOWS);
+			image.setShadowBlur(THUMB_SELECTED_SHADOW_BLUR);
+			image.setShadowOffset(THUMB_SELECTED_SHADOW_OFFSET);
+			image.setShadowOpacity(THUMB_SELECTED_SHADOW_OPACITY);
+			image.setShadowColor(THUMB_SELECTED_SHADOW_COLOUR);
 		}
-	
-	// now find all nodes linked to that target node
-	for ( e in targetNode.edges)
+		else if (highlight)
 		{
-			targetNode.edges[e].line.setStrokeWidth(5);
-			targetNode.edges[e].line.setStroke('grey');
-
-			if (targetNode.edges[e].from != targetNode)
-			{
-				if (targetNode.edges[e].from.image.getStroke() != 'red')
-				{
-					targetNode.edges[e].from.image.setStrokeEnabled(false);
-					targetNode.edges[e].from.image.setStrokeWidth(5);
-					//targetNode.edges[e].from.image.setStroke('black');
-				}
-			}
-			else
-				if (targetNode.edges[e].to.image.getStroke() != 'red')
-				{
-					targetNode.edges[e].to.image.setStrokeEnabled(false);
-					targetNode.edges[e].to.image.setStrokeWidth(5);
-					//targetNode.edges[e].to.image.setStroke('black');
-				}
+			image.setStrokeEnabled(THUMB_HIGHLIGHTED_OUTLINE);
+			image.setStroke(THUMB_HIGHLIGHTED_OUTLINE_COLOUR);
+			image.setStrokeWidth(THUMB_HIGHLIGHTED_OUTLINE_WIDTH);
+			image.setShadowEnabled(THUMB_HIGHLIGHTED_SHADOWS);
+			image.setShadowBlur(THUMB_HIGHLIGHTED_SHADOW_BLUR);
+			image.setShadowOffset(THUMB_HIGHLIGHTED_SHADOW_OFFSET);
+			image.setShadowOpacity(THUMB_HIGHLIGHTED_SHADOW_OPACITY);
+			image.setShadowColor(THUMB_HIGHLIGHTED_SHADOW_COLOUR);
+		}
+		else
+		{
+			image.setStrokeEnabled(THUMB_OUTLINE);
+			image.setStroke(THUMB_OUTLINE_COLOUR);
+			image.setStrokeWidth(THUMB_OUTLINE_WIDTH);
+			image.setShadowEnabled(THUMB_SHADOWS);
+			image.setShadowBlur(THUMB_SHADOW_BLUR);
+			image.setShadowOffset(THUMB_SHADOW_OFFSET);
+			image.setShadowOpacity(THUMB_SHADOW_OPACITY);
+			image.setShadowColor(THUMB_SHADOW_COLOUR);
 		}
 	}
+	else
+	{
+		if (selected)
+		{
+			image.setStrokeEnabled(NODE_SELECTED_OUTLINE);
+			image.setStroke(NODE_SELECTED_OUTLINE_COLOUR);
+			image.setStrokeWidth(NODE_SELECTED_OUTLINE_WIDTH);
+			image.setShadowEnabled(NODE_SELECTED_SHADOWS);
+			image.setShadowBlur(NODE_SELECTED_SHADOW_BLUR);
+			image.setShadowOffset(NODE_SELECTED_SHADOW_OFFSET);
+			image.setShadowOpacity(NODE_SELECTED_SHADOW_OPACITY);
+			image.setShadowColor(NODE_SELECTED_SHADOW_COLOUR);
+		}
+		else if (highlight)
+		{
+			image.setStrokeEnabled(NODE_HIGHLIGHTED_OUTLINE);
+			image.setStroke(NODE_HIGHLIGHTED_OUTLINE_COLOUR);
+			image.setStrokeWidth(NODE_HIGHLIGHTED_OUTLINE_WIDTH);
+			image.setShadowEnabled(NODE_HIGHLIGHTED_SHADOWS);
+			image.setShadowBlur(NODE_HIGHLIGHTED_SHADOW_BLUR);
+			image.setShadowOffset(NODE_HIGHLIGHTED_SHADOW_OFFSET);
+			image.setShadowOpacity(NODE_HIGHLIGHTED_SHADOW_OPACITY);
+			image.setShadowColor(NODE_HIGHLIGHTED_SHADOW_COLOUR);
+		}
+		else
+		{
+			image.setStrokeEnabled(NODE_OUTLINE);
+			image.setStroke(NODE_OUTLINE_COLOUR);
+			image.setStrokeWidth(NODE_OUTLINE_WIDTH);
+			image.setShadowEnabled(NODE_SHADOWS);
+			image.setShadowBlur(NODE_SHADOW_BLUR);
+			image.setShadowOffset(NODE_SHADOW_OFFSET);
+			image.setShadowOpacity(NODE_SHADOW_OPACITY);
+			image.setShadowColor(NODE_SHADOW_COLOUR);
+		}
+	}
+	redraw();
+}
+function setEdgeHighlight(edge, on)
+{
+	if (on)
+	{
+		if (EDGE_HIGHLIGHTED_COLOURS[edge.type])
+			edge.line.setStroke(EDGE_HIGHLIGHTED_COLOURS[edge.type]);
+		else
+			edge.line.setStroke(EDGE_HIGHLIGHTED_DEFAULT_COLOUR);
+		edge.line.setStrokeWidth(EDGE_HIGHLIGHTED_WIDTH);
+		edge.line.setShadowEnabled(EDGE_HIGHLIGHTED_SHADOWS);
+		edge.line.setShadowBlur(EDGE_HIGHLIGHTED_SHADOW_BLUR);
+		edge.line.setShadowOffset(EDGE_HIGHLIGHTED_SHADOW_OFFSET);
+		edge.line.setShadowOpacity(EDGE_HIGHLIGHTED_SHADOW_OPACITY);
+		edge.line.setShadowColor(EDGE_HIGHLIGHTED_SHADOW_COLOUR);
+	}
+	else
+	{
+		if (EDGE_COLOURS[edge.type])
+			edge.line.setStroke(EDGE_COLOURS[edge.type]);
+		else
+			edge.line.setStroke(EDGE_DEFAULT_COLOUR);
+		edge.line.setStrokeWidth(EDGE_WIDTH);
+		edge.line.setShadowEnabled(EDGE_SHADOWS);
+		edge.line.setShadowBlur(EDGE_SHADOW_BLUR);
+		edge.line.setShadowOffset(EDGE_SHADOW_OFFSET);
+		edge.line.setShadowOpacity(EDGE_SHADOW_OPACITY);
+		edge.line.setShadowColor(EDGE_SHADOW_COLOUR);
+	}
+	redraw();
+}
 
+function isSelected(node)
+{
+	return !((!selectedNodes['1'] || selectedNodes['1'] != node) && (!selectedNodes['2'] || selectedNodes['2'] != node));
 }
 
 /*
@@ -557,7 +607,7 @@ function loadJSONProv (json)
 
 function arrowPoints(fromx, fromy, tox, toy)
 {
-     headlen = 30;// Math.sqrt(Math.sqrt((fromx-tox)*(fromx-tox) - (fromy-toy)*(fromy-toy)));   // how long you want the head of the arrow to be, you could calculate this as a fraction of the distance between the points as well.
+     headlen = EDGE_ARROWHEAD_WIDTH;// Math.sqrt(Math.sqrt((fromx-tox)*(fromx-tox) - (fromy-toy)*(fromy-toy)));   // how long you want the head of the arrow to be, you could calculate this as a fraction of the distance between the points as well.
      angle = Math.atan2(toy-fromy,tox-fromx);
 
     points = [fromx, fromy, tox, toy, tox-headlen*Math.cos(angle-Math.PI/6),toy-headlen*Math.sin(angle-Math.PI/6),tox, toy, tox-headlen*Math.cos(angle+Math.PI/6),toy-headlen*Math.sin(angle+Math.PI/6)];
@@ -647,16 +697,17 @@ function showAttributes(node, position)
 	 rect = new Kinetic.Rect({
         x: X,
         y: Y,
-        stroke: '#000',
-        strokeWidth: 2,
-        fill: '#fafafa',
-        width: 0.16 * STAGE_WIDTH,
-        height: 0.43 * STAGE_HEIGHT,
-        shadowColor: 'black',
-        shadowBlur: 10,
-        shadowOffset: [10, 10],
-        shadowOpacity: 0.2,
-        cornerRadius: 10
+        stroke: ATTRIBBOX_BORDER_COLOUR,
+        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
+        fill: ATTRIBBOX_FILL,
+        width: ATTRIBBOX_WIDTH,
+        height: ATTRIBBOX_HEIGHT,
+        shadowEnabled: ATTRIBBOX_SHADOW,
+        shadowColor: ATTRIBBOX_SHADOW_COLOUR,
+        shadowBlur: ATTRIBBOX_SHADOW_BLUR,
+        shadowOffset: ATTRIBBOX_SHADOW_OFFSET,
+        shadowOpacity: ATTRIBBOX_SHADOW_OPACITY,
+        cornerRadius: ATTRIBBOX_CORNER_RADIUS
       });
 
 	 if (node.attribImage == null) // first time creating attributes
@@ -666,17 +717,18 @@ function showAttributes(node, position)
 	        x: X+10,
 	        y: Y+10,
 	        draggable: false,
-	        shadowColor: 'black',
-	        shadowBlur: 3,
-	        shadowOffset: 2,
-	        shadowOpacity: 1,
-	        rotationDeg: 0,
-	        strokeEnabled: false,
-	        stroke: 'red',
-	        strokeWidth:5
+	        shadowEnabled: THUMB_SHADOWS,
+	        shadowColor: THUMB_SHADOW_COLOUR,
+	        shadowBlur: THUMB_SHADOW_BLUR,
+	        shadowOffset: THUMB_SHADOW_OFFSET,
+	        shadowOpacity: THUMB_SHADOW_OPACITY,
+	        rotationDeg: Math.floor(Math.random()*(THUMB_MAX_ANGLE - THUMB_MIN_ANGLE) + THUMB_MIN_ANGLE),
+	        strokeEnabled: THUMB_OUTLINE,
+	        stroke: THUMB_OUTLINE_COLOUR,
+	        strokeWidth: THUMB_OUTLINE_WIDTH
 	      });
 		 
-		  scale = Math.sqrt(1.0 * DEFAULT_THUMB_SIZE / (node.attribImage.getWidth()*node.attribImage.getHeight()));
+		  scale = Math.sqrt(1.0 * THUMB_DEFAULT_SIZE / (node.attribImage.getWidth()*node.attribImage.getHeight()));
 		  node.attribImage.setWidth(node.attribImage.getWidth()*scale);
 		  node.attribImage.setHeight(node.attribImage.getHeight()*scale);
 		  
@@ -684,10 +736,12 @@ function showAttributes(node, position)
 		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
 		        y: Y + 20,
 		        text: wordWrap(node.attributes['name'], 10),
-		        fontSize: LARGE_FONT,
-		        fontFamily: 'Calibri',
-		        fontStyle: 'normal',
-		        fill: 'Black'
+		        fontSize: ATTRIBBOX_LARGE_FONT,
+		        fontFamily: ATTRIBBOX_FONT_FAMILY,
+		        fontStyle: ATTRIBBOX_FONT_STYLE,
+		        fill: ATTRIBBOX_FONT_FILL,
+		        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 		  });
 		  
 		  totalY = Y + node.attribImage.getHeight() + 15;
@@ -699,19 +753,23 @@ function showAttributes(node, position)
 			  			x: node.attribImage.getX(),
 				        y: totalY,
 				        text: i + ": ",
-				        fontSize: SMALL_FONT,
-				        fontFamily: 'Calibri',
-				        fontStyle: 'bold',
-				        fill: 'blue'
+				        fontSize: ATTRIBBOX_SMALL_FONT,
+				        fontFamily: ATTRIBBOX_FONT_FAMILY,
+				        fontStyle: ATTRIBBOX_ATTNAME_FONT_STYLE,
+				        fill: ATTRIBBOX_ATTNAME_FONT_FILL,
+				        strokeEnabled: ATTRIBBOX_ATTNAME_FONT_OUTLINE,
+				        stroke: ATTRIBBOX_ATTNAME_FONT_OUTLINE_COLOUR
 			  		});		  		
 			  		node.attribValues[i] = new Kinetic.Text({
 				        x: node.attribNames[i].getX() + node.attribNames[i].getWidth(),
 				        y: totalY,
 				        text: wordWrap(node.attributes[i], 25 - i.length),
-				        fontSize: SMALL_FONT,
-				        fontFamily: 'Calibri',
-				        fontStyle: 'normal',
-				        fill: 'black'
+				        fontSize: ATTRIBBOX_SMALL_FONT,
+				        fontFamily: ATTRIBBOX_FONT_FAMILY,
+				        fontStyle: ATTRIBBOX_FONT_STYLE,
+				        fill: ATTRIBBOX_FONT_FILL,
+				        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+				        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 				  });
 				  totalY += node.attribValues[i].getHeight() + 5;
 			  	}
@@ -720,10 +778,11 @@ function showAttributes(node, position)
 	 else
 	 {
 		 node.attribImage.setY(Y+10);
-		 node.attribImage.setStrokeEnabled(false);
+		 setImageHighlight(node.attribImage, false, false, true);
 		 for (i in node.attribValues)
 		 {
-			 node.attribValues[i].setFill('black');
+			 if (node.attribValues[i] != node.attribImage)
+				 setTextHighlight(node.attribValues[i], false, false);
 			 if (position == '1' && node.attribValues[i].getY() > 0.45*STAGE_HEIGHT)
 			 {
 				 node.attribValues[i].setY(node.attribValues[i].getY() - 0.45*STAGE_HEIGHT + 5);
@@ -794,9 +853,7 @@ function toggleNodeSelection(shape)
 		attribLayer['1'].removeChildren();
 		attribLayer['1'].draw();
 		selectedAttributes['1'] = null;
-	    shape.setStroke('black');
-	    shape.setStrokeWidth(5);
-	    redraw();
+		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
 		return;
 	}
@@ -806,9 +863,7 @@ function toggleNodeSelection(shape)
 		attribLayer['2'].removeChildren();
 		attribLayer['2'].draw();
 		selectedAttributes['2'] = null;
-	    shape.setStroke('black');
-	    shape.setStrokeWidth(5);
-	    redraw();
+	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
 		return;
 	}
@@ -824,18 +879,15 @@ function toggleNodeSelection(shape)
 	{
 		selectedNodes['1'] = clickedNode;
 		showAttributes(clickedNode,'1');
-		shape.setStroke('red');
-	  	shape.setStrokeWidth(10);
+		setImageHighlight(clickedNode.image, true, false);
 	}
 	else
 	{
 		selectedNodes['2'] = clickedNode;
 		showAttributes(clickedNode,'2');
-		shape.setStroke('red');
-	  	shape.setStrokeWidth(10);
+		setImageHighlight(clickedNode.image, true, false);
 	}
 	clickSound.play();
-	redraw();
 }
 
 function toggleHighlightAttribute(shape,on)
@@ -863,30 +915,25 @@ function toggleHighlightAttribute(shape,on)
 						document.body.style.cursor = 'pointer';
 						if (shape == selectedNodes[i].attribImage)
 						{
-							shape.setStrokeEnabled(true);
-							shape.setStroke('black');
+							setImageHighlight(shape, false, true, true);
 						}
 						else
 						{
-							shape.setFill('black');
-							shape.setFontStyle('bold');
+							setTextHighlight(shape, false, true);
 						}
 					}
 					else
 					{
-		     	          document.body.style.cursor = 'default';
+		     	        document.body.style.cursor = 'default';
 						if (shape == selectedNodes[i].attribImage)
 						{
-							shape.setStrokeEnabled(false);
-							shape.setStroke('red');
+							setImageHighlight(shape, false, false, true);
 						}
 						else
 						{
-							shape.setFill('black');
-							shape.setFontStyle('normal');
+							setTextHighlight(shape, false, false);
 						}
 					}
-					redraw();
 					return;
 				}
 }
@@ -899,14 +946,12 @@ function toggleAttributeSelection(shape)
 		{
 			selectedAttributes[i] = null;
 			if (shape == selectedNodes[i].attribImage)
-				shape.setStrokeEnabled(false);
+				setImageHighlight(shape, false, false, true);
 			else
 			{
-				shape.setFill('black');
-				shape.setFontStyle('normal');
+				setTextHighlight(shape, false, false);
 			}
 			clickSound.play();
-			redraw();
 			return;
 		}
 	
@@ -919,30 +964,52 @@ function toggleAttributeSelection(shape)
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
 					{
 						if (selectedNodes[i].attribValues[selectedAttributes[i]] == selectedNodes[i].attribImage)
-							selectedNodes[i].attribValues[selectedAttributes[i]].setStrokeEnabled(false);
+							setImageHighlight(selectedNodes[i].attribValues[selectedAttributes[i]],false,false,true);
 						else
 						{
-							selectedNodes[i].attribValues[selectedAttributes[i]].setFill('black');
-							selectedNodes[i].attribValues[selectedAttributes[i]].setFontStyle('normal');
+							setTextHighlight(selectedNodes[i].attribValues[selectedAttributes[i]],false,false);
 						}
 					}
 					selectedAttributes[i] = j;
 					if (shape == selectedNodes[i].attribImage)
 					{
-						shape.setStrokeEnabled(true);
-						shape.setStroke('red');
+						setImageHighlight(shape, true, false, true);
 					}
 					else
 					{
-						shape.setFill('red');
-						//shape.setFontStyle('bold');
+						setTextHighlight(shape, true, false);
 					}
 					clickSound.play();
-					redraw();
 					return;
 				}
 	// do nothing is shape does not match any selectable object
  }
+
+function setTextHighlight(shape, selected, highlighted)
+{
+	if (selected)
+	{
+		shape.setFontStyle(ATTRIBBOX_SELECTED_FONT_STYLE);
+		shape.setFill(ATTRIBBOX_SELECTED_FONT_FILL);
+		shape.setStrokeEnabled(ATTRIBBOX_SELECTED_FONT_OUTLINE);
+		shape.setStroke(ATTRIBBOX_SELECTED_FONT_OUTLINE_COLOUR);
+	}
+	else if (highlighted)
+	{
+		shape.setFontStyle(ATTRIBBOX_HIGHLIGHTED_FONT_STYLE);
+		shape.setFill(ATTRIBBOX_HIGHLIGHTED_FONT_FILL);
+		shape.setStrokeEnabled(ATTRIBBOX_HIGHLIGHTED_FONT_OUTLINE);
+		shape.setStroke(ATTRIBBOX_HIGHLIGHTED_FONT_OUTLINE_COLOUR);
+	}
+	else
+	{
+		shape.setFontStyle(ATTRIBBOX_FONT_STYLE);
+		shape.setFill(ATTRIBBOX_FONT_FILL);
+		shape.setStrokeEnabled(ATTRIBBOX_FONT_OUTLINE);
+		shape.setStroke(ATTRIBBOX_FONT_OUTLINE_COLOUR);
+	}
+	redraw();
+}
 
 function redraw()
 {
