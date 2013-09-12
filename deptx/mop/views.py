@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.context_processors import csrf
 from django.views.decorators.csrf import csrf_protect
@@ -28,6 +28,10 @@ from cron.models import CronDocumentInstance
 
 from provmanager.views import getProvJson, getProvSvg
 
+def public_index(request):
+    return render_to_response('mop/public_index.html')
+
+
 def isMop(user):
     if user:
         for mop in Mop.objects.filter(user=user):
@@ -35,20 +39,22 @@ def isMop(user):
                 return True
     return False
 
-@login_required(login_url='mop_login')
-@user_passes_test(isMop, login_url='mop_login')
+#@login_required(login_url='mop_login')
+#@user_passes_test(isMop, login_url='mop_login')
 def index(request):
-    activeMops = Mop.objects.filter(active=True)
-    inactiveMops = Mop.objects.filter(active=False)
     
-    #MAIL MANAGING
-    inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
-    outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
-    trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
-    draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
+    if request.user is not None and request.user.is_active and isMop(request.user):
+        #MAIL MANAGING
+        inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
+        trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
+        draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
+        
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
+        return render(request, 'mop/index.html', context)
     
-    context = {'activeMops': activeMops, 'inactiveMops': inactiveMops, 'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
-    return render(request, 'mop/index.html', context)
+    else:
+        return login(request)
 
 def login(request):
     if request.method == 'POST':
@@ -72,6 +78,10 @@ def login(request):
     else:
         form =  AuthenticationForm()
         return render_to_response('mop/login.html', {'form' : form,}, context_instance=RequestContext(request))
+
+def logout_view(request):
+    logout(request)
+    return redirect('mop_index')
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')

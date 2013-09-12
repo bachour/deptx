@@ -13,7 +13,7 @@ import json
 api = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 
 
-    
+#TODO make everything unacessible for non-admin users (apart from improve)    
 def index(request):
     provenance_list = Provenance.objects.all()
     

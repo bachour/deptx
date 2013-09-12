@@ -3,6 +3,7 @@ from django.conf import settings
 
 urlpatterns = patterns('',
     url(r'^', include('mop.urls')),
+    url(r'^provmanager/', include('provmanager.urls')),
 )
 
 # Static and Media files
