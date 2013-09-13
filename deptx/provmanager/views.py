@@ -8,6 +8,9 @@ from prov.model import ProvBundle
 
 from deptx.api import api_location, api_username, api_key
 from assets.models import Document
+from cron.models import CronDocumentInstance
+from mop.models import DocumentInstance
+
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -15,6 +18,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from graphml2prov import convert_graphml
+
+
 
 API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 MODE_CRON = "cron"
@@ -79,8 +84,10 @@ def improve(request, serial):
 #TODO check if logged in as cron/mop
 @csrf_exempt
 def prov_check(request):
+    
     correct = False
     message = "This is not correct."
+
     #if request.is_ajax():
     if request.method == 'POST':
         serial = request.POST.get('serial', "")
@@ -95,21 +102,37 @@ def prov_check(request):
         except Provenance.DoesNotExist:
             print "bad provenance store_id"
         
-        if mode == MODE_CRON:
-            pass
-        elif mode == MODE_MOP:
-            pass
+        
         
         if provenance.node1 == node1 and provenance.node2 == node2 and provenance.attribute1 == attribute1 and provenance.attribute2 == attribute2:
             correct = True
         elif provenance.node2 == node1 and provenance.node1 == node2 and provenance.attribute2 == attribute1 and provenance.attribute1 == attribute2:
             correct = True
         
-        if correct:
-            message = "Good job, agent!"    
+
+        if mode == MODE_CRON:
+            if correct:
+                message = "Good job, cron agent!"
+
+                #TODO check properly for cron-user and if Instance exists
+                cronDocumentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+                cronDocumentInstance.solved = True
+                cronDocumentInstance.save()
+            else:
+                message = "Well, we don't think so. Try again."
+                  
+        elif mode == MODE_MOP:
+            message = "Provenance modification saved. Please submit document now."  
+            #TODO check properly for mop-user and if Instance exists
+            documentInstance = DocumentInstance.objects.get(document=provenance.document, mop=request.user.mop)
+            documentInstance.modified = True
+            documentInstance.correct = correct
+            documentInstance.save()
+            correct = True
+            
         
         json_data = json.dumps({"correct":correct, "message":message})
-    
+
         return HttpResponse(json_data, mimetype="application/json")
             
             

@@ -13,6 +13,12 @@
     	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %}
     	var AJAX_URL = "{% url 'provmanager_prov_check' %}"
     	var AJAX_MODE = "{{mode}}"
+    	{% if case %}
+    	var CONTINUE_URL = "{% url 'cron_case_detail' case.serial %}"
+    	{% elif task %}
+    	var CONTINUE_URL = "{% url 'mop_documents' %}"
+    	{% endif %}
+		var DEBUG = false   
     </script>
     <script src="{% static "provmanager/defaultKss.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>

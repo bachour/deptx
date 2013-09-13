@@ -16,3 +16,7 @@ class Provenance(models.Model):
     
     def __unicode__(self):
         return self.name + " - store: " + self.store_id.__str__()
+
+
+   
+    

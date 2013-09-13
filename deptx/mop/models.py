@@ -1,16 +1,27 @@
 from django.db import models
-from datetime import datetime   
+from deptx.helpers import now 
 
 from players.models import Mop
 from assets.models import Unit, Task, Requisition, Document
+
+
 
 class DocumentInstance(models.Model):
     document = models.ForeignKey(Document)
     mop = models.ForeignKey(Mop)
     
+    provenanceState = models.TextField(blank=True, null=True)
+    modified = models.BooleanField()
+    correct = models.BooleanField()
+    used = models.BooleanField()
+    date = models.DateTimeField(now(), auto_now=True)
+    
     def __unicode__(self):
-        return self.document.name + " / " + self.mop.user.username
-
+        if (self.modified):
+            status = "MODIFIED"
+        else:
+            status = "IN PROGRESS"
+        return self.document.name + " / " + self.mop.user.username + " (" + status + ")"
 
 class TaskInstance(models.Model):
     STATE_ACTIVE = 2
@@ -41,7 +52,7 @@ class RequisitionBlank(models.Model):
 class RequisitionInstance(models.Model):
     blank = models.ForeignKey(RequisitionBlank)
     data = models.CharField(max_length=256)
-    date = models.DateTimeField(default=datetime.now)
+    date = models.DateTimeField(default=now(), auto_now=True)
     used = models.BooleanField(default=False)
     
     def __unicode__(self):
@@ -74,6 +85,7 @@ class Mail(models.Model):
     SUBJECT_REQUEST_FORM = 101
     SUBJECT_REQUEST_TASK = 102
     SUBJECT_REQUEST_DOCUMENT = 103
+    SUBJECT_SEND_DOCUMENT = 104
         
     SUBJECT_RECEIVE_FORM = 201
     SUBJECT_RECEIVE_TASK = 202
@@ -87,6 +99,7 @@ class Mail(models.Model):
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
         (SUBJECT_REQUEST_TASK, "Requesting Task"),
         (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
+        (SUBJECT_SEND_DOCUMENT, "Sending Document"),
     )
     
     
@@ -103,7 +116,7 @@ class Mail(models.Model):
     
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit)
-    date = models.DateTimeField(default=datetime.now)
+    date = models.DateTimeField(default=now(), auto_now=True)
     subject = models.IntegerField(choices=SUBJECT_CHOICES, default=SUBJECT_NONE)
     body = models.TextField()
     read = models.BooleanField()

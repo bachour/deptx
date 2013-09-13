@@ -22,9 +22,9 @@ class Requisition(models.Model):
     CATEGORY_DOCUMENT = 2
     
     CATEGORY_CHOICES = (
-        (CATEGORY_FORM, "form for form"),
-        (CATEGORY_TASK, "form for task"),
-        (CATEGORY_DOCUMENT, "form for document"),
+        (CATEGORY_FORM, "form"),
+        (CATEGORY_TASK, "task"),
+        (CATEGORY_DOCUMENT, "document"),
     )
     
     
@@ -80,9 +80,9 @@ class Document(models.Model):
     serial = models.CharField(max_length=36, default=generateUUID)
     content = models.TextField()
     unit = models.ForeignKey(Unit)
-    provenance = models.OneToOneField(Provenance, blank=True, null=True)
+    provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
     case = models.ForeignKey(Case, blank=True, null=True)
-    task = models.ForeignKey(Task, blank=True, null=True)
+    task = models.OneToOneField(Task, blank=True, null=True)
             
     def __unicode__(self):
         return self.name

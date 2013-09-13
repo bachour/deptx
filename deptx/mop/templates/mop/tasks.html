@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>Current Tasks</h1>
+<h1>Tasks</h1>
 <h3>Friendly advice: Gain more trust to gain more tasks!</h3>
 <h2>Active tasks</h2>
 <table>
@@ -24,6 +24,30 @@
 <tr><th>Unit</th><th>Task</th><th>Description</th><th>Identification Code</th></tr>
 {% for task in new_task_list %}
 	<tr><td>{{task.unit.name}}</td><td>{{task.name}}</td><td>{{task.description}}</td><td>{{task.serial}}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Failed tasks</h2>
+<table>
+<tr><th>Unit</th><th>Task</th><th>Description</th></tr>
+{% for taskInstance in failed_taskInstance_list %}
+	<tr>
+	<td>{{taskInstance.task.unit.name}}</td>
+	<td>{{taskInstance.task.name}}</td>
+	<td>{{taskInstance.task.description}}</td>
+	</tr>
+{% endfor %}
+</table>
+
+<h2>Succesful tasks</h2>
+<table>
+<tr><th>Unit</th><th>Task</th><th>Description</th></tr>
+{% for taskInstance in solved_taskInstance_list %}
+	<tr>
+	<td>{{taskInstance.task.unit.name}}</td>
+	<td>{{taskInstance.task.name}}</td>
+	<td>{{taskInstance.task.description}}</td>
+	</tr>
 {% endfor %}
 </table>
 

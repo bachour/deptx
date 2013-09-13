@@ -3,44 +3,17 @@
 {% block content %}
 
 <h1>Provenance Investigation in Progress...</h1>
+Name: {{ documentInstance.document.name }}<br/>
+Identification Number: {{ documentInstance.document.serial }} <br/>
+<div>
+Content: {{documentInstance.document.content|linebreaksbr}}
+</div>
+<hr/>
+<pre>{{documentInstance.document.svg | safe}}</pre>
+<hr/>
+<pre>{{documentInstance.document.json}}</pre>
+<hr/>
 
-{% for document in document_list %}
-	Name: {{ document.name }}<br/>
-	Identification Number: {{ document.serial }} <br/>
-	{% if document.available %}
-		<div>
-		Content: {{document.content|linebreaksbr}}
-		</div>
-		<hr/>
-		<pre>{{document.svg | safe}}</pre>
-		<hr/>
-		<pre>{{document.json}}</pre>
-	{% else %}
-		<span style="color:red">Document not available</span>
-	{% endif %}
-	<hr/>
-{% endfor %}
-
-{% for provenance in provenance_list %}
-	{% include 'provmanager/improve.html' %}
-{% endfor %}
-
-{% if canSubmitReport %}
-	<form action="{% url 'cron_provenance' case.serial %}" method="post">{% csrf_token %}
-	<input type="submit" value="Submit Report" name="submit" />
-	</form>
-{% else %}
-	<p>
-	You first neeed all documents before you can submit a report. Please login to MoP, request the missing documents, create a draft message and attach the document for each of them.<br/>
-	Our secret hackers will then be able to acquire the documents and provide them for you here.<br/>
-	Good luck!
-	</p>
-	<p>
-	Or you could cheat, for now...
-	<form action="{% url 'cron_provenance' case.serial %}" method="post">{% csrf_token %}
-	<input type="submit" value="Cheat" name="submit" />
-	</form>
-	</p>
-{% endif %}
+{% include 'provmanager/improve.html' with provenance=documentInstance.document.provenance case=documentInstance.document.case %}
 
 {% endblock %}

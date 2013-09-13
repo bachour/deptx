@@ -28,6 +28,12 @@ class CaseInstance(models.Model):
 class CronDocumentInstance(models.Model):
     document = models.ForeignKey(Document)
     cron = models.ForeignKey(Cron)
+    provenanceState = models.TextField(blank=True, null=True)
+    solved = models.BooleanField()
     
     def __unicode__(self):
-        return self.document.name + " / " + self.cron.user.username
+        if (self.solved):
+            status = "SOLVED"
+        else:
+            status = "IN PROGRESS"
+        return self.document.name + " / " + self.cron.user.username + " (" + status + ")"

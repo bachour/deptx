@@ -1152,11 +1152,15 @@ function validateSubmit()
 
 function handleResponse(response)
 {
+	response = jQuery.parseJSON(response);
+
 	if (DEBUG)
 	{
 		response = {"correct":true,"message":"You are correct! Press continue to continue."};
 	}
+
 	showMessage(response.message);
+
 	if (response.correct)
 	{
 		taskCompleted = true;

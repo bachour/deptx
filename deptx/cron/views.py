@@ -18,7 +18,7 @@ from django.template import Context, Template
 
 from players.forms import MopForm
 
-from assets.models import Case, Mission
+from assets.models import Case, Mission, Document
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
 from provmanager.views import getProvJson, getProvSvg, MODE_CRON
@@ -199,7 +199,7 @@ def case(request, serial):
     caseInstance, created = CaseInstance.objects.get_or_create(case=case, crontracker=crontracker)
 
     
-    if not (caseInstance.solved):
+    if not (isSolved(caseInstance)):
         content = case.intro
         text = renderContent(content, request.user)
         
@@ -215,39 +215,54 @@ def case(request, serial):
                                         context_instance=RequestContext(request))
     
     
-    
+def isSolved(caseInstance):
+    document_list = Document.objects.filter(case=caseInstance.case)
+    for document in document_list:
+        documentInstance = CronDocumentInstance.objects.get(document=document, cron=caseInstance.crontracker.cron)
+        if not documentInstance.solved:
+            return False
+    #TODO remove caseInstance.solved from everywhere
+    caseInstance.solved = True
+    caseInstance.save()
+    return True
     
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-#TODO: Has user access to case?
+#TODO: Has user access to case and document?
 def provenance(request, serial):
     
-    case = Case.objects.get(serial=serial)
-    if request.method == 'POST':
-        #TODO check if it was really solved
-        caseInstance = CaseInstance.objects.get(case=case)
-        caseInstance.solved = True
-        caseInstance.save()
-        return redirect('cron_case_detail', serial)
+    document = Document.objects.get(serial=serial)
+    documentInstance = CronDocumentInstance.objects.get(document=document, cron=request.user.cron)
     
-    #TODO Each case can only have one document / provenance!
-    document_list = getAllDocumentStates(request.user.cron, case)
-    canSubmitReport = True
-    provenance_list = []
-    for document in document_list:
-        if not document.available:
-            canSubmitReport = False
-            break
-        else:
-            #document.json = getProvJson(document.provenance)
-            #document.svg = getProvSvg(document.provenance)
-            provenance_list.append(document.provenance)
-            
+    return render_to_response('cron/provenance.html', {"user": request.user, "documentInstance": documentInstance, "mode":MODE_CRON },
+                                         context_instance=RequestContext(request)
+                                 )
     
-    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "provenance_list": provenance_list, "canSubmitReport": canSubmitReport, "mode":MODE_CRON },
-                                        context_instance=RequestContext(request)
-                                )
+#     case = Case.objects.get(serial=serial)
+#     if request.method == 'POST':
+#         #TODO check if it was really solved
+#         caseInstance = CaseInstance.objects.get(case=case)
+#         caseInstance.solved = True
+#         caseInstance.save()
+#         return redirect('cron_case_detail', serial)
+#     
+#     #TODO Each case can only have one document / provenance!
+#     document_list = getAllDocumentStates(request.user.cron, case)
+#     canSubmitReport = True
+#     provenance_list = []
+#     for document in document_list:
+#         if not document.available:
+#             canSubmitReport = False
+#             break
+#         else:
+#             #document.json = getProvJson(document.provenance)
+#             #document.svg = getProvSvg(document.provenance)
+#             provenance_list.append(document.provenance)
+#     
+#     return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "provenance_list": provenance_list, "canSubmitReport": canSubmitReport, "mode":MODE_CRON },
+#                                         context_instance=RequestContext(request)
+#                                 )
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()

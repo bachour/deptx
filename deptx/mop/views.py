@@ -93,10 +93,13 @@ def tasks(request):
 
     #TODO handle the other states of the task instances as well
     active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACTIVE)
+    failed_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_FAILED)
+    solved_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_SOLVED)
     
     new_task_list = []
     tasks = Task.objects.all()
     
+    #TODO optimize so that not everything needs to be read everytime
     for task in tasks:
         try:
             taskInstance = TaskInstance.objects.get(task=task, mop=request.user.mop)
@@ -106,23 +109,14 @@ def tasks(request):
         if taskInstance is None:
             new_task_list.append(task)
        
-    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "new_task_list": new_task_list})
+    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "failed_taskInstance_list": failed_taskInstance_list, "solved_taskInstance_list": solved_taskInstance_list, "new_task_list": new_task_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    documentInstance_list = DocumentInstance.objects.filter(mop=request.user.mop)
+    documentInstance_list = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False)
     return render(request, 'mop/documents.html', {"documentInstance_list": documentInstance_list})
 
-@login_required(login_url='mop_login')
-@user_passes_test(isMop, login_url='mop_login')
-def document_view(request, documentInstance_id):
-    try:
-        documentInstance = DocumentInstance.objects.get(id=documentInstance_id, mop=request.user.mop)
-        documentInstance.save()
-    except DocumentInstance.DoesNotExist:
-        documentInstance = None
-    return render(request, 'mop/documents_view.html', {'documentInstance': documentInstance})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -132,26 +126,8 @@ def document_provenance(request, documentInstance_id):
         documentInstance.save()
     except DocumentInstance.DoesNotExist:
         documentInstance = None
-    #prov_test()
     
-    #TODO: Currently the graph is newly generated everytime this view is called
-    #TODO: Put this code where the Provenance is being created
-    provenance = documentInstance.document.provenance
-    
-    json = getProvJson(provenance)
-    svg = getProvSvg(provenance)
-    
-    #g = provenance.pdBundle.get_prov_bundle()
-            
-    #filename = generateUUID() + ".png"
-    #path = MEDIA_ROOT + "/" + GRAPH_FOLDER
-    #prov_to_file(g, path + filename, use_labels=True)
-    #provenance.imagefile = GRAPH_FOLDER + filename
-    #provenance.save()
-    
-    #json_str = g.get_provjson(indent=4)
-    
-    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'provenance': documentInstance.document.provenance, 'json':json, 'svg':svg, 'mode':MODE_MOP})
+    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'mode':MODE_MOP})
 
 
 @login_required(login_url='mop_login')
@@ -253,15 +229,16 @@ def mail_compose(request):
                 analyzeDraftMail(mail)
             return redirect('mop_index')
         else:
+            #TODO code duplication between here and the else below
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
-            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
+            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-date')
             form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
-        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
+        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-date')
         form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
 
@@ -308,7 +285,10 @@ def analyzeDraftMail(mail):
     if mail.documentInstance is not None:
         cron = mail.mop.player.cron
         document = mail.documentInstance.document
-        cronDocumentInstance = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
+        #If CRON gets the document, it disappears
+        mail.documentInstance.used = True
+        mail.documentInstance.save()
+        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
 
 
 def analyzeSentMail(mail):
@@ -321,9 +301,39 @@ def analyzeSentMail(mail):
     if mail.requisitionInstance is not None:
         mail.requisitionInstance.used = True
         mail.requisitionInstance.save()
+    
+    if mail.documentInstance is not None:
+        mail.documentInstance.used = True
+        mail.documentInstance.save()
    
-    #TODO Send proper error messages for all potential errors. 
-    if mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
+    #TODO Send proper error messages for all potential errors.
+    if mail.documentInstance is not None:
+        if mail.unit == mail.documentInstance.document.unit:
+            if mail.subject is Mail.SUBJECT_SEND_DOCUMENT:
+                #TODO check is user had the task assigned
+                newMail.subject = Mail.SUBJECT_INFORMATION
+                task = Task.objects.get(document=mail.documentInstance.document)
+                taskInstance = TaskInstance.objects.get(task=task, mop=mail.mop)
+                if mail.documentInstance.correct:
+                    newMail.body = "Very good job!"
+                    taskInstance.state = TaskInstance.STATE_SOLVED
+                else:
+                    newMail.body = "That deserves a penalty."
+                    taskInstance.state = TaskInstance.STATE_FAILED
+                taskInstance.save()
+            else:
+                newMail.subject = Mail.SUBJECT_ERROR
+                newMail.body = "Wrong subject"
+        else:
+            newMail.subject = Mail.SUBJECT_ERROR
+            newMail.body = "Wrong unit"
+        if newMail.subject == Mail.SUBJECT_ERROR:
+            #If a document was sent wrongly, it does not disappear
+            mail.documentInstance.used = False
+            mail.documentInstance.save()
+        newMail.save()
+        
+    elif mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
         if mail.subject is Mail.SUBJECT_REQUEST_FORM and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
             #Check if requested requisition exists
             #TODO check more conditions (e.g. trust level)

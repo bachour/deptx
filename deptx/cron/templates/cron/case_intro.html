@@ -8,16 +8,16 @@
 <h2>Required Documents:</h2>
 <table>
 	<tr>
+		<th></th>
 		<th>document</th>
 		<th>responsible unit</th>
 		<th>identification number</th>
 	</tr>
 {% for document in document_list %}
-	<tr {% if not document.available %}class="missing"{% endif %}>
-	<td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
+	<tr>
+	<td>{% if document.available %}<a href="{% url "cron_provenance" document.serial %}">view</a>{% endif %}</td><td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
 {% endfor %}
 </table>
-<h2>Investigate</h2>
-<a href="{% url "cron_provenance" case.serial %}">Check da provenance!</a>
+
 
 {% endblock %}
