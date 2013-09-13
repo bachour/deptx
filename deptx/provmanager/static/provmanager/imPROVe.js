@@ -28,6 +28,10 @@ var resetText;
 var selectedNodes = {};
 var selectedAttributes = {};
 
+//completion
+var taskCompleted = false;
+var revisiting = false;
+
 //Object declarations
 // graph node
 function ProvNode (type, id, ressource, attributes)
@@ -1073,8 +1077,11 @@ function createButtons()
 	        align: 'center'
 	 });
 	 
-	 layer.add(submitButton);
-	 layer.add(submitText);
+	 if (!taskCompleted)
+	 {
+		 layer.add(submitButton);
+		 layer.add(submitText);
+	 }
 	 
 }
 
@@ -1093,15 +1100,22 @@ function resetPushed()
 
 function submitPushed()
 {
-	if (selectedAttributes['1'] && selectedAttributes['2'])
+	if (taskCompleted)
 	{
-		alert("You think there is something wrong with:\n" +
-			"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
-					"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");
-		validateSubmit();
+		window.location.href = CONTINUE_URL;
 	}
 	else
-		alert("You need to select two attributes before submitting.");
+	{
+		if (selectedAttributes['1'] && selectedAttributes['2'])
+		{
+			/*alert("You think there is something wrong with:\n" +
+				"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
+						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");*/
+			validateSubmit();
+		}
+		else
+			alert("You need to select two attributes before submitting.");
+	}
 }
 
 function validateSubmit()
@@ -1120,7 +1134,8 @@ function validateSubmit()
 	{
 	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
 	    {
-	       alert("Server says:" + xmlhttp.responseText);
+	      // alert("Server says:" + xmlhttp.responseText);
+	       handleResponse(xmlhttp.responseText);
 	    }
 	 };
 	xmlhttp.open("POST",AJAX_URL,true);
@@ -1131,6 +1146,22 @@ function validateSubmit()
 					"&attribute2=" +selectedAttributes['2'] +
 					"&serial=" + AJAX_SERIAL +
 					"&mode=" + AJAX_MODE);
+}
+
+function handleResponse(response)
+{
+	if (DEBUG)
+	{
+		response = {"correct":true,"message":"You are correct!"};
+	}
+	alert(response.message);
+	if (response.correct)
+	{
+		taskCompleted = true;
+		submitText.setText("Continue");
+		layer.draw();
+	}
+	
 }
 
 function setupAttribPanes()
