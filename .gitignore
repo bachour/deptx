@@ -9,3 +9,4 @@ deptx/media
 deptx/assets/fixtures
 deptx/static
 api.py
+org.eclipse.core.resources.prefs

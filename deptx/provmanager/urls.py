@@ -10,7 +10,6 @@ urlpatterns = patterns('',
      
      url(r'improve/([-\w]+)', views.improve, name='provmanager_improve'),
      
-     url(r'cron_submit/', views.cron_submit, name='provmanager_cron_submit'),
-     url(r'mop_submit/', views.mop_submit, name='provmanager_mop_submit'),
-        
+     url(r'prov_check/', views.prov_check, name='provmanager_prov_check'),
+             
 )

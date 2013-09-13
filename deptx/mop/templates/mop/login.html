@@ -1,10 +1,36 @@
-{% extends 'mop/base.html' %}
+{% load static %}
 
-{% block content %}
-
-<h1>MoP login</h1>
-
-{% if form.errors %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>Ministry of Provenance - The Ubiquitous Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="MoP, provenance, ministry, privacy, documents, data center, domestic spying, W3C PROV">
+    <meta name="description" content="Ministry of Provenance: Proudly watching you since 1872">
+    <meta name="author" content="MofP.net">
+    <!-- MoP styles -->
+    <link href="{% static 'mop/assets/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'mop/assets/css/mofp-join.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'mop/assets/css/font-awesome.min.css' %}">
+    <!-- MoP scripts -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script> 
+    <script src="{% static 'mop/assets/js/bootstrap.min.js' %}"></script>	   
+  </head>
+  <body>
+<div id="signup">
+  <div class="container">
+    <div class="row pagination-centered">
+      <img src="{% static 'mop/assets/images/mop-logo.png' %}">
+      <h1>Ministry of Provenance</h1>
+      <a href="#" class="button" data-target="#sign-up-modal" role="button" data-toggle="modal">Intranet</a>
+      <!-- MoP Modal -->
+      <div id="sign-up-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-body">
+          <div class="pagination-centered">
+          </div>
+          <div class="well alert-error"><span class="big">MOP INTRANET</span><br><span>Please enter your credentials to continue.</span>
+          {% if form.errors %}
 	<p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
@@ -24,5 +50,18 @@
 	<input type="submit" value="login" />
 	<input type="hidden" name="next" value="{{ next }}" />
 </form>
-
-{% endblock %}
+        </div>			   
+      </div>
+    </div>
+    <!--End MoP Modal -->
+  </div>
+</div>
+</div>
+<div id="footer">
+  <div class="container">
+    <div class="row pagination-centered">
+      <a href="http://genesisofcr0n.com">About this site</a>
+    </div>
+  </div>
+  </body>
+</html>

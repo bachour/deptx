@@ -21,7 +21,7 @@ from players.forms import MopForm
 from assets.models import Case, Mission
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
-from provmanager.views import getProvJson, getProvSvg
+from provmanager.views import getProvJson, getProvSvg, MODE_CRON
 
 def isCron(user):
     if user:
@@ -245,7 +245,7 @@ def provenance(request, serial):
             provenance_list.append(document.provenance)
             
     
-    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "provenance_list": provenance_list, "canSubmitReport": canSubmitReport },
+    return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "provenance_list": provenance_list, "canSubmitReport": canSubmitReport, "mode":MODE_CRON },
                                         context_instance=RequestContext(request)
                                 )
 

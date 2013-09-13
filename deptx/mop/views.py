@@ -26,10 +26,7 @@ from deptx.helpers import generateUUID
 from deptx.settings import MEDIA_ROOT
 from cron.models import CronDocumentInstance
 
-from provmanager.views import getProvJson, getProvSvg
-
-def public_index(request):
-    return render_to_response('mop/public_index.html')
+from provmanager.views import getProvJson, getProvSvg, MODE_MOP
 
 
 def isMop(user):
@@ -73,11 +70,11 @@ def login(request):
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
-            return render_to_response('mop/login.html', {'form' : form,}, context_instance=RequestContext(request))
+            return render_to_response('mop/login.html', {'form' : form}, context_instance=RequestContext(request))
         
     else:
         form =  AuthenticationForm()
-        return render_to_response('mop/login.html', {'form' : form,}, context_instance=RequestContext(request))
+        return render_to_response('mop/login.html', {'form' : form}, context_instance=RequestContext(request))
 
 def logout_view(request):
     logout(request)
@@ -154,7 +151,7 @@ def document_provenance(request, documentInstance_id):
     
     #json_str = g.get_provjson(indent=4)
     
-    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'provenance': documentInstance.document.provenance, 'json':json, 'svg':svg})
+    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'provenance': documentInstance.document.provenance, 'json':json, 'svg':svg, 'mode':MODE_MOP})
 
 
 @login_required(login_url='mop_login')

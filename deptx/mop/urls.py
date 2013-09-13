@@ -3,9 +3,9 @@ from django.conf.urls import patterns, url
 from mop import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.public_index, name='mop_public_index'),
+    url(r'^$', views.login, name='mop_login'),
     url(r'intranet/$', views.index, name='mop_index'),
-    url(r'intranet/login/', views.login, name='mop_login'),
+
     url(r'intranet/logout/', views.logout_view, name='mop_logout'),
     url(r'intranet/rules/', views.rules, name='mop_rules'),
     url(r'intranet/tasks/', views.tasks, name='mop_tasks'),

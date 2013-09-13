@@ -10,8 +10,9 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     
     <script>
-    	var SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %}
-    	var SUBMIT_URL = "{% url 'provmanager_cron_submit' %}"
+    	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %}
+    	var AJAX_URL = "{% url 'provmanager_prov_check' %}"
+    	var AJAX_MODE = "{{mode}}"
     </script>
     <script src="{% static "provmanager/defaultKss.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>

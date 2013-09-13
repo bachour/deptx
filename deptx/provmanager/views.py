@@ -16,7 +16,9 @@ import json
 
 from graphml2prov import convert_graphml
 
-api = Api(api_location=api_location, api_username=api_username, api_key=api_key)
+API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
+MODE_CRON = "cron"
+MODE_MOP = "mop"
 
 
 #TODO make everything unacessible for non-admin users (apart from improve)    
@@ -31,17 +33,17 @@ def index(request):
 
 def view(request, id):
     provenance = Provenance.objects.get(id=id)
-    bundle = api.get_document(provenance.store_id)
+    bundle = API.get_document(provenance.store_id)
     svg = getProvSvg(provenance)
     #xml = api.get_document(provenance.store_id, format="xml")
     json_str = getProvJson(provenance)
 
-    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg})
+    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg, 'mode':MODE_CRON})
     #return render(request, 'provmanager/improve.html', {'provenance': provenance})
 
 
 def create(request):
-    json_str = api.get_document(212, format="json")
+    json_str = API.get_document(212, format="json")
     return render_to_response('provmanager/create.html', {"json_str": json_str})
 
 def convert(request, id):
@@ -60,12 +62,12 @@ def convert(request, id):
     #return HttpResponseRedirect(reverse('provmanager_index'))
 
 def getProvJson(provenance):
-    json_str = api.get_document(provenance.store_id, format="json")
+    json_str = API.get_document(provenance.store_id, format="json")
     parsed = json.loads(json_str)
     return json.dumps(parsed, indent=4, sort_keys=True)
 
 def getProvSvg(provenance):
-    svg = api.get_document(provenance.store_id, format="svg")
+    svg = API.get_document(provenance.store_id, format="svg")
     return svg
 
 def improve(request, serial):
@@ -74,9 +76,9 @@ def improve(request, serial):
     return HttpResponse(json_str, content_type="application/json")
 
 
-#TODO check if logged in as cron
+#TODO check if logged in as cron/mop
 @csrf_exempt
-def cron_submit(request):
+def prov_check(request):
     correct = False
     message = "This is not correct."
     #if request.is_ajax():
@@ -86,11 +88,17 @@ def cron_submit(request):
         node2 = request.POST.get('node2', "")
         attribute1 = request.POST.get('attribute1', "")
         attribute2 = request.POST.get('attribute2', "")
+        mode = request.POST.get('mode', "")
       
         try:
             provenance = Provenance.objects.get(serial=serial)
         except Provenance.DoesNotExist:
             print "bad provenance store_id"
+        
+        if mode == MODE_CRON:
+            pass
+        elif mode == MODE_MOP:
+            pass
         
         if provenance.node1 == node1 and provenance.node2 == node2 and provenance.attribute1 == attribute1 and provenance.attribute2 == attribute2:
             correct = True
@@ -124,7 +132,5 @@ def cron_submit(request):
 #    return HttpResponse(message)
     pass
 
-def mop_submit(request):
-    pass
 
     
