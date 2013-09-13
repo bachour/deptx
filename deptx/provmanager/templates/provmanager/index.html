@@ -17,15 +17,19 @@ td { border:2px black solid; padding:4px;}
 <tr>
 	<th></th>
 	<th></th>
-	<th>Used in cases</th>
-	<th>Used in tasks</th>
+	<th>ProvStore</th>
+	<th>cr0n: case (document)</th>
+	<th>MoP: task (document)</th>
+	<th>modified</th>
 </tr>
 {% for provenance in provenance_list %}
 	<tr>
 		<td>{% if provenance.store_id %}<a href="{% url 'provmanager_view' provenance.id %}">view</a>{% endif %}</td>
 		<td>{{provenance.name}}</td>
-		<td>{% for document in provenance.cron_document_list %}{{document.name}} ({{document.case.name}})<br/>{% endfor %}</td>
-		<td>{% for document in provenance.mop_document_list %}{{document.name}} ({{document.task.name}})<br/>{% endfor %}</td>		
+		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
+		<td>{% for document in provenance.cron_document_list %}{{document.case.name}} ({{document.name}})<br/>{% endfor %}</td>
+		<td>{% for document in provenance.mop_document_list %}{{document.task.name}} ({{document.name}})<br/>{% endfor %}</td>
+		<td>{{provenance.date}}</td>		
 	</tr>
 {% endfor %}
 </table>

@@ -1,6 +1,7 @@
 from django.shortcuts import render, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
+from django.template import RequestContext
 
 from provmanager.wrapper import Api
 from provmanager.models import Provenance
@@ -17,7 +18,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 import json
 
-from graphml2prov import convert_graphml
+from graphml2prov import convert_graphml_string, validate
+import prov.model
 
 
 
@@ -28,7 +30,7 @@ MODE_MOP = "mop"
 
 #TODO make everything unacessible for non-admin users (apart from improve)    
 def index(request):
-    provenance_list = Provenance.objects.all()
+    provenance_list = Provenance.objects.all().order_by("-date")
     
     for provenance in provenance_list:
         provenance.cron_document_list = Document.objects.filter(provenance=provenance).exclude(case__isnull=True)
@@ -48,23 +50,35 @@ def view(request, id):
 
 
 def create(request):
-    json_str = API.get_document(212, format="json")
-    return render_to_response('provmanager/create.html', {"json_str": json_str})
+    if request.method == 'POST':
+        if 'convert' in request.POST:
+            graphml_str = request.POST["graphml"]
+            provn_str = convert_graphml_string(graphml_str)
+            valid, validation_url = validate(provn_str)
+            if valid:
+                json_str = provn_str.get_provjson()
+            else:
+                json_str={}
+            return render_to_response('provmanager/create.html', {"graphml_str": graphml_str, "json_str": json_str, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
+        elif 'save' in request.POST:
+            graphml_str = request.POST["graphml"]
+            provn_str = convert_graphml_string(graphml_str)
+            valid, validation_url = validate(provn_str)
+            if valid:
+                name = request.POST["name"]
+                if name=="":
+                    name = "PLEASE ENTER A NAME"
+                store_id = API.submit_document(provn_str, name, public=False)
+                provenance = Provenance(name=name, store_id=store_id)
+                provenance.save()
+                return HttpResponseRedirect(reverse('provmanager_index'))
+            
+            
+    return render_to_response('provmanager/create.html', context_instance=RequestContext(request))
 
 def convert(request, id):
     provenance = Provenance.objects.get(id=id)
-    convert_graphml(provenance.graphml)
-    return HttpResponseRedirect(reverse('provmanager_index'))
-
-#def create(request):
-    #name = "random name"
-    #bundle = ProvBundle()
-    #bundle.entity('crashed_car')
-    #store_id = api.submit_document(bundle, name, public=False)
-    
-    #provenance = Provenance(store_id=store_id, name=name)
-    #provenance.save()
-    #return HttpResponseRedirect(reverse('provmanager_index'))
+    convert_graphml_string(provenance.graphml)
 
 def getProvJson(provenance):
     json_str = API.get_document(provenance.store_id, format="json")

@@ -3,19 +3,32 @@
   <title></title>
 </head>
 <body>
-<textarea id="drop_zone_graphml" style="width:480px; height:80px">Drop GRAPHML file here</textarea>
-<br/><br/>
-<a href="">Convert to Json</a>
-<br/><br/>
-<textarea id="drop_zone_json" style="width:480px; height:80px">JSON file here</textarea>
-<br/><br/>
-Ingame preview:
-<br/><br/>
-{% include 'provmanager/improve.html' %}
-<br/><br/>
-<textarea>Provenance Name</textarea>
-<br/><br/>
-<a href="">Save</a>
+<form action="{% url 'provmanager_create' %}" method="post">{% csrf_token %}
+<textarea name="graphml" id="drop_zone" style="width:480px; height:80px">{{graphml_str}}</textarea><br/>
+<input type="submit" value="Convert" name="convert" />
+
+{% if valid == None %}
+{% else %}
+
+	{% if valid %}Valid document!
+	{% else %} INVALID DOCUMENT!
+	{% endif %}
+	<a href="{{validation_url}}" target="_blank">Check Report</a><br/>
+	<br/><br/>
+	
+	<textarea name="json" style="width:480px; height:80px">{{json_str}}</textarea>
+	<br/><br/>
+	Ingame preview:
+	<br/><br/>
+	{% include 'provmanager/improve.html' %}
+	<br/><br/>
+	{% if valid %}
+	Provenance name: <input type="text" name="name" value=""/>
+	<br/><br/>
+	<input type="submit" value="Save" name="save" />
+	{% endif %}
+{% endif %}
+</form>
 <br/><br/>
 <script>
   function handleFileSelect(evt) {

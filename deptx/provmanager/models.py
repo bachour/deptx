@@ -1,6 +1,6 @@
 from django.db import models
 
-from deptx.helpers import generateUUID
+from deptx.helpers import generateUUID, now
 
 
 class Provenance(models.Model):
@@ -12,6 +12,8 @@ class Provenance(models.Model):
     attribute1 = models.CharField(max_length=50, blank=True, null=True)
     node2 = models.CharField(max_length=50, blank=True, null=True)
     attribute2 = models.CharField(max_length=50, blank=True, null=True)
+    
+    date = models.DateTimeField(default=now(), auto_now=True)
     
     
     def __unicode__(self):

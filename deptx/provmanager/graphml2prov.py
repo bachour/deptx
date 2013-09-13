@@ -12,7 +12,7 @@ converter is a tool for extracting PROV annotations from a graphML file
 @license:    TBD
 
 @contact:    trungdong@donggiang.com
-@deffield    updated: 2013-09-10
+@deffield    updated: 2013-09-13
 '''
 
 import sys
@@ -32,7 +32,7 @@ import prov.model
 __all__ = []
 __version__ = 0.1
 __date__ = '2013-09-09'
-__updated__ = '2013-09-09'
+__updated__ = '2013-09-13'
 
 DEBUG = 1
 TESTRUN = 0
@@ -137,9 +137,8 @@ def convert_attributes(element, attributes):
 
 
 class GraphMLProvConverter(object):
-    def __init__(self, filepath):
-        tree = etree.parse(filepath)
-        self.root = tree.getroot()
+    def __init__(self, root):
+        self.root = root
         self.initialise_attributes()
 
         self.prov = prov.model.ProvBundle()
@@ -183,9 +182,9 @@ class GraphMLProvConverter(object):
         shape_element = node.find('g:data/y:ShapeNode/y:Shape', GRAPHML_PREFIXES)
         shape = shape_element.attrib['type']
         # TODO: Change the following back to PROV node shape convention
-        if shape == 'rectangle':
+        if shape == 'ellipse':
             prov_node = self.convert_entity(label, attributes)
-        elif shape == 'ellipse':
+        elif shape == 'rectangle':
             prov_node = self.convert_activity(label, attributes)
         elif shape == 'trapezoid':
             prov_node = self.convert_entity(label, attributes)
@@ -221,11 +220,10 @@ class GraphMLProvConverter(object):
         return self.prov.agent(convert_identifier(label), other_attributes=attributes)
 
 
-def validate(provjson):
-#     headers = {'Content-Type': 'application/json',
-#                'Accept': 'application/json'}
-#
-    headers = {'Content-Type': 'text/provenance-notation',
+def validate(prov_document):
+    provjson = prov_document.get_provjson()
+
+    headers = {'Content-Type': 'application/json',
                'Accept': 'application/json'}
 
     try:
@@ -247,10 +245,8 @@ def validate(provjson):
 
         valid = len(result) == 0
 
-        if valid:
-            logger.info('The output PROV document is valid.')
-        else:
-            logger.warn('The output PROV document is INVALID. Please check the validation report at %s' % validation_url)
+        return valid, validation_url
+
     except Exception, e:
         if DEBUG or TESTRUN:
             traceback.print_exc()
@@ -265,26 +261,40 @@ def convert_path(path, recursive=False):
             if recursive and os.path.isdir(child_path):
                 convert_path(child_path, recursive)
             elif os.path.isfile(child_path):
-                convert_graphml(child_path)
+                convert_graphml_file(child_path)
     elif os.path.isfile(path):
-        convert_graphml(path)
+        convert_graphml_file(path)
 
 
-def convert_graphml(filepath):
+def convert_xml_root(root):
+    c = GraphMLProvConverter(root)
+    return c.prov
+
+
+def convert_graphml_string(content):
+    root = etree.fromstring(content)
+    return convert_xml_root(root)
+
+
+def convert_graphml_file(filepath):
     root, ext = os.path.splitext(filepath)
     if ext == '.graphml':
         logger.info('Converting file %s...' % filepath)
-        c = GraphMLProvConverter(filepath)
+        tree = etree.parse(filepath)
+        prov_doc = convert_xml_root(tree.getroot())
         with open(root + '.provn', 'w') as f:
             logger.debug('Writing to %s.provn' % root)
-            provn = c.prov.get_provn()
+            provn = prov_doc.get_provn()
             f.write(provn)
-            validate(provn)
         with open(root + '.json', 'w') as f:
             logger.debug('Writing to %s.json' % root)
-            provjson = c.prov.get_provjson(indent=2)
+            provjson = prov_doc.get_provjson(indent=2)
             f.write(provjson)
-
+        valid, validation_url = validate(prov_doc)
+        if valid:
+            logger.info('The output PROV document is valid.')
+        else:
+            logger.warn('The output PROV document is INVALID. Please check the validation report at %s' % validation_url)
 
 
 def main(argv=None):  # IGNORE:C0111
