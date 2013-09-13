@@ -163,6 +163,8 @@ function initStage()
 	attribLayer['1'] = new Kinetic.Layer();
 	attribLayer['2'] = new Kinetic.Layer();
 	allLayers = [layer,attribLayer['1'],attribLayer['2']];
+	messageLayer = new Kinetic.Layer();
+	
 	// connectors first so they are behind images
 	for (k in lines)
 		layer.add(lines[k]);
@@ -355,7 +357,7 @@ function initStage()
      stage.add(layer);
      stage.add(attribLayer['1']);
      stage.add(attribLayer['2']);
-     
+     stage.add(messageLayer);
    } // end of function init stage
 
 // toggle highlighting for shapes when mouse over
@@ -1114,7 +1116,7 @@ function submitPushed()
 			validateSubmit();
 		}
 		else
-			alert("You need to select two attributes before submitting.");
+			showMessage("You need to select two attributes before submitting.");
 	}
 }
 
@@ -1152,16 +1154,15 @@ function handleResponse(response)
 {
 	if (DEBUG)
 	{
-		response = {"correct":true,"message":"You are correct!"};
+		response = {"correct":true,"message":"You are correct! Press continue to continue."};
 	}
-	alert(response.message);
+	showMessage(response.message);
 	if (response.correct)
 	{
 		taskCompleted = true;
 		submitText.setText("Continue");
 		layer.draw();
 	}
-	
 }
 
 function setupAttribPanes()
@@ -1217,6 +1218,76 @@ function clearAttributePane(position)
 	attribLayer[position].removeChildren();
 	attribLayer[position].add(text);
 	attribLayer[position].draw();
+}
+
+function showMessage(msg)
+{
+	background = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        strokeEnabled: false,
+        fill: 'black',
+        opacity: 0.4,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        shadowEnabled: false,
+      });
+	box = new Kinetic.Rect({
+        x: STAGE_WIDTH/3,
+        y: STAGE_HEIGHT/3,
+        stroke: ATTRIBBOX_BORDER_COLOUR,
+        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
+        fill: ATTRIBBOX_FILL,
+        width: STAGE_WIDTH/3,
+        height: STAGE_HEIGHT/3,
+        shadowEnabled: ATTRIBBOX_SHADOW,
+        shadowColor: ATTRIBBOX_SHADOW_COLOUR,
+        shadowBlur: ATTRIBBOX_SHADOW_BLUR,
+        shadowOffset: ATTRIBBOX_SHADOW_OFFSET,
+        shadowOpacity: ATTRIBBOX_SHADOW_OPACITY,
+        cornerRadius: ATTRIBBOX_CORNER_RADIUS
+      });
+	message = new Kinetic.Text({
+        x: box.getX(),
+        y: box.getY(),
+        text: msg,
+        fontSize: ATTRIBBOX_LARGE_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: ATTRIBBOX_FONT_STYLE,
+        fill: 'black',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        padding: box.getHeight()*0.3,
+        width: box.getWidth(),
+        height: box.getHeight()
+	});
+	submessage = new Kinetic.Text({
+        x: box.getX(),
+        y: box.getY() + box.getHeight() - 30,
+        text: "Click anywhere to continue.",
+        fontSize: ATTRIBBOX_SMALL_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: 'italic',
+        fill: 'aaaaaa',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        padding: 0,
+        width: box.getWidth(),
+        height: box.getHeight()
+	});
+	
+	messageLayer.add(background);
+	messageLayer.add(box);
+	messageLayer.add(message);
+	messageLayer.add(submessage);
+	messageLayer.draw();
+	
+	messageLayer.on('mouseup', function(evt){
+		messageLayer.removeChildren();
+		messageLayer.draw();
+	});
 }
 
 function redraw()
