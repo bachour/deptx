@@ -20,6 +20,7 @@ import os
 import logging
 import traceback
 import urllib2
+from prov.model import ProvException
 logger = logging.getLogger(__name__)
 import re
 from argparse import ArgumentParser
@@ -32,9 +33,9 @@ import prov.model
 __all__ = []
 __version__ = 0.1
 __date__ = '2013-09-09'
-__updated__ = '2013-09-13'
+__updated__ = '2013-09-16'
 
-DEBUG = 1
+DEBUG = 0
 TESTRUN = 0
 PROFILE = 0
 
@@ -109,6 +110,13 @@ PROV_RELATION_FUNCTION = {
 }
 
 
+def to_unicode_or_bust(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return obj
+
+
 def convert_attribute_name(name):
     colon_pos = name.find(': ')
     attr_name = name if colon_pos < 0 else name[colon_pos + 2:]
@@ -132,7 +140,7 @@ def convert_attributes(element, attributes):
             if key in attributes:
                 value = data.text
                 if value:
-                    results[attributes[key]] = value
+                    results[attributes[key]] = to_unicode_or_bust(value)
         return results
 
 
@@ -173,21 +181,24 @@ class GraphMLProvConverter(object):
 
     def convert_node(self, node):
         node_id = node.attrib['id']
+        logger.debug("Processing node %s" % node_id)
         label_element = node.find('g:data/y:ShapeNode/y:NodeLabel', GRAPHML_PREFIXES)
-        label = label_element.text
+        label = to_unicode_or_bust(label_element.text)
         if not label:
             logger.warn("No label found for node %s. Ignored this node." % node_id)
             return  # Stop processing
         attributes = convert_attributes(node, self.node_attributes)
+        # Adding the original label as prov:label
+        attributes[prov.model.PROV['label']] = label
         shape_element = node.find('g:data/y:ShapeNode/y:Shape', GRAPHML_PREFIXES)
         shape = shape_element.attrib['type']
         # TODO: Change the following back to PROV node shape convention
-        if shape == 'ellipse':
+        if shape == 'rectangle':
             prov_node = self.convert_entity(label, attributes)
-        elif shape == 'rectangle':
+        elif shape == 'ellipse':
             prov_node = self.convert_activity(label, attributes)
         elif shape == 'trapezoid':
-            prov_node = self.convert_entity(label, attributes)
+            prov_node = self.convert_agent(label, attributes)
         else:
             logger.warn("Unrecognised shape %s. Ignored node %s (%s)." % (shape, node_id, label))
             return  # Stop processing
@@ -196,6 +207,7 @@ class GraphMLProvConverter(object):
 
     def convert_edge(self, edge):
         edge_id = edge.attrib['id']
+        logger.debug("Processing edge %s" % edge_id)
         source_id = edge.attrib['source']
         target_id = edge.attrib['target']
         edge_type_data = edge.find("g:data[@key='%s']" % self.edge_type_key, GRAPHML_PREFIXES)
@@ -208,7 +220,10 @@ class GraphMLProvConverter(object):
             return  # Stop processing
         prov_type = EDGE_PROV_CODE[edge_type]
         attributes = convert_attributes(edge, self.edge_attributes)
-        PROV_RELATION_FUNCTION[prov_type](self.prov, self.nodes[source_id], self.nodes[target_id], other_attributes=attributes)
+        try:
+            PROV_RELATION_FUNCTION[prov_type](self.prov, self.nodes[source_id], self.nodes[target_id], other_attributes=attributes)
+        except ProvException, e:
+            logger.warn("Cannot create relation for edge %s (type %s - %s). Ignored this edge.\n%s" % (edge_id, edge_type, prov.model.PROV_N_MAP[prov_type], repr(e)))
 
     def convert_entity(self, label, attributes):
         return self.prov.entity(convert_identifier(label), other_attributes=attributes)
@@ -370,11 +385,10 @@ USAGE
         return 2
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=(logging.DEBUG if DEBUG else logging.INFO))
     if DEBUG:
         sys.argv.append("-v")
         sys.argv.append("-r")
-        logging.basicConfig(level=logging.DEBUG)
     if TESTRUN:
         import doctest
         doctest.testmod()

@@ -1,0 +1,37 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+<h1>Personal Data</h1>
+<table>
+<tr><td>Name:</td><td>{{player.firstName}} {{player.lastName}}</td></tr>
+<tr><td>Address:</td><td>{{player.address}}</td></tr>
+<tr><td>Phone:</td><td>{{player.phone}}</td></tr>
+<tr><td>Email:</td><td>{{player.email}}</td></tr>
+</table>
+<hr/>
+<h1>Cron Data</h1>
+<table>
+<tr><td>User name:</td><td>{{cron.user.username}}</td></tr>
+<tr><td>Solved Missions:</td><td>{% for mission in solved_mission_list %}{{mission.name}}<br/>{% endfor %}</td></tr>
+<tr><td>Current Mission:</td><td>{{currentMission.name}}</td></tr>
+</table>
+<hr/>
+<h1>MoP Data</h1>
+{% for mop in mop_list %}
+<table>
+<tr><td>User name:</td><td>{{mop.user.username}}</td></tr>
+<tr><td>Trust Level:</td><td>{{mop.trust}}</td></tr>
+<tr><td>ID:</td><td>{{mop.serial}}</td></tr>
+<tr><td>Status:</td><td>{% if mop.active %}active{% else %}retired{% endif %}</td></tr>
+<tr><td>Name: </td><td>{{mop.firstname}} {{mop.lastname}}</td></tr>
+<tr><td>Date of Birth:</td><td>{{mop.dob}}</td></tr>
+<tr><td>Gender</td><td>{{mop.get_gender_display}}</td></tr>
+<tr><td>Weight:</td><td>{{mop.weight}}</td></tr>
+<tr><td>Height:</td><td>{{mop.height}}</td></tr>
+<tr><td>Marital Status:</td><td>{{mop.get_marital_display}}</td></tr>
+<tr><td>Hair Colour:</td><td>{{mop.get_hair_display}}</td></tr>
+<tr><td>Eye Colour:</td><td>{{mop.get_eyes_display}}</td></tr>
+</table><br/>
+{% endfor %}
+
+{% endblock %}

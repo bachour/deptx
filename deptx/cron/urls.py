@@ -12,4 +12,5 @@ urlpatterns = patterns('',
     url(r'mission/', views.mission, name='cron_mission'),
     url(r'case/([-\w]+)', views.case, name='cron_case_detail'),
     url(r'provenance/([-\w]+)', views.provenance, name='cron_provenance'), 
+    url(r'profile/', views.profile, name='cron_profile'), 
 )

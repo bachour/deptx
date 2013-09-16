@@ -239,30 +239,20 @@ def provenance(request, serial):
                                          context_instance=RequestContext(request)
                                  )
     
-#     case = Case.objects.get(serial=serial)
-#     if request.method == 'POST':
-#         #TODO check if it was really solved
-#         caseInstance = CaseInstance.objects.get(case=case)
-#         caseInstance.solved = True
-#         caseInstance.save()
-#         return redirect('cron_case_detail', serial)
-#     
-#     #TODO Each case can only have one document / provenance!
-#     document_list = getAllDocumentStates(request.user.cron, case)
-#     canSubmitReport = True
-#     provenance_list = []
-#     for document in document_list:
-#         if not document.available:
-#             canSubmitReport = False
-#             break
-#         else:
-#             #document.json = getProvJson(document.provenance)
-#             #document.svg = getProvSvg(document.provenance)
-#             provenance_list.append(document.provenance)
-#     
-#     return render_to_response('cron/provenance.html', {"user": request.user, "case": case, "document_list": document_list, "provenance_list": provenance_list, "canSubmitReport": canSubmitReport, "mode":MODE_CRON },
-#                                         context_instance=RequestContext(request)
-#                                 )
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def profile(request):
+    
+    crontracker = CronTracker.objects.get(cron=request.user.cron)
+    currentMission = crontracker.mission
+    solved_mission_list = Mission.objects.filter(rank__lt=currentMission.rank).order_by("rank")
+    
+    mop_list = Mop.objects.filter(player=request.user.cron.player)
+    return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, "currentMission":currentMission, "solved_mission_list": solved_mission_list,"mop_list":mop_list },
+                                         context_instance=RequestContext(request)
+                                 )
+
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()
