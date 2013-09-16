@@ -49,7 +49,7 @@ function ProvNode (type, id, ressource, attributes)
 	this.attribValues = {};
 	this.attribNames = {};
 	
-	sources[id] = ressource;
+	sources[id] = MEDIA_URL + ressource;
 	nodes[id] = this;
 }
 
