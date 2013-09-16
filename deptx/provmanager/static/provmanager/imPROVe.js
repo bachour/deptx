@@ -51,6 +51,7 @@ function ProvNode (type, id, ressource, attributes)
 	
 	sources[id] = MEDIA_URL + ressource;
 	nodes[id] = this;
+	
 }
 
 // graph edge
