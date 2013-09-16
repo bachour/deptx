@@ -18,7 +18,8 @@
     	{% elif task %}
     	var CONTINUE_URL = "{% url 'mop_documents' %}"
     	{% endif %}
-		var DEBUG = false   
+		var DEBUG = false
+		var MEDIA_URL = "{{MEDIA_URL}}"   
     </script>
     <script src="{% static "provmanager/defaultKss.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>
