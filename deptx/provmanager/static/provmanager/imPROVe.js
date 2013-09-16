@@ -537,6 +537,9 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["image"];
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/fed37f/000.jpg&text=" + nodeName;
+				else
+					nodeImage = MEDIA_URL + nodeImage;
+				
 				attribs = {"name":nodeName}
 				for (k in json[i][j])
 					if (k != "prov:label")
