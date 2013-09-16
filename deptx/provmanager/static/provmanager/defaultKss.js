@@ -24,7 +24,7 @@ var NODE_SHADOW_COLOUR = 'black'; // the clour of the shadow
 //outlines - default
 var NODE_OUTLINE = false;	// whether or not the shape has an outline by default
 var NODE_OUTLINE_COLOUR = 'black'; // the colour of the outline
-var NODE_OUTLINE_WIDTH = 5; // the thickness of the outline
+var NODE_OUTLINE_WIDTH = 2; // the thickness of the outline
 
 //SELECTED - when a user clicks on a node and displays its attributes
 //shadows - selected
@@ -36,7 +36,7 @@ var NODE_SELECTED_SHADOW_COLOUR = 'black';
 //outlines - selected
 var NODE_SELECTED_OUTLINE = true;
 var NODE_SELECTED_OUTLINE_COLOUR = 'red';
-var NODE_SELECTED_OUTLINE_WIDTH = 10;
+var NODE_SELECTED_OUTLINE_WIDTH = 3;
 
 //HIGHLIGHTED - when a user hovers the mouse over a node (or an adjacent node)
 //              currently one style is implemented both for the node being highlighted
@@ -50,7 +50,7 @@ var NODE_HIGHLIGHTED_SHADOW_COLOUR = 'black';
 //outlines - highlighted
 var NODE_HIGHLIGHTED_OUTLINE = true;
 var NODE_HIGHLIGHTED_OUTLINE_COLOUR = 'black';
-var NODE_HIGHLIGHTED_OUTLINE_WIDTH = 5;
+var NODE_HIGHLIGHTED_OUTLINE_WIDTH = 2;
 
 //other
 //background colours: background colours for nodes that don't have an image.
@@ -82,8 +82,8 @@ var EDGE_COLOURS = { // use this to specify different colours for different edge
 		alternateOf:'gray',
 		specializationOf:'gray',
 		hadMember:'gray'}; 
-var EDGE_WIDTH = 5; // the thickness of the line
-var EDGE_ARROWHEAD_WIDTH = 30; // the size of the arrowhead
+var EDGE_WIDTH = 2; // the thickness of the line
+var EDGE_ARROWHEAD_WIDTH = 10; // the size of the arrowhead
 
 //shadows
 var EDGE_SHADOWS = true;
