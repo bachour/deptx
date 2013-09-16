@@ -6,7 +6,8 @@
 <p>logged in as {{user.username}}</p>
 <ul>
 	<li><a href="{% url 'cron_mission' %}">Current Mission</a></li>
-	<li><a href="">Archive</a></li>
+	<li><a href="{% url 'cron_profile' %}">Profile</a></li>
+	<li>Archive</li>
 </ul>
 
 {% endblock %}

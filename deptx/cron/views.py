@@ -218,7 +218,10 @@ def case(request, serial):
 def isSolved(caseInstance):
     document_list = Document.objects.filter(case=caseInstance.case)
     for document in document_list:
-        documentInstance = CronDocumentInstance.objects.get(document=document, cron=caseInstance.crontracker.cron)
+        try:
+            documentInstance = CronDocumentInstance.objects.get(document=document, cron=caseInstance.crontracker.cron)
+        except CronDocumentInstance.DoesNotExist:
+            return False
         if not documentInstance.solved:
             return False
     #TODO remove caseInstance.solved from everywhere
@@ -256,10 +259,8 @@ def profile(request):
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()
-    print requiredDocuments
     #TODO when document is put in draft, add it to CronDocumentInstance
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
-    print availableDocumentInstances
             
     for required in requiredDocuments:
         required.available = False
@@ -267,5 +268,4 @@ def getAllDocumentStates(cron, case):
             if (required==available.document):
                 required.available = True
 
-    
     return requiredDocuments

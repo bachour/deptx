@@ -18,6 +18,7 @@
 	<td>{% if document.available %}<a href="{% url "cron_provenance" document.serial %}">view</a>{% endif %}</td><td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
 {% endfor %}
 </table>
+<p>In order to acquire missing documents, login to the Ministry of Provenance and request the document. Afterwards, attach it to a message but then save the document as draft.</p>
 
 
 {% endblock %}
