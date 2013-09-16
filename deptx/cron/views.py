@@ -173,6 +173,7 @@ def mission(request):
                                          context_instance=RequestContext(request)
                                  )
 
+
 def renderContent(content, user):
 
     name = user.cron.user.username

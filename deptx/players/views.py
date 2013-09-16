@@ -7,6 +7,7 @@ from forms import PlayerForm
 from django.contrib.auth.forms import UserCreationForm
 from models import Cron
 
+
 #TODO: Move registration over to CRON
 def register(request):
     if request.method == 'POST':
