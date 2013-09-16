@@ -49,7 +49,7 @@ function ProvNode (type, id, ressource, attributes)
 	this.attribValues = {};
 	this.attribNames = {};
 	
-	sources[id] = MEDIA_URL + ressource;
+	sources[id] = ressource;
 	nodes[id] = this;
 	
 }
@@ -537,6 +537,8 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["image"];
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/fed37f/000.jpg&text=" + nodeName;
+				else
+					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {"name":nodeName}
 				for (k in json[i][j])
 					if (k != "prov:label")
@@ -553,6 +555,8 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["image"];
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/fffc87/000.jpg&text=" + nodeName;
+				else
+					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {"name":nodeName}
 				for ( k in json[i][j])
 					if (k != "prov:label")
@@ -569,6 +573,8 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["image"];
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/9fb1fc/000.jpg&text=" + nodeName;
+				else
+					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {"name":nodeName}				
 				for ( k in json[i][j])
 					if (k != "prov:label")
