@@ -6,8 +6,8 @@ var STAGE_HEIGHT = STAGE_WIDTH*9/18;
 //--------------------------------
 //size and position
 var MAX_TRANSLATE = 100; // default max for random horizontal and vertical shift in starting location
-var NODE_MAX_ANGLE = 20;		// default max for random starting angle for nodes
-var NODE_MIN_ANGLE = -20;
+var NODE_MAX_ANGLE = 0;		// default max for random starting angle for nodes
+var NODE_MIN_ANGLE = 0;
 var NODE_DEFAULT_SIZE = STAGE_WIDTH*STAGE_HEIGHT/70; // the size (area) of image shapes.
 var DEFAULT_X = 0.8*STAGE_WIDTH/2;	// default starting location for nodes
 var DEFAULT_Y = STAGE_HEIGHT/3;	// default starting location for nodes
