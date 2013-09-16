@@ -111,7 +111,6 @@ def mopmaker(request):
 @user_passes_test(isCron, login_url='cron_login')
 def mission(request):
     
-    #TODO: mission texts should come from the database and not from the file system! As otherwise they would need to be checked in...
     try:
         crontracker = CronTracker.objects.get(cron=request.user.cron)
     except CronTracker.DoesNotExist:
@@ -172,6 +171,44 @@ def mission(request):
         return render_to_response('cron/mission.html', {"user": request.user, "mission": crontracker.mission, "text":text},
                                          context_instance=RequestContext(request)
                                  )
+
+#TODO only if staff
+def mission_reset(request):
+    try:
+        crontracker = CronTracker.objects.get(cron=request.user.cron)
+    except CronTracker.DoesNotExist:
+        crontracker = None
+    
+    if not crontracker is None:
+        crontracker.progress = 0
+        crontracker.save()
+        case_list = Case.objects.filter(mission=crontracker.mission)
+        for case in case_list:
+            caseInstance_list = CaseInstance.objects.filter(case=case).filter(crontracker=crontracker)
+            for caseInstance in caseInstance_list:
+                caseInstance.solved = False
+                caseInstance.save()
+            document_list = Document.objects.filter(case=case)
+            for document in document_list:
+                cronDocumentInstance_list = CronDocumentInstance.objects.filter(document=document).filter(cron=request.user.cron)
+                for cronDocumentInstance in cronDocumentInstance_list:
+                    cronDocumentInstance.solved = False
+                    cronDocumentInstance.save()
+    
+    return HttpResponseRedirect(reverse('cron_profile'))
+
+def mission_redo(request, mission_id):
+    try:
+        crontracker = CronTracker.objects.get(cron=request.user.cron)
+    except CronTracker.DoesNotExist:
+        crontracker = None
+    
+    if not crontracker is None:
+        mission = Mission.objects.get(id=mission_id)
+        crontracker.mission = mission
+        crontracker.save()
+        
+    return HttpResponseRedirect(reverse('cron_profile'))
 
 
 def renderContent(content, user):

@@ -9,8 +9,11 @@ urlpatterns = patterns('',
     url(r'login/', views.login, name='cron_login'),
     url(r'logout/', views.logout_view, name='cron_logout'),
     url(r'mopmaker/', views.mopmaker, name='cron_mopmaker'),
-    url(r'mission/', views.mission, name='cron_mission'),
+    url(r'mission/$', views.mission, name='cron_mission'),
+    url(r'mission/reset/', views.mission_reset, name='cron_mission_reset'),
+    url(r'mission/redo/(\d+)', views.mission_redo, name='cron_mission_redo'),
     url(r'case/([-\w]+)', views.case, name='cron_case_detail'),
     url(r'provenance/([-\w]+)', views.provenance, name='cron_provenance'), 
-    url(r'profile/', views.profile, name='cron_profile'), 
+    url(r'profile/', views.profile, name='cron_profile'),
+
 )
