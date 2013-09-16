@@ -2,12 +2,9 @@
 
 {% block content %}
 
-<h1>cr0n HQ</h1>
 <p>logged in as {{user.username}}</p>
-<ul>
-	<li><a href="{% url 'cron_mission' %}">Current Mission</a></li>
-	<li><a href="{% url 'cron_profile' %}">Profile</a></li>
-	<li>Archive</li>
-</ul>
+<h1>==&gt; <a href="{% url 'cron_mission' %}">{{mission.name}}</a></h1>
+<h1>==&gt; <a href="{% url 'cron_profile' %}">Profile</a></li></h1>
+<h1>==&gt; Archive</h1>
 
 {% endblock %}

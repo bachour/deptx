@@ -60,21 +60,21 @@ def index(request):
     if request.user is not None and request.user.is_active and isCron(request.user):
         user = request.user
         cron = user.cron
-        context = { "cron": cron, "user":user }
+        try:
+            crontracker = CronTracker.objects.get(cron=request.user.cron)
+        except CronTracker.DoesNotExist:
+            firstMission = Mission.objects.get(rank=0)
+            crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
+            crontracker.save()
+            
+        context = { "cron": cron, "user":user, "mission":crontracker.mission }
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
-#     if (cron.crontracker.mission.rank==0 and cron.crontracker.progress==0):
-#         return render(request, 'cron/episode0.html', context)
-#     elif (cron.crontracker.mission.rank==0 and cron.crontracker.progress==1):
-#         return render(request, 'cron/index.html', context)
-#     else:
-#         return render(request, 'cron/index.html', context)
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mopmaker(request):
-    print request
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
@@ -111,12 +111,7 @@ def mopmaker(request):
 @user_passes_test(isCron, login_url='cron_login')
 def mission(request):
     
-    try:
-        crontracker = CronTracker.objects.get(cron=request.user.cron)
-    except CronTracker.DoesNotExist:
-        firstMission = Mission.objects.get(rank=0)
-        crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
-        crontracker.save()
+    crontracker = CronTracker.objects.get(cron=request.user.cron)
        
     #TODO remove magic numbers
     if request.method == 'POST':
