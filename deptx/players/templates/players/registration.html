@@ -1,18 +1,19 @@
-{% extends 'players/base.html' %}
+{% extends 'cron/base.html' %}
 
 {% block content %}
 
-<h1>Please create an account</h1>
-
 {% if success %}
-	<h2>Wohoo, you registered!</h2>
+	<h1>Registration succesful</h1>
+	<p>You can <a href="{% url 'cron_index' %}">login</a> now and start your adventure.</p>
 
 {% else %}
-	<h2>Personal:</h2>
+	<h1>Please create an account</h1>
 	<form action="{% url 'players_registration' %}" method="post">{% csrf_token %}
+	<h2>Personal:</h2>
 	{{ player_form.as_p }}
 	<h2>Cron:</h2>
 	{{ user_form.as_p }}
+	Secret Passcode: <input type="text" name="registration_passcode" /><br/>
 	<input type="submit" value="Submit" />
 	</form>
 {% endif %}

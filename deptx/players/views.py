@@ -7,6 +7,8 @@ from forms import PlayerForm
 from django.contrib.auth.forms import UserCreationForm
 from models import Cron
 
+from deptx.secrets import registration_passcode
+
 
 #TODO: Move registration over to CRON
 def register(request):
@@ -14,10 +16,9 @@ def register(request):
         player_form = PlayerForm(request.POST, prefix="player")
         user_form = UserCreationForm(request.POST, prefix = "user")
         
-        print player_form
-        print user_form
+        passcode = request.POST.get('registration_passcode', '')
         
-        if player_form.is_valid() and user_form.is_valid():
+        if passcode == registration_passcode and player_form.is_valid() and user_form.is_valid():
             player = player_form.save()
             user = user_form.save()
             cron = Cron()

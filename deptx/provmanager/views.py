@@ -7,7 +7,7 @@ from provmanager.wrapper import Api
 from provmanager.models import Provenance
 from prov.model import ProvBundle
 
-from deptx.api import api_location, api_username, api_key
+from deptx.secrets import api_username, api_key
 from assets.models import Document
 from cron.models import CronDocumentInstance
 from mop.models import DocumentInstance
@@ -21,7 +21,7 @@ import json
 from graphml2prov import convert_graphml_string, validate
 import prov.model
 
-
+api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
 
 API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 MODE_CRON = "cron"

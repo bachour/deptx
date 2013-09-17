@@ -22,6 +22,6 @@ a {
 	color:inherit;
 }
 
-.missing {
+.missing, .errorlist {
 	color:red;
 }
