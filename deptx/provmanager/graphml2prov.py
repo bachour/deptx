@@ -193,9 +193,9 @@ class GraphMLProvConverter(object):
         shape_element = node.find('g:data/y:ShapeNode/y:Shape', GRAPHML_PREFIXES)
         shape = shape_element.attrib['type']
         # TODO: Change the following back to PROV node shape convention
-        if shape == 'rectangle':
+        if shape == 'ellipse':
             prov_node = self.convert_entity(label, attributes)
-        elif shape == 'ellipse':
+        elif shape == 'rectangle':
             prov_node = self.convert_activity(label, attributes)
         elif shape == 'trapezoid':
             prov_node = self.convert_agent(label, attributes)
