@@ -2,7 +2,7 @@
 
 {% block content %}
 
-{% if cron %}
+{% if activated %}
 	<h1>Welcome {{cron.user.username}}!</h1>
 	<p>You can <a href="{% url 'cron_index' %}">login</a> now and help us change the world.</p>
 
@@ -12,7 +12,7 @@
 
 {% elif registered %}
 	<h1>Activation Required</h1>
-	<p>We have sent you an email with an activation link. Please click on the link to complete your registration.</p>
+	<p>We have sent an email to {{cron.player.email}} with an activation link. Please click on the link to complete your registration.</p>
 	
 	
 

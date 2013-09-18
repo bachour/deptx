@@ -44,7 +44,7 @@ def register(request):
 
             
              
-            return render_to_response('players/registration.html', {"registered": True})
+            return render_to_response('players/registration.html', {"registered": True, "cron":cron})
         else:
             return render_to_response(   'players/registration.html',
                                         {"player_form": player_form, "user_form": user_form},
@@ -69,7 +69,7 @@ def activate(request, code):
     if not cron is None:
         cron.activated = True
         cron.save()
-        return render_to_response('players/registration.html', {"cron": cron})
+        return render_to_response('players/registration.html', {"activated":True, "cron": cron})
     else:
         return render_to_response('players/registration.html', {"wrongCode": True})
 
