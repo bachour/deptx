@@ -37,7 +37,7 @@ def register(request):
                 subject='[cr0n] Activate your account',
                 body= email_tpl.render(c), 
                 from_email="groundsman@cr0n.org",
-                to=["psxrw3@nottingham.ac.uk",],
+                to=[cron.player.email,],
             )
             #in settings.py you can configure console backend for displaying emails instead of sending them - great for testing!
             email.send(fail_silently=True)

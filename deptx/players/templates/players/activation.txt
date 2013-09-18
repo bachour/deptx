@@ -1,5 +1,5 @@
-Thank you for signing up to a good cause, {{cron.user.username}}.\n
-Please follow this link to activate your account: {{url}}\n
-\n
-\n
+Thank you for signing up to a good cause, {{cron.user.username}}.
+Please follow this link to activate your account: {{url}}
+
+
 The Groundsman
