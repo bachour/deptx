@@ -7,7 +7,7 @@
 {{text}}
 
 <form action="{% url 'cron_mission' %}" method="post">{% csrf_token %}
-<input type="submit" value="Proceed" name="proceed" />
+<input class="proceed" type="submit" value="Proceed" name="proceed" />
 </form>
 
 {% endblock %}

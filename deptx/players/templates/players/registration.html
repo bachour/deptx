@@ -2,18 +2,40 @@
 
 {% block content %}
 
-{% if success %}
-	<h1>Registration succesful</h1>
-	<p>You can <a href="{% url 'cron_index' %}">login</a> now and start your adventure.</p>
+{% if cron %}
+	<h1>Welcome {{cron.user.username}}!</h1>
+	<p>You can <a href="{% url 'cron_index' %}">login</a> now and help us change the world.</p>
+
+{% elif wrongCode %}
+	<h1>Error</h1>
+	<p>This activation code does not exist.</p>
+
+{% elif registered %}
+	<h1>Activation Required</h1>
+	<p>We have sent you an email with an activation link. Please click on the link to complete your registration.</p>
+	
+	
 
 {% else %}
-	<h1>Please create an account</h1>
+	<h1>Cron Registration</h1>
 	<form action="{% url 'players_registration' %}" method="post">{% csrf_token %}
-	<h2>Personal:</h2>
-	{{ player_form.as_p }}
-	<h2>Cron:</h2>
-	{{ user_form.as_p }}
-	Secret Passcode: <input type="text" name="registration_passcode" /><br/>
+	<h2>Personal Data:</h2>
+	<table>
+	<tr><td>First Name:</td><td>{{player_form.firstName}}</td><td>{{player_form..errors}}</td></tr>
+	<tr><td>Last Name:</td><td>{{player_form.lastName}}</td><td>{{player_form..errors}}</td></tr>
+	<tr><td>Address:</td><td>{{player_form.address}}</td><td>{{player_form..errors}}</td></tr>
+	<tr><td>Phone:</td><td>{{player_form.phone}}</td><td>{{player_form..errors}}</td></tr>
+	<tr><td>Email:</td><td>{{player_form.email}}</td><td>{{player_form..errors}}</td></tr>
+	</table>
+	<hr/>
+	<h2>Cron Data:</h2>
+	</table>
+	<table>
+	<tr><td>CRON User Name:</td><td>{{user_form.username}}</td><td>{{user_form.username.errors}}Letters, digits and @/./+/-/_ only.</td></tr>
+	<tr><td>Password:</td><td>{{user_form.password1}}</td><td>{{user_form.password1.errors}}</td></tr>
+	<tr><td>Password Confirmation:</td><td>{{user_form.password2}}</td><td>{{user_form.password2.errors}}</td></tr>
+	<tr><td>Secret Passcode:</td><td><input type="text" name="registration_passcode" /></td><td></td></tr>
+	</table>
 	<input type="submit" value="Submit" />
 	</form>
 {% endif %}

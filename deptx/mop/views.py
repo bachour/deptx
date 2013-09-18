@@ -28,6 +28,8 @@ from cron.models import CronDocumentInstance
 
 from provmanager.views import getProvJson, getProvSvg, MODE_MOP
 
+from logger.logging import log_cron, log_mop
+import json
 
 def isMop(user):
     if user:
@@ -47,6 +49,7 @@ def index(request):
         trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
         draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
         
+        log_mop(request.user.mop, 'index')
         context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
         return render(request, 'mop/index.html', context)
     
@@ -67,6 +70,7 @@ def login(request):
         # TODO: Code is almost identical to CRON-code
         if user is not None and user.is_active and isMop(user):
             auth.login(request, user)
+            log_mop(request.user.mop, 'login')
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -77,6 +81,7 @@ def login(request):
         return render_to_response('mop/login.html', {'form' : form}, context_instance=RequestContext(request))
 
 def logout_view(request):
+    log_mop(request.user.mop, 'logout')
     logout(request)
     return redirect('mop_index')
 
@@ -84,6 +89,7 @@ def logout_view(request):
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
     requisition_list = Requisition.objects.all()
+    log_mop(request.user.mop, 'read rules')
     return render(request, 'mop/rules.html', {"requisition_list": requisition_list})
 
 
@@ -108,13 +114,16 @@ def tasks(request):
         
         if taskInstance is None:
             new_task_list.append(task)
-       
+    
+    log_mop(request.user.mop, 'view tasks')   
     return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "failed_taskInstance_list": failed_taskInstance_list, "solved_taskInstance_list": solved_taskInstance_list, "new_task_list": new_task_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
     documentInstance_list = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False)
+    
+    log_mop(request.user.mop, 'view documents')
     return render(request, 'mop/documents.html', {"documentInstance_list": documentInstance_list})
 
 
@@ -126,7 +135,15 @@ def document_provenance(request, documentInstance_id):
         documentInstance.save()
     except DocumentInstance.DoesNotExist:
         documentInstance = None
-    
+
+    if not documentInstance is None:
+
+        doc ={}
+        doc['id'] = documentInstance.document.id
+        doc['name'] = documentInstance.document.name
+        doc['store_id'] = documentInstance.document.provenance.store_id    
+        log_mop(request.user.mop, 'view provenance', json.dumps(doc))
+
     return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'mode':MODE_MOP})
 
 
@@ -134,18 +151,21 @@ def document_provenance(request, documentInstance_id):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-date')
+    log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_outbox(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-date')
+    log_mop(request.user.mop, 'view outbox')
     return render(request, 'mop/mail_outbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_draft(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-date')
+    log_mop(request.user.mop, 'view drafts')
     return render(request, 'mop/mail_draft.html', {"mail_list": mail_list})
 
 
@@ -153,6 +173,7 @@ def mail_draft(request):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_trash(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-date')
+    log_mop(request.user.mop, 'view trash')
     return render(request, 'mop/mail_trash.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
@@ -164,6 +185,14 @@ def mail_view(request, mail_id):
         mail.save()
     except Mail.DoesNotExist:
         mail = None
+    
+    
+    if not mail is None:
+        m ={}
+        m['id'] = mail.id
+        m['subject'] = mail.subject
+        log_mop(request.user.mop, 'view mail', json.dumps(m))
+    
     return render(request, 'mop/mail_view.html', {'mail': mail})
 
 @login_required(login_url='mop_login')
@@ -177,6 +206,13 @@ def mail_trashing(request, mail_id):
     mail.read = True
     mail.state = Mail.STATE_TRASHED
     mail.save()
+    
+    if not mail is None:
+        m ={}
+        m['id'] = mail.id
+        m['subject'] = mail.subject
+        log_mop(request.user.mop, 'trash mail', json.dumps(m))
+    
     if mail.type is Mail.TYPE_RECEIVED:
         return redirect('mop_mail_inbox')
     elif mail.type is Mail.TYPE_SENT:
@@ -195,6 +231,13 @@ def mail_untrashing(request, mail_id):
     mail.read = True
     mail.state = Mail.STATE_NORMAL
     mail.save()
+    
+    if not mail is None:
+        m ={}
+        m['id'] = mail.id
+        m['subject'] = mail.subject
+        log_mop(request.user.mop, 'untrash mail', json.dumps(m))
+    
     return redirect('mop_mail_trash')
 
 @login_required(login_url='mop_login')
@@ -208,6 +251,13 @@ def mail_deleting(request, mail_id):
     mail.read = True
     mail.state = Mail.STATE_DELETED
     mail.save()
+    
+    if not mail is None:
+        m ={}
+        m['id'] = mail.id
+        m['subject'] = mail.subject
+        log_mop(request.user.mop, 'delete mail', json.dumps(m))
+    
     return redirect('mop_mail_trash')
 
 @login_required(login_url='mop_login')
@@ -289,9 +339,20 @@ def analyzeDraftMail(mail):
         mail.documentInstance.used = True
         mail.documentInstance.save()
         cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
+    
+    m ={}
+    m['id'] = mail.id
+    m['subject'] = mail.subject
+    log_mop(mail.mop, 'save draft mail', json.dumps(m))
 
 
 def analyzeSentMail(mail):
+    
+    m ={}
+    m['id'] = mail.id
+    m['subject'] = mail.subject
+    log_mop(mail.mop, 'send mail', json.dumps(m))
+    
     
     newMail = Mail()
     newMail.type = Mail.TYPE_RECEIVED
@@ -396,25 +457,25 @@ def analyzeSentMail(mail):
             
         
 
-@login_required(login_url='mop_login')
-@user_passes_test(isMop, login_url='mop_login')
-def forms_task(request):
-    if request.method == 'POST':
-        serial = request.POST['serial']
-        try:
-            taskInstance = TaskInstance.objects.get(serial=serial)
-        except TaskInstance.DoesNotExist:
-            #TODO error handling
-            taskInstance = None
-        if taskInstance is not None:
-            req = RequisitionInstance()
-            #req.type = RequisitionInstance.CATEGORY_TASK
-            req.mop = request.user.mop
-            req.data = serial
-            req.save()
-            return redirect('mop_forms')
-            
-    return render_to_response('mop/forms_task.html', {"mop": request.user.mop}, context_instance=RequestContext(request))
+# @login_required(login_url='mop_login')
+# @user_passes_test(isMop, login_url='mop_login')
+# def forms_task(request):
+#     if request.method == 'POST':
+#         serial = request.POST['serial']
+#         try:
+#             taskInstance = TaskInstance.objects.get(serial=serial)
+#         except TaskInstance.DoesNotExist:
+#             #TODO error handling
+#             taskInstance = None
+#         if taskInstance is not None:
+#             req = RequisitionInstance()
+#             #req.type = RequisitionInstance.CATEGORY_TASK
+#             req.mop = request.user.mop
+#             req.data = serial
+#             req.save()
+#             return redirect('mop_forms')
+#             
+#     return render_to_response('mop/forms_task.html', {"mop": request.user.mop}, context_instance=RequestContext(request))
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -426,6 +487,8 @@ def forms_blank(request):
         RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
             
     blank_list = RequisitionBlank.objects.filter(mop=request.user.mop)            
+    
+    log_mop(request.user.mop, 'blank forms')
     return render(request, 'mop/forms_blank.html', {"blank_list": blank_list})
 
 @login_required(login_url='mop_login')
@@ -442,6 +505,13 @@ def form_fill(request, reqBlank_id):
         form = RequisitionInstanceForm(data=request.POST, instance=requisitionInstance)
         if form.is_valid():
             form.save()
+            
+            f ={}
+            f['form_id'] = reqBlank.requisition.id
+            f['form_name'] = reqBlank.requisition.name
+            f['instance_id'] = requisitionInstance.id
+            f['data'] = form.data
+            log_mop(request.user.mop, 'fill form', json.dumps(f))
             return redirect('mop_forms_signed')
     else:
         form = RequisitionInstanceForm()
@@ -452,6 +522,8 @@ def form_fill(request, reqBlank_id):
 def forms_signed(request):
     requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-date")
     requisitionInstance_used_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-date")
+    
+    log_mop(request.user.mop, 'view filled forms')
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
 
 

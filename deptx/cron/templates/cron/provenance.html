@@ -5,15 +5,7 @@
 <h1>Provenance Investigation in Progress...</h1>
 Name: {{ documentInstance.document.name }}<br/>
 Identification Number: {{ documentInstance.document.serial }} <br/>
-<div>
-Content: {{documentInstance.document.content|linebreaksbr}}
-</div>
-<hr/>
-<pre>{{documentInstance.document.svg | safe}}</pre>
-<hr/>
-<pre>{{documentInstance.document.json}}</pre>
-<hr/>
-
+<br/>
 {% include 'provmanager/improve.html' with provenance=documentInstance.document.provenance case=documentInstance.document.case %}
 
 {% endblock %}

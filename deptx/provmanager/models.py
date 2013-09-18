@@ -1,6 +1,7 @@
 from django.db import models
 
 from deptx.helpers import generateUUID, now
+from players.models import Player
 
 
 class Provenance(models.Model):
@@ -19,6 +20,10 @@ class Provenance(models.Model):
     def __unicode__(self):
         return self.name + " - store: " + self.store_id.__str__()
 
-
-   
+# class ProvenanceLog(models.Model):
+#     player = models.ForeignKey(Player)
+#     store_id = models.IntegerField(blank=True, null=True)
+#         
+#     def __unicode__(self):
+#         return self.player.firstName + self.player.lastName   
     

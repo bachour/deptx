@@ -18,6 +18,9 @@ class Cron(models.Model):
     player = models.OneToOneField(Player)
     user = models.OneToOneField(User)
     
+    activated = models.BooleanField()
+    activationCode = models.CharField(max_length=36, default=generateUUID)
+    
     def __unicode__(self):
         return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + ")"
 
@@ -28,10 +31,12 @@ class Mop(models.Model):
     
     GENDER_MALE = 0
     GENDER_FEMALE = 1
+    GENDER_OTHER = 2
         
     GENDER_CHOICES = ( 
         (GENDER_MALE, 'male'), 
-        (GENDER_FEMALE, 'female'), 
+        (GENDER_FEMALE, 'female'),
+        (GENDER_OTHER, 'other'), 
     ) 
     
     MARITAL_SINGLE = 0

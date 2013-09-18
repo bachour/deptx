@@ -5,7 +5,7 @@ from django.template import RequestContext
 
 from provmanager.wrapper import Api
 from provmanager.models import Provenance
-from prov.model import ProvBundle
+from prov.model import ProvBundle, Namespace
 
 from deptx.secrets import api_username, api_key
 from assets.models import Document
@@ -14,7 +14,7 @@ from mop.models import DocumentInstance
 
 
 from django.views.decorators.csrf import csrf_exempt
-
+from deptx.helpers import now
 
 import json
 
@@ -148,26 +148,36 @@ def prov_check(request):
         json_data = json.dumps({"correct":correct, "message":message})
 
         return HttpResponse(json_data, mimetype="application/json")
-            
-            
-#    message = -1
-#    if request.is_ajax():
-#        if request.method == 'POST':
-#
-#            pebble_id = request.POST.get('pebble_id', "")
-#            marble_id = request.POST.get('marble_id', "")
-#
-#            pebble = get_object_or_404(Pebble, id=int(pebble_id))
-#            marble = get_object_or_404(Marble, id=int(marble_id))
-#
-#            #TODO check if user has rights to delete
-#            marble.pebbles.remove(pebble)
-#            
-#            message = 1
-#
-#    print message
-#    return HttpResponse(message)
-    pass
 
-
-    
+# def createProvLog(player):
+#     
+#     g = ProvBundle()
+#     
+#     playername = "player_" + player.cron.user.username
+#     register = "register"
+#     g.agent(playername)
+#     g.activity(register)
+#     g.wasGeneratedBy(playername, register)
+#     
+#     store_id = API.submit_document(g, playername, public=False)
+#     provLog = ProvenanceLog(player=player)
+#     provLog.store_id = store_id
+#     provLog.save()
+#     
+# def addCronAction(cron, action):
+#     g = ProvBundle()
+#     playername = "player_" + cron.user.username
+#     print playername
+#     g.agent(playername)
+#     print "good"
+#     g.activity('clicked profile')
+#     print "still good"
+#     #g.wasAssociatedWith('something', 'clicked profile')
+#     print "still still good"
+#     provLog = ProvenanceLog.objects.get(player=cron.player)
+#     API.add_bundle(provLog.store_id, g)
+#     
+#     
+#     
+# 
+#     

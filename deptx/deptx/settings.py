@@ -133,9 +133,12 @@ INSTALLED_APPS = (
     'cron',
     'assets',
     'provmanager',
+    'logger',
        
     
 )
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

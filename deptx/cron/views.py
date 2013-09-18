@@ -21,11 +21,18 @@ from players.forms import MopForm
 from assets.models import Case, Mission, Document
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
-from provmanager.views import getProvJson, getProvSvg, MODE_CRON
+from provmanager.views import MODE_CRON
+from logger.logging import log_cron, log_mop
+
+import json
 
 def isCron(user):
     if user:
-        return Cron.objects.filter(user=user).exists()
+        try:
+            cron = Cron.objects.get(user=user, activated=True)
+            return True
+        except Cron.DoesNotExist:
+            pass
     return False
 
 def login(request):
@@ -40,6 +47,7 @@ def login(request):
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
         if user is not None and user.is_active and isCron(user):
             auth.login(request, user)
+            log_cron(request.user.cron, 'login')
             return HttpResponseRedirect(reverse('cron_index'))
             
         else:
@@ -50,7 +58,8 @@ def login(request):
         return render_to_response('cron/login.html', {'form' : form,}, context_instance=RequestContext(request))
 
 def logout_view(request):
-    logout(request)
+    log_cron(request.user.cron, 'logout')
+    logout(request)    
     return redirect('cron_index')
 
 #@login_required(login_url='cron_login')
@@ -79,6 +88,8 @@ def mopmaker(request):
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
         
+        print user_form
+        
         if mop_form.is_valid() and user_form.is_valid():
             #TODO check if all saves work and catch the error if they don't
             new_user = user_form.save()
@@ -91,6 +102,8 @@ def mopmaker(request):
             crontracker = request.user.cron.crontracker
             crontracker.progress = crontracker.progress + 1
             crontracker.save()
+            
+            log_mop(mop, 'mop account created')
             return redirect('cron_mission')
         else:
             return render_to_response(   'cron/mopmaker.html',
@@ -271,6 +284,12 @@ def provenance(request, serial):
     document = Document.objects.get(serial=serial)
     documentInstance = CronDocumentInstance.objects.get(document=document, cron=request.user.cron)
     
+    doc ={}
+    doc['id'] = document.id
+    doc['name'] = document.name
+    doc['store_id'] = document.provenance.store_id    
+    log_cron(request.user.cron, 'view provenance', json.dumps(doc))
+    
     return render_to_response('cron/provenance.html', {"user": request.user, "documentInstance": documentInstance, "mode":MODE_CRON },
                                          context_instance=RequestContext(request)
                                  )
@@ -285,6 +304,8 @@ def profile(request):
     solved_mission_list = Mission.objects.filter(rank__lt=currentMission.rank).order_by("rank")
     
     mop_list = Mop.objects.filter(player=request.user.cron.player)
+  
+    
     return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, "currentMission":currentMission, "solved_mission_list": solved_mission_list,"mop_list":mop_list },
                                          context_instance=RequestContext(request)
                                  )
