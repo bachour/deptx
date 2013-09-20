@@ -21,7 +21,7 @@ from players.forms import MopForm
 from assets.models import Case, Mission, Document
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
-from provmanager.views import MODE_CRON, createProvLog, addCronAction
+from provmanager.views import MODE_CRON, addCronAction
 from logger.logging import log_cron, log_mop
 
 import json
@@ -216,7 +216,7 @@ def mission_redo(request, mission_id):
         crontracker.mission = mission
         crontracker.save()
     
-    createProvLog(crontracker.cron.player)    
+    
     return HttpResponseRedirect(reverse('cron_profile'))
 
 
@@ -306,7 +306,7 @@ def profile(request):
     
     mop_list = Mop.objects.filter(player=request.user.cron.player)
   
-    
+
     return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, "currentMission":currentMission, "solved_mission_list": solved_mission_list,"mop_list":mop_list },
                                          context_instance=RequestContext(request)
                                  )
