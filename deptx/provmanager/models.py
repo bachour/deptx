@@ -20,10 +20,11 @@ class Provenance(models.Model):
     def __unicode__(self):
         return self.name + " - store: " + self.store_id.__str__()
 
-# class ProvenanceLog(models.Model):
-#     player = models.ForeignKey(Player)
-#     store_id = models.IntegerField(blank=True, null=True)
-#         
-#     def __unicode__(self):
-#         return self.player.firstName + self.player.lastName   
+class ProvenanceLog(models.Model):
+    player = models.ForeignKey(Player)
+    store_id = models.IntegerField(blank=True, null=True)
+    counter = models.IntegerField(default=0)
+         
+    def __unicode__(self):
+        return self.player.firstName + self.player.lastName   
     

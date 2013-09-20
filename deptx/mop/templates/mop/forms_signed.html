@@ -4,16 +4,23 @@
 
 <h1>Signed Forms</h1>
 <table>
+<tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}
-	<tr><td>{{reqInstance.blank.requisition.name}}</td><td>{{recInstance.blank.requisition.serial}}</td><td>{{reqInstance.blank.requisition.unit.name}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
+	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
 {% endfor %}
 </table>
 
 <h1>Used Forms</h1>
 <table>
+<tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_used_list %}
-	<tr><td>{{reqInstance.blank.requisition.name}}</td><td>{{recInstance.blank.requisition.serial}}</td><td>{{reqInstance.blank.requisition.unit.name}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
+	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
 {% endfor %}
 </table>
 
+{% endblock %}
+
+{% block help %}
+<p>
+</p>
 {% endblock %}

@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Task, Requisition, Document, GRAPH_FOLDER
+from assets.models import Task, Requisition, Document
 from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
@@ -48,6 +48,8 @@ def index(request):
         outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
         trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
         draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
+        
+                        
         
         log_mop(request.user.mop, 'index')
         context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
@@ -359,39 +361,38 @@ def analyzeSentMail(mail):
     newMail.unit = mail.unit
     newMail.mop = mail.mop
     
-    if mail.requisitionInstance is not None:
-        mail.requisitionInstance.used = True
-        mail.requisitionInstance.save()
-    
-    if mail.documentInstance is not None:
-        mail.documentInstance.used = True
-        mail.documentInstance.save()
+   
    
     #TODO Send proper error messages for all potential errors.
-    if mail.documentInstance is not None:
-        if mail.unit == mail.documentInstance.document.unit:
-            if mail.subject is Mail.SUBJECT_SEND_DOCUMENT:
-                #TODO check is user had the task assigned
-                newMail.subject = Mail.SUBJECT_INFORMATION
-                task = Task.objects.get(document=mail.documentInstance.document)
-                taskInstance = TaskInstance.objects.get(task=task, mop=mail.mop)
-                if mail.documentInstance.correct:
-                    newMail.body = "Very good job!"
-                    taskInstance.state = TaskInstance.STATE_SOLVED
+    if mail.documentInstance is not None and mail.requisitionInstance is not None:
+        if mail.unit == mail.documentInstance.document.unit and mail.unit == mail.requisitionInstance.blank.requisition.unit:
+            if mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
+                if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_SUBMISSION:
+                    if mail.requisitionInstance.data == mail.documentInstance.document.task.serial:
+                        #TODO check is user had the task assigned
+                        newMail.subject = Mail.SUBJECT_INFORMATION
+                        task = Task.objects.get(document=mail.documentInstance.document)
+                        taskInstance = TaskInstance.objects.get(task=task, mop=mail.mop)
+                        if mail.documentInstance.correct:
+                            newMail.body = "Very good job!"
+                            taskInstance.state = TaskInstance.STATE_SOLVED
+                        else:
+                            newMail.body = "That deserves a penalty."
+                            taskInstance.state = TaskInstance.STATE_FAILED
+                        taskInstance.save()
+                    else:
+                        newMail.subject = Mail.SUBJECT_ERROR
+                        newMail.body = "Wrong form data"
                 else:
-                    newMail.body = "That deserves a penalty."
-                    taskInstance.state = TaskInstance.STATE_FAILED
-                taskInstance.save()
+                        newMail.subject = Mail.SUBJECT_ERROR
+                        newMail.body = "Wrong form type"
+                
             else:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = "Wrong subject"
         else:
             newMail.subject = Mail.SUBJECT_ERROR
             newMail.body = "Wrong unit"
-        if newMail.subject == Mail.SUBJECT_ERROR:
-            #If a document was sent wrongly, it does not disappear
-            mail.documentInstance.used = False
-            mail.documentInstance.save()
         newMail.save()
         
     elif mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
@@ -452,7 +453,15 @@ def analyzeSentMail(mail):
         newMail.subject = Mail.SUBJECT_ERROR
         newMail.body = "Denied."
         newMail.save()
-        
+    
+    #If there was no error message, the forms and documents are now 'used'
+    if not newMail.subject is Mail.SUBJECT_ERROR:
+        if not mail.documentInstance is None:
+            mail.documentInstance.used = True
+            mail.documentInstance.save()
+        if not mail.requisitionInstance is None:
+            mail.requisitionInstance.used = True
+            mail.requisitionInstance.save()    
             
             
         

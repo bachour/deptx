@@ -2,13 +2,18 @@
 
 {% block content %}
 
-<h1>Behold, Provenance!</h1>
+<h1>Improvement of Provenance</h1>
 
-Name: {{ documentInstance.document.name }}<br/>
-Identification Number: {{ documentInstance.document.serial }} <br/>
-<hr/>
+<table>
+<tr><th>Document</th><td>{{documentInstance.document.name}}</td></tr>
+<tr><th>Identification Number</th><td>{{ documentInstance.document.serial }}</td></tr>
+</table>
 
 {% include 'provmanager/improve.html' with provenance=documentInstance.document.provenance task=documentInstance.document.task %}
 
 {% endblock %}
 
+{% block help %}
+<p>
+</p>
+{% endblock %}

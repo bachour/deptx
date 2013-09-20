@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 
 from provmanager.wrapper import Api
-from provmanager.models import Provenance
+from provmanager.models import Provenance, ProvenanceLog
 from prov.model import ProvBundle, Namespace
 
 from deptx.secrets import api_username, api_key
@@ -14,7 +14,9 @@ from mop.models import DocumentInstance
 
 
 from django.views.decorators.csrf import csrf_exempt
-from deptx.helpers import now
+from deptx.helpers import now, generateUUID
+
+
 
 import json
 
@@ -149,35 +151,41 @@ def prov_check(request):
 
         return HttpResponse(json_data, mimetype="application/json")
 
-# def createProvLog(player):
-#     
-#     g = ProvBundle()
-#     
-#     playername = "player_" + player.cron.user.username
-#     register = "register"
-#     g.agent(playername)
-#     g.activity(register)
-#     g.wasGeneratedBy(playername, register)
-#     
-#     store_id = API.submit_document(g, playername, public=False)
-#     provLog = ProvenanceLog(player=player)
-#     provLog.store_id = store_id
-#     provLog.save()
-#     
-# def addCronAction(cron, action):
-#     g = ProvBundle()
-#     playername = "player_" + cron.user.username
-#     print playername
-#     g.agent(playername)
-#     print "good"
-#     g.activity('clicked profile')
-#     print "still good"
-#     #g.wasAssociatedWith('something', 'clicked profile')
-#     print "still still good"
-#     provLog = ProvenanceLog.objects.get(player=cron.player)
-#     API.add_bundle(provLog.store_id, g)
-#     
-#     
-#     
-# 
-#     
+def createProvLog(player):
+     
+    g = ProvBundle()
+    
+    playername = "player_" + player.cron.user.username + "_0"
+    register = "register"
+    g.agent(playername)
+    g.activity(register)
+    g.wasGeneratedBy(playername, register)
+    
+    store_id = API.submit_document(g, playername, public=True)
+    provLog = ProvenanceLog(player=player)
+    provLog.store_id = store_id
+    provLog.save()
+     
+def addCronAction(cron, action):
+    try:
+        provLog = ProvenanceLog.objects.get(player=cron.player)
+        g = ProvBundle()
+        playername = "player_" + cron.user.username
+        oldplayer = playername + "_" + str(provLog.counter)
+        provLog.counter = provLog.counter + 1
+        provLog.save()
+        newplayer = playername + "_" + str(provLog.counter)
+        actionname = action + "_" + generateUUID()
+        g.agent(oldplayer)
+        g.activity(actionname)
+        g.agent(newplayer)
+        g.wasAssociatedWith(actionname, oldplayer)
+        g.wasDerivedFrom(newplayer, oldplayer)
+        g.wasGeneratedBy(newplayer, actionname)
+        API.add_bundle(provLog.store_id, g, action + "_" + generateUUID())
+        
+    except ProvenanceLog.DoesNotExist:
+        createProvLog(cron.player)
+    
+    
+    

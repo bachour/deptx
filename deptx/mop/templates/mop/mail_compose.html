@@ -1,11 +1,47 @@
 {% extends 'mop/base.html' %}
 
+{% block head %}
+
+
+<script>
+	window.onload = function () {
+		document.getElementById('attach_document').style.visibility = 'hidden';
+		document.getElementById('id_subject').onchange = function () {
+			var selectedValue = this.options[this.selectedIndex].value; 
+		
+			if (selectedValue == "104") { 
+				document.getElementById('attach_document').style.visibility = 'visible';
+			}
+			else {
+				document.getElementById('attach_document').style.visibility = 'hidden';
+			}
+		};
+	};
+</script>
+
+
+{% endblock %}
+
 {% block content %}
 
 <h2>Compose Message:</h2>
 <form action="{% url 'mop_mail_compose' %}" method="post">{% csrf_token %}
-{{ form.as_p }}
+<table>
+<tr><th>Receiving Unit</th><td>{{form.unit}}</td></tr>
+<tr><th>Subject</th><td>{{form.subject}}</td></tr>
+<tr><th>Attach signed Form</th><td>{{form.requisitionInstance}}</td></tr>
+<tr id="attach_document"><th>Attach Document</th><td>{{form.documentInstance}}</td></tr>
+</table>
 <input type="submit" value="Send" name="send" /><input type="submit" value="Save as draft" name="draft" />
 </form>
+
+{% endblock %}
+
+{% block help %}
+<p>You can communicate with the different MoP Units via this mail interface. Use it to send forms and request forms, tasks or documents.
+</p>
+<p>Each request requires a correctly filled in form. If you have finished a task, you need to send the correct form as well as the document along.
+</p>You can always save your message as draft and edit it later.
+<p>
 
 {% endblock %}

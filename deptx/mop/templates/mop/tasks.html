@@ -3,52 +3,73 @@
 {% block content %}
 
 <h1>Tasks</h1>
-<h3>Friendly advice: Gain more trust to gain more tasks!</h3>
-<h2>Active tasks</h2>
-<table>
-<tr><th>Unit</th><th>Task</th><th>Description</th><th>Identification Code</th><th>Documents</th></tr>
-{% for taskInstance in active_taskInstance_list %}
-	<tr>
-	<td>{{taskInstance.task.unit.name}}</td>
-	<td>{{taskInstance.task.name}}</td>
-	<td>{{taskInstance.task.description}}</td>
-	<td>{{taskInstance.task.serial}}</td>
-	<td>{% for document in taskInstance.task.document_set.all %}
-		{{document.serial}} ({{document.unit.serial}})<br/>
-		{% endfor %}</td>
-	</tr>
-{% endfor %}
-</table>
-<h2>Available tasks</h2>
-<table>
-<tr><th>Unit</th><th>Task</th><th>Description</th><th>Identification Code</th></tr>
-{% for task in new_task_list %}
-	<tr><td>{{task.unit.name}}</td><td>{{task.name}}</td><td>{{task.description}}</td><td>{{task.serial}}</td></tr>
-{% endfor %}
-</table>
 
-<h2>Failed tasks</h2>
-<table>
-<tr><th>Unit</th><th>Task</th><th>Description</th></tr>
-{% for taskInstance in failed_taskInstance_list %}
-	<tr>
-	<td>{{taskInstance.task.unit.name}}</td>
-	<td>{{taskInstance.task.name}}</td>
-	<td>{{taskInstance.task.description}}</td>
-	</tr>
-{% endfor %}
-</table>
 
-<h2>Succesful tasks</h2>
-<table>
-<tr><th>Unit</th><th>Task</th><th>Description</th></tr>
-{% for taskInstance in solved_taskInstance_list %}
-	<tr>
-	<td>{{taskInstance.task.unit.name}}</td>
-	<td>{{taskInstance.task.name}}</td>
-	<td>{{taskInstance.task.description}}</td>
-	</tr>
-{% endfor %}
-</table>
+<h2>Active</h2>
+{% if active_taskInstance_list %}
+	<table>
+	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Document</th></tr>
+	{% for taskInstance in active_taskInstance_list %}
+		<tr>
+		<td>{{taskInstance.task.document.unit.name}}</td>
+		<td>{{taskInstance.task.name}}</td>
+		<td>{{taskInstance.task.serial}}</td>
+		<td>{{taskInstance.task.document.serial}}</td>
+		</tr>
+	{% endfor %}
+	</table>
+{% else %}
+No active tasks.
+{% endif %}
+<h2>Available</h2>
+{% if new_task_list %}
+	<table>
+	<tr><th>Unit</th><th>Task</th><th>Identification Code</th></tr>
+	{% for task in new_task_list %}
+		<tr><td>{{task.document.unit.name}}</td><td>{{task.name}}</td><td>{{task.serial}}</td></tr>
+	{% endfor %}
+	</table>
+{% else %}
+No available tasks.
+{% endif %}
+<h2>Failed</h2>
+{% if failed_taskInstance_list %}
+	<table>
+	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Timestamp</th></tr>
+	{% for taskInstance in failed_taskInstance_list %}
+		<tr>
+		<td>{{taskInstance.task.document.unit.name}}</td>
+		<td>{{taskInstance.task.name}}</td>
+		<td>{{taskInstance.task.serial}}</td>
+		<td>{{taskInstance.date}}</td>
+		</tr>
+	{% endfor %}
+	</table>
+{% else %}
+No failed tasks.
+{% endif %}
 
+<h2>Succesful</h2>
+{% if solved_taskInstance_list %}
+	<table>
+	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Timestamp</th></tr>
+	{% for taskInstance in solved_taskInstance_list %}
+		<tr>
+		<td>{{taskInstance.task.document.unit.name}}</td>
+		<td>{{taskInstance.task.name}}</td>
+		<td>{{taskInstance.task.serial}}</td>
+		<td>{{taskInstance.date}}</td>
+		</tr>
+	{% endfor %}
+	</table>
+{% else %}
+No succesful tasks.
+{% endif %}
+
+{% endblock %}
+
+{% block help %}
+<p>
+Friendly advice: Gain more trust to gain more tasks!
+</p>
 {% endblock %}

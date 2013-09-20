@@ -2,29 +2,36 @@
 
 {% block content %}
 
-<h1>Welcome agent {{user.username}}!</h1>
-<h2>Where do you want to go today?</h2>
-<ul>
-	<li><a href="{% url 'mop_rules' %}">Guidebook</a></li>
-	<li>Mail
-		<ul>
-			<li><a href="{% url 'mop_mail_inbox' %}">Inbox ({{ inbox_unread }})</a></li>
-			<li><a href="{% url 'mop_mail_outbox' %}">Outbox ({{ outbox_unread }})</a></li>
-			<li><a href="{% url 'mop_mail_trash' %}">Trash ({{ trash_unread }})</a></li>
-			<li><a href="{% url 'mop_mail_draft' %}">Drafts ({{ draft_unread }})</a></li>
-			<li><a href="{% url 'mop_mail_compose' %}">Compose</a></li>
-		</ul>
-	</li>
-	<li>Forms
-		<ul>
-			<li><a href="{% url 'mop_forms_blank' %}">Blank Forms</a></li>
-			<li><a href="{% url 'mop_forms_signed' %}">Signed Forms</a></li>
-		</ul>
-	</li>
-	<li><a href="{% url 'mop_tasks' %}">Tasks</a></li>
-	<li><a href="{% url 'mop_documents' %}">Documents</a></li>
-	
-	
-</ul>
+<h1>Where do you want to go today?</h1>
 
+<p class="nav">
+	<span class="button"><a href="{% url 'mop_rules' %}">Guidebook</a></span>
+</p>
+<p class="nav">
+<span class="button"><a href="{% url 'mop_mail_compose' %}">Compose</a></span>
+	<span class="button"><a href="{% url 'mop_mail_inbox' %}">Inbox ({{ inbox_unread }})</a></span>
+	<span class="button"><a href="{% url 'mop_mail_outbox' %}">Outbox ({{ outbox_unread }})</a></span>
+	<span class="button"><a href="{% url 'mop_mail_trash' %}">Trash ({{ trash_unread }})</a></span>
+	<span class="button"><a href="{% url 'mop_mail_draft' %}">Drafts ({{ draft_unread }})</a></span>
+</p>
+<p class="nav">
+	<span class="button"><a href="{% url 'mop_forms_blank' %}">Blank Forms</a></span>
+	<span class="button"><a href="{% url 'mop_forms_signed' %}">Signed Forms</a></span>
+</p>
+<p class="nav">
+	<span class="button"><a href="{% url 'mop_tasks' %}">Tasks</a></span>
+	<span class="button"><a href="{% url 'mop_documents' %}">Documents</a></span>
+</p>
+
+
+{% endblock %}
+
+
+{% block help %}
+<p>
+This is the control centre of the Ministry of Provenance intranet. Please select where you want to go next.
+</p>
+<p>
+You can (and should!) read the Guidebook, check your messages, fill in forms, select your tasks and work with documents.
+</p>
 {% endblock %}

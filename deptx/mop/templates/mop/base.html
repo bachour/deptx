@@ -1,26 +1,46 @@
 {% load staticfiles %}
 <head>
 <link rel="stylesheet" type="text/css" href="{% static "mop/mop.css" %}">
+
+{% block head %}
+{% endblock %}
+
 </head>
 
 <body>
 
-<div class="header">
-<marquee behavior="scroll" direction="left">
-<span class="marquee"></span>
-<span class="marquee">MoP - Proudly watching you since 1872</span>
-<span class="marquee">MoP - Putting the form back into information</span>
-<span class="marquee">MoP - He who controls the past controls the future. He who controls the present controls the past.</span>
-<span class="marquee">MoP - War is peace. Freedom is slavery. Ignorance is strength.</span>
-<span class="marquee">MoP - Keep calm and carry on.</span>
-<span class="marquee">MoP - The need is great, the time is short, PROVENANCE must be the watchword.</span>
-</marquee>
+
+<div class="wrapper">
+	
+	<div class="header">
+		<marquee behavior="scroll" direction="left">
+		<span class="marquee"></span>
+		<span class="marquee">MoP - Proudly watching you since 1872</span>
+		<span class="marquee">MoP - Putting the form back into information</span>
+		<span class="marquee">MoP - He who controls the past controls the future. He who controls the present controls the past.</span>
+		<span class="marquee">MoP - War is peace. Freedom is slavery. Ignorance is strength.</span>
+		<span class="marquee">MoP - Keep calm and carry on.</span>
+		<span class="marquee">MoP - The need is great, the time is short, PROVENANCE must be the watchword.</span>
+		</marquee>
+	</div>
+	
+	<div class="navbar">
+		<a href="{% url 'mop_index' %}">control centre</a> --- logged in as: {{user.username}} --- <a href="{% url 'mop_logout' %}">logout</a>
+	</div>
+	
+	<div class="main">
+		<div class="content">
+			{% block content %}
+			{% endblock %}
+		</div>
+		<div class="sidebar">
+			<h1><img src="{% static 'mop/logo-mop-bg.png' %}" style='width:100px; vertical-align:middle;' /> Guidance</h1>
+			{% block help %}
+			{% endblock %}
+		</div>
+	</div>
 </div>
 
-<div class="main">
-<a href="{% url 'mop_index' %}">control centre</a> {% if user.is_authenticated %}<a href="{% url 'mop_logout' %}">logout</a>{% endif %}
-{% block content %}
-{% endblock %}
 
-</div>
+
 </body>

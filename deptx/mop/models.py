@@ -14,18 +14,17 @@ class DocumentInstance(models.Model):
     modified = models.BooleanField()
     correct = models.BooleanField()
     used = models.BooleanField()
-    date = models.DateTimeField(now(), auto_now=True)
+    date = models.DateTimeField(default=now(), auto_now=True)
     
     def __unicode__(self):
         if (self.modified):
-            status = "MODIFIED"
+            status = "modified"
         else:
-            status = "IN PROGRESS"
-        return self.document.name + " / " + self.mop.user.username + " (" + status + ")"
+            status = "original"
+        return self.document.serial + " (" + status + ")"
 
 class TaskInstance(models.Model):
     STATE_ACTIVE = 2
-    STATE_REPORTED = 3
     STATE_SOLVED = 4
     STATE_FAILED = 5
     
@@ -38,6 +37,7 @@ class TaskInstance(models.Model):
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_ACTIVE)
+    date = models.DateTimeField(default=now(), auto_now=True)
     
     def __unicode__(self):
         return self.task.name + " / " + self.mop.user.username
@@ -56,7 +56,7 @@ class RequisitionInstance(models.Model):
     used = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return self.blank.mop.user.username + " " + self.blank.requisition.serial + " " + self.data
+        return self.blank.requisition.serial
     
 
 class Mail(models.Model):
@@ -85,7 +85,7 @@ class Mail(models.Model):
     SUBJECT_REQUEST_FORM = 101
     SUBJECT_REQUEST_TASK = 102
     SUBJECT_REQUEST_DOCUMENT = 103
-    SUBJECT_SEND_DOCUMENT = 104
+    SUBJECT_SUBMIT_REPORT = 104
         
     SUBJECT_RECEIVE_FORM = 201
     SUBJECT_RECEIVE_TASK = 202
@@ -99,7 +99,7 @@ class Mail(models.Model):
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
         (SUBJECT_REQUEST_TASK, "Requesting Task"),
         (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
-        (SUBJECT_SEND_DOCUMENT, "Sending Document"),
+        (SUBJECT_SUBMIT_REPORT, "Submitting Report"),
     )
     
     
@@ -115,7 +115,7 @@ class Mail(models.Model):
     
     
     mop = models.ForeignKey(Mop)
-    unit = models.ForeignKey(Unit)
+    unit = models.ForeignKey(Unit, blank=True, null=True)
     date = models.DateTimeField(default=now(), auto_now=True)
     subject = models.IntegerField(choices=SUBJECT_CHOICES, default=SUBJECT_NONE)
     body = models.TextField()

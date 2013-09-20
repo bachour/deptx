@@ -2,12 +2,17 @@
 
 {% block content %}
 
-{{ mail.get_status_display }}<br/>
-Subject: {{ mail.get_subject_display }}<br/>
-Unit: {{ mail.unit.name }} <br/>
-Date: {{ mail.date }}<br/>
-Body: {{ mail.body }}<br/>
-Form: {{ mail.requisitionInstance.blank.requisition.unit.serial}}<br />
-Data: {{ mail.requisitionInstance.data}}
+<table>
+<tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
+<tr><th>Unit</th><td>{{ mail.unit.name }}</td></tr>
+<tr><th>Timestamp</th><td>{{ mail.date }}</td></tr>
+<tr><th>Message</th><td>{{ mail.body }}</td></tr>
+<tr><th>Form</th><td>{{ mail.requisitionInstance.blank.requisition.unit.serial}}</td></tr>
+<tr><th>Document</th><td>{{ mail.documentInstance.document.serial}}</td></tr>
+</table>
+{% endblock %}
 
+{% block help %}
+<p>
+</p>
 {% endblock %}

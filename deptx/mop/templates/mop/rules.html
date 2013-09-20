@@ -20,23 +20,28 @@ If everything was correct with your form, the task will now be assigned to you.<
 Go back to "Tasks" and start working!
 </p>
 <h2>Documents</h2>
-Each task has documents relevant for it.<br/>
-Before you can work with the documents, you need to request them.<br/>
+Each task has a document relevant for it.<br/>
+Before you can work with the document, you need to request it.<br/>
 Requesting a document works the same as requesting a task or a form.<br/>
 Just fill in the appropriate form and send it to the unit that is storing the document.<br/>
 Soon the document will be in your document drawer.
 <h2>Forms</h2>
 <p>
 Every MOP Unit requires a different form for different requests<br/>
-There are forms to reuqest forms, to request tasks and to request documents.<br/>
+There are forms to request forms, to request tasks, to request documents and to submit a report (of a fulfilled task).<br/>
 The following forms are currently available:
 </p>
 <table>
-<tr><th>responsible unit</th><th>form</th><th>usage</th><th>code</th><th>trust level</th></tr>
+<tr><th>Responsible Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
 {% for req in requisition_list %}
-	<tr><td>{{req.unit.name}} ({{req.unit.serial}})</td><td>{{req.name}}</td><td>{{req.description}}</td><td>{{req.serial}}</td><td>{{req.trust}}</td></tr>
+	<tr><td>{{req.unit.name}} ({{req.unit.serial}})</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
 {% endfor %}
 </table>
 
+{% endblock %}
+
+{% block help %}
+<p>
+</p>
 {% endblock %}
 

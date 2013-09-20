@@ -21,7 +21,7 @@ from players.forms import MopForm
 from assets.models import Case, Mission, Document
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
-from provmanager.views import MODE_CRON
+from provmanager.views import MODE_CRON, createProvLog, addCronAction
 from logger.logging import log_cron, log_mop
 
 import json
@@ -202,7 +202,7 @@ def mission_reset(request):
                 for cronDocumentInstance in cronDocumentInstance_list:
                     cronDocumentInstance.solved = False
                     cronDocumentInstance.save()
-    
+
     return HttpResponseRedirect(reverse('cron_profile'))
 
 def mission_redo(request, mission_id):
@@ -215,7 +215,8 @@ def mission_redo(request, mission_id):
         mission = Mission.objects.get(id=mission_id)
         crontracker.mission = mission
         crontracker.save()
-        
+    
+    createProvLog(crontracker.cron.player)    
     return HttpResponseRedirect(reverse('cron_profile'))
 
 

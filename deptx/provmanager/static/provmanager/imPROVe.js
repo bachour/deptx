@@ -81,8 +81,8 @@ function ProvLink (id, from, to, type, role, attributes)
 
 function loadStaticImages()
 {
-	staticSources["__arrow"] = MEDIA_URL + "arrow.png";
-	staticSources["__arrow2"] = MEDIA_URL + "arrow2.png";
+	staticSources["__arrow"] = ARROW_URL_1;
+	staticSources["__arrow2"] = ARROW_URL_2;
 	
     for(name in staticSources) {
         numImages++;
