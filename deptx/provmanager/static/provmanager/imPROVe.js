@@ -4,7 +4,9 @@
 var nodes = {}; // INPUT: collection of ProvNode objects indexed by name
 var edges = []; // INPUT: array of ProvLink objects.
 var sources = {}; // TEMP: collection of image URLs used for loading all images at once
+var staticSources = {} // TEMP: collection of image URLS for non-graph images
 var images = {}; // TEMP: collection of images before being imported into nodes{}
+var staticImages = {}; //TEMP: collection of images for non-graph elements
 var lines = []; // PROCESS: array of connectors;
 
 //zoom variables
@@ -77,10 +79,31 @@ function ProvLink (id, from, to, type, role, attributes)
 	edges.push(this);
 }
 
+function loadStaticImages()
+{
+	staticSources["__arrow"] = MEDIA_URL + "arrow.png";
+	staticSources["__arrow2"] = MEDIA_URL + "arrow2.png";
+	
+    for(name in staticSources) {
+        numImages++;
+      }
+      for(name in staticSources) {
+        staticImages[name] = new Image();
+        staticImages[name].onload = function() {
+          if(++loadedImages >= numImages) {
+            callback();
+          }
+        };
+        staticImages[name].src = staticSources[name];
+      }
+}
+
 //Functions
 function loadImages(callback) { // and sounds
      loadedImages = 0;
      numImages = 0;
+     
+     loadStaticImages();
     
     for(name in sources) {
       numImages++;
@@ -359,6 +382,9 @@ function initStage()
      stage.add(attribLayer['1']);
      stage.add(attribLayer['2']);
      stage.add(messageLayer);
+     
+     if (FIRST_TIME)
+    	 showTutorial();
    } // end of function init stage
 
 // toggle highlighting for shapes when mouse over
@@ -663,6 +689,21 @@ function loadJSONProv (json)
 			link = new ProvLink(j, nodes[json[i][j][from]], nodes[json[i][j][to]], i, role, attribs);
 		}
 	}
+}
+
+function clearAttribName(name, value)
+{
+	attribs = name.split(":");
+	attribs = attribs[1].split("_");
+	attribName = attribs[0];
+	for (i in attribs)
+	{
+		if (i == 0)
+			continue;
+		attribName += " " + attribs[i];
+	}
+	
+	return attribName;
 }
 
 function arrowPoints(fromx, fromy, tox, toy)
@@ -1306,4 +1347,110 @@ function redraw()
 	layer.draw();
 	attribLayer['1'].draw();
 	attribLayer['2'].draw();
+}
+
+function showTutorial()
+{
+	background = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        strokeEnabled: false,
+        fill: 'black',
+        opacity: 0.2,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        shadowEnabled: false,
+      });
+	
+	message1 = new Kinetic.Text({
+        x: 0.15*STAGE_WIDTH,
+        y: STAGE_HEIGHT/6,
+        text: "1. Spread out nodes and arrange them\nto make things clearer",
+        fontSize: ATTRIBBOX_LARGE_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: ATTRIBBOX_FONT_STYLE,
+        fill: 'black',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        padding: 0,
+        width: STAGE_WIDTH/3,
+        height: STAGE_HEIGHT/3
+	});
+	
+	message2 = new Kinetic.Text({
+        x: STAGE_WIDTH*0.55,
+        y: STAGE_HEIGHT/3,
+        text: "2. When you click a node, \nits attributes can be\n inspected here.",
+        fontSize: ATTRIBBOX_LARGE_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: ATTRIBBOX_FONT_STYLE,
+        fill: 'black',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        padding: 0,
+        width: STAGE_WIDTH/3,
+        height: STAGE_HEIGHT/3
+	});
+	
+	message3 = new Kinetic.Text({
+        x: 0.46*STAGE_WIDTH,
+        y: 0.84*STAGE_HEIGHT,
+        text: "3. Highlight pairs of attributes\n that you find suspicious\n then click submit.",
+        fontSize: ATTRIBBOX_LARGE_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: ATTRIBBOX_FONT_STYLE,
+        fill: 'black',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        width: STAGE_WIDTH/3,
+        height: STAGE_HEIGHT/3
+	});
+	
+	arrow1 = new Kinetic.Image({
+        image: staticImages["__arrow"],
+        x: message1.getX() + 0.2*STAGE_WIDTH,
+        y: message1.getY()+ 0.26* STAGE_HEIGHT,
+        width:0.095 * STAGE_WIDTH,
+        height:0.095 * STAGE_WIDTH,
+        draggable: false,
+        rotationDeg: 180
+        });
+
+	arrow2 = new Kinetic.Image({
+        image: staticImages["__arrow"],
+        x: message2.getX() + 0.25*STAGE_WIDTH,
+        y: message2.getY() - 0.20* STAGE_HEIGHT,
+        width:0.095 * STAGE_WIDTH,
+        height:0.095 * STAGE_WIDTH,
+        draggable: false,
+        rotationDeg:180,
+        });
+	arrow3 = new Kinetic.Image({
+        image: staticImages["__arrow2"],
+        x: message3.getX() + 0.36*STAGE_WIDTH,
+        y: message3.getY() + STAGE_HEIGHT/60,
+        width:0.05 * STAGE_WIDTH,
+        height:0.095 * STAGE_WIDTH,
+        draggable: false,
+        rotationDeg: 90
+        });
+	
+	arrow2.setScale(1,-1);
+	
+	messageLayer.add(background);
+	messageLayer.add(message1);
+	messageLayer.add(message2);
+	messageLayer.add(message3);
+	messageLayer.add(arrow1);
+	messageLayer.add(arrow2);
+	messageLayer.add(arrow3);
+	messageLayer.draw();
+	
+	messageLayer.on('mouseup', function(evt){
+		messageLayer.removeChildren();
+		messageLayer.draw();
+	});
 }
