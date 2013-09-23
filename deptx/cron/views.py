@@ -21,6 +21,8 @@ from players.forms import MopForm
 from assets.models import Case, Mission, Document
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
+from deptx.settings import MEDIA_URL
+
 from provmanager.views import MODE_CRON, addCronAction
 from logger.logging import log_cron, log_mop
 
@@ -225,7 +227,7 @@ def renderContent(content, user):
     name = user.cron.user.username
     
     t = Template(content)
-    c = Context({"name":name})
+    c = Context({"name":name, "MEDIA_URL":MEDIA_URL})
     
     return t.render(c)
 
