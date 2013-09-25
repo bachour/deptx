@@ -1211,15 +1211,12 @@ function handleResponse(response)
 		response = {"correct":true,"message":"You are correct! Press continue to continue."};
 	}
 
-	showMessage(response.message);
-
 	if (response.correct)
 	{
-		//taskCompleted = true;
-		//submitText.setText("Proceed");
-		//layer.draw();
-		window.location.href = CONTINUE_URL;
+		taskCompleted = true;
 	}
+	showMessage(response.message);
+
 }
 
 function setupAttribPanes()
@@ -1344,6 +1341,10 @@ function showMessage(msg)
 	messageLayer.on('mouseup', function(evt){
 		messageLayer.removeChildren();
 		messageLayer.draw();
+
+		if (taskCompleted)
+		window.location.href = CONTINUE_URL;
+
 	});
 }
 
