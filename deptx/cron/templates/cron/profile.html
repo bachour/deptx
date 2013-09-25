@@ -12,8 +12,8 @@
 <h1>Cron Data</h1>
 <table>
 <tr><td>User name:</td><td>{{cron.user.username}}</td></tr>
-<tr><td>Solved Missions:</td><td>{% for mission in solved_mission_list %}{{mission.name}} (<a href="{% url 'cron_mission_redo' mission.id %}">redo (used for debug, do not press)</a>)<br/>{% endfor %}</td></tr>
-<tr><td>Current Mission:</td><td>{{currentMission.name}} (<a href="{% url 'cron_mission_reset' %}">reset (used for debug, do not press)</a>)</td></tr>
+<tr><td>Solved Missions:</td><td>{% for mission in solved_mission_list %}{{mission.name}} (<a href="{% url 'cron_mission_redo' mission.id %}">redo</a> (used for debug, press at your own risk))<br/>{% endfor %}</td></tr>
+<tr><td>Current Mission:</td><td>{{currentMission.name}} (<a href="{% url 'cron_mission_reset' %}">reset</a> (used for debug, press at your own risk))</td></tr>
 </table>
 <hr/>
 <h1>MoP Data</h1>
