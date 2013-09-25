@@ -129,6 +129,7 @@ function initStage()
         scale:SCREEN_WIDTH/STAGE_WIDTH
       });
 
+	document.getElementById('container').style.height = SCREEN_HEIGHT + "px";
 	//stage.setScale(STAGE_WIDTH/VIRTUAL_STAGE_WIDTH);
 
 	// create Kinetic Images for all objects and put them in nodes

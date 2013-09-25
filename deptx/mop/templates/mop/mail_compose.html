@@ -38,10 +38,14 @@
 {% endblock %}
 
 {% block help %}
-<p>You can communicate with the different MoP Units via this mail interface. Use it to send forms and request forms, tasks or documents.
+<p>You can communicate with the different MoP Units via this mail interface. Use it to request forms, tasks or documents and to submit completed tasks.
 </p>
-<p>Each request requires a correctly filled in form. If you have finished a task, you need to send the correct form as well as the document along.
-</p>You can always save your message as draft and edit it later.
-<p>
+<p>You must always attach a correctly filled and signed form with any message otherwise the relevant MoP unit will not be able to process it. If you have finished a task, you also need to send the the necessary document along with the correctly filled form.
+</p><p>
+If you haven't done so already, click <a href="{% url 'mop_forms_blank' %}">here</a> to fill and sign the appropriate form.
+</p><p>
+You can always save your message as draft and edit it later.
+</p>
+<p>Do NOT use the MoP main server for personal communication!</p>
 
 {% endblock %}
