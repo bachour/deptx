@@ -125,8 +125,11 @@ function initStage()
 	var stage = new Kinetic.Stage({
         container: 'container',
         width: STAGE_WIDTH, 
-        height: STAGE_HEIGHT
+        height: STAGE_HEIGHT,
+        scale:SCREEN_WIDTH/STAGE_WIDTH
       });
+
+	//stage.setScale(STAGE_WIDTH/VIRTUAL_STAGE_WIDTH);
 
 	// create Kinetic Images for all objects and put them in nodes
 	for (name in sources)
