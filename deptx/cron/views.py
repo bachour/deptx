@@ -24,8 +24,10 @@ from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 from deptx.settings import MEDIA_URL
 
 from provmanager.models import ProvenanceLog
-from provmanager.views import MODE_CRON, addCronAction
+from provmanager.views import MODE_CRON
 from logger.logging import log_cron, log_mop
+from provmanager.provlogging import provlog_add_cron_login, provlog_add_cron_logout, provlog_add_mop_register
+
 
 import json
 
@@ -51,6 +53,7 @@ def login(request):
         if user is not None and user.is_active and isCron(user):
             auth.login(request, user)
             log_cron(request.user.cron, 'login')
+            provlog_add_cron_login(request.user.cron, request.session.session_key)
             return HttpResponseRedirect(reverse('cron_index'))
             
         else:
@@ -62,6 +65,7 @@ def login(request):
 
 def logout_view(request):
     log_cron(request.user.cron, 'logout')
+    provlog_add_cron_logout(request.user.cron, request.session.session_key)
     logout(request)    
     return redirect('cron_index')
 
@@ -80,7 +84,7 @@ def index(request):
             crontracker.save()
         
         try:
-            provLog = ProvenanceLog.objects.get(player=cron.player)
+            provLog = ProvenanceLog.objects.get(cron=cron)
         except ProvenanceLog.DoesNotExist:
             provLog = None
          
@@ -112,6 +116,7 @@ def mopmaker(request):
             crontracker.save()
             
             log_mop(mop, 'mop account created')
+            provlog_add_mop_register(request.user.cron, mop, request.session.session_key)
             return redirect('cron_mission')
         else:
             return render_to_response(   'cron/mopmaker.html',

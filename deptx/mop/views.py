@@ -27,6 +27,7 @@ from deptx.settings import MEDIA_ROOT
 from cron.models import CronDocumentInstance
 
 from provmanager.views import getProvJson, getProvSvg, MODE_MOP
+from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
 
 from logger.logging import log_cron, log_mop
 import json
@@ -73,6 +74,7 @@ def login(request):
         if user is not None and user.is_active and isMop(user):
             auth.login(request, user)
             log_mop(request.user.mop, 'login')
+            provlog_add_mop_login(request.user.mop, request.session.session_key)
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -84,6 +86,7 @@ def login(request):
 
 def logout_view(request):
     log_mop(request.user.mop, 'logout')
+    provlog_add_mop_logout(request.user.mop, request.session.session_key)
     logout(request)
     return redirect('mop_index')
 
@@ -276,9 +279,9 @@ def mail_compose(request):
         if form.is_valid():
             mail = form.save()
             if mail.type is Mail.TYPE_SENT:
-                analyzeSentMail(mail)
+                analyzeSentMail(request, mail)
             elif mail.type is Mail.TYPE_DRAFT:
-                analyzeDraftMail(mail)
+                analyzeDraftMail(request, mail)
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
@@ -315,9 +318,9 @@ def mail_edit(request, mail_id):
         if form.is_valid():
             mail = form.save()
             if mail.type is Mail.TYPE_SENT:
-                analyzeSentMail(mail)
+                analyzeSentMail(request, mail)
             elif mail.type is Mail.TYPE_DRAFT:
-                analyzeDraftMail(mail)
+                analyzeDraftMail(request, mail)
             return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
@@ -333,7 +336,7 @@ def mail_edit(request, mail_id):
 
 #TODO time delay
 #TODO risk
-def analyzeDraftMail(mail):
+def analyzeDraftMail(request, mail):
     if mail.documentInstance is not None:
         cron = mail.mop.player.cron
         document = mail.documentInstance.document
@@ -348,18 +351,21 @@ def analyzeDraftMail(mail):
     log_mop(mail.mop, 'save draft mail', json.dumps(m))
 
 
-def analyzeSentMail(mail):
+def analyzeSentMail(request, mail):
     
     m ={}
     m['id'] = mail.id
     m['subject'] = mail.subject
     log_mop(mail.mop, 'send mail', json.dumps(m))
     
+    if mail.requisitionInstance is not None:
+        provlog_add_mop_send_form(request.user.mop, mail, request.session.session_key)
     
     newMail = Mail()
     newMail.type = Mail.TYPE_RECEIVED
     newMail.unit = mail.unit
     newMail.mop = mail.mop
+    
     
    
    
@@ -405,9 +411,10 @@ def analyzeSentMail(mail):
                 requisition = None
             if requisition is not None and mail.unit.isAdministrative:
                 newMail.subject = Mail.SUBJECT_RECEIVE_FORM
-                newMail.body = "Here is a magnificient form for you: " + requisition.serial + "."
+                newMail.body = "You have been assigned form " + requisition.serial + ". You can find it in your blank-form-workspace."
                 newMail.save()
                 RequisitionBlank.objects.get_or_create(requisition=requisition, mop=mail.mop)
+                provlog_add_mop_issue_form(request.user.mop, mail, requisition, request.session.session_key)
             else:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = "We cannot help you with requesting form " + mail.requisitionInstance.data
@@ -439,7 +446,8 @@ def analyzeSentMail(mail):
                 newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
                 newMail.body = "You have been assigned document " + document.serial + "."
                 newMail.save()
-                DocumentInstance.objects.get_or_create(document=document, mop=mail.mop)
+                documentInstance, created = DocumentInstance.objects.get_or_create(document=document, mop=mail.mop)
+                provlog_add_mop_issue_document(mail.mop, mail, documentInstance, request.session.session_key)
             else:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = "We cannot help you with requesting document " + mail.requisitionInstance.data
@@ -521,6 +529,7 @@ def form_fill(request, reqBlank_id):
             f['instance_id'] = requisitionInstance.id
             f['data'] = form.data
             log_mop(request.user.mop, 'fill form', json.dumps(f))
+            provlog_add_mop_sign_form(request.user.mop, requisitionInstance, request.session.session_key)
             return redirect('mop_forms_signed')
     else:
         form = RequisitionInstanceForm()

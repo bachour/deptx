@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 
 from deptx.helpers import generateUUID
 
+#TODO move Player into CRON
+#TODO move Cron and Mop into appropriate apps
 class Player(models.Model):
     firstName = models.CharField(max_length=50)
     lastName = models.CharField(max_length=50)
