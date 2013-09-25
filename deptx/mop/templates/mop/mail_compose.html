@@ -4,7 +4,7 @@
 
 
 <script>
-	window.onload = function () {
+	/*window.onload = function () {
 		document.getElementById('attach_document').style.visibility = 'hidden';
 		document.getElementById('id_subject').onchange = function () {
 			var selectedValue = this.options[this.selectedIndex].value; 
@@ -16,7 +16,7 @@
 				document.getElementById('attach_document').style.visibility = 'hidden';
 			}
 		};
-	};
+	};*/
 </script>
 
 
@@ -29,8 +29,8 @@
 <table>
 <tr><th>Receiving Unit</th><td>{{form.unit}}</td></tr>
 <tr><th>Subject</th><td>{{form.subject}}</td></tr>
-<tr><th>Attach signed Form</th><td>{{form.requisitionInstance}}</td></tr>
-<tr id="attach_document"><th>Attach Document</th><td>{{form.documentInstance}}</td></tr>
+<tr><th>Attach signed Form</th><td>{{form.requisitionInstance}}</td><td>A signed form is always required.</td></tr>
+<tr id="attach_document"><th>Attach Document</th><td>{{form.documentInstance}}</td><td>Only attach a document when submitting a report.</td></tr>
 </table>
 <input type="submit" value="Send" name="send" /><input type="submit" value="Save as draft" name="draft" />
 </form>
