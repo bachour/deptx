@@ -1215,9 +1215,10 @@ function handleResponse(response)
 
 	if (response.correct)
 	{
-		taskCompleted = true;
-		submitText.setText("Continue");
-		layer.draw();
+		//taskCompleted = true;
+		//submitText.setText("Proceed");
+		//layer.draw();
+		window.location.href = CONTINUE_URL;
 	}
 }
 
