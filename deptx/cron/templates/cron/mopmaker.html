@@ -11,7 +11,7 @@
 </script>
 
 <h1>Infiltration Account</h1>
-<p>Agent {{user.username}}, please enter your biometric and personal data which is required for each MoP employee. As there might be background checks, you should create a persona that 'makes sense' but is not identical to your real self.</p>
+<p>Agent {{user.username}}, please fill in the following details which are required for each MoP employee. Although Cr0n hackers will bypass standard checks on new employees, there might be future background checks triggered by MoP Security. You should therefore create a persona that 'makes sense' but is not identical and cannot be traced back to your real self.</p>
 <form action="{% url 'cron_mopmaker' %}" method="post">{% csrf_token %}
 <hr/>
 <table>
@@ -26,7 +26,7 @@
 <tr><td>Marital Status:</td><td>{{mop_form.marital}}</td><td>{{mop_form.marital.errors}}</td></tr>
 </table>
 <hr/>
-<p>You also need to choose your account credentials in order to be able to log-in to the intranet of the Ministry of Provenance. Our hackers will then add your account to the official MoP system through a backdoor in their software.</p>
+<p>You also need to choose your account credentials in order to be able to log in to the intranet of the Ministry of Provenance. Our hackers will then add your account to the official MoP system by exploiting a backdoor in their employee registration software.</p>
 <hr/>
 <table>
 <tr><td>MoP User Name:</td><td>{{user_form.username}}</td><td>{{user_form.username.errors}}Letters, digits and @/./+/-/_ only.</td></tr>
