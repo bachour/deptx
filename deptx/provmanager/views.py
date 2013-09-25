@@ -131,14 +131,14 @@ def prov_check(request):
 
         if mode == MODE_CRON:
             if correct:
-                message = "Good job, cron agent!"
+                message = "You found the suspicious data! Great job, proceed to your debrief."
 
                 #TODO check properly for cron-user and if Instance exists
                 cronDocumentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
                 cronDocumentInstance.solved = True
                 cronDocumentInstance.save()
             else:
-                message = "The data you submitted does not seem to contradict itself. Please try something else."
+                message = "The data you submitted does not seem suspicious. Please keep investigating."
                   
         elif mode == MODE_MOP:
             message = "Provenance modification saved. Please submit document now."  
