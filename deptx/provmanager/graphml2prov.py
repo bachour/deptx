@@ -21,6 +21,7 @@ import logging
 import traceback
 import urllib2
 from prov.model import ProvException
+import datetime
 logger = logging.getLogger(__name__)
 import re
 from argparse import ArgumentParser
@@ -35,7 +36,7 @@ __version__ = 0.1
 __date__ = '2013-09-09'
 __updated__ = '2013-09-16'
 
-DEBUG = 0
+DEBUG = 1
 TESTRUN = 0
 PROFILE = 0
 
@@ -73,6 +74,11 @@ NS_MOP = prov.model.Namespace('mop', 'http://mofp.net/ns#')
 CUSTOM_ATTRIBUTES = {
     'date_of_birth': NS_MOP['birthdate'],
 }
+
+MOP_start_date = NS_MOP['start_date']
+MOP_end_date = NS_MOP['end_date']
+MOP_start_time = NS_MOP['start_time']
+MOP_end_time = NS_MOP['end_time']
 
 EDGE_PROV_CODE = {
     '0': prov.model.PROV_REC_ASSOCIATION,
@@ -142,6 +148,11 @@ def convert_attributes(element, attributes):
                 if value:
                     results[attributes[key]] = to_unicode_or_bust(value)
         return results
+
+
+def convert_time(date, time):
+    str_datetime = ' '.join((date, time))
+    return datetime.datetime.strptime(str_datetime, '%d/%m/%Y %H:%M')
 
 
 class GraphMLProvConverter(object):
@@ -229,7 +240,13 @@ class GraphMLProvConverter(object):
         return self.prov.entity(convert_identifier(label), other_attributes=attributes)
 
     def convert_activity(self, label, attributes):
-        return self.prov.activity(convert_identifier(label), other_attributes=attributes)
+        start_time = None
+        end_time = None
+        if MOP_start_date in attributes and MOP_start_time in attributes:
+            start_time = convert_time(attributes[MOP_start_date], attributes[MOP_start_time])
+        if MOP_end_date in attributes and MOP_end_time in attributes:
+            end_time = convert_time(attributes[MOP_end_date], attributes[MOP_end_time])
+        return self.prov.activity(convert_identifier(label), start_time, end_time, other_attributes=attributes)
 
     def convert_agent(self, label, attributes):
         return self.prov.agent(convert_identifier(label), other_attributes=attributes)
