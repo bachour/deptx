@@ -1,7 +1,7 @@
 @import"reset.css";@import"grid.css";
 @import url(http://fonts.googleapis.com/css?family=Anton);
 @import url(http://fonts.googleapis.com/css?family=Share+Tech+Mono);
-body{font:14px/20px Arial, Helvetica, sans-serif;color:#878787;position:relative;min-width:960px; background:url(../images/bg.jpg) center 0 repeat-x #252525;}
+body{font:20px/26px Arial, Helvetica, sans-serif;color:#878787;position:relative;min-width:960px; background:url(../images/bg.jpg) center 0 repeat-x #252525;}
 html,body{height:100%;}
 p{}
 h1,h2,h3,h4,h5,h6{line-height:1.2em;color:#c9c9c9;font-weight:normal; font-family: 'Share Tech Mono', sans-serif; text-transform:uppercase;}
@@ -182,7 +182,7 @@ section{ position:relative; z-index:1;}
 figure.box-border {display:inline-block;padding:4px 5px 5px 5px;}
 .box-border p {margin:22px 0 13px 0;}
 
-.line-1 {padding-bottom:37px; background:url(../images/line.png) center 0 no-repeat; margin-top:29px;}
+.line-1 {padding-bottom:5px; background:url(../images/line.png) center 0 no-repeat; margin-top:29px;}
 
 .block-1 {}
 .block-1 p {padding:1px 0 11px 0;}
@@ -192,7 +192,7 @@ figure.box-border {display:inline-block;padding:4px 5px 5px 5px;}
 	.date{ line-height:42px; }
 	.date span{ margin-top:5px; line-height:17px;} 
 }
-.banner-1 {padding:16px 15px 24px 15px; background:#1e1e1e; border-bottom:#3b3b3b 1px solid;  border-radius:4px; margin-top:26px; margin-bottom:30px; text-align:center; }
+.banner-1 {padding:15px 15px 15px 15px; background:#1e1e1e; border-bottom:#3b3b3b 1px solid;  border-radius:4px; margin-top:26px; margin-bottom:30px; text-align:center; }
 
 
 #form2 { margin: 28px 0 0px 0px; width:300px; }
