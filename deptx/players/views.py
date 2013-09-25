@@ -9,7 +9,7 @@ from django.contrib.auth.forms import UserCreationForm
 from models import Cron
 
 from deptx.secrets import registration_passcode
-
+from provmanager.provlogging import provlog_add_cron_register
 
 #TODO: Move registration over to CRON
 def register(request):
@@ -28,6 +28,8 @@ def register(request):
             #TODO remove after AHM
             cron.activated = True
             cron.save()
+            
+            provlog_add_cron_register(cron)
             
 #             email_tpl = loader.get_template('players/activation.txt')
 #             url = request.build_absolute_uri(reverse('players_activation', args=[cron.activationCode]))

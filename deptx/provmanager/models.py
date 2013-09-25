@@ -1,7 +1,7 @@
 from django.db import models
 
 from deptx.helpers import generateUUID, now
-from players.models import Player
+from players.models import Cron
 
 
 class Provenance(models.Model):
@@ -21,10 +21,10 @@ class Provenance(models.Model):
         return self.name + " - store: " + self.store_id.__str__()
 
 class ProvenanceLog(models.Model):
-    player = models.ForeignKey(Player)
+    cron = models.ForeignKey(Cron)
     store_id = models.IntegerField(blank=True, null=True)
     counter = models.IntegerField(default=0)
          
     def __unicode__(self):
-        return self.player.firstName + self.player.lastName   
+        return self.cron.user.username   
     

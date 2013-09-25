@@ -138,7 +138,7 @@ def prov_check(request):
                 cronDocumentInstance.solved = True
                 cronDocumentInstance.save()
             else:
-                message = "Well, we don't think so. Try again."
+                message = "The data you submitted does not seem to contradict itself. Please try something else."
                   
         elif mode == MODE_MOP:
             message = "Provenance modification saved. Please submit document now."  
@@ -154,44 +154,4 @@ def prov_check(request):
 
         return HttpResponse(json_data, mimetype="application/json")
 
-def createProvLog(player):
-     
-    g = ProvBundle()
-    
-    ns = Namespace('mop', 'http://mofp.net/ns#')
-    
-    playername = "player_" + player.cron.user.username + "_0"
-    register = "register"
-    g.agent(ns[playername])
-    g.activity(ns[register])
-    g.wasGeneratedBy(ns[playername], ns[register])
-    
-    store_id = API.submit_document(g, playername, public=True)
-    provLog = ProvenanceLog(player=player)
-    provLog.store_id = store_id
-    provLog.save()
-     
-def addCronAction(cron, action):
-    try:
-        provLog = ProvenanceLog.objects.get(player=cron.player)
-        ns = Namespace('mop', 'http://mofp.net/ns#' + generateUUID() + '/')
-        g = ProvBundle()
-        playername = "player_" + cron.user.username
-        oldplayer = playername + "_" + str(provLog.counter)
-        provLog.counter = provLog.counter + 1
-        provLog.save()
-        newplayer = playername + "_" + str(provLog.counter)
-        actionname = action + "_" + generateUUID()
-        g.agent(oldplayer)
-        g.activity(actionname)
-        g.agent(newplayer)
-        g.wasAssociatedWith(actionname, oldplayer)
-        g.wasDerivedFrom(newplayer, oldplayer)
-        g.wasGeneratedBy(newplayer, actionname)
-        API.add_bundle(provLog.store_id, g, action + "_" + generateUUID())
-        
-    except ProvenanceLog.DoesNotExist:
-        createProvLog(cron.player)
-    
-    
-    
+
