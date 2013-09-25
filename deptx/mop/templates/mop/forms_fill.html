@@ -16,5 +16,13 @@ Please enter the serial number for the {{reqBlank.requisition.get_category_displ
 
 {% block help %}
 <p>
+Enter the data for this form, and then click "Sign Form" to attach your Digital MoP FingerPrint to the form. 
 </p>
+<p>
+If you are unsure what "data" to enter, check the relevant reference page: 
+</p>
+<ul>
+<li>if you are requesting a form, check the <a href="{% url 'mop_rules' %}">Guidebook</a> for the list of Form IDs.</li>
+<li>if you are requesting a document for completing a task, find the necessary document ID in the <a href="{% url 'mop_tasks' %}">Tasks</a> page.
+</ul>
 {% endblock %}

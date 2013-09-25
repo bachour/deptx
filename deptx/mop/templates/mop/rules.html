@@ -3,33 +3,39 @@
 {% block content %}
 
 <h1>Rules</h1>
+<p> Welcome to the Ministry of Provenance Employee Guidebook. Here you can find all the information you need to be a productive member of the MoP team.
 <h2>Tasks</h2>
 <p>
-Your job is it to finish tasks.<br/>
-You find the available tasks under "Tasks".<br/>
-Depending on your trust level there will be more tasks available for you.<br/>
-If you want to work on a task, note down its task identification number.<br/>
-Fill in all necessary data into the appropriate form (depending on the MOP unit handing out the task)<br/>
-Compose a new message.<br/>
-Send the message to the appropriate unit<br/>
-Select "Requesting Task" as the subject<br/>
-Attach the appropriate form to the message.<br/>
-Send the message.<br/>
-After a while you should get a notification message.<br/>
-If everything was correct with your form, the task will now be assigned to you.<br/>
-Go back to "Tasks" and start working!
+The Ministry uses a shared task pool system. 
+Depending on your clearance level, you will have access to a pool of tasks that are shared with other employees of the same clearance level as you.
+<br/>
+You can find tasks available to you in the <a href="{% url 'mop_tasks' %}">Tasks</a> page.
+<br/>
+You may choose which tasks you would like assigned to you by filling in the necessary forms and submitting a request to the relevant MoP unit.
+Always make sure you have the right form.<br/>
+You can request tasks through the message interface by following these steps:
 </p>
+<ol>
+<li>Compose a new message.</li>
+<li>Choose the appropriate unit as recipient.</li>
+<li>Select "Requesting Task" as the subject.</li>
+<li>Attach the appropriate form to the message.</li>
+<li>Send the message.</li>
+<li>Once your request has been processed, you will get a notification message.</li>
+<li>Barring errors in your request, the task will be assigned to you.</li>
+<li>Go back to the <a href="{% url 'mop_tasks' %}">Tasks</a> page and start working!</li>
+</ol>
+<p>Each task will usually require access to some document. Next section will explain how to access these documents.</p>
+
 <h2>Documents</h2>
-Each task has a document relevant for it.<br/>
-Before you can work with the document, you need to request it.<br/>
-Requesting a document works the same as requesting a task or a form.<br/>
-Just fill in the appropriate form and send it to the unit that is storing the document.<br/>
-Soon the document will be in your document drawer.
+Each task has a document relevant for it. Just like tasks, you need to request access to documents, and you do so in the same manner as requesting tasks (see above).<br/>
+If your request is properly submitted and processed, the document will then be delivered to your document drawer.
 <h2>Forms</h2>
 <p>
-Every MOP Unit requires a different form for different requests<br/>
-There are forms to request forms, to request tasks, to request documents and to submit a report (of a fulfilled task).<br/>
-The following forms are currently available:
+Every MoP Unit requires a different form for different requests. There are forms to request forms, to request tasks, to request documents and to submit a report (of a fulfilled task).<br/>
+You may request forms in the same way as requesting tasks and documents: by filling in a blank Form Request Form which is available to you and sending it to the Unit of Administration.<br/>
+Once you acquire a blank form of a certain type, you may use it as many times as you wish. Blank forms you have already acquired can be seen in the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</br>
+The following is a comprehensive list of forms that are currently available from the Unit of Administration:
 </p>
 <table>
 <tr><th>Responsible Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
