@@ -5,11 +5,12 @@
 <h1>{{mission.name}}</h1>
 <p>{{user.username}}, please choose what you want to investigate next:</p>
 <table>
-{% for case in case_list %}
-	{% if case.isPublished %}
+{% for case in case_published_list %}
 		<tr><td>{% if case.solved %}<img src='{{MEDIA_URL}}content/solved.png'/ style='vertical-align:middle;width:50px;'>{% endif %}</td><td><a href="{% url "cron_case_detail" case.serial %}">{{ case.name }}</a></td></tr>
-	{% endif %}
 {% endfor %}
 </table>
+{% if finished and unpublished %}
+	<h2>More cases coming soon...</h2>
+{% endif %}
 
 {% endblock %}

@@ -149,19 +149,25 @@ def mission(request):
         if (crontracker.mission.rank == 0):
             return mopmaker(request)
         
-        case_list = Case.objects.filter(mission=crontracker.mission).order_by("rank")
-        unfinished = False
-        for case in case_list:
+        case_published_list = Case.objects.filter(mission=crontracker.mission).filter(isPublished=True).order_by("rank")
+        finished = True
+        for case in case_published_list:
             try:
                 caseInstance = CaseInstance.objects.get(case=case, crontracker=crontracker)
                 case.solved = caseInstance.solved
                 if not case.solved:
-                    unfinished = True
+                    finished = False
             except CaseInstance.DoesNotExist:
-                unfinished = True
+                finished = False
         
-        if unfinished:
-            return render_to_response('cron/case_list.html', {"user": request.user, "mission": crontracker.mission, "case_list": case_list},
+        case_unpublished_list = Case.objects.filter(mission=crontracker.mission).filter(isPublished=False)
+        if case_unpublished_list:
+            unpublished = True
+        else:
+            unpublished = False
+        
+        if not finished or unpublished:
+            return render_to_response('cron/case_list.html', {"user": request.user, "unpublished":unpublished, "finished":finished, "mission": crontracker.mission, "case_published_list": case_published_list},
                                         context_instance=RequestContext(request)
                                 )
         else:

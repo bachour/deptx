@@ -59,7 +59,7 @@ class Mission(models.Model):
     
     
     def __unicode__(self):
-        return self.name + " (" + str(self.rank) + ")"
+        return self.name + " (" + str(self.rank) + " - published: " + str(self.isPublished) + ")"
 
   
 class Case(models.Model):
@@ -74,7 +74,7 @@ class Case(models.Model):
     isPublished = models.BooleanField()
     
     def __unicode__(self):
-        return self.mission.name + " - Case " + str(self.rank) + ": " + self.name
+        return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ")"
 
 class Document(models.Model):
     name = models.CharField(max_length=256)
