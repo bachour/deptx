@@ -2,8 +2,9 @@
 
 {% block content %}
 
-<h1>==&gt; <a href="{% url 'cron_mission' %}">{{mission.name}}</a></h1>
+<h1>==&gt; {% if mission.isPublished %}<a href="{% url 'cron_mission' %}">{{mission.name}}</a>{% else %} No new mission available{% endif %}</h1>
+{% if provLog %}<h1>==&gt; <a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provLog.store_id}}/flattened/" target='_blank'>View your Provenance</a></li></h1>{% endif %}
 <h1>==&gt; <a href="{% url 'cron_profile' %}">Profile</a></li></h1>
-<h1>==&gt; Archive</h1>
+<h1>==&gt; Archive (not active yet)</h1>
 
 {% endblock %}

@@ -25,22 +25,23 @@ def register(request):
             cron = Cron()
             cron.player = player
             cron.user = user
+            #TODO remove after AHM
+            cron.activated = True
             cron.save()
             
-            email_tpl = loader.get_template('players/activation.txt')
-            url = request.build_absolute_uri(reverse('players_activation', args=[cron.activationCode]))
-            c = Context({
-                'cron': cron, 'url':url
-                })
-            
-            email = EmailMessage(
-                subject='[cr0n] Activate your account',
-                body= email_tpl.render(c), 
-                from_email="groundsman@cr0n.org",
-                to=[cron.player.email,],
-            )
-            #in settings.py you can configure console backend for displaying emails instead of sending them - great for testing!
-            email.send(fail_silently=True)
+#             email_tpl = loader.get_template('players/activation.txt')
+#             url = request.build_absolute_uri(reverse('players_activation', args=[cron.activationCode]))
+#             c = Context({
+#                 'cron': cron, 'url':url
+#                 })
+#             
+#             email = EmailMessage(
+#                 subject='[cr0n] Activate your account',
+#                 body= email_tpl.render(c), 
+#                 to=[cron.player.email,],
+#             )
+#             #in settings.py you can configure console backend for displaying emails instead of sending them - great for testing!
+#             email.send(fail_silently=False)
 
             
              
@@ -69,7 +70,7 @@ def activate(request, code):
     if not cron is None:
         cron.activated = True
         cron.save()
-        return render_to_response('players/registration.html', {"activated":True, "cron": cron})
+        return render_to_response('players/registration.html', {"cron": cron})
     else:
         return render_to_response('players/registration.html', {"wrongCode": True})
 

@@ -23,6 +23,7 @@ from cron.models import CaseInstance, CronDocumentInstance, CronTracker
 
 from deptx.settings import MEDIA_URL
 
+from provmanager.models import ProvenanceLog
 from provmanager.views import MODE_CRON, addCronAction
 from logger.logging import log_cron, log_mop
 
@@ -77,8 +78,13 @@ def index(request):
             firstMission = Mission.objects.get(rank=0)
             crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
             crontracker.save()
-            
-        context = { "cron": cron, "user":user, "mission":crontracker.mission }
+        
+        try:
+            provLog = ProvenanceLog.objects.get(player=cron.player)
+        except ProvenanceLog.DoesNotExist:
+            provLog = None
+         
+        context = { "cron": cron, "user":user, "mission":crontracker.mission, "provLog":provLog }
         return render(request, 'cron/index.html', context)
     else:
         return login(request)

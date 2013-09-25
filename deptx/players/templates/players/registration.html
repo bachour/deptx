@@ -2,7 +2,7 @@
 
 {% block content %}
 
-{% if activated %}
+{% if cron.activated %}
 	<h1>Welcome {{cron.user.username}}!</h1>
 	<p>You can <a href="{% url 'cron_index' %}">login</a> now and help us change the world.</p>
 

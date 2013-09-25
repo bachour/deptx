@@ -56,7 +56,7 @@ class RequisitionInstance(models.Model):
     used = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return self.blank.requisition.serial
+        return self.blank.requisition.unit.serial + ": " + self.blank.requisition.serial + " (" + str(self.date) + ")"
     
 
 class Mail(models.Model):

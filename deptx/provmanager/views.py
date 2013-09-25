@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
@@ -30,7 +31,7 @@ MODE_CRON = "cron"
 MODE_MOP = "mop"
 
 
-#TODO make everything unacessible for non-admin users (apart from improve)    
+@staff_member_required    
 def index(request):
     provenance_list = Provenance.objects.all().order_by("-date")
     
@@ -40,6 +41,7 @@ def index(request):
     
     return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
 
+@staff_member_required
 def view(request, id):
     provenance = Provenance.objects.get(id=id)
     bundle = API.get_document(provenance.store_id)
@@ -50,7 +52,7 @@ def view(request, id):
     return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg, 'mode':MODE_CRON})
     #return render(request, 'provmanager/improve.html', {'provenance': provenance})
 
-
+@staff_member_required
 def create(request):
     if request.method == 'POST':
         if 'convert' in request.POST:
@@ -78,6 +80,7 @@ def create(request):
             
     return render_to_response('provmanager/create.html', context_instance=RequestContext(request))
 
+@staff_member_required
 def convert(request, id):
     provenance = Provenance.objects.get(id=id)
     convert_graphml_string(provenance.graphml)
@@ -155,11 +158,13 @@ def createProvLog(player):
      
     g = ProvBundle()
     
+    ns = Namespace('mop', 'http://mofp.net/ns#')
+    
     playername = "player_" + player.cron.user.username + "_0"
     register = "register"
-    g.agent(playername)
-    g.activity(register)
-    g.wasGeneratedBy(playername, register)
+    g.agent(ns[playername])
+    g.activity(ns[register])
+    g.wasGeneratedBy(ns[playername], ns[register])
     
     store_id = API.submit_document(g, playername, public=True)
     provLog = ProvenanceLog(player=player)
@@ -169,6 +174,7 @@ def createProvLog(player):
 def addCronAction(cron, action):
     try:
         provLog = ProvenanceLog.objects.get(player=cron.player)
+        ns = Namespace('mop', 'http://mofp.net/ns#' + generateUUID() + '/')
         g = ProvBundle()
         playername = "player_" + cron.user.username
         oldplayer = playername + "_" + str(provLog.counter)

@@ -55,6 +55,8 @@ class Mission(models.Model):
     debriefing = models.TextField(blank=True, null=True)
     outro = models.TextField(blank=True, null=True)
     
+    isPublished = models.BooleanField()
+    
     
     def __unicode__(self):
         return self.name + " (" + str(self.rank) + ")"
@@ -68,6 +70,8 @@ class Case(models.Model):
     
     intro = models.TextField(blank=True, null=True)
     outro = models.TextField(blank=True, null=True)
+    
+    isPublished = models.BooleanField()
     
     def __unicode__(self):
         return self.mission.name + " - Case " + str(self.rank) + ": " + self.name
