@@ -21,11 +21,11 @@
 	<form action="{% url 'players_registration' %}" method="post">{% csrf_token %}
 	<h2>Personal Data:</h2>
 	<table>
-	<tr><td>First Name:</td><td>{{player_form.firstName}}</td><td>{{player_form..errors}}</td></tr>
-	<tr><td>Last Name:</td><td>{{player_form.lastName}}</td><td>{{player_form..errors}}</td></tr>
-	<tr><td>Address:</td><td>{{player_form.address}}</td><td>{{player_form..errors}}</td></tr>
-	<tr><td>Phone:</td><td>{{player_form.phone}}</td><td>{{player_form..errors}}</td></tr>
-	<tr><td>Email:</td><td>{{player_form.email}}</td><td>{{player_form..errors}}Used for account activation</td></tr>
+	<tr><td>First Name:</td><td>{{player_form.firstName}}</td><td>{{player_form.errors}}</td></tr>
+	<tr><td>Last Name:</td><td>{{player_form.lastName}}</td><td>{{player_form.errors}}</td></tr>
+	<tr><td>Address:</td><td>{{player_form.address}}</td><td>{{player_form.errors}}</td></tr>
+	<tr><td>Phone:</td><td>{{player_form.phone}}</td><td>{{player_form.errors}}</td></tr>
+	<tr><td>Email:</td><td>{{player_form.email}}</td><td>{{player_form.errors}}Used for account activation</td></tr>
 	</table>
 	<hr/>
 	<h2>Cron Data:</h2>
