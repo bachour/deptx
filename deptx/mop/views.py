@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Task, Requisition, Document
+from assets.models import Task, Requisition, Document, Unit
 from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
@@ -99,9 +99,10 @@ def logout_view(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
+    unit_list = Unit.objects.all()
     requisition_list = Requisition.objects.all()
     log_mop(request.user.mop, 'read rules')
-    return render(request, 'mop/rules.html', {"requisition_list": requisition_list})
+    return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
 
 @login_required(login_url='mop_login')
@@ -288,6 +289,10 @@ def mail_compose(request):
         if form.is_valid():
             mail.processed = False
             mail = form.save()
+            if not mail.requisitionInstance is None:
+                mail.requisitionInstance.used = True
+                mail.requisitionInstance.save()
+                
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below

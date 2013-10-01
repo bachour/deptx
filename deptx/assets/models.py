@@ -65,6 +65,8 @@ class Task(models.Model):
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=36, default=generateUUID)
     trust = models.IntegerField(default=25)
+    description = models.TextField()
+    unit = models.ForeignKey(Unit)
 
     def __unicode__(self):
         return self.name
@@ -102,8 +104,8 @@ class Case(models.Model):
 class Document(models.Model):
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=36, default=generateUUID)
-    unit = models.ForeignKey(Unit)
     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
+    unit = models.ForeignKey(Unit)
     case = models.ForeignKey(Case, blank=True, null=True)
     task = models.OneToOneField(Task, blank=True, null=True)
             

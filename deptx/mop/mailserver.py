@@ -60,9 +60,9 @@ def analyze_mail(mop):
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_existing_task, mail.requisitionInstance.data)
             else:
-                assignTask(mail.mop, requisition)
+                assignTask(mail.mop, task)
                 newMail.subject = Mail.SUBJECT_RECEIVE_TASK
-                newMail.body = generateBody(mail.unit.mail_assign_task, mail.requisitionInstance.data)
+                newMail.body = generateBody(mail.unit.mail_assigning_task, mail.requisitionInstance.data)
         elif mail.subject is Mail.SUBJECT_REQUEST_DOCUMENT:
             document = getDocument(mail)
             if document is None:
@@ -75,7 +75,7 @@ def analyze_mail(mop):
             else:
                 assignDocument(mail.mop, document)
                 newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
-                newMail.body = generateBody(mail.unit.mail_assign_document, mail.requisitionInstance.data)
+                newMail.body = generateBody(mail.unit.mail_assigning_document, mail.requisitionInstance.data)
         elif mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
             taskInstance = getTaskInstance(mail)
             if taskInstance is None:
@@ -141,6 +141,8 @@ def documentInstanceExists(mop, document):
         return False
 
 def getRequisition(mail):
+    if not mail.unit.isAdministrative:
+        return None
     try:
         requisition = Requisition.objects.get(serial=mail.requisitionInstance.data)
     except Requisition.DoesNotExist:
@@ -149,9 +151,7 @@ def getRequisition(mail):
 
 def getTask(mail):
     try:
-        task = Task.objects.get(serial=mail.requisitionInstance.data)
-        if not task.document.unit == mail.unit:
-            task = None
+        task = Task.objects.get(serial=mail.requisitionInstance.data, unit=mail.unit)
     except Task.DoesNotExist:
         task = None
     return task
@@ -168,7 +168,7 @@ def getTaskInstance(mail):
         task = getTask(mail)
         if not task is None:
             taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, state=TaskInstance.STATE_ACTIVE)
-            if not taskInstance.task.document.unit == mail.unit:
+            if not taskInstance.task.unit == mail.unit:
                 return None
         else:
             return None

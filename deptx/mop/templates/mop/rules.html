@@ -4,6 +4,16 @@
 
 <h1>Rules</h1>
 <p> Welcome to the Ministry of Provenance Citizen Employee Guidebook. Here you can find all the information you need to be a productive member of the MoP team.
+<h2>Units</h2>
+<p>
+The Ministry of Provenance is divided into several units which are working together and with each other to improve the life of all citizens.
+</p>
+<table>
+<tr><th>Unit</th><th>Identifier</th><th>Description</th></tr>
+{% for unit in unit_list %}
+<tr><td>{{unit.name}}</td><td>{{unit.serial}}</td><td>{{unit.description}}</td></tr>
+{% endfor %}
+</table>
 <h2>Tasks</h2>
 <p>
 The Ministry uses a shared task pool system. 
@@ -40,7 +50,7 @@ The following is a comprehensive list of forms that are currently available from
 <table>
 <tr><th>Responsible Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
 {% for req in requisition_list %}
-	<tr><td>{{req.unit.name}} ({{req.unit.serial}})</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
+	<tr><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
 {% endfor %}
 </table>
 

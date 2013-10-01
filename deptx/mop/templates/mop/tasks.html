@@ -8,13 +8,13 @@
 <h2>Active</h2>
 {% if active_taskInstance_list %}
 	<table>
-	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Document</th></tr>
+	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Document (Unit)</th></tr>
 	{% for taskInstance in active_taskInstance_list %}
 		<tr>
-		<td>{{taskInstance.task.document.unit.name}}</td>
-		<td>{{taskInstance.task.name}}</td>
-		<td>{{taskInstance.task.serial}}</td>
-		<td>{{taskInstance.task.document.serial}}</td>
+			<td>{{taskInstance.task.unit.name}}</td>
+			<td>{{taskInstance.task.name}}</td>
+			<td>{{taskInstance.task.serial}}</td>
+			<td>{{taskInstance.task.document.serial}} ({{taskInstance.task.document.unit.serial}})</td>
 		</tr>
 	{% endfor %}
 	</table>
@@ -38,10 +38,10 @@ No available tasks.
 	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Timestamp</th></tr>
 	{% for taskInstance in failed_taskInstance_list %}
 		<tr>
-		<td>{{taskInstance.task.document.unit.name}}</td>
-		<td>{{taskInstance.task.name}}</td>
-		<td>{{taskInstance.task.serial}}</td>
-		<td>{{taskInstance.date}}</td>
+			<td>{{taskInstance.task.unit.name}}</td>
+			<td>{{taskInstance.task.name}}</td>
+			<td>{{taskInstance.task.serial}}</td>
+			<td>{{taskInstance.date}}</td>
 		</tr>
 	{% endfor %}
 	</table>
@@ -55,10 +55,10 @@ No failed tasks.
 	<tr><th>Unit</th><th>Task</th><th>Identification Code</th><th>Timestamp</th></tr>
 	{% for taskInstance in solved_taskInstance_list %}
 		<tr>
-		<td>{{taskInstance.task.document.unit.name}}</td>
-		<td>{{taskInstance.task.name}}</td>
-		<td>{{taskInstance.task.serial}}</td>
-		<td>{{taskInstance.date}}</td>
+			<td>{{taskInstance.task.unit.name}}</td>
+			<td>{{taskInstance.task.name}}</td>
+			<td>{{taskInstance.task.serial}}</td>
+			<td>{{taskInstance.date}}</td>
 		</tr>
 	{% endfor %}
 	</table>
