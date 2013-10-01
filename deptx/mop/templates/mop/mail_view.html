@@ -6,8 +6,8 @@
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
 <tr><th>Unit</th><td>{{ mail.unit.name }}</td></tr>
 <tr><th>Timestamp</th><td>{{ mail.date }}</td></tr>
-<tr><th>Message</th><td>{{ mail.body }}</td></tr>
-<tr><th>Form</th><td>{{ mail.requisitionInstance.blank.requisition.unit.serial}}</td></tr>
+{% if mail.body %}<tr><th>Message</th><td>Citizen Employee {{mail.mop.firstname}} {{mail.mop.lastname}},<br/><br/>{{ mail.body }}<br/>{% with unit=mail.unit %}{% include 'mop/mail/sig.txt'%}{% endwith %}</td></tr>{% endif %}
+<tr><th>Form</th><td>{{ mail.requisitionInstance.blank.requisition.serial}} {{mail.requisitionInstance.date}}</td></tr>
 <tr><th>Document</th><td>{{ mail.documentInstance.document.serial}}</td></tr>
 </table>
 {% endblock %}

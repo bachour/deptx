@@ -20,7 +20,7 @@ class Cron(models.Model):
     player = models.OneToOneField(Player)
     user = models.OneToOneField(User)
     
-    activated = models.BooleanField()
+    activated = models.BooleanField(default=False)
     activationCode = models.CharField(max_length=36, default=generateUUID)
     
     def __unicode__(self):

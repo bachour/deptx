@@ -1,6 +1,6 @@
 from django.shortcuts import render, render_to_response, redirect
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 
 from django.template import RequestContext
@@ -31,6 +31,9 @@ from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logou
 
 from logger.logging import log_cron, log_mop
 import json
+
+from mop.mailserver import analyze_mail
+from django.views.decorators.csrf import csrf_exempt
 
 def isMop(user):
     if user:
@@ -75,6 +78,9 @@ def login(request):
             auth.login(request, user)
             log_mop(request.user.mop, 'login')
             provlog_add_mop_login(request.user.mop, request.session.session_key)
+            
+            #Checking mail when logging in
+            analyze_mail(request.user.mop)
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -155,6 +161,8 @@ def document_provenance(request, documentInstance_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
+    #checking mail when checking inbox
+    analyze_mail(request.user.mop)
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-date')
     log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
@@ -208,7 +216,6 @@ def mail_trashing(request, mail_id):
     except Mail.DoesNotExist:
         #TODO Error handling
         return redirect('mop_index')
-    mail.read = True
     mail.state = Mail.STATE_TRASHED
     mail.save()
     
@@ -269,19 +276,18 @@ def mail_deleting(request, mail_id):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_compose(request):
     if request.method == 'POST':
-        mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT, read=True)
+        mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
+            mail.read = True
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
+            mail.read = False
         form = MailForm(data=request.POST, instance=mail)
         
         if form.is_valid():
+            mail.processed = False
             mail = form.save()
-            if mail.type is Mail.TYPE_SENT:
-                analyzeSentMail(request, mail)
-            elif mail.type is Mail.TYPE_DRAFT:
-                analyzeDraftMail(request, mail)
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
@@ -310,189 +316,42 @@ def mail_edit(request, mail_id):
     if request.method == 'POST':
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
+            mail.read = True
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
+            mail.read = False
         
         form = MailForm(data=request.POST, instance=mail)
-        
+        print mail.id
         if form.is_valid():
+            mail.processed = False
             mail = form.save()
-            if mail.type is Mail.TYPE_SENT:
-                analyzeSentMail(request, mail)
-            elif mail.type is Mail.TYPE_DRAFT:
-                analyzeDraftMail(request, mail)
             return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
             form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
-            return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
+            form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
+            return render_to_response('mop/mail_compose.html', {'form' : form, 'mail':mail}, context_instance=RequestContext(request))
         
     else:
-        form =  MailForm(instance=mail)
+        form = MailForm(instance=mail)
         #TODO same with documents at all occurences
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
         form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
-        return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
+        form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
+        return render_to_response('mop/mail_compose.html', {'form' : form, 'mail':mail}, context_instance=RequestContext(request))
 
-#TODO time delay
-#TODO risk
-def analyzeDraftMail(request, mail):
-    if mail.documentInstance is not None:
-        cron = mail.mop.player.cron
-        document = mail.documentInstance.document
-        #If CRON gets the document, it disappears
-        mail.documentInstance.used = True
-        mail.documentInstance.save()
-        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
+#@login_required(login_url='mop_login')
+#@user_passes_test(isMop, login_url='mop_login')
+@csrf_exempt
+def mail_check(request):
+    if request.is_ajax():
+        mail_count = analyze_mail(request.user.mop)
+        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count() 
+        json_data = json.dumps({"mail_count":mail_count, 'total_unread':total_unread})
     
-    m ={}
-    m['id'] = mail.id
-    m['subject'] = mail.subject
-    log_mop(mail.mop, 'save draft mail', json.dumps(m))
+        return HttpResponse(json_data, mimetype="application/json")
 
-
-def analyzeSentMail(request, mail):
-    
-    m ={}
-    m['id'] = mail.id
-    m['subject'] = mail.subject
-    log_mop(mail.mop, 'send mail', json.dumps(m))
-    
-    if mail.requisitionInstance is not None:
-        provlog_add_mop_send_form(request.user.mop, mail, request.session.session_key)
-    
-    newMail = Mail()
-    newMail.type = Mail.TYPE_RECEIVED
-    newMail.unit = mail.unit
-    newMail.mop = mail.mop
-    
-    
-   
-   
-    #TODO Send proper error messages for all potential errors.
-    if mail.documentInstance is not None and mail.requisitionInstance is not None:
-        if mail.unit == mail.documentInstance.document.unit and mail.unit == mail.requisitionInstance.blank.requisition.unit:
-            if mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
-                if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_SUBMISSION:
-                    if mail.requisitionInstance.data == mail.documentInstance.document.task.serial:
-                        #TODO check is user had the task assigned
-                        newMail.subject = Mail.SUBJECT_INFORMATION
-                        task = Task.objects.get(document=mail.documentInstance.document)
-                        taskInstance = TaskInstance.objects.get(task=task, mop=mail.mop)
-                        if mail.documentInstance.correct:
-                            newMail.body = "Very good job!"
-                            taskInstance.state = TaskInstance.STATE_SOLVED
-                        else:
-                            newMail.body = "That deserves a penalty."
-                            taskInstance.state = TaskInstance.STATE_FAILED
-                        taskInstance.save()
-                    else:
-                        newMail.subject = Mail.SUBJECT_ERROR
-                        newMail.body = "Wrong form data"
-                else:
-                        newMail.subject = Mail.SUBJECT_ERROR
-                        newMail.body = "Wrong form type"
-                
-            else:
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = "Wrong subject"
-        else:
-            newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = "Wrong unit"
-        newMail.save()
-        
-    elif mail.requisitionInstance is not None and mail.unit == mail.requisitionInstance.blank.requisition.unit:
-        if mail.subject is Mail.SUBJECT_REQUEST_FORM and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
-            #Check if requested requisition exists
-            #TODO check more conditions (e.g. trust level)
-            try:
-                requisition = Requisition.objects.get(serial=mail.requisitionInstance.data)
-            except Requisition.DoesNotExist:
-                requisition = None
-            if requisition is not None and mail.unit.isAdministrative:
-                newMail.subject = Mail.SUBJECT_RECEIVE_FORM
-                newMail.body = "You have been assigned form " + requisition.serial + ". You can find it in your blank-form-workspace."
-                newMail.save()
-                RequisitionBlank.objects.get_or_create(requisition=requisition, mop=mail.mop)
-                provlog_add_mop_issue_form(request.user.mop, mail, requisition, request.session.session_key)
-            else:
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = "We cannot help you with requesting form " + mail.requisitionInstance.data
-                newMail.save()
-        elif mail.subject is Mail.SUBJECT_REQUEST_TASK and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_TASK:
-            #Check if requested task exists
-            #TODO check more conditions (e.g. trust level)
-            try:
-                task = Task.objects.get(serial=mail.requisitionInstance.data)
-            except Task.DoesNotExist:
-                task = None
-            if task is not None and task.unit == mail.unit:
-                newMail.subject = Mail.SUBJECT_RECEIVE_TASK
-                newMail.body = "You have been assigned task " + task.serial + "."
-                newMail.save()
-                TaskInstance.objects.get_or_create(state=TaskInstance.STATE_ACTIVE, task=task, mop=mail.mop)
-            else:
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = "We cannot help you with requesting task " + mail.requisitionInstance.data
-                newMail.save()
-        elif mail.subject is Mail.SUBJECT_REQUEST_DOCUMENT and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_DOCUMENT:
-            #Check if requested document exists
-            #TODO check more conditions (e.g. trust level)
-            try:
-                document = Document.objects.get(serial=mail.requisitionInstance.data)
-            except Document.DoesNotExist:
-                document = None
-            if document is not None and document.unit == mail.unit:
-                newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
-                newMail.body = "You have been assigned document " + document.serial + "."
-                newMail.save()
-                documentInstance, created = DocumentInstance.objects.get_or_create(document=document, mop=mail.mop)
-                provlog_add_mop_issue_document(mail.mop, mail, documentInstance, request.session.session_key)
-            else:
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = "We cannot help you with requesting document " + mail.requisitionInstance.data
-                newMail.save()
-        else:
-            newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = "Your form is not applicable for this request."
-            newMail.save()
-        
-    else:
-        newMail.subject = Mail.SUBJECT_ERROR
-        newMail.body = "Denied."
-        newMail.save()
-    
-    #If there was no error message, the forms and documents are now 'used'
-    if not newMail.subject is Mail.SUBJECT_ERROR:
-        if not mail.documentInstance is None:
-            mail.documentInstance.used = True
-            mail.documentInstance.save()
-        if not mail.requisitionInstance is None:
-            mail.requisitionInstance.used = True
-            mail.requisitionInstance.save()    
-            
-            
-        
-
-# @login_required(login_url='mop_login')
-# @user_passes_test(isMop, login_url='mop_login')
-# def forms_task(request):
-#     if request.method == 'POST':
-#         serial = request.POST['serial']
-#         try:
-#             taskInstance = TaskInstance.objects.get(serial=serial)
-#         except TaskInstance.DoesNotExist:
-#             #TODO error handling
-#             taskInstance = None
-#         if taskInstance is not None:
-#             req = RequisitionInstance()
-#             #req.type = RequisitionInstance.CATEGORY_TASK
-#             req.mop = request.user.mop
-#             req.data = serial
-#             req.save()
-#             return redirect('mop_forms')
-#             
-#     return render_to_response('mop/forms_task.html', {"mop": request.user.mop}, context_instance=RequestContext(request))
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')

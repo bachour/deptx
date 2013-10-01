@@ -15,7 +15,7 @@
 	</tr>
 {% for document in document_list %}
 	<tr>
-	<td>{% if document.available %}<a href="{% url "cron_provenance" document.serial %}">view</a>{% else %}<span class="missing">missing</span>{% endif %}</td><td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
+	<td>{% if document.available %}<a href="{% url "cron_provenance" document.serial %}">view</a>{% else %}<span class="missing">missing</span><br/><a href="{% url 'cron_hack_document' document.serial %}">hack MoP account</a>{% endif %}</td><td>{{document.name}}</td><td>{{document.unit.serial}}</td><td>{{document.serial}}</td></tr>
 {% endfor %}
 </table>
 <p>In order to acquire missing documents, login to the Ministry of Provenance  <a href="http://www.mofp.net">Intranet</a> and request the document following their standard procedures. Afterwards, compose a message and attach the document to it, but don't send it. Instead save it as a draft. Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>

@@ -5,22 +5,22 @@
 <h1>Where do you want to go today?</h1>
 
 <p class="nav">
-	<span class="button"><a href="{% url 'mop_rules' %}">Guidebook</a></span>
+	<a class="button" href="{% url 'mop_rules' %}"><input class="button" type="submit" value="guidebook" /></a>
 </p>
 <p class="nav">
-<span class="button"><a href="{% url 'mop_mail_compose' %}">Compose</a></span>
-	<span class="button"><a href="{% url 'mop_mail_inbox' %}">Inbox ({{ inbox_unread }})</a></span>
-	<span class="button"><a href="{% url 'mop_mail_outbox' %}">Outbox ({{ outbox_unread }})</a></span>
-	<span class="button"><a href="{% url 'mop_mail_trash' %}">Trash ({{ trash_unread }})</a></span>
-	<span class="button"><a href="{% url 'mop_mail_draft' %}">Drafts ({{ draft_unread }})</a></span>
+	<a class="button" href="{% url 'mop_mail_compose' %}"><input class="button" type="submit" value="compose" /></a>
+	<a class="button" href="{% url 'mop_mail_inbox' %}"><input id="inbox" class="button" type="submit" value="inbox ({{ inbox_unread }})" /></a>
+	<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox ({{ outbox_unread }})" /></a>
+	<a class="button" href="{% url 'mop_mail_draft' %}"><input class="button" type="submit" value="drafts ({{ draft_unread }})" /></a>
+	<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash ({{ trash_unread }})" /></a>
 </p>
 <p class="nav">
-	<span class="button"><a href="{% url 'mop_forms_blank' %}">Blank Forms</a></span>
-	<span class="button"><a href="{% url 'mop_forms_signed' %}">Signed Forms</a></span>
+	<a class="button" href="{% url 'mop_forms_blank' %}"><input class="button" type="submit" value="blank forms" /></a>
+	<a class="button" href="{% url 'mop_forms_signed' %}"><input class="button" type="submit" value="signed forms" /></a>
 </p>
 <p class="nav">
-	<span class="button"><a href="{% url 'mop_tasks' %}">Tasks</a></span>
-	<span class="button"><a href="{% url 'mop_documents' %}">Documents</a></span>
+	<a class="button" href="{% url 'mop_tasks' %}"><input class="button" type="submit" value="tasks" /></a>
+	<a class="button" href="{% url 'mop_documents' %}"><input class="button" type="submit" value="documents" /></a>
 </p>
 
 

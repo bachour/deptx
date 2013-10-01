@@ -1,0 +1,18 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+{% block content %}
+
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="{% static "cron/js/texttype.js" %}"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        texttype("textDiv", "{{output}}", 100, 100, function() {document.getElementById("case_link").style.visibility="visible";});
+      });
+    </script>
+
+<br/>
+<pre id="textDiv"></pre>
+<br/>
+<a id="case_link" style="visibility:hidden;" href="{% url "cron_case_detail" document.case.serial %}"> Return to Case</a>
+
+{% endblock %}

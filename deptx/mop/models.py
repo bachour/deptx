@@ -11,9 +11,9 @@ class DocumentInstance(models.Model):
     mop = models.ForeignKey(Mop)
     
     provenanceState = models.TextField(blank=True, null=True)
-    modified = models.BooleanField()
-    correct = models.BooleanField()
-    used = models.BooleanField()
+    modified = models.BooleanField(default=False)
+    correct = models.BooleanField(default=False)
+    used = models.BooleanField(default=False)
     date = models.DateTimeField(default=now(), auto_now=True)
     
     def __unicode__(self):
@@ -79,9 +79,9 @@ class Mail(models.Model):
         (STATE_TRASHED, "trashed"),
         (STATE_DELETED, "deleted")
     )
-
-    SUBJECT_NONE = 1
   
+    SUBJECT_EMPTY = 1
+    
     SUBJECT_REQUEST_FORM = 101
     SUBJECT_REQUEST_TASK = 102
     SUBJECT_REQUEST_DOCUMENT = 103
@@ -93,9 +93,11 @@ class Mail(models.Model):
     
     SUBJECT_ERROR = 211
     SUBJECT_INFORMATION = 212
+    SUBJECT_REPORT_EVALUATION = 213
+    SUBJECT_UNCAUGHT_CASE = 214
     
     SUBJECT_CHOICES_SENDING = (
-        (SUBJECT_NONE, "(no subject)"),
+        (SUBJECT_EMPTY, "---------"),
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
         (SUBJECT_REQUEST_TASK, "Requesting Task"),
         (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
@@ -109,6 +111,8 @@ class Mail(models.Model):
         (SUBJECT_RECEIVE_DOCUMENT, "Assigning Document"),
         (SUBJECT_ERROR, "Error"),
         (SUBJECT_INFORMATION, "Information"),
+        (SUBJECT_REPORT_EVALUATION, "Task Evaluation Result"),
+        (SUBJECT_UNCAUGHT_CASE, "dfjhsjdvnvewe;efhjk")
     )
     
     SUBJECT_CHOICES = SUBJECT_CHOICES_SENDING + SUBJECT_CHOICES_RECEIVING
@@ -117,20 +121,22 @@ class Mail(models.Model):
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit, blank=True, null=True)
     date = models.DateTimeField(default=now(), auto_now=True)
-    subject = models.IntegerField(choices=SUBJECT_CHOICES, default=SUBJECT_NONE)
-    body = models.TextField()
-    read = models.BooleanField()
+    subject = models.IntegerField(choices=SUBJECT_CHOICES, default=SUBJECT_EMPTY, blank=True, null=True)
+    body = models.TextField(blank=True, null=True)
+    read = models.BooleanField(default=False)
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_NORMAL)
     type = models.IntegerField(choices=TYPE_CHOICES)
+    processed = models.BooleanField(default=False)
     
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
     documentInstance = models.ForeignKey(DocumentInstance, null=True, blank=True)  
     
     def __unicode__(self):
         if self.subject is None:
-            return "no subject"
+            subject = "no subject"
         else:
-            return self.get_subject_display()
+            subject = self.get_subject_display()
+        return "%s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, str(self.processed))
 
     
     
