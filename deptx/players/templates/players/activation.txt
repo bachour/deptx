@@ -1,5 +1,7 @@
 Thank you for signing up to a good cause, {{cron.user.username}}.
 Please follow this link to activate your account: {{url}}
 
+-- 
+cr0nogram v1.45b
 
-The Groundsman
+This is an automated message. Please do not reply to this email.
