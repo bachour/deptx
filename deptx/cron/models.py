@@ -29,7 +29,7 @@ class CronDocumentInstance(models.Model):
     document = models.ForeignKey(Document)
     cron = models.ForeignKey(Cron)
     provenanceState = models.TextField(blank=True, null=True)
-    solved = models.BooleanField()
+    solved = models.BooleanField(default=False)
     
     def __unicode__(self):
         if (self.solved):

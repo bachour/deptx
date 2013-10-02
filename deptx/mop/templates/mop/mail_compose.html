@@ -3,36 +3,19 @@
 {% block head %}
 
 
-<script>
-	/*window.onload = function () {
-		document.getElementById('attach_document').style.visibility = 'hidden';
-		document.getElementById('id_subject').onchange = function () {
-			var selectedValue = this.options[this.selectedIndex].value; 
-		
-			if (selectedValue == "104") { 
-				document.getElementById('attach_document').style.visibility = 'visible';
-			}
-			else {
-				document.getElementById('attach_document').style.visibility = 'hidden';
-			}
-		};
-	};*/
-</script>
-
-
 {% endblock %}
 
 {% block content %}
 
 <h2>Compose Message:</h2>
-<form action="{% url 'mop_mail_compose' %}" method="post">{% csrf_token %}
+<form action="{% if not mail %}{% url 'mop_mail_compose' %}{% else %}{% url 'mop_mail_edit' mail.id %}{% endif %}" method="post">{% csrf_token %}
 <table>
 <tr><th>Receiving Unit</th><td>{{form.unit}}</td></tr>
 <tr><th>Subject</th><td>{{form.subject}}</td></tr>
 <tr><th>Attach signed Form</th><td>{{form.requisitionInstance}}</td><td>A signed form is always required.</td></tr>
 <tr id="attach_document"><th>Attach Document</th><td>{{form.documentInstance}}</td><td>Only attach a document when submitting a report.</td></tr>
 </table>
-<input type="submit" value="Send" name="send" /><input type="submit" value="Save as draft" name="draft" />
+<input class="button" type="submit" value="send message" name="send" />&nbsp;&nbsp;&nbsp;&nbsp;<input class="button" type="submit" value="save as draft" name="draft" />
 </form>
 
 {% endblock %}

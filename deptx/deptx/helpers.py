@@ -7,5 +7,5 @@ def now():
     return datetime.datetime.utcnow().replace(tzinfo=utc)
 
 def generateUUID():
-    return str(uuid.uuid1())
+    return str(uuid.uuid1())[:-13]
 

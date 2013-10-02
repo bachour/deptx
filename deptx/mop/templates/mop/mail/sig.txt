@@ -1,0 +1,9 @@
+<br/>
+{{unit.name}}<br/>
+{{unit.serial}} - {{unit.tagline}}<br/>
+<br/>
+--<br/> 
+This message and any attachment are intended solely for the addressee and may contain confidential information. If you have received this message in error, please immediately delete it. Please do not use, copy or disclose the information contained in this message or in any attachment. Any views or opinions expressed by the author of this email do not necessarily reflect the views of the Ministry of Provenance.<br/>
+<br/>
+This message has been checked for viruses but the contents of an attachment may still contain software viruses which could damage your computer system, you are advised to perform your own checks. Email communications with the Ministry of Provenance may be monitored as permitted by EU legislation.<br/>
+<br/>

@@ -1,0 +1,4 @@
+Hi. This is the mop-mail-send program at mail3.mofp.net.
+I'm afraid I wasn't able to deliver your message to the following addresses. This is a permanent error; I've given up. Sorry it didn't work out.
+
+ERR341: %%NO ADRESS SPECIFIED%%

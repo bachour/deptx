@@ -14,12 +14,13 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Cron, Mop
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from django.template import Context, Template
+from django.template import Context, Template, loader
 
 from players.forms import MopForm
 
 from assets.models import Case, Mission, Document
 from cron.models import CaseInstance, CronDocumentInstance, CronTracker
+from mop.models import DocumentInstance, Mail
 
 from deptx.settings import MEDIA_URL
 
@@ -255,6 +256,42 @@ def finishMission(crontracker):
     crontracker.mission = newMission
     crontracker.progress = 0
     crontracker.save()
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def hack_document(request, serial):
+    mop_list = Mop.objects.filter(player=request.user.cron.player).filter(active=True)
+    try:
+        document = Document.objects.get(serial=serial)    
+    except Document.DoesNotExist:
+        document = None
+    
+    if not document is None:
+        good_mop, mop_list = accessMopServer(request.user.cron, document, mop_list)
+
+    output_tpl = loader.get_template('cron/hack_document_output.txt')
+    c = Context({"document":document, "good_mop":good_mop, "mop_list":mop_list})
+    output = output_tpl.render(c).replace("\n", "\\n")
+    return render_to_response('cron/hack_document.html', {"document":document, "output":output})
+
+def accessMopServer(cron, document, mop_list):
+        checked_mop_list = []
+        for mop in mop_list:
+            mail_list = Mail.objects.filter(type=Mail.TYPE_DRAFT).filter(mop=mop).filter(state=Mail.STATE_NORMAL)
+            checked_mop_list.append(mop)
+            for mail in mail_list:
+                if not mail.documentInstance is None:
+                    if mail.documentInstance.document == document:
+                        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
+                        #Document gets removed
+                        mail.documentInstance.used = True
+                        mail.documentInstance.save()
+                        #Mail gets deleted
+                        mail.state = Mail.STATE_DELETED
+                        mail.save()
+                        return mop, checked_mop_list
+                        
+        return None, checked_mop_list
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
