@@ -27,7 +27,7 @@ def analyze_mail(mop):
             newMail.body = generateBody(mail.unit.mail_error_wrong_unit, mail.requisitionInstance.blank.requisition.serial)
         elif not (subjectMatchesRequisition(mail)):
             newMail.subject = Mail.SUBJECT_ERROR
-            data = "%s %s %s" % (mail.subject, mail.requisitionInstance.blank.requisition.category, Requisition.CATEGORY_FORM)
+            data = "%s %s %s %s" % (mail.subject, Mail.SUBJECT_REQUEST_FORM, mail.requisitionInstance.blank.requisition.category, Requisition.CATEGORY_FORM)
             newMail.body = generateBody(mail.unit.mail_error_wrong_form, data)
         elif redundantDocument(mail):
             newMail.subject = Mail.SUBJECT_ERROR
