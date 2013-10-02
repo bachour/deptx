@@ -564,14 +564,15 @@ function loadJSONProv (json)
 				nodeName = json[i][j]["prov:label"];
 				if (!nodeName)
 					nodeName = j;
-				nodeImage = json[i][j]["image"];
+				nodeImage = json[i][j]["mop:image"];
+				
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/fed37f/000.jpg&text=" + nodeName;
 				else
 					nodeImage = MEDIA_URL + nodeImage;
-				attribs = {"name":nodeName}
+				attribs = {}
 				for (k in json[i][j])
-					if (k != "prov:label")
+					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];
 				node = new ProvNode("agent", j, nodeImage,attribs);
 			}
@@ -582,14 +583,14 @@ function loadJSONProv (json)
 				nodeName = json[i][j]["prov:label"];
 				if (!nodeName)
 					nodeName = j;
-				nodeImage = json[i][j]["image"];
+				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/fffc87/000.jpg&text=" + nodeName;
 				else
 					nodeImage = MEDIA_URL + nodeImage;
-				attribs = {"name":nodeName}
+				attribs = {}
 				for ( k in json[i][j])
-					if (k != "prov:label")
+					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];
 				node = new ProvNode("entity", j, nodeImage,attribs);
 			}
@@ -600,14 +601,14 @@ function loadJSONProv (json)
 				nodeName = json[i][j]["prov:label"];
 				if (!nodeName)
 					nodeName = j;
-				nodeImage = json[i][j]["image"];
+				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
 					nodeImage = "http://dummyimage.com/600x400/9fb1fc/000.jpg&text=" + nodeName;
 				else
 					nodeImage = MEDIA_URL + nodeImage;
-				attribs = {"name":nodeName}				
+				attribs = {}				
 				for ( k in json[i][j])
-					if (k != "prov:label")
+					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];				
 				node = new ProvNode("activity", j, nodeImage,attribs);
 
@@ -695,19 +696,28 @@ function loadJSONProv (json)
 	}
 }
 
-function clearAttribName(name, value)
+function naturalifyString(str) // converts string that looks like "this_is_awseome" to "This is awesome"
 {
-	attribs = name.split(":");
-	attribs = attribs[1].split("_");
-	attribName = attribs[0];
-	for (i in attribs)
+	words = str.split("_");
+	naturalStr = words[0];
+	for (w in words)
 	{
-		if (i == 0)
+		if (w == 0)
 			continue;
-		attribName += " " + attribs[i];
+		naturalStr += " " + words[w];
 	}
 	
-	return attribName;
+	return naturalStr.charAt(0).toUpperCase() + naturalStr.slice(1);
+}
+
+function extractNamespace(str) // breaks a string with namespace into an array: e.g. "mop:image" --> ["mop","image"]
+{
+	if (str.indexOf(":") != -1)
+		{
+			return str.split(":");
+		}
+	else
+		return ["",str];
 }
 
 function arrowPoints(fromx, fromy, tox, toy)
@@ -826,7 +836,7 @@ function showAttributes(node, position)
 		  node.attribName = new Kinetic.Text({
 		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
 		        y: Y + 20,
-		        text: wordWrap(node.attributes['name'], 10),
+		        text: wordWrap(node.attributes['prov:label'], 10),
 		        fontSize: ATTRIBBOX_LARGE_FONT,
 		        fontFamily: ATTRIBBOX_FONT_FAMILY,
 		        fontStyle: ATTRIBBOX_FONT_STYLE,
@@ -838,12 +848,12 @@ function showAttributes(node, position)
 		  totalY = Y + node.attribImage.getHeight() + 20;
 		  for (i in node.attributes)
 			  {
-			  	if (i != 'name' && i != 'image')
+			  	if (i != 'prov:label')
 			  	{
 			  		node.attribNames[i] = new Kinetic.Text({
 			  			x: node.attribImage.getX(),
 				        y: totalY,
-				        text: i + ": ",
+				        text: naturalifyString(extractNamespace(i)[1]) + ": ",
 				        fontSize: ATTRIBBOX_SMALL_FONT,
 				        fontFamily: ATTRIBBOX_FONT_FAMILY,
 				        fontStyle: ATTRIBBOX_ATTNAME_FONT_STYLE,
@@ -854,7 +864,7 @@ function showAttributes(node, position)
 			  		node.attribValues[i] = new Kinetic.Text({
 				        x: node.attribNames[i].getX() + node.attribNames[i].getWidth(),
 				        y: totalY,
-				        text: wordWrap(node.attributes[i], 25 - i.length),
+				        text: wordWrap(node.attributes[i], 33 - i.length),
 				        fontSize: ATTRIBBOX_SMALL_FONT,
 				        fontFamily: ATTRIBBOX_FONT_FAMILY,
 				        fontStyle: ATTRIBBOX_FONT_STYLE,
