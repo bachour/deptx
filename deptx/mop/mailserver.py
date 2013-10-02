@@ -180,8 +180,8 @@ def getTaskInstance(mail):
 def subjectMatchesRequisition(mail):
     logging.info("checking subjectMatchesRequisition");
     logging.info("mail.subject is Mail.SUBJECT_REQUEST_FORM ???");
-    logging.info("%s is %s ???" % (mail.subject, Mail.SUBJECT_REQUEST_FORM))
-    if mail.subject == Mail.SUBJECT_REQUEST_FORM:
+    logging.info("%d is %d ???" % (int(mail.subject), int(Mail.SUBJECT_REQUEST_FORM)))
+    if int(mail.subject) == int(Mail.SUBJECT_REQUEST_FORM):
         logging.info("mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_FORM ???")
         logging.info("%s %s" % (mail.subject, Mail.SUBJECT_REQUEST_FORM))
         if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_FORM:
