@@ -20,7 +20,7 @@ def analyze_mail(mop):
             mail_tpl = loader.get_template('mop/mail/no_unit.txt')
             c = Context()
             newMail.body = mail_tpl.render(c)
-        elif mail.subject is Mail.SUBJECT_EMPTY:
+        elif mail.subject == Mail.SUBJECT_EMPTY:
             newMail.subject = Mail.SUBJECT_ERROR
             newMail.body = generateBody(mail.unit.mail_error_no_subject)
         elif mail.requisitionInstance is None:
