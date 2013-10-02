@@ -189,7 +189,8 @@ def subjectMatchesRequisition(mail):
     elif mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
         if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_SUBMISSION:
             return True
-    return False
+    else:
+        return False
 
 def redundantDocument(mail):
     if not mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
