@@ -1,5 +1,5 @@
 from django.shortcuts import render, render_to_response, redirect
-
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
@@ -242,7 +242,10 @@ def mission_redo(request, mission_id):
 
 def renderContent(content, user):
 
-    name = user.cron.user.username
+    try:
+        name = user.cron.user.username
+    except:
+        name = 'ANONYMOUS_AGENT'
     
     t = Template(content)
     c = Context({"name":name, "MEDIA_URL":MEDIA_URL})
@@ -367,7 +370,6 @@ def profile(request):
                                          context_instance=RequestContext(request)
                                  )
 
-
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()
     #TODO when document is put in draft, add it to CronDocumentInstance
@@ -380,3 +382,54 @@ def getAllDocumentStates(cron, case):
                 required.available = True
 
     return requiredDocuments
+
+
+@staff_member_required
+def hq(request):
+    mission_list = Mission.objects.all().order_by('rank')
+    case_list = Case.objects.all().order_by('rank')
+    
+    return render_to_response('cron/hq.html', {'mission_list':mission_list, 'case_list':case_list})
+
+@staff_member_required
+def hq_mission_intro(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.intro
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_mission_briefing(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.briefing
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_mission_debriefing(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.debriefing
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_mission_outro(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.outro
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_case_intro(request, id):
+    case = Case.objects.get(id=id)
+    content = case.intro
+    text = renderContent(content, request.user)
+    requiredDocuments = case.document_set.all()
+    return render_to_response('cron/case_intro.html', {'text':text, 'case':case, 'document_list':requiredDocuments})
+
+@staff_member_required
+def hq_case_outro(request, id):
+    case = Case.objects.get(id=id)
+    content = case.outro
+    text = renderContent(content, request.user)
+    return render_to_response('cron/case_intro.html', {'text':text, 'case':case })
