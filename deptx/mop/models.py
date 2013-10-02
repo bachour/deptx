@@ -132,7 +132,7 @@ class Mail(models.Model):
     documentInstance = models.ForeignKey(DocumentInstance, null=True, blank=True)  
     
     def __unicode__(self):
-        if self.subject is None:
+        if self.subject == None:
             subject = "no subject"
         else:
             subject = self.get_subject_display()

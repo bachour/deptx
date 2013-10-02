@@ -69,7 +69,7 @@ def activate(request, code):
     except Cron.DoesNotExist:
         cron = None
     
-    if not cron is None:
+    if not cron == None:
         cron.activated = True
         cron.save()
         return render_to_response('players/registration.html', {"cron": cron})
