@@ -9,8 +9,11 @@ def analyze_mail(mop):
     print "checking inbox of mailserver..."
     mail_list = Mail.objects.filter(mop=mop).filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
     
+    
+    
     print "unprocessed mails: %d" % mail_list.count()
     for mail in mail_list:
+        logging.info("comparing subject %s to stored value %s" % (type(mail.subject), type(Mail.SUBJECT_ERROR)))
         newMail = prepareMail(mail)
         if mail.unit is None:
             newMail.subject = Mail.SUBJECT_ERROR
