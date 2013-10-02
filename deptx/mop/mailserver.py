@@ -2,9 +2,10 @@ from mop.models import Mail, TaskInstance, DocumentInstance, RequisitionBlank
 from cron.models import CronDocumentInstance
 from assets.models import Requisition, Task, Document
 from django.template import Context, loader, Template
-
+import logging
 
 def analyze_mail(mop):
+    logging.info("Running analyse mail on mop.id %s" % mop.id);
     print "checking inbox of mailserver..."
     mail_list = Mail.objects.filter(mop=mop).filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
     
@@ -27,8 +28,7 @@ def analyze_mail(mop):
             newMail.body = generateBody(mail.unit.mail_error_wrong_unit, mail.requisitionInstance.blank.requisition.serial)
         elif not (subjectMatchesRequisition(mail)):
             newMail.subject = Mail.SUBJECT_ERROR
-            data = "%s %s %s %s" % (mail.subject, Mail.SUBJECT_REQUEST_FORM, mail.requisitionInstance.blank.requisition.category, Requisition.CATEGORY_FORM)
-            newMail.body = generateBody(mail.unit.mail_error_wrong_form, data)
+            newMail.body = generateBody(mail.unit.mail_error_wrong_form)
         elif redundantDocument(mail):
             newMail.subject = Mail.SUBJECT_ERROR
             newMail.body = generateBody(mail.unit.mail_error_redundant_document, mail.requisitionInstance.data)
@@ -178,8 +178,14 @@ def getTaskInstance(mail):
     return taskInstance
     
 def subjectMatchesRequisition(mail):
-    if mail.subject == Mail.SUBJECT_REQUEST_FORM:
-        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
+    logging.info("checking subjectMatchesRequisition");
+    logging.info("mail.subject is Mail.SUBJECT_REQUEST_FORM ???");
+    logging.info("%s is %s ???" % (mail.subject, Mail.SUBJECT_REQUEST_FORM))
+    if mail.subject is Mail.SUBJECT_REQUEST_FORM:
+        logging.info("mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_FORM ???")
+        logging.info("%s %s" % (mail.subject, Mail.SUBJECT_REQUEST_FORM))
+        if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_FORM:
+            logging.info("subject matches request form");
             return True
     elif mail.subject is Mail.SUBJECT_REQUEST_TASK:
         if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_TASK:
