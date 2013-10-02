@@ -178,8 +178,8 @@ def getTaskInstance(mail):
     return taskInstance
     
 def subjectMatchesRequisition(mail):
-    if mail.subject is Mail.SUBJECT_REQUEST_FORM:
-        if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_FORM:
+    if mail.subject == Mail.SUBJECT_REQUEST_FORM:
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
             return True
     elif mail.subject is Mail.SUBJECT_REQUEST_TASK:
         if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_TASK:
