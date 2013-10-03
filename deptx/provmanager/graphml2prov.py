@@ -190,6 +190,8 @@ class GraphMLProvConverter(object):
         self.prov = prov.model.ProvBundle()
         self.nodes = {}
 
+        self.identifiers = set()
+
         # Getting the graph element
         self.graph = self.root.find('g:graph', GRAPHML_PREFIXES)
         # Converting nodes
@@ -225,7 +227,12 @@ class GraphMLProvConverter(object):
         if not label:
             logger.warn("No label found for node %s. Ignored this node." % node_id)
             return  # Stop processing
-        identifier = convert_identifier(label + node_id)
+        # Generating identifier
+        identifier = convert_identifier(label)
+        if identifier in self.identifiers:
+            identifier = convert_identifier(label + node_id)
+        self.identifiers.add(identifier)
+
         attributes = convert_attributes(node, self.node_attributes)
         # Adding the original label as prov:label
         attributes[prov.model.PROV['label']] = label
