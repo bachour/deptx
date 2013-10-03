@@ -10,15 +10,10 @@
     <meta name="description" content="People across the globe working together to expose the Ministry of Provenance.">
     <meta name="author" content="cr0n.org">
     <link rel="stylesheet" href="{% static "cron/css/style.css" %}">
+    <link rel="stylesheet" href="{% static "cron/cron.css" %}">
     <link rel="icon" href="{% static "cron/images/favicon.ico" %}" type="image/x-icon">
 	<link rel="shortcut icon" href="{% static "cron/images/favicon.ico" %}" type="image/x-icon" />
-	
-	<style type="text/css">
-	<!--
-		.errorlist, .missing { color:red; }
-		table {border-collapse:separate;border-spacing:20px 5px;}
-	-->
-	</style>
+
 	<script src="{{MEDIA_URL}}ANALYTICS/cr0n.js"></script>
 	
 </head>
@@ -29,15 +24,15 @@
 
 	  <div class="container_12">
 	    <div class="grid_9">
-	      <h1><a href="{% url 'cron_index' %}"><br>
-          <img src="{% static "cron/images/logo.png" %}" alt="----cr0n---------------"></a></h1>
+	    
+	      <a class='image' href="{% url 'cron_index' %}">
+          <img src="{% static "cron/images/logo.png" %}" alt="----cr0n---------------" /></a>
         </div>
 	    <div class="clear"></div>
             <div class="grid_12">
 	      
         </div>
       </div>
-
 
 
   <section id="content">
@@ -53,7 +48,7 @@
 
 <!-- Cr0nogram Footer -->
 	<footer>
-        <p>{% if user.is_authenticated %}agent {{user.username}} - <a href="{% url 'cron_logout' %}">logout</a><br/>{% endif %}
+        <p class='footer'>{% if user.is_authenticated %}<a class='none' href='{% url 'cron_profile' %}'>agent {{user.username}}</a> - <a class='none' href="{% url 'cron_logout' %}">logout</a><br/>{% endif %}
         <span class="clr-9">running cr0nogram v1.45b</a></span><!-- {%Cr0nogram-v} --></p>
     </footer>
 </body>

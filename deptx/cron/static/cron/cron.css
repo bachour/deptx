@@ -1,27 +1,93 @@
-body {
-	background-color:#333;
-	font-family:courier, sans-serif;
-	color:#0f0;
+input.button, a.button {
+	color:#03c1e2;
+	background-color:#000;
+	border:0px solid #03c1e2;
+	border-radius:5px;
+	padding:15px;
+	font-size:20px;
+	font-family:inherit;
+	cursor: pointer;
+	margin-top:10px;
+	margin-bottom:10px;
 }
 
-div.main {
-	background-color:black;
-	margin:25px;
-	padding:25px;
-	padding-top:10px;
-	border:8px double #0f0;
+input.buttonslim {
+	color:#03c1e2;
+	background-color:#000;
+	border:0px solid #03c1e2;
+	border-radius:5px;
+	padding:10px;
+	font-size:14px;
+	font-family:inherit;
+	cursor: pointer;
 }
 
-div.footer {
-	text-align:right;
-	margin-top:-20px;
-	margin-right:25px;
+a.button {
+	display:block;
 }
 
 a {
-	color:inherit;
+	color:#03c1e2;
+	text-decoration:none;
 }
 
-.missing, .errorlist {
-	color:red;
+a:before {
+	content: '[';
 }
+a:after {
+	content: ']';
+}
+
+a.button:before, a.button:after, a.image:before, a.image:after {
+	content:'';
+}
+
+a.none {
+	color:#03c1e2;
+	text-decoration:none;
+}
+
+a.none:hover {
+	text-decoration:none;
+}
+
+
+a.image {
+	background-color:transparent;
+}
+
+a.image:hover {
+	background-color:transparent;
+}
+
+a:visited {
+	color:#03c1e2
+}
+
+
+input.button:hover, a:hover, input.buttonslim:hover {
+	color:#000;
+	background-color:#03c1e2;
+	text-decoration:none;
+}
+
+
+.errorlist, .missing { color:red; }
+
+table {
+	border-collapse:separate;
+	border-spacing:20px 5px;
+}
+
+table.slim {
+	border-spacing:0 0;
+}
+
+div.loginbox {
+	margin-left:60px;
+}
+
+p.footer {
+	line-height:200%;
+}
+

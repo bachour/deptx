@@ -17,7 +17,7 @@
               </div>
             </div>
 </div> 
-          <div class="grid_3 box-border">
+          <div class="grid_3 box-border extramargin">
           	<div class="box-2">
               <div class="box-2-2">
                 <h3 class="clr-4">FOR</h3>
@@ -25,7 +25,7 @@
               </div>
             </div>
           </div> 
-          <div class="grid_3 box-border">
+          <div class="grid_3 box-border extramargin">
           	<div class="box-3">
               <div class="box-3-3">
                 <h3 class="clr-4">YOUR</h3>
@@ -33,7 +33,7 @@
               </div>
             </div>
           </div> 
-          <div class="grid_3 box-border">
+          <div class="grid_3 box-border extramargin">
           	<div class="box-4">
               <div class="box-4-4">
                 <h3 class="clr-4">FREEDOM</h3>
@@ -50,23 +50,24 @@
         </div>
         <div class="grid_4">
           <h6 class="clr-9">Connect with cr0n</h6>
-            <ul class="tooltips">
-              <li><a href="https://twitter.com/cr0ns"><img src="{% static "cron/images/icon-3.png" %}" alt="Twitter @cr0ns"><span>Follow us on Twitter</span></a></li>
+            <div class='tweet'><ul class="tooltips">
+              <li><a class='image' href="https://twitter.com/cr0ns"><img src="{% static "cron/images/icon-3.png" %}" alt="Twitter @cr0ns"></a><span>&nbsp;&nbsp;&nbsp;<a class='none' href="https://twitter.com/cr0ns">Follow us on Twitter</a></span></li>
               <li></li>
-              <li><a href="http://www.youtube.com/channel/UCNla9YGrgpkiSe0ZIlkAuGA"><img src="{% static "cron/images/icon-1.png" %}" alt="YouTube"><span>Watch on YouTube</span></a></li>
+              <li><a class='image' href="http://www.youtube.com/channel/UCNla9YGrgpkiSe0ZIlkAuGA"><img src="{% static "cron/images/icon-1.png" %}" alt="YouTube"></a><span>&nbsp;&nbsp;&nbsp;<a class='none' href="http://www.youtube.com/channel/UCNla9YGrgpkiSe0ZIlkAuGA">Watch on YouTube</a></span></li>
               <li></li>
             </ul>
+            </div>
         </div>
         <div class="grid_4">
           <h6 class="clr-9 p5">The time is now</h6>
           <div class="tweet">
-            <p>Our future is in danger and we must fight this danger together. This is the time to act. Across the globe a legion of people just like you are  working together to expose the <a href="http://mofp.net">Ministry of Provenance</a>.</p>
+            <p>Our future is in danger and we must fight this danger together. This is the time to act. Across the globe a legion of people just like you are  working together to expose the <a class='none' href="http://mofp.net">Ministry of Provenance</a>.</p>
           </div>
         </div>
-        <div class="grid_4">
+        <div class="grid_4 loginbox">
           <h6 class="clr-9"> agent Login</h6>
-          <div class="grid_3">
-            <table width="100%" border="0">
+          <div class="grid_3b">
+            <table border="0" class='slim'>
               <tr>
                 <td><ul class="tooltips">
                   {% if form.errors %}
@@ -75,18 +76,21 @@
 
 <form method="post" action="{% url 'cron_login' %}">
 	{% csrf_token %}
-	<table>
+	<table class='slim' style='font-size:14px;'>
 		<tr>
 		    <td>{{ form.username.label_tag }}</td>
-		    <td>{{ form.username }}</td>
+		    <td>&nbsp;{{ form.username }}</td>
 		</tr>
 		<tr>
 		    <td>{{ form.password.label_tag }}</td>
-		    <td>{{ form.password }}</td>
+		    <td>&nbsp;{{ form.password }}</td>
+		</tr>
+		<tr>
+			<td><input class='buttonslim' type="submit" value="login" /></td><td>&nbsp;Registration not yet open.</td>
 		</tr>
 		</table>
 	
-	<input type="submit" value="login" /> Registration not yet open.
+	 
 </form>
                 </ul></td>
               </tr>
