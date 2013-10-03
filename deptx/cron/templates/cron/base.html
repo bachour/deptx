@@ -51,5 +51,6 @@
         <p class='footer'>{% if user.is_authenticated %}<a class='none' href='{% url 'cron_profile' %}'>agent {{user.username}}</a> - <a class='none' href="{% url 'cron_logout' %}">logout</a><br/>{% endif %}
         <span class="clr-9">running cr0nogram v1.45b</a></span><!-- {%Cr0nogram-v} --></p>
     </footer>
+
 </body>
 </html>

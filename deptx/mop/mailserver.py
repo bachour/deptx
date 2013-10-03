@@ -139,7 +139,7 @@ def documentInstanceExists(mop, document):
         return False
 
 def getRequisition(mail):
-    if not mail.unit.isAdministrative:
+    if not mail.unit.handsOutForms:
         return None
     try:
         requisition = Requisition.objects.get(serial=mail.requisitionInstance.data)
@@ -155,8 +155,10 @@ def getTask(mail):
     return task
 
 def getDocument(mail):
+    if not mail.unit.handsOutDocuments:
+        return None
     try:
-        document = Document.objects.get(serial=mail.requisitionInstance.data, unit=mail.unit)
+        document = Document.objects.get(serial=mail.requisitionInstance.data)
     except Document.DoesNotExist:
         document = None
     return document
