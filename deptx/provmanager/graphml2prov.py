@@ -70,7 +70,7 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-URL_VALIDATOR_SERVICE = 'http://provenance.ecs.soton.ac.uk/validator/provapi/documents/'
+URL_VALIDATOR_SERVICE = 'https://provenance.ecs.soton.ac.uk/validator/provapi/documents/'
 
 NS_URI_GRAPH_ML = 'http://graphml.graphdrawing.org/xmlns'
 NS_URI_YWORKS = 'http://www.yworks.com/xml/graphml'
