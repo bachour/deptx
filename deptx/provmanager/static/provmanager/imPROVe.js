@@ -83,6 +83,7 @@ function loadStaticImages()
 {
 	staticSources["__arrow"] = MEDIA_URL + ARROW_URL_1;
 	staticSources["__arrow2"] = MEDIA_URL + ARROW_URL_2;
+	staticSources["__magnify"] = MEDIA_URL + MAGNIFY_URL;
 	
     for(name in staticSources) {
         numImages++;
@@ -126,11 +127,10 @@ function initStage()
         container: 'container',
         width: STAGE_WIDTH, 
         height: STAGE_HEIGHT,
-        scale:SCREEN_WIDTH/STAGE_WIDTH
+        scale:document.getElementById("container").offsetWidth/STAGE_WIDTH // scale to the size of the container
       });
 
-	document.getElementById('container').style.height = SCREEN_HEIGHT + "px";
-	//stage.setScale(STAGE_WIDTH/VIRTUAL_STAGE_WIDTH);
+	//document.getElementById('container').style.height = SCREEN_HEIGHT + "px";
 
 	// create Kinetic Images for all objects and put them in nodes
 	for (name in sources)
@@ -335,7 +335,6 @@ function initStage()
                   //submitButton.setY(submitButton.getY()+10);
                   //submitText.setX(submitButton.getX());
                   //submitText.setY(submitButton.getY());
-                  
                   layer.draw();
           	}
         });
@@ -845,10 +844,26 @@ function showAttributes(node, position)
 		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 		  });
 		  
-		  totalY = Y + node.attribImage.getHeight() + 20;
+		  if (node.attributes['mop:url'])
+		  {
+			  node.attribURL = new Kinetic.Image({
+				  x: node.attribImage.getX() + node.attribImage.getWidth() - 2,
+				  y: node.attribImage.getY() + node.attribImage.getHeight() - 2,
+				  width: 50,
+				  height: 50,
+				  image: staticImages[getType(node.attributes['mop:URL'])],
+				  shadowEnabled: false,
+				  strokeEnabled: false  
+			  });
+			  node.attribURL.setX(node.attribURL.getX() - node.attribURL.getWidth());
+			  node.attribURL.setY(node.attribURL.getY() - node.attribURL.getHeight());
+		  }
+		  
+		  totalY = node.attribImage.getHeight() + Y + 20;
+		  
 		  for (i in node.attributes)
 			  {
-			  	if (i != 'prov:label')
+			  	if (i != 'prov:label' && i != 'mop:url')
 			  	{
 			  		node.attribNames[i] = new Kinetic.Text({
 			  			x: node.attribImage.getX(),
@@ -875,14 +890,19 @@ function showAttributes(node, position)
 				  totalY += node.attribValues[i].getHeight() + 5;
 			  	}
 			  }
+		  node.attribValues['prov:label'] = node.attribName;
+		  node.attribValues['mop:image'] = node.attribImage;
+		  if (node.attribURL)
+			  node.attribValues['mop:URL'] = node.attribURL;
 	 }
 	 else
 	 {
 		 node.attribImage.setY(Y+10);
 		 setImageHighlight(node.attribImage, false, false, true);
+
 		 for (i in node.attribValues)
 		 {
-			 if (node.attribValues[i] != node.attribImage)
+			 if (node.attribValues[i] != node.attribImage && node.attribValues[i] != node.attribURL)
 				 setTextHighlight(node.attribValues[i], false, false);
 			 if (position == '1' && node.attribValues[i].getY() > 0.45*STAGE_HEIGHT)
 			 {
@@ -904,16 +924,20 @@ function showAttributes(node, position)
 	  //layer.add(textName);
 	  for (i in node.attribNames)
 		  {
-		  attribLayer[position].add(node.attribNames[i]);
-		  attribLayer[position].add(node.attribValues[i]);
+			  attribLayer[position].add(node.attribNames[i]);
+			  attribLayer[position].add(node.attribValues[i]);
 		  }
 	  attribLayer[position].add(node.attribImage);
 	  if (node.type != 'activity')
 		  attribLayer[position].add(node.attribName);
+	  if (node.attribURL)
+		  attribLayer[position].add(node.attribURL);
 	  attribLayer[position].draw();
-	  
-	  node.attribValues['name'] = node.attribName;
-	  node.attribValues['image'] = node.attribImage;
+}
+
+function getType(str)
+{
+	return "__magnify"; // "sound"; "video";
 }
 
 function wordWrap(string, maxChars)
@@ -1012,7 +1036,7 @@ function toggleHighlightAttribute(shape,on)
 					if (on)
 					{
 						document.body.style.cursor = 'pointer';
-						if (shape == selectedNodes[i].attribImage)
+						if (shape == selectedNodes[i].attribImage || (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL))
 						{
 							setImageHighlight(shape, false, true, true);
 						}
@@ -1024,7 +1048,7 @@ function toggleHighlightAttribute(shape,on)
 					else
 					{
 		     	        document.body.style.cursor = 'default';
-						if (shape == selectedNodes[i].attribImage)
+						if (shape == selectedNodes[i].attribImage || (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL))
 						{
 							setImageHighlight(shape, false, false, true);
 						}
@@ -1060,6 +1084,11 @@ function toggleAttributeSelection(shape)
 			for (j in selectedNodes[i].attribValues)
 				if (selectedNodes[i].attribValues[j] == shape)
 				{
+					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
+						{
+							alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
+							return;
+						}
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
 					{
 						if (selectedNodes[i].attribValues[selectedAttributes[i]] == selectedNodes[i].attribImage)
@@ -1172,9 +1201,9 @@ function submitPushed()
 	{
 		if (selectedAttributes['1'] && selectedAttributes['2'])
 		{
-			/*alert("You think there is something wrong with:\n" +
+			alert("You think there is something wrong with:\n" +
 				"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
-						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");*/
+						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");
 			validateSubmit();
 		}
 		else
