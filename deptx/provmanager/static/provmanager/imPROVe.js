@@ -17,8 +17,15 @@ var MIN_ZOOM = -0.5;
 //sounds
 var clickSound = document.getElementById('click');
 
-//main active layer.
-var layer;
+//layers
+var stage;
+var layer; // main active layer
+var attribLayer; // attribute layer 
+var messageLayer; // layer for displaying messages
+var mediaLayer;  // layer for displaying media (video, images, ...)
+
+// html container:
+var CONTAINER = document.getElementById("container");
 
 //buttons
 var submitButton;
@@ -123,14 +130,15 @@ function loadImages(callback) { // and sounds
 function initStage()
 {
 	// create stage
-	var stage = new Kinetic.Stage({
+	stage = new Kinetic.Stage({
         container: 'container',
         width: STAGE_WIDTH, 
         height: STAGE_HEIGHT,
         scale:document.getElementById("container").offsetWidth/STAGE_WIDTH // scale to the size of the container
       });
 
-	//document.getElementById('container').style.height = SCREEN_HEIGHT + "px";
+	SCREEN_WIDTH = document.getElementById('container').offsetWidth;
+	SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
 
 	// create Kinetic Images for all objects and put them in nodes
 	for (name in sources)
@@ -192,6 +200,7 @@ function initStage()
 	attribLayer['2'] = new Kinetic.Layer();
 	allLayers = [layer,attribLayer['1'],attribLayer['2']];
 	messageLayer = new Kinetic.Layer();
+	mediaLayer = new Kinetic.Layer();
 	
 	// connectors first so they are behind images
 	for (k in lines)
@@ -385,6 +394,7 @@ function initStage()
      stage.add(attribLayer['1']);
      stage.add(attribLayer['2']);
      stage.add(messageLayer);
+     stage.add(mediaLayer);
      
      if (FIRST_TIME)
     	 showTutorial();
@@ -1086,7 +1096,8 @@ function toggleAttributeSelection(shape)
 				{
 					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
 						{
-							alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
+							//alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
+							showMedia(selectedNodes[i].attributes["mop:url"])
 							return;
 						}
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
@@ -1498,4 +1509,74 @@ function showTutorial()
 		messageLayer.removeChildren();
 		messageLayer.draw();
 	});
+}
+
+function showMedia(url)
+{
+	background = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        strokeEnabled: false,
+        fill: 'black',
+        opacity: 0.7,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        shadowEnabled: false,
+      });
+	box = new Kinetic.Rect({
+        x: 0.025*STAGE_WIDTH,
+        y: 0.05*STAGE_HEIGHT,
+        stroke: ATTRIBBOX_BORDER_COLOUR,
+        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
+        fill: 'black',
+        width: 0.95*STAGE_WIDTH,
+        height: 0.9*STAGE_HEIGHT,
+        cornerRadius: 10
+      });
+	
+	mediaLayer.setOpacity(0);
+	
+	mediaLayer.add(background);
+	mediaLayer.draw();
+	
+	anim = new Kinetic.Animation(function(frame) {
+		
+		mediaLayer.setOpacity(Math.min(2.0*frame.time/ 1000, 1));
+		if (2.0*frame.time/1000 >= 1.5)
+		{
+			mediaLayer.add(box);
+			media = createAndAddMedia(url);
+			this.stop();
+		}
+		
+		}, mediaLayer);
+	
+	anim.start();
+}
+
+function createAndAddMedia(url)
+{
+	document.getElementById('overlay').style.display = 'block';
+	document.getElementById('overlay').style.padding = SCREEN_HEIGHT*0.06 + 'px';
+
+	// if video
+	if (url.indexOf("youtube")!= -1)
+		{
+			url = url + "?rel=0&autoplay=1&controls=0&showinfo=0&modestbranding=1";
+			document.getElementById('overlay').innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.8 + '" height="' +SCREEN_HEIGHT*0.8 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';		
+		}
+	else
+	{
+		document.getElementById('overlay').innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
+	}
+				
+	// if image
+}
+
+function setVideo(v,i) {
+    if (!v.paused && !v.ended) {
+        i.setImage(v);
+        cvsObj.modal.draw();
+        setTimeout(setVideo,20,v,i);
+    }
 }
