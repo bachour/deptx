@@ -6,7 +6,7 @@
 <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script>
 	$(function() {
-		$( ".datepicker" ).datepicker({ dateFormat: "yy-mm-dd" });
+		$( ".datepicker" ).datepicker({ dateFormat: "yy-mm-dd", changeMonth: true, changeYear:true, yearRange: "-100:+0" });
 	});
 </script>
 
@@ -34,7 +34,7 @@
 <tr><td>Password Confirmation:</td><td>{{user_form.password2}}</td><td>{{user_form.password2.errors}}</td></tr>
 </table>	
 <hr/>
-<input class="proceed" type="submit" value="Create MoP Employee" />
+<input class="proceed button" type="submit" value="Create MoP Employee" />
 </form>
 
 {% endblock content %}

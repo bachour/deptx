@@ -1,6 +1,6 @@
 from django.core.management.base import NoArgsCommand
 
-from mop.mailserver import analyze_sent_mail
+from mop.mailserver import analyze_mail
 
 class Command(NoArgsCommand):
     help = "Automated Mailserver"

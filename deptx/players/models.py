@@ -8,8 +8,6 @@ from deptx.helpers import generateUUID
 class Player(models.Model):
     firstName = models.CharField(max_length=50)
     lastName = models.CharField(max_length=50)
-    address = models.CharField(max_length=256)
-    phone = models.CharField(max_length=50)
     email = models.EmailField()
     
     def __unicode__(self):

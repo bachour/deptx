@@ -20,8 +20,9 @@ import os
 import logging
 import traceback
 import urllib2
-from prov.model import ProvException
 import datetime
+from StringIO import StringIO
+from prov.model import ProvException
 logger = logging.getLogger(__name__)
 import re
 from argparse import ArgumentParser
@@ -41,6 +42,22 @@ TESTRUN = 0
 PROFILE = 0
 
 
+def logging_intercept(fn, level=logging.DEBUG):
+    def wrapping_fn(*args, **kwargs):
+        log_stream = StringIO()
+        handler = logging.StreamHandler(log_stream)  # 1000 should be enough for a small
+        handler.setLevel(level=level)
+        logger.addHandler(handler)  # Use the existing logger, but could also use the global logger
+        result = fn(*args, **kwargs)
+        logger.removeHandler(handler)
+        logs = log_stream.getvalue()
+        print logs  # Do whatever we want with the logs here
+#         return result, logs  # We could also return the logs along with the actual result
+        log_stream.close()
+        return result
+    return wrapping_fn
+
+
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
     def __init__(self, msg):
@@ -53,7 +70,7 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-URL_VALIDATOR_SERVICE = 'http://provenance.ecs.soton.ac.uk/validator/provapi/documents/'
+URL_VALIDATOR_SERVICE = 'https://provenance.ecs.soton.ac.uk/validator/provapi/documents/'
 
 NS_URI_GRAPH_ML = 'http://graphml.graphdrawing.org/xmlns'
 NS_URI_YWORKS = 'http://www.yworks.com/xml/graphml'
@@ -115,6 +132,16 @@ PROV_RELATION_FUNCTION = {
     prov.model.PROV_REC_MEMBERSHIP:           prov.model.ProvBundle.membership,
 }
 
+PROV_DEFAULT_RELATION = {
+    (prov.model.PROV_REC_ENTITY, prov.model.PROV_REC_ENTITY): prov.model.PROV_REC_DERIVATION,
+    (prov.model.PROV_REC_ENTITY, prov.model.PROV_REC_AGENT): prov.model.PROV_REC_ATTRIBUTION,
+    (prov.model.PROV_REC_ENTITY, prov.model.PROV_REC_ACTIVITY): prov.model.PROV_REC_GENERATION,
+    (prov.model.PROV_REC_AGENT, prov.model.PROV_REC_AGENT): prov.model.PROV_REC_DELEGATION,
+    (prov.model.PROV_REC_ACTIVITY, prov.model.PROV_REC_ENTITY): prov.model.PROV_REC_USAGE,
+    (prov.model.PROV_REC_ACTIVITY, prov.model.PROV_REC_AGENT): prov.model.PROV_REC_ASSOCIATION,
+    (prov.model.PROV_REC_ACTIVITY, prov.model.PROV_REC_ACTIVITY): prov.model.PROV_REC_COMMUNICATION,
+}
+
 
 def to_unicode_or_bust(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
@@ -163,6 +190,8 @@ class GraphMLProvConverter(object):
         self.prov = prov.model.ProvBundle()
         self.nodes = {}
 
+        self.identifiers = set()
+
         # Getting the graph element
         self.graph = self.root.find('g:graph', GRAPHML_PREFIXES)
         # Converting nodes
@@ -198,6 +227,12 @@ class GraphMLProvConverter(object):
         if not label:
             logger.warn("No label found for node %s. Ignored this node." % node_id)
             return  # Stop processing
+        # Generating identifier
+        identifier = convert_identifier(label)
+        if identifier in self.identifiers:
+            identifier = convert_identifier(label + node_id)
+        self.identifiers.add(identifier)
+
         attributes = convert_attributes(node, self.node_attributes)
         # Adding the original label as prov:label
         attributes[prov.model.PROV['label']] = label
@@ -205,11 +240,11 @@ class GraphMLProvConverter(object):
         shape = shape_element.attrib['type']
         # TODO: Change the following back to PROV node shape convention
         if shape == 'ellipse':
-            prov_node = self.convert_entity(label, attributes)
+            prov_node = self.convert_entity(identifier, attributes)
         elif shape == 'rectangle':
-            prov_node = self.convert_activity(label, attributes)
+            prov_node = self.convert_activity(identifier, attributes)
         elif shape == 'trapezoid':
-            prov_node = self.convert_agent(label, attributes)
+            prov_node = self.convert_agent(identifier, attributes)
         else:
             logger.warn("Unrecognised shape %s. Ignored node %s (%s)." % (shape, node_id, label))
             return  # Stop processing
@@ -221,35 +256,41 @@ class GraphMLProvConverter(object):
         logger.debug("Processing edge %s" % edge_id)
         source_id = edge.attrib['source']
         target_id = edge.attrib['target']
+        source_rec = self.nodes[source_id]
+        target_rec = self.nodes[target_id]
+
         edge_type_data = edge.find("g:data[@key='%s']" % self.edge_type_key, GRAPHML_PREFIXES)
-        if edge_type_data is None:
-            logger.warn('Edge %s has no PROV relation type, ignored.' % edge_id)
-            return  # Stop processing
-        edge_type = edge_type_data.text
-        if not edge_type or edge_type not in EDGE_PROV_CODE:
-            logger.warn('Cannot determine the PROV relation (%s) for edge %s. Ignored this edge.' % (edge_type, edge_id))
-            return  # Stop processing
-        prov_type = EDGE_PROV_CODE[edge_type]
+        edge_type = edge_type_data.text if edge_type_data is not None else None
+        if not edge_type or edge_type not in EDGE_PROV_CODE or edge_type not in EDGE_PROV_CODE:
+            # Trying to find a default relation
+            try:
+                prov_type = PROV_DEFAULT_RELATION[(source_rec.get_type(), target_rec.get_type())]
+                logger.info('Cannot determine the PROV relation (%s) for edge %s, creating the default relation (%s) for this edge.' % (edge_type, edge_id, prov.model.PROV_N_MAP[prov_type]))
+            except KeyError:
+                logger.warn('Cannot determine the PROV relation (%s) for edge %s. Ignored this edge.' % (edge_type, edge_id))
+                return  # Stop processing
+        else:
+            prov_type = EDGE_PROV_CODE[edge_type]
         attributes = convert_attributes(edge, self.edge_attributes)
         try:
-            PROV_RELATION_FUNCTION[prov_type](self.prov, self.nodes[source_id], self.nodes[target_id], other_attributes=attributes)
+            PROV_RELATION_FUNCTION[prov_type](self.prov, source_rec, target_rec, other_attributes=attributes)
         except ProvException, e:
             logger.warn("Cannot create relation for edge %s (type %s - %s). Ignored this edge.\n%s" % (edge_id, edge_type, prov.model.PROV_N_MAP[prov_type], repr(e)))
 
-    def convert_entity(self, label, attributes):
-        return self.prov.entity(convert_identifier(label), other_attributes=attributes)
+    def convert_entity(self, identifier, attributes):
+        return self.prov.entity(identifier, other_attributes=attributes)
 
-    def convert_activity(self, label, attributes):
+    def convert_activity(self, identifier, attributes):
         start_time = None
         end_time = None
         if MOP_start_date in attributes and MOP_start_time in attributes:
             start_time = convert_time(attributes[MOP_start_date], attributes[MOP_start_time])
         if MOP_end_date in attributes and MOP_end_time in attributes:
             end_time = convert_time(attributes[MOP_end_date], attributes[MOP_end_time])
-        return self.prov.activity(convert_identifier(label), start_time, end_time, other_attributes=attributes)
+        return self.prov.activity(identifier, start_time, end_time, other_attributes=attributes)
 
-    def convert_agent(self, label, attributes):
-        return self.prov.agent(convert_identifier(label), other_attributes=attributes)
+    def convert_agent(self, identifier, attributes):
+        return self.prov.agent(identifier, other_attributes=attributes)
 
 
 def validate(prov_document):
@@ -298,6 +339,7 @@ def convert_path(path, recursive=False):
         convert_graphml_file(path)
 
 
+@logging_intercept
 def convert_xml_root(root):
     c = GraphMLProvConverter(root)
     return c.prov

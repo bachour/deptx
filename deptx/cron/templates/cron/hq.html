@@ -1,0 +1,26 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
+<ul>
+{% for mission in mission_list %}
+	<h1>{{mission.rank}} - {{mission.name}} ({% if mission.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h1>
+		<h2>
+			<a href="{% url 'cron_hq_mission_intro' mission.id %}">Intro</a>
+			<a href="{% url 'cron_hq_mission_briefing' mission.id %}">Briefing</a>
+			<a href="{% url 'cron_hq_mission_debriefing' mission.id %}">Debriefing</a>
+			<a href="{% url 'cron_hq_mission_outro' mission.id %}">Outro</a>
+		</h2>
+		{% for case in case_list %}
+			{% if case.mission.id == mission.id %}
+				<h2>{{case.rank}} - {{case.name}} ({% if case.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h2>
+				<h3>
+					<a href="{% url 'cron_hq_case_intro' case.id %}">Intro</a>
+					<a href="{% url 'cron_hq_case_outro' case.id %}">Outro</a>
+				</h3>
+			{% endif %}
+		{% endfor %}
+	<hr/>
+{% endfor %}
+
+{% endblock %}

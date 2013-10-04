@@ -3,7 +3,13 @@
 {% block content %}
 
 <h1>{{reqBlank.requisition.name}}</h1>
-Please enter the serial number for the {{reqBlank.requisition.get_category_display}} you want to request and then send it to the {{reqBlank.requisition.unit.name}}.<br>
+Please enter the identification code of the 
+{% if reqBlank.requisition.category == 0 %}<b>form</b> you want to request
+{% elif reqBlank.requisition.category == 1 %}<b>task</b> you want to request
+{% elif reqBlank.requisition.category == 2 %}<b>document</b> you want to request
+{% elif reqBlank.requisition.category == 3 %}<b>task</b> you are submitting
+{% endif %}
+ and then send the form to the {{reqBlank.requisition.unit.name}}.<br>
 <form method="post" action="">
 	{% csrf_token %}
 	{{ form.as_p}}

@@ -6,7 +6,7 @@
 <p>{{user.username}}, please choose what you want to investigate next:</p>
 <table class="banner-1">
 {% for case in case_published_list %}
-		<tr><td>{% if case.solved %}<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>{% endif %}</td><td style='vertical-align:middle;'><a href="{% url "cron_case_detail" case.serial %}">{{ case.name }}</a></td></tr>
+		<tr><td>{% if case.solved %}<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>{% endif %}</td><td style='vertical-align:middle;text-align:left;'><a class='button' style:'width:100%' href="{% url "cron_case_detail" case.serial %}">{{ case.name }}</a></td></tr>
 {% endfor %}
 </table>
 {% if finished and unpublished %}

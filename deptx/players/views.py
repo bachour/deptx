@@ -12,6 +12,8 @@ from deptx.secrets import registration_passcode
 from provmanager.provlogging import provlog_add_cron_register
 
 #TODO: Move registration over to CRON
+#TODO: Request new activation link in case old one was lost
+#TODO: Password reset
 def register(request):
     if request.method == 'POST':
         player_form = PlayerForm(request.POST, prefix="player")
@@ -25,25 +27,24 @@ def register(request):
             cron = Cron()
             cron.player = player
             cron.user = user
-            #TODO remove after AHM
-            cron.activated = True
+            cron.activated = False
             cron.save()
             
             provlog_add_cron_register(cron)
             
-#             email_tpl = loader.get_template('players/activation.txt')
-#             url = request.build_absolute_uri(reverse('players_activation', args=[cron.activationCode]))
-#             c = Context({
-#                 'cron': cron, 'url':url
-#                 })
-#             
-#             email = EmailMessage(
-#                 subject='[cr0n] Activate your account',
-#                 body= email_tpl.render(c), 
-#                 to=[cron.player.email,],
-#             )
-#             #in settings.py you can configure console backend for displaying emails instead of sending them - great for testing!
-#             email.send(fail_silently=False)
+            email_tpl = loader.get_template('players/activation.txt')
+            url = request.build_absolute_uri(reverse('players_activation', args=[cron.activationCode]))
+            c = Context({
+                'cron': cron, 'url':url
+                })
+             
+            email = EmailMessage(
+                subject='[cr0n] Activate your account',
+                body= email_tpl.render(c), 
+                to=[cron.player.email,],
+            )
+            #in settings.py you can configure console backend for displaying emails instead of sending them - great for testing!
+            email.send(fail_silently=True)
 
             
              
@@ -69,7 +70,7 @@ def activate(request, code):
     except Cron.DoesNotExist:
         cron = None
     
-    if not cron is None:
+    if not cron == None:
         cron.activated = True
         cron.save()
         return render_to_response('players/registration.html', {"cron": cron})

@@ -1,6 +1,7 @@
 # Django settings for deptx project.
 
 import os
+import logging
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -145,6 +146,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+
+logging.basicConfig(
+    level = logging.INFO,
+    format = '%(asctime)s %(levelname)s %(message)s',
+    filename = '/tmp/djangoLog.log',)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

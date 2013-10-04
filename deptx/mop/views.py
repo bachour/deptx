@@ -46,7 +46,7 @@ def isMop(user):
 #@user_passes_test(isMop, login_url='mop_login')
 def index(request):
     
-    if request.user is not None and request.user.is_active and isMop(request.user):
+    if not request.user == None and request.user.is_active and isMop(request.user):
         #MAIL MANAGING
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
         outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
@@ -74,7 +74,7 @@ def login(request):
         # (also in if-clause
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
         # TODO: Code is almost identical to CRON-code
-        if user is not None and user.is_active and isMop(user):
+        if not user == None and user.is_active and isMop(user):
             auth.login(request, user)
             log_mop(request.user.mop, 'login')
             provlog_add_mop_login(request.user.mop, request.session.session_key)
@@ -124,7 +124,7 @@ def tasks(request):
         except TaskInstance.DoesNotExist:
             taskInstance = None
         
-        if taskInstance is None:
+        if taskInstance == None:
             new_task_list.append(task)
     
     log_mop(request.user.mop, 'view tasks')   
@@ -148,7 +148,7 @@ def document_provenance(request, documentInstance_id):
     except DocumentInstance.DoesNotExist:
         documentInstance = None
 
-    if not documentInstance is None:
+    if not documentInstance == None:
 
         doc ={}
         doc['id'] = documentInstance.document.id
@@ -201,7 +201,7 @@ def mail_view(request, mail_id):
         mail = None
     
     
-    if not mail is None:
+    if not mail == None:
         m ={}
         m['id'] = mail.id
         m['subject'] = mail.subject
@@ -220,17 +220,17 @@ def mail_trashing(request, mail_id):
     mail.state = Mail.STATE_TRASHED
     mail.save()
     
-    if not mail is None:
+    if not mail == None:
         m ={}
         m['id'] = mail.id
         m['subject'] = mail.subject
         log_mop(request.user.mop, 'trash mail', json.dumps(m))
     
-    if mail.type is Mail.TYPE_RECEIVED:
+    if mail.type == Mail.TYPE_RECEIVED:
         return redirect('mop_mail_inbox')
-    elif mail.type is Mail.TYPE_SENT:
+    elif mail.type == Mail.TYPE_SENT:
         return redirect('mop_mail_outbox')
-    elif mail.type is Mail.TYPE_DRAFT:
+    elif mail.type == Mail.TYPE_DRAFT:
         return redirect('mop_mail_draft')
     
 
@@ -245,7 +245,7 @@ def mail_untrashing(request, mail_id):
     mail.state = Mail.STATE_NORMAL
     mail.save()
     
-    if not mail is None:
+    if not mail == None:
         m ={}
         m['id'] = mail.id
         m['subject'] = mail.subject
@@ -265,7 +265,7 @@ def mail_deleting(request, mail_id):
     mail.state = Mail.STATE_DELETED
     mail.save()
     
-    if not mail is None:
+    if not mail == None:
         m ={}
         m['id'] = mail.id
         m['subject'] = mail.subject
@@ -289,7 +289,7 @@ def mail_compose(request):
         if form.is_valid():
             mail.processed = False
             mail = form.save()
-            if not mail.requisitionInstance is None:
+            if not mail.requisitionInstance == None:
                 mail.requisitionInstance.used = True
                 mail.requisitionInstance.save()
                 

@@ -44,10 +44,10 @@ class Requisition(models.Model):
     CATEGORY_SUBMISSION = 3
     
     CATEGORY_CHOICES = (
-        (CATEGORY_FORM, "form"),
-        (CATEGORY_TASK, "task"),
-        (CATEGORY_DOCUMENT, "document"),
-        (CATEGORY_SUBMISSION, "submission"),
+        (CATEGORY_FORM, "request form"),
+        (CATEGORY_TASK, "request task"),
+        (CATEGORY_DOCUMENT, "request document"),
+        (CATEGORY_SUBMISSION, "submit report"),
     )
     
     

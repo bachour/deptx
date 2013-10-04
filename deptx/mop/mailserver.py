@@ -2,24 +2,22 @@ from mop.models import Mail, TaskInstance, DocumentInstance, RequisitionBlank
 from cron.models import CronDocumentInstance
 from assets.models import Requisition, Task, Document
 from django.template import Context, loader, Template
-
+import logging
 
 def analyze_mail(mop):
-    print "checking inbox of mailserver..."
     mail_list = Mail.objects.filter(mop=mop).filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
-    
-    print "unprocessed mails: %d" % mail_list.count()
+
     for mail in mail_list:
         newMail = prepareMail(mail)
-        if mail.unit is None:
+        if mail.unit == None:
             newMail.subject = Mail.SUBJECT_ERROR
             mail_tpl = loader.get_template('mop/mail/no_unit.txt')
             c = Context()
             newMail.body = mail_tpl.render(c)
-        elif mail.subject is Mail.SUBJECT_EMPTY:
+        elif mail.subject == Mail.SUBJECT_EMPTY:
             newMail.subject = Mail.SUBJECT_ERROR
             newMail.body = generateBody(mail.unit.mail_error_no_subject)
-        elif mail.requisitionInstance is None:
+        elif mail.requisitionInstance == None:
             newMail.subject = Mail.SUBJECT_ERROR
             newMail.body = generateBody(mail.unit.mail_error_missing_form)
         elif not mail.unit == mail.requisitionInstance.blank.requisition.unit:
@@ -39,9 +37,9 @@ def analyze_mail(mop):
             newMail.body = generateBody(mail.unit.mail_error_wrong_document, mail.requisitionInstance.data)
         #Now the mail should be formally correct
         #Let's see about the content!
-        elif mail.subject is Mail.SUBJECT_REQUEST_FORM:
+        elif mail.subject == Mail.SUBJECT_REQUEST_FORM:
             requisition = getRequisition(mail)
-            if requisition is None:
+            if requisition == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unfound_form, mail.requisitionInstance.data)
             elif requisitionBlankExists(mail.mop, requisition):
@@ -51,9 +49,9 @@ def analyze_mail(mop):
                 assignRequisition(mail.mop, requisition)
                 newMail.subject = Mail.SUBJECT_RECEIVE_FORM
                 newMail.body = generateBody(mail.unit.mail_assigning_form, mail.requisitionInstance.data)
-        elif mail.subject is Mail.SUBJECT_REQUEST_TASK:
+        elif mail.subject == Mail.SUBJECT_REQUEST_TASK:
             task = getTask(mail)
-            if task is None:
+            if task == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unfound_task, mail.requisitionInstance.data)
             elif taskInstanceExists(mail.mop, task):
@@ -63,9 +61,9 @@ def analyze_mail(mop):
                 assignTask(mail.mop, task)
                 newMail.subject = Mail.SUBJECT_RECEIVE_TASK
                 newMail.body = generateBody(mail.unit.mail_assigning_task, mail.requisitionInstance.data)
-        elif mail.subject is Mail.SUBJECT_REQUEST_DOCUMENT:
+        elif mail.subject == Mail.SUBJECT_REQUEST_DOCUMENT:
             document = getDocument(mail)
-            if document is None:
+            if document == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unfound_document, mail.requisitionInstance.data)
             elif documentInstanceExists(mail.mop, document):
@@ -76,9 +74,9 @@ def analyze_mail(mop):
                 assignDocument(mail.mop, document)
                 newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
                 newMail.body = generateBody(mail.unit.mail_assigning_document, mail.requisitionInstance.data)
-        elif mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
+        elif mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
             taskInstance = getTaskInstance(mail)
-            if taskInstance is None:
+            if taskInstance == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unassigned_task, mail.requisitionInstance.data)
             else:
@@ -98,8 +96,8 @@ def analyze_mail(mop):
         mail.save()
         newMail.save()
         print newMail.body
-        if newMail.subject is Mail.SUBJECT_ERROR:
-            if not mail.documentInstance is None:
+        if newMail.subject == Mail.SUBJECT_ERROR:
+            if not mail.documentInstance == None:
                 mail.documentInstance.used = False
                 mail.documentInstance.save()
     
@@ -166,7 +164,7 @@ def getDocument(mail):
 def getTaskInstance(mail):
     try:
         task = getTask(mail)
-        if not task is None:
+        if not task == None:
             taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, state=TaskInstance.STATE_ACTIVE)
             if not taskInstance.task.unit == mail.unit:
                 return None
@@ -177,39 +175,40 @@ def getTaskInstance(mail):
     return taskInstance
     
 def subjectMatchesRequisition(mail):
-    if mail.subject is Mail.SUBJECT_REQUEST_FORM:
-        if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_FORM:
+    if int(mail.subject) == int(Mail.SUBJECT_REQUEST_FORM):
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
+            logging.info("subject matches request form");
             return True
-    elif mail.subject is Mail.SUBJECT_REQUEST_TASK:
-        if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_TASK:
+    elif mail.subject == Mail.SUBJECT_REQUEST_TASK:
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_TASK:
             return True
-    elif mail.subject is Mail.SUBJECT_REQUEST_DOCUMENT:
-        if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_DOCUMENT:
+    elif mail.subject == Mail.SUBJECT_REQUEST_DOCUMENT:
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_DOCUMENT:
             return True
-    elif mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
-        if mail.requisitionInstance.blank.requisition.category is Requisition.CATEGORY_SUBMISSION:
+    elif mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SUBMISSION:
             return True
     return False
 
 def redundantDocument(mail):
-    if not mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
-        if not mail.documentInstance is None:
+    if not mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
+        if not mail.documentInstance == None:
             return True
     return False
 
 def missingDocument(mail):
-    if mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
-        if mail.documentInstance is None:
+    if mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
+        if mail.documentInstance == None:
             return True
     return False
 
 def wrongDocument(mail):
-    if mail.subject is Mail.SUBJECT_SUBMIT_REPORT:
+    if mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
         try:
             task = Task.objects.get(serial=mail.requisitionInstance.data)
         except Task.DoesNotExist:
             task = None
-        if not task is None:
+        if not task == None:
             if not mail.documentInstance.document == task.document:
                 return True
     return False

@@ -1,5 +1,5 @@
 from django.shortcuts import render, render_to_response, redirect
-
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
@@ -51,7 +51,7 @@ def login(request):
         
         # this is used to check if the user is a cron user
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
-        if user is not None and user.is_active and isCron(user):
+        if not user == None and user.is_active and isCron(user):
             auth.login(request, user)
             log_cron(request.user.cron, 'login')
             provlog_add_cron_login(request.user.cron, request.session.session_key)
@@ -74,7 +74,7 @@ def logout_view(request):
 #@user_passes_test(isCron, login_url='cron_login')
 def index(request):
     
-    if request.user is not None and request.user.is_active and isCron(request.user):
+    if not request.user == None and request.user.is_active and isCron(request.user):
         user = request.user
         cron = user.cron
         try:
@@ -207,7 +207,7 @@ def mission_reset(request):
     except CronTracker.DoesNotExist:
         crontracker = None
     
-    if not crontracker is None:
+    if not crontracker == None:
         crontracker.progress = 0
         crontracker.save()
         case_list = Case.objects.filter(mission=crontracker.mission)
@@ -231,7 +231,7 @@ def mission_redo(request, mission_id):
     except CronTracker.DoesNotExist:
         crontracker = None
     
-    if not crontracker is None:
+    if not crontracker == None:
         mission = Mission.objects.get(id=mission_id)
         crontracker.mission = mission
         crontracker.save()
@@ -242,7 +242,10 @@ def mission_redo(request, mission_id):
 
 def renderContent(content, user):
 
-    name = user.cron.user.username
+    try:
+        name = user.cron.user.username
+    except:
+        name = 'ANONYMOUS_AGENT'
     
     t = Template(content)
     c = Context({"name":name, "MEDIA_URL":MEDIA_URL})
@@ -266,7 +269,7 @@ def hack_document(request, serial):
     except Document.DoesNotExist:
         document = None
     
-    if not document is None:
+    if not document == None:
         good_mop, mop_list = accessMopServer(request.user.cron, document, mop_list)
 
     output_tpl = loader.get_template('cron/hack_document_output.txt')
@@ -280,7 +283,7 @@ def accessMopServer(cron, document, mop_list):
             mail_list = Mail.objects.filter(type=Mail.TYPE_DRAFT).filter(mop=mop).filter(state=Mail.STATE_NORMAL)
             checked_mop_list.append(mop)
             for mail in mail_list:
-                if not mail.documentInstance is None:
+                if not mail.documentInstance == None:
                     if mail.documentInstance.document == document:
                         cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
                         #Document gets removed
@@ -367,7 +370,6 @@ def profile(request):
                                          context_instance=RequestContext(request)
                                  )
 
-
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()
     #TODO when document is put in draft, add it to CronDocumentInstance
@@ -380,3 +382,54 @@ def getAllDocumentStates(cron, case):
                 required.available = True
 
     return requiredDocuments
+
+
+@staff_member_required
+def hq(request):
+    mission_list = Mission.objects.all().order_by('rank')
+    case_list = Case.objects.all().order_by('rank')
+    
+    return render_to_response('cron/hq.html', {'mission_list':mission_list, 'case_list':case_list})
+
+@staff_member_required
+def hq_mission_intro(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.intro
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_mission_briefing(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.briefing
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_mission_debriefing(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.debriefing
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_mission_outro(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.outro
+    text = renderContent(content, request.user)
+    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+
+@staff_member_required
+def hq_case_intro(request, id):
+    case = Case.objects.get(id=id)
+    content = case.intro
+    text = renderContent(content, request.user)
+    requiredDocuments = case.document_set.all()
+    return render_to_response('cron/case_intro.html', {'text':text, 'case':case, 'document_list':requiredDocuments})
+
+@staff_member_required
+def hq_case_outro(request, id):
+    case = Case.objects.get(id=id)
+    content = case.outro
+    text = renderContent(content, request.user)
+    return render_to_response('cron/case_intro.html', {'text':text, 'case':case })
