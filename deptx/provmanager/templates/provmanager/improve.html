@@ -14,6 +14,7 @@
     	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
     	var AJAX_URL = "{% url 'provmanager_prov_check' %}";
     	var AJAX_MODE = "{{mode}}";
+    	var LOG_URL = "";
     	{% if case %}
     	var CONTINUE_URL = "{% url 'cron_case_detail' case.serial %}";
     	{% elif task %}

@@ -356,6 +356,8 @@ function initStage()
           	  layer.draw();
 	          if (shapePosition == shape.getX()*shape.getY())
 	        	  toggleNodeSelection(shape);
+	          else
+	        	  logDrag(shape);
           }
           else 
           	if (shape && (shape == submitButton || shape == submitText))
@@ -989,6 +991,7 @@ function toggleNodeSelection(shape)
 		selectedAttributes['1'] = null;
 		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
+	    logClick(clickedNode.id, "none", false);
 		return;
 	}
 	else if (selectedNodes['2'] == clickedNode)
@@ -998,6 +1001,7 @@ function toggleNodeSelection(shape)
 		selectedAttributes['2'] = null;
 	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
+	    logClick(clickedNode.id, "none", false);
 		return;
 	}
 
@@ -1013,12 +1017,14 @@ function toggleNodeSelection(shape)
 		selectedNodes['1'] = clickedNode;
 		showAttributes(clickedNode,'1');
 		setImageHighlight(clickedNode.image, true, false);
+		logClick(clickedNode.id, "none", true);
 	}
 	else
 	{
 		selectedNodes['2'] = clickedNode;
 		showAttributes(clickedNode,'2');
 		setImageHighlight(clickedNode.image, true, false);
+		logClick(clickedNode.id, "none", true);
 	}
 	clickSound.play();
 }
@@ -1077,7 +1083,6 @@ function toggleAttributeSelection(shape)
 	for (i in selectedAttributes)
 		if (selectedAttributes[i] && selectedNodes[i].attribValues[selectedAttributes[i]] == shape)
 		{
-			selectedAttributes[i] = null;
 			if (shape == selectedNodes[i].attribImage)
 				setImageHighlight(shape, false, false, true);
 			else
@@ -1085,6 +1090,8 @@ function toggleAttributeSelection(shape)
 				setTextHighlight(shape, false, false);
 			}
 			clickSound.play();
+			logClick(selectedNodes[i].id, selectedAttributes[i], false);
+			selectedAttributes[i] = null;
 			return;
 		}
 	
@@ -1098,6 +1105,7 @@ function toggleAttributeSelection(shape)
 						{
 							//alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
 							showMedia(selectedNodes[i].attributes["mop:url"])
+							logClick(selectedNodes[i].id, j, true);
 							return;
 						}
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
@@ -1118,6 +1126,7 @@ function toggleAttributeSelection(shape)
 					{
 						setTextHighlight(shape, true, false);
 					}
+					logClick(selectedNodes[i].id, j, true);
 					clickSound.play();
 					return;
 				}
@@ -1222,7 +1231,7 @@ function submitPushed()
 	}
 }
 
-function validateSubmit()
+function ajaxCall(URL, message, callback)
 {
 	var xmlhttp;
 	if (window.XMLHttpRequest)
@@ -1239,27 +1248,35 @@ function validateSubmit()
 	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
 	    {
 	      // alert("Server says:" + xmlhttp.responseText);
-	       handleResponse(xmlhttp.responseText);
+		  if (callback)
+			  callback(xmlhttp.responseText);
 	    }
 	 };
-	xmlhttp.open("POST",AJAX_URL,true);
+	xmlhttp.open("POST",URL,true);
 	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-	xmlhttp.send("node1=" + selectedNodes['1'].id + 
-					"&node2=" + selectedNodes['2'].id + 
-					"&attribute1=" + selectedAttributes['1'] +
-					"&attribute2=" +selectedAttributes['2'] +
-					"&serial=" + AJAX_SERIAL +
-					"&mode=" + AJAX_MODE);
+	xmlhttp.send(message);
 }
 
-function handleResponse(response)
+function validateSubmit()
 {
-	response = jQuery.parseJSON(response);
+	message = "node1=" + selectedNodes['1'].id + 
+	"&node2=" + selectedNodes['2'].id + 
+	"&attribute1=" + selectedAttributes['1'] +
+	"&attribute2=" +selectedAttributes['2'] +
+	"&serial=" + AJAX_SERIAL +
+	"&mode=" + AJAX_MODE;
+	
+	ajaxCall(AJAX_URL, message, handleValidateResponse);
+}
 
+function handleValidateResponse(response)
+{
 	if (DEBUG)
 	{
 		response = {"correct":true,"message":"You are correct! Press continue to continue."};
 	}
+	else
+		response = jQuery.parseJSON(response);
 
 	if (response.correct)
 	{
@@ -1518,7 +1535,7 @@ function showMedia(url)
         y: 0,
         strokeEnabled: false,
         fill: 'black',
-        opacity: 0.7,
+        opacity: 1,
         width: STAGE_WIDTH,
         height: STAGE_HEIGHT,
         shadowEnabled: false,
@@ -1541,10 +1558,10 @@ function showMedia(url)
 	
 	anim = new Kinetic.Animation(function(frame) {
 		
-		mediaLayer.setOpacity(Math.min(2.0*frame.time/ 1000, 1));
-		if (2.0*frame.time/1000 >= 1.5)
+		mediaLayer.setOpacity(Math.min(1.0*frame.time/ 1000, 1));
+		if (2.0*frame.time/1000 >= 1.2)
 		{
-			mediaLayer.add(box);
+			//mediaLayer.add(box);
 			media = createAndAddMedia(url);
 			this.stop();
 		}
@@ -1573,10 +1590,27 @@ function createAndAddMedia(url)
 	// if image
 }
 
-function setVideo(v,i) {
-    if (!v.paused && !v.ended) {
-        i.setImage(v);
-        cvsObj.modal.draw();
-        setTimeout(setVideo,20,v,i);
-    }
+function logDrag(shape)
+{
+	// find node belonging to this shape
+	node = null;
+	for (n in nodes)
+		if (nodes[n].image == shape)
+			node = nodes[n];
+	
+	message = "action=move&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+	
+	ajaxCall(LOG_URL, message, logResponse);
+}
+
+function logResponse(response)
+{
+	//alert("Logging response: " + response)
+}
+
+function logClick(node, attribute, newState)
+{
+	message = "action=click&node=" + node + "&attribute=" + attribute + "&newState=" + newState;
+	
+	ajaxCall(LOG_URL, message, logResponse);
 }
