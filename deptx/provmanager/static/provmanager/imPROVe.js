@@ -1701,7 +1701,9 @@ function getName(shape)
 
 function getSaveState()
 {
-	ajaxCall(GET_STATE_URL, "serial=" + AJAX_SERIAL, updateState);
+    $.getJSON(GET_STATE_URL, function(json) {
+ 	   updateState(json);
+ 	 });
 }
 
 function updateState(response)
@@ -1709,12 +1711,12 @@ function updateState(response)
 	state = JSON && JSON.parse(response) || $.parseJSON(response);
 	for (var n in state)
 	{
-		nodes[n].image.setX(state[n].x);
-		nodes[n].image.setY(state[n].y);
+		nodes[state[n].node].image.setX(state[n].x);
+		nodes[state[n].node].image.setY(state[n].y);
 		
-    	for (var l in nodes[n].edges)
+    	for (var l in nodes[state[n].node].edges)
 		{
-			var edge = nodes[n].edges[l];
+			var edge = nodes[state[n].node].edges[l];
 			var points = getLinePoints(edge.from.image, edge.to.image);
         	edge.line.setPoints(points);
 		}
