@@ -4,6 +4,7 @@ from django.conf import settings
 urlpatterns = patterns('',
     url(r'^', include('mop.urls')),
     url(r'^provmanager/', include('provmanager.urls')),
+    url(r'^generated/', include('dummyimage.urls')),
 )
 
 # Static and Media files

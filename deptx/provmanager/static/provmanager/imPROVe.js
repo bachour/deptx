@@ -588,9 +588,9 @@ function isSelected(node)
 }
 
 /*
- * http://dummyimage.com/600x400/fed37f/000.jpg&text=AGENT
- * http://dummyimage.com/600x400/fffc87/000.jpg&text=ENTITY
- * http://dummyimage.com/600x400/9fb1fc/000.jpg&text=ACTIVITY
+ * GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=AGENT
+ * GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=ENTITY
+ * GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=ACTIVITY
  */
 function loadJSONProv (json)
 {
@@ -612,7 +612,7 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["mop:image"];
 				
 				if (!nodeImage)
-					nodeImage = "http://dummyimage.com/600x400/fed37f/000.jpg&text=" + nodeName;
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName 
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}
@@ -630,7 +630,7 @@ function loadJSONProv (json)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
-					nodeImage = "http://dummyimage.com/600x400/fffc87/000.jpg&text=" + nodeName;
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=" + nodeName
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}
@@ -649,7 +649,7 @@ function loadJSONProv (json)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
-					nodeImage = "http://dummyimage.com/600x400/9fb1fc/000.jpg&text=" + nodeName;
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=" + nodeName
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}				

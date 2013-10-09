@@ -1,8 +1,7 @@
-{% load dummyimage_tags %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
 <head>
-<title>Das style-Element</title>
+<title>ProvManager</title>
 <style type="text/css">
 <!--
 table { border-collapse:collapse; }
@@ -14,10 +13,6 @@ td { border:2px black solid; padding:4px;}
 <h1>PROVmanager</h1>
 <a href="{% url 'provmanager_create' %}">create new provenance</a>
 <br/><br/>
-
-{% get_dummyimage_url 320 240 png as image %}
-<img src="{{ image }}?text=hello+world" />
-
 <table>
 <tr>
 	<th></th>
