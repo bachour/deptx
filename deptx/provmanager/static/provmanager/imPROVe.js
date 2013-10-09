@@ -1710,8 +1710,8 @@ function updateState(state)
 {
 	for (var n in state)
 	{
-		nodes[state[n].node].image.setX(state[n].x);
-		nodes[state[n].node].image.setY(state[n].y);
+		nodes[state[n].node].image.setX(parseInt(state[n].x));
+		nodes[state[n].node].image.setY(parseInt(state[n].y));
 		
     	for (var l in nodes[state[n].node].edges)
 		{
