@@ -129,6 +129,7 @@ INSTALLED_APPS = (
     
     'south', # for db migration
     'django_extensions',
+    'dummyimage',
     'players',
     'mop',
     'cron',
@@ -175,3 +176,8 @@ LOGGING = {
         },
     }
 }
+
+DUMMYIMAGE_MAX_DIMENSION = 1024
+DUMMYIMAGE_DEFAULT_BG = 'white'
+DUMMYIMAGE_DEFAULT_TEXT = 'grey'
+DUMMYIMAGE_DEFAULT_BORDER = 'grey'
