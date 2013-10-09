@@ -168,7 +168,8 @@ def mission_cases(request, serial):
     missionInstance = None
     try:
         mission = Mission.objects.get(serial=serial)
-        missionInstance = MissionInstance.objects.get(mission=mission)
+        print mission
+        missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
     except:
         return
     
