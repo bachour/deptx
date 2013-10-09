@@ -106,7 +106,8 @@ def improve_saved_state(request, serial, mode):
     elif mode == MODE_MOP:
             documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
     try:
-        json_str = json.loads(documentInstance.provenanceState)
+        json_load = json.loads(documentInstance.provenanceState)
+        json_str = json.dumps(json_load, indent=4, sort_keys=True)
     except:
         json_str = '[]'
     return HttpResponse(json_str, content_type="application/json")
