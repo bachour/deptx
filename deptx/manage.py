@@ -9,14 +9,14 @@ try:
 except:
     HOSTNAME = 'exception'
 
-print HOSTNAME
+#print HOSTNAME
 
 if __name__ == "__main__":
     if HOSTNAME == PRODUCTION_HOSTNAME:
-        print 'production'
+        #print 'production'
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "deptx.settings_production")
     else:
-        print 'local'
+        #print 'local'
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "deptx.settings")
     
     from django.core.management import execute_from_command_line
