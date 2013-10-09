@@ -57,7 +57,6 @@ class Requisition(models.Model):
     serial = models.CharField(max_length=36, default=generateUUID)
     unit = models.ForeignKey(Unit)
     category = models.IntegerField(choices=CHOICES_CATEGORY)
-    trust = models.IntegerField(default=25)
     isInitial = models.BooleanField(default=False)
     
     def __unicode__(self):
