@@ -1706,7 +1706,7 @@ function getSaveState()
  	 });
 }
 
-function updateState(response)
+function updateState(state)
 {
 	for (var n in state)
 	{
