@@ -99,6 +99,18 @@ def improve(request, serial):
     json_str = getProvJson(provenance)
     return HttpResponse(json_str, content_type="application/json")
 
+def improve_saved_state(request, serial, mode):
+    provenance = Provenance.objects.get(serial=serial)
+    if mode == MODE_CRON:
+            documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+    elif mode == MODE_MOP:
+            documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+    try:
+        json_str = json.loads(documentInstance.provenanceState)
+    except:
+        json_str = '[]'
+    return HttpResponse(json_str, content_type="application/json")
+
 
 #TODO check if logged in as cron/mop
 @csrf_exempt
@@ -154,4 +166,52 @@ def prov_check(request):
 
         return HttpResponse(json_data, mimetype="application/json")
 
+@csrf_exempt
+def prov_log_action(request):
+    #TODO better error handling and feedback
+    correct = False
+    message = "This is not correct."
 
+    #if request.is_ajax():
+    if request.method == 'POST':
+        serial = request.POST.get('serial', None)
+        mode = request.POST.get('mode', None) #MODE_MOP or MODE_CRON
+        action = request.POST.get('action', None) #'move' or 'click'
+        node = request.POST.get('node', None)
+        x = request.POST.get('x', None)
+        y = request.POST.get('y', None)
+        attribute = request.POST.get('attribute', None)
+        state = request.POST.get('state', None)
+        
+        provenance = Provenance.objects.get(serial=serial)
+        
+        if mode == MODE_CRON:
+            documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+        elif mode == MODE_MOP:
+            documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+        
+        if action == 'move':
+            try:
+                stored_data = json.loads(documentInstance.provenanceState)
+            except:
+                stored_data = []
+            updated = False
+            for data in stored_data:
+                if data['node'] == node:
+                    print 'equal'
+                    data['x'] = x
+                    data['y'] = y
+                    updated = True
+                    break
+            if not updated:
+                stored_data.append({"node":node, "x":x, "y":y})
+            documentInstance.provenanceState = json.dumps(stored_data)
+            documentInstance.save()
+            #documentInstance.provenanceState += json_data
+            #documentInstance.save()
+        elif action == 'click':
+            pass
+        
+        return HttpResponse("json_data", mimetype="application/json") 
+        
+  

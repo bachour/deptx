@@ -14,9 +14,10 @@
     	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
     	var AJAX_URL = "{% url 'provmanager_prov_check' %}";
     	var AJAX_MODE = "{{mode}}";
-    	var LOG_URL = "";
+    	var LOG_URL = "{% url 'provmanager_prov_log_action' %}";
+    	var GET_STATE_URL = "{% url 'provmanager_improve_saved_state' provenance.serial mode %}";
     	{% if case %}
-    	var CONTINUE_URL = "{% url 'cron_case_detail' case.serial %}";
+    	var CONTINUE_URL = "{% url 'cron_case_intro' mission.serial case.serial %}";
     	{% elif task %}
     	var CONTINUE_URL = "{% url 'mop_documents' %}";
     	{% endif %}

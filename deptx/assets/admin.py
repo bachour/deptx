@@ -1,7 +1,7 @@
 from django.contrib import admin
 from assets.models import Unit, Requisition, Task, Document, Mission, Case
 
-class CaseDocumentInline(admin.TabularInline):
+class CaseDocumentInline(admin.StackedInline):
     model = Document
     extra = 0
     exclude = ['task']
