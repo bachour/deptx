@@ -74,6 +74,7 @@ function ProvLink (id, from, to, type, role, attributes)
 	this.attributes = attributes;
 	
 	this.line = null;
+	this.ball = null;
 	
 	if (from)
 		from.edges.push(this);
@@ -86,13 +87,13 @@ function ProvLink (id, from, to, type, role, attributes)
 	edges.push(this);
 }
 
-function loadStaticImages()
+function loadStaticImages(callback)
 {
 	staticSources["__arrow"] = MEDIA_URL + ARROW_URL_1;
 	staticSources["__arrow2"] = MEDIA_URL + ARROW_URL_2;
 	staticSources["__magnify"] = MEDIA_URL + MAGNIFY_URL;
 	
-    for(name in staticSources) {
+    for(var name in staticSources) {
         numImages++;
       }
       for(name in staticSources) {
@@ -111,12 +112,12 @@ function loadImages(callback) { // and sounds
      loadedImages = 0;
      numImages = 0;
      
-     loadStaticImages();
+     loadStaticImages(callback);
     
-    for(name in sources) {
+    for(var name in sources) {
       numImages++;
     }
-    for(name in sources) {
+    for(var name in sources) {
       images[name] = new Image();
       images[name].onload = function() {
         if(++loadedImages >= numImages) {
@@ -141,7 +142,7 @@ function initStage()
 	SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
 
 	// create Kinetic Images for all objects and put them in nodes
-	for (name in sources)
+	for (var name in sources)
 		{
 		  nodes[name].image = new Kinetic.Image({
 	        image: images[name],
@@ -159,19 +160,19 @@ function initStage()
 	        strokeWidth:NODE_OUTLINE_WIDTH,
 	      });
 		  
-		  scale = Math.sqrt(1.0 * NODE_DEFAULT_SIZE / (nodes[name].image.getWidth()*nodes[name].image.getHeight()));
+		  var scale = Math.sqrt(1.0 * NODE_DEFAULT_SIZE / (nodes[name].image.getWidth()*nodes[name].image.getHeight()));
 		  nodes[name].image.setWidth(nodes[name].image.getWidth()*scale);
 		  nodes[name].image.setHeight(nodes[name].image.getHeight()*scale);
 		}
 	// create connectors for all edges
-	for (i in edges)
-		{
-		   edge = edges[i];
-		   colour = DEFAULT_EDGE_COLOUR;
+	for (var i in edges)
+	{
+		var edge = edges[i];
+		var colour = DEFAULT_EDGE_COLOUR;
 		   if (EDGE_COLOURS[edge.type])
 			   colour = EDGE_COLOURS[edge.type];
-
-		   connector = new Kinetic.Line(
+		   var points = getLinePoints(edge.from.image, edge.to.image);
+		   var connector = new Kinetic.Line(
             {
             	//set starting point for connector to by center points of linked images
   /*          	points: [edge.from.image.getX() + edge.from.image.getWidth()/2,
@@ -179,7 +180,7 @@ function initStage()
                          edge.to.image.getX() + edge.to.image.getWidth()/2,
                          edge.to.image.getY() + edge.to.image.getHeight()/2],
                          */
-            	points: getLinePoints(edge.from.image, edge.to.image),
+            	points: points,
             	stroke: colour,
             	strokeWidth: EDGE_WIDTH,
             	shadowEnabled: EDGE_SHADOWS,
@@ -203,12 +204,12 @@ function initStage()
 	mediaLayer = new Kinetic.Layer();
 	
 	// connectors first so they are behind images
-	for (k in lines)
+	for (var k in lines)
 		layer.add(lines[k]);
 	// add the nodes, and set up onDrag functions
-	for (j in nodes)
+	for (var j in nodes)
 	{
-		node = nodes[j];
+		var node = nodes[j];
 		layer.add(node.image);
 		
 		// now for each edge that links to this node, update its x and y
@@ -239,15 +240,18 @@ function initStage()
         	if (this.getY() + offset > 0.95*STAGE_HEIGHT)
         		this.setY(0.97*STAGE_HEIGHT - offset);
         	
-        	for ( n in nodes)
+        	var targetNode;
+        	
+        	for (var n in nodes)
         		if (nodes[n].image == evt.targetNode)
         			{
         				 targetNode = nodes[n];
         			}
-        	for ( l in targetNode.edges)
+        	for (var l in targetNode.edges)
         		{
-        			edge = targetNode.edges[l];
-                	edge.line.setPoints(getLinePoints(edge.from.image, edge.to.image));
+        			var edge = targetNode.edges[l];
+        			var points = getLinePoints(edge.from.image, edge.to.image);
+                	edge.line.setPoints(points);
         		}
         	layer.draw();
         	//attribLayer['1'].draw();
@@ -256,43 +260,65 @@ function initStage()
 	}
 	
 	createButtons();
+
+	tooltipText = new Kinetic.Text({
+        x: 0.15*STAGE_WIDTH,
+        y: 15,
+        text: "",
+        fontSize: ATTRIBBOX_SMALL_FONT,
+        fontFamily: ATTRIBBOX_FONT_FAMILY,
+        fontStyle: ATTRIBBOX_SELECTED_FONT_STYLE,
+        fill: 'black',
+        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR,
+        align: 'center',
+        width: STAGE_WIDTH/2,
+        height: 30
+	});
 		
 	// add mouseover effect for objects pointed at
     layer.on('mouseover', function(evt) {
-         shape = evt.targetNode;
-        if (shape && shape.isDraggable())
-        {
-        	document.body.style.cursor = 'pointer'; 
-        	toggleHighlightShape(shape,true);
-
-        	layer.draw();
-        }
-        else 
-        	if (shape && (shape == submitButton || shape == submitText))
-        	{
-                submitButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
-                document.body.style.cursor = 'pointer';
-                layer.draw();
-        	}
-        	
+		var shape = evt.targetNode;
+	    if (shape && shape != tooltipText)
+	    {
+	    	tooltipText.setText(getName(shape));
+	        if (shape.isDraggable())
+	        {
+	        	document.body.style.cursor = 'pointer'; 
+	        	toggleHighlightShape(shape,true);
+	        }
+	        else if (shape == submitButton || shape == submitText)
+	    	{
+	            submitButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
+	            document.body.style.cursor = 'pointer';
+	            
+	    	}
+	        else if (shape.getClassName() == 'Line')
+	        	toggleHighlightLine(shape, true);//alert("Line!");
+	        
+	        layer.draw();
+	    }
       });
       layer.on('mouseout', function(evt) {
-        shape = evt.targetNode;
+    	tooltipText.setText("");
+    	var shape = evt.targetNode;
         if (shape && shape.isDraggable())
         {
 	          document.body.style.cursor = 'default';
 	          
 	          toggleHighlightShape(shape,false);
 	          //shape.setShadowColor('black');
-        	  layer.draw();
         }
-        else 
-        	if (shape && (shape == submitButton || shape == submitText))
-        	{
-                submitButton.setFill(SUBMIT_FILL);
-                document.body.style.cursor = 'pointer';
-                layer.draw();
-        	}
+        else if (shape && (shape == submitButton || shape == submitText))
+    	{
+            submitButton.setFill(SUBMIT_FILL);
+            document.body.style.cursor = 'pointer';
+    	}
+        else if (shape && shape.getClassName() == 'Line')
+        {
+        	toggleHighlightLine(shape, false);
+        }
+        layer.draw();
       });
       
       /*layer.on('dblclick', function(evt) {
@@ -301,7 +327,7 @@ function initStage()
           	  redraw();
         });
       */
-      for (l in attribLayer)
+      for (var l in attribLayer)
       {
     	 /* attribLayer[l].on('dblclick', function(evt) {
            shape = evt.targetNode;
@@ -326,12 +352,12 @@ function initStage()
            });
       }
  
-      
       layer.on('mousedown', function(evt) {
-          shape = evt.targetNode;
+    	  var shape = evt.targetNode;
           if (shape && shape.isDraggable())
           {
 	          shape.moveToTop();
+	          tooltipText.moveToTop();
           	  layer.draw();
           
           	  shapePosition = shape.getX()*shape.getY();
@@ -349,7 +375,7 @@ function initStage()
         });
      
       layer.on('mouseup', function(evt) {
-          shape = evt.targetNode;
+    	  var shape = evt.targetNode;
           if (shape && shape.isDraggable())
           {
 	          shape.moveToTop();
@@ -373,7 +399,7 @@ function initStage()
           
         });
       
-       zoom = function(e) {
+        var zoom = function(e) {
       	   zoomAmount = e.wheelDeltaY*0.0001;
       	  if (currentZoom + zoomAmount > MAX_ZOOM || currentZoom + zoomAmount < MIN_ZOOM)
       		  return;
@@ -389,7 +415,7 @@ function initStage()
        
      //showAttributes(nodes['helen_blank'], '1');
      //showAttributes(nodes['french_transcript'], '2');
-      
+     layer.add(tooltipText);
      //document.getElementById("container").addEventListener("mousewheel", zoom, false);
      document.getElementById("loading").innerHTML = "";
      stage.add(layer);
@@ -408,6 +434,7 @@ function initStage()
 // otherwise, removes all highlights from target and adjacent nodes.
 function toggleHighlightShape(target, on)
 {
+	var targetNode;
 	/*	        
 	 * strokeEnabled: false,
 	   stroke: 'black',
@@ -415,7 +442,7 @@ function toggleHighlightShape(target, on)
 	 */
 	
 	// first find the ProvNode holding this image
-	for ( n in nodes)
+	for (var n in nodes)
 		if (nodes[n].image == target)
 			{
 				targetNode = nodes[n];
@@ -428,7 +455,7 @@ function toggleHighlightShape(target, on)
 	}
 	
 	// now find all nodes linked to that target node
-	for ( e in targetNode.edges)
+	for (var e in targetNode.edges)
 		{
 			setEdgeHighlight(targetNode.edges[e], on);
 			
@@ -566,11 +593,17 @@ function isSelected(node)
  */
 function loadJSONProv (json)
 {
-	for ( i in json)
+	var node;
+	var nodeName;
+	var nodeImage;
+	var attribs;
+	
+	// first create nodes
+	for (var i in json)
 		switch (i)
 		{
 		case "agent":
-			for (j in json[i])
+			for (var j in json[i])
 			{
 				nodeName = json[i][j]["prov:label"];
 				if (!nodeName)
@@ -582,7 +615,7 @@ function loadJSONProv (json)
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}
-				for (k in json[i][j])
+				for (var k in json[i][j])
 					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];
 				node = new ProvNode("agent", j, nodeImage,attribs);
@@ -610,6 +643,7 @@ function loadJSONProv (json)
 			for ( j in json[i])
 			{
 				nodeName = json[i][j]["prov:label"];
+				json[i][j]["prov:label"] = "Activity: " + nodeName;
 				if (!nodeName)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
@@ -628,7 +662,14 @@ function loadJSONProv (json)
 		default:
 			break;
 		}
-	for ( i in json)
+	
+	var from;
+	var to;
+	var label;
+	var role;
+	var link;
+	// now create edges
+	for (var i in json)
 	{
 		switch (i)
 		{
@@ -639,67 +680,83 @@ function loadJSONProv (json)
 			case "wasDerivedFrom":
 				from = "prov:generatedEntity";
 				to = "prov:usedEntity";
+				label = "was derived from";
 				break;
 			case "alternateOf":
 				from = "prov:alternate1";
 				to = "prov:alternate2";
+				label = "is an alternate of";
 				break;
 			case "specializationOf":
 				from = "prov:specificEntity";
 				to = "prov:generalEntity";
+				label = "is a specialization of";
 				break;
 			case "hadMember":
 				from = "prov:collection";
 				to = "prov:entity";
+				label = "has as member";
 				break;
 			case "wasAttributedTo":
 				from = "prov:entity";
 				to = "prov:agent";
+				label = "was attributed to";
 				break;
 			case "wasInfluencedBy":
 				from = "prov:influencee";
 				to = "prov:influencer";
+				label = "was influenced by";
 				break;
 			case "wasGeneratedBy":
 				from = "prov:entity";
 				to = "prov:activity";
+				label = "was generated by";
 				break;
 			case "wasInvalidatedBy":
 				from = "prov:entity";
 				to = "prov:activity";
+				label = "was invalidated by";
 				break;
 			case "used":
 				from = "prov:activity";
 				to = "prov:entity";
+				label = "used";
 				break;
 			case "wasStartedBy":
 				from = "prov:activity";
 				to = "prov:trigger";
+				label = "was started by";
 				break;
 			case "wasEndedBy":
 				from = "prov:activity";
 				to = "prov:trigger";
+				label = "was ended by";
 				break;
 			case "wasAssociatedWith":
 				from = "prov:activity";
 				to = "prov:agent";
+				label = "was associated with";
 				break;
 			case "wasInformedBy":
 				from = "prov:informed";
 				to = "prov:informant";
+				label = "was informed by";
 				break;
 			case "actedOnBehalfOf":
 				from = "prov:delegate";
 				to = "prov:responsible";
+				label = "acted on behalf of";
 				break;
 			default:
 				continue;
 		}
-		for ( j in json[i])
+		for (var j in json[i])
 		{
 			role = json[i][j]["prov:role"];
-			attribs = {};
-			for (k in json[i][j])
+			if (role)
+				label = label + " (role)";
+			attribs = {"name":label};
+			for (var k in json[i][j])
 				if (k != "prov:role" && k != from && k != to)
 					attribs[k]=json[i][j][k];
 			link = new ProvLink(j, nodes[json[i][j][from]], nodes[json[i][j][to]], i, role, attribs);
@@ -709,9 +766,9 @@ function loadJSONProv (json)
 
 function naturalifyString(str) // converts string that looks like "this_is_awseome" to "This is awesome"
 {
-	words = str.split("_");
-	naturalStr = words[0];
-	for (w in words)
+	var words = str.split("_");
+	var naturalStr = words[0];
+	for (var w in words)
 	{
 		if (w == 0)
 			continue;
@@ -731,65 +788,70 @@ function extractNamespace(str) // breaks a string with namespace into an array: 
 		return ["",str];
 }
 
+// converts basic line points to arrow points
 function arrowPoints(fromx, fromy, tox, toy)
 {
-     headlen = EDGE_ARROWHEAD_WIDTH;// Math.sqrt(Math.sqrt((fromx-tox)*(fromx-tox) - (fromy-toy)*(fromy-toy)));   // how long you want the head of the arrow to be, you could calculate this as a fraction of the distance between the points as well.
-     angle = Math.atan2(toy-fromy,tox-fromx);
+	 var headlen = EDGE_ARROWHEAD_WIDTH;// Math.sqrt(Math.sqrt((fromx-tox)*(fromx-tox) - (fromy-toy)*(fromy-toy)));   // how long you want the head of the arrow to be, you could calculate this as a fraction of the distance between the points as well.
+	 var angle = Math.atan2(toy-fromy,tox-fromx);
 
-    points = [fromx, fromy, tox, toy, tox-headlen*Math.cos(angle-Math.PI/6),toy-headlen*Math.sin(angle-Math.PI/6),tox, toy, tox-headlen*Math.cos(angle+Math.PI/6),toy-headlen*Math.sin(angle+Math.PI/6)];
+	 var points = [fromx, fromy, tox, toy, tox-headlen*Math.cos(angle-Math.PI/6),toy-headlen*Math.sin(angle-Math.PI/6),tox, toy, tox-headlen*Math.cos(angle+Math.PI/6),toy-headlen*Math.sin(angle+Math.PI/6)];
     return points;
 }
 
+// gets the end points of a line to be drawn between two images
 function getLinePoints(fromImage, toImage)
 {
-	fromCenter = getCenter(fromImage.getX(), fromImage.getY(), fromImage.getWidth(), fromImage.getHeight(), fromImage.getRotation());
-	toCenter = getCenter(toImage.getX(), toImage.getY(), toImage.getWidth(), toImage.getHeight(), toImage.getRotation());
+	var fromCenter = getCenter(fromImage.getX(), fromImage.getY(), fromImage.getWidth(), fromImage.getHeight(), fromImage.getRotation());
+	var toCenter = getCenter(toImage.getX(), toImage.getY(), toImage.getWidth(), toImage.getHeight(), toImage.getRotation());
 	
-	x1 = fromCenter["x"];
-	y1 = fromCenter["y"];
-	x2 = toCenter["x"];
-	y2 = toCenter["y"];
+	var x1 = fromCenter["x"];
+	var y1 = fromCenter["y"];
+	var x2 = toCenter["x"];
+	var y2 = toCenter["y"];
 	
-	totalDistance = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+	var totalDistance = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 //	fromOffset = (fromImage.getWidth() + fromImage.getHeight())/2;
 //	fromOffset = (fromOffset + fromOffset*Math.sqrt(2))/4;
-	fromOffset = getOffset(fromImage.getWidth(), fromImage.getHeight(), fromImage.getRotation(), x1,y1,x2,y2);
+	var fromOffset = getOffset(fromImage.getWidth(), fromImage.getHeight(), fromImage.getRotation(), x1,y1,x2,y2);
 	//toOffset = (toImage.getWidth() + toImage.getHeight())/2;
 	//toOffset = (fromOffset + toOffset*Math.sqrt(2))/4;
-	toOffset = getOffset(toImage.getWidth(), toImage.getHeight(), toImage.getRotation(), x1,y1,x2,y2);
-	fromRatio = fromOffset / totalDistance;
-	toRatio = toOffset / totalDistance;
+	var toOffset = getOffset(toImage.getWidth(), toImage.getHeight(), toImage.getRotation(), x1,y1,x2,y2);
+	var fromRatio = fromOffset / totalDistance;
+	var toRatio = toOffset / totalDistance;
 	
-	lineX1 = (x2*fromOffset + x1*(totalDistance-fromOffset))/totalDistance;
-	lineY1 = (y2*fromOffset + y1*(totalDistance-fromOffset))/totalDistance;
-	lineX2 = (x1*toOffset + x2*(totalDistance-toOffset))/totalDistance;
-	lineY2 = (y1*toOffset + y2*(totalDistance-toOffset))/totalDistance;
+	var lineX1 = (x2*fromOffset + x1*(totalDistance-fromOffset))/totalDistance;
+	var lineY1 = (y2*fromOffset + y1*(totalDistance-fromOffset))/totalDistance;
+	var lineX2 = (x1*toOffset + x2*(totalDistance-toOffset))/totalDistance;
+	var lineY2 = (y1*toOffset + y2*(totalDistance-toOffset))/totalDistance;
 	
 	return arrowPoints(lineX1,lineY1,lineX2,lineY2);
 }
 
-
+// get the center point of a shape given it's x, y, angle and dimentions.
 function getCenter(x, y, width, height, angle_rad) {
-     cosa = Math.cos(angle_rad);
-     sina = Math.sin(angle_rad);
-     wp = width/2;
-     hp = height/2;
+	var cosa = Math.cos(angle_rad);
+	var sina = Math.sin(angle_rad);
+	var wp = width/2;
+	var hp = height/2;
     return { x: ( x + wp * cosa - hp * sina ),
              y: ( y + wp * sina + hp * cosa ) };
 }
 
+// get the distance from the center of a shape to the point at which a line would intersect it
 function getOffset(width, height, shapeAngle, x1,y1,x2,y2)
 {
-	oldAngle = shapeAngle;
-	oldx1 = x1; oldx2 = x2; oldy1 = y1; oldy2 = y2;
-	x1 = oldx1*Math.cos(-shapeAngle)- oldy1*Math.sin(-shapeAngle);
-	x2 = oldx2*Math.cos(-shapeAngle)- oldy2*Math.sin(-shapeAngle);
-	y1 = oldx1*Math.sin(-shapeAngle)+ oldy1*Math.cos(-shapeAngle);
-	y2 = oldx2*Math.sin(-shapeAngle)+ oldy2*Math.cos(-shapeAngle);
+	var oldAngle = shapeAngle;
+	var oldx1 = x1; oldx2 = x2; oldy1 = y1; oldy2 = y2;
+	var x1 = oldx1*Math.cos(-shapeAngle)- oldy1*Math.sin(-shapeAngle);
+	var x2 = oldx2*Math.cos(-shapeAngle)- oldy2*Math.sin(-shapeAngle);
+	var y1 = oldx1*Math.sin(-shapeAngle)+ oldy1*Math.cos(-shapeAngle);
+	var y2 = oldx2*Math.sin(-shapeAngle)+ oldy2*Math.cos(-shapeAngle);
 	
-	slope = (y2-y1)/(x2-x1);
-	lineAngle = Math.atan(slope);
-	shapeAngle = 0;
+	var slope = (y2-y1)/(x2-x1);
+	var lineAngle = Math.atan(slope);
+	var shapeAngle = 0;
+	
+	var offset;
 
 	if (-height/2 <= slope * width/2 &&  slope * width/2 <= height / 2 )
 		if (x1 >= x2) // right edge
@@ -814,7 +876,8 @@ function getOffset(width, height, shapeAngle, x1,y1,x2,y2)
 //display attributes of node, at location x,y
 function showAttributes(node, position)
 {
-	X = 0.83 * STAGE_WIDTH;
+	var X = 0.83 * STAGE_WIDTH;
+	var Y;
 	if (position == '1')
 		Y = 5;
 	else
@@ -840,7 +903,7 @@ function showAttributes(node, position)
 	        strokeWidth: THUMB_OUTLINE_WIDTH
 	      });
 		 
-		  scale = Math.sqrt(1.0 * THUMB_DEFAULT_SIZE / (node.attribImage.getWidth()*node.attribImage.getHeight()));
+		  var scale = Math.sqrt(1.0 * THUMB_DEFAULT_SIZE / (node.attribImage.getWidth()*node.attribImage.getHeight()));
 		  node.attribImage.setWidth(node.attribImage.getWidth()*scale);
 		  node.attribImage.setHeight(node.attribImage.getHeight()*scale);
 		  
@@ -871,9 +934,9 @@ function showAttributes(node, position)
 			  node.attribURL.setY(node.attribURL.getY() - node.attribURL.getHeight());
 		  }
 		  
-		  totalY = node.attribImage.getHeight() + Y + 20;
+		  var totalY = node.attribImage.getHeight() + Y + 20;
 		  
-		  for (i in node.attributes)
+		  for (var i in node.attributes)
 			  {
 			  	if (i != 'prov:label' && i != 'mop:url')
 			  	{
@@ -934,7 +997,7 @@ function showAttributes(node, position)
 	  
 	  //attribLayer[position].add(rect);
 	  //layer.add(textName);
-	  for (i in node.attribNames)
+	  for (var i in node.attribNames)
 		  {
 			  attribLayer[position].add(node.attribNames[i]);
 			  attribLayer[position].add(node.attribValues[i]);
@@ -954,10 +1017,10 @@ function getType(str)
 
 function wordWrap(string, maxChars)
 {
-	words = string.split(" ");
-	newString = words[0];
-	currentLength = newString.length;
-	for (w=1; w<words.length; w++)
+	var words = string.split(" ");
+	var newString = words[0];
+	var currentLength = newString.length;
+	for (var w=1; w<words.length; w++)
 		{
 			if (currentLength + words[w].length + 1 > maxChars)
 			{
@@ -973,11 +1036,23 @@ function wordWrap(string, maxChars)
 	return newString;
 }
 
+function toggleHighlightLine(line, on)
+{
+	for (var e in edges)
+		if (edges[e].line == line)
+			{
+				if (on)
+					line.setStroke(EDGE_HIGHLIGHTED_COLOURS[edges[e].type]);
+				else
+					line.setStroke(EDGE_COLOURS[edges[e].type]);
+			}
+}
+
 function toggleNodeSelection(shape)
 {
 	// find node that was clicked on
-	clickedNode = null;
-	for (n in nodes)
+	var clickedNode = null;
+	for (var n in nodes)
 		if (nodes[n].image == shape)
 			clickedNode = nodes[n];
 	if (clickedNode == null)
@@ -1032,7 +1107,7 @@ function toggleNodeSelection(shape)
 function toggleHighlightAttribute(shape,on)
 {
 	// if already selected, ignore
-	for (i in selectedAttributes)
+	for (var i in selectedAttributes)
 		if (selectedAttributes[i] && selectedNodes[i].attribValues[selectedAttributes[i]] == shape)
 		{
 			if (on)
@@ -1044,9 +1119,9 @@ function toggleHighlightAttribute(shape,on)
 		}
 	
 	// if this is an attribute shape, highlight it
-	for (i in selectedNodes)
+	for (var i in selectedNodes)
 		if (selectedNodes[i] != null)
-			for (j in selectedNodes[i].attribValues)
+			for (var j in selectedNodes[i].attribValues)
 				if (selectedNodes[i].attribValues[j] == shape)
 				{
 					if (on)
@@ -1080,7 +1155,7 @@ function toggleHighlightAttribute(shape,on)
 function toggleAttributeSelection(shape)
 {
 	// if already selected, deselect it
-	for (i in selectedAttributes)
+	for (var i in selectedAttributes)
 		if (selectedAttributes[i] && selectedNodes[i].attribValues[selectedAttributes[i]] == shape)
 		{
 			if (shape == selectedNodes[i].attribImage)
@@ -1096,9 +1171,9 @@ function toggleAttributeSelection(shape)
 		}
 	
 	// match shape to attribute and store attribute
-	for (i in selectedNodes)
+	for (var i in selectedNodes)
 		if (selectedNodes[i] != null)
-			for (j in selectedNodes[i].attribValues)
+			for (var j in selectedNodes[i].attribValues)
 				if (selectedNodes[i].attribValues[j] == shape)
 				{
 					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
@@ -1161,7 +1236,7 @@ function setTextHighlight(shape, selected, highlighted)
 
 function createButtons()
 {
-	 submitButton = new Kinetic.Rect({
+	var submitButton = new Kinetic.Rect({
 	        x: 0.83 * STAGE_WIDTH,
 	        y: 0.90 * STAGE_HEIGHT,
 	        stroke: BUTTON_BORDER_COLOUR,
@@ -1176,7 +1251,7 @@ function createButtons()
 	        shadowOpacity: BUTTON_SHADOW_OPACITY,
 	        cornerRadius: BUTTON_CORNER_RADIUS
 	      });
-	 submitText = new Kinetic.Text({
+	var submitText = new Kinetic.Text({
 		    x: submitButton.getX(),
 	        y: submitButton.getY(),
 	        text: 'Submit!',
@@ -1196,19 +1271,6 @@ function createButtons()
 		 layer.add(submitText);
 	 }
 	 
-}
-
-function resetPushed()
-{
-	r = confirm("Are you sure you want to reset the current graph?");
-	if (r==true)
-	  {
-			x="You pressed OK!";
-	  }
-	else
-	  {
-			x="You pressed Cancel!";
-	  }
 }
 
 function submitPushed()
@@ -1259,7 +1321,7 @@ function ajaxCall(URL, message, callback)
 
 function validateSubmit()
 {
-	message = "node1=" + selectedNodes['1'].id + 
+	var message = "node1=" + selectedNodes['1'].id + 
 	"&node2=" + selectedNodes['2'].id + 
 	"&attribute1=" + selectedAttributes['1'] +
 	"&attribute2=" +selectedAttributes['2'] +
@@ -1271,6 +1333,7 @@ function validateSubmit()
 
 function handleValidateResponse(response)
 {
+	var response;
 	if (DEBUG)
 	{
 		response = {"correct":true,"message":"You are correct! Press continue to continue."};
@@ -1283,15 +1346,15 @@ function handleValidateResponse(response)
 		taskCompleted = true;
 	}
 	showMessage(response.message);
-
 }
 
 function setupAttribPanes()
 {
-	X = 0.83 * STAGE_WIDTH;
-	y = {'1':5, '2':0.45*STAGE_HEIGHT};
+	var X = 0.83 * STAGE_WIDTH;
+	var Y;
+	var y = {'1':5, '2':0.45*STAGE_HEIGHT};
 	
-	for (i in y)
+	for (var i in y)
 	{
 		Y = y[i];
 		rect = new Kinetic.Rect({
@@ -1317,11 +1380,11 @@ function setupAttribPanes()
 
 function clearAttributePane(position)
 {
-	X = 0.83 * STAGE_WIDTH;
-	y = {'1':5, '2':0.45*STAGE_HEIGHT};
-	Y = y[position];
+	var X = 0.83 * STAGE_WIDTH;
+	var y = {'1':5, '2':0.45*STAGE_HEIGHT};
+	var Y = y[position];
 	
-	text = new Kinetic.Text({
+	var text = new Kinetic.Text({
         x: X,
         y: Y,
         text: "\n\n\nClick on a node\nto inspect it.",
@@ -1343,7 +1406,7 @@ function clearAttributePane(position)
 
 function showMessage(msg)
 {
-	background = new Kinetic.Rect({
+	var background = new Kinetic.Rect({
         x: 0,
         y: 0,
         strokeEnabled: false,
@@ -1353,7 +1416,7 @@ function showMessage(msg)
         height: STAGE_HEIGHT,
         shadowEnabled: false,
       });
-	box = new Kinetic.Rect({
+	var box = new Kinetic.Rect({
         x: STAGE_WIDTH/3,
         y: STAGE_HEIGHT/3,
         stroke: ATTRIBBOX_BORDER_COLOUR,
@@ -1368,7 +1431,7 @@ function showMessage(msg)
         shadowOpacity: ATTRIBBOX_SHADOW_OPACITY,
         cornerRadius: ATTRIBBOX_CORNER_RADIUS
       });
-	message = new Kinetic.Text({
+	var message = new Kinetic.Text({
         x: box.getX(),
         y: box.getY(),
         text: msg,
@@ -1383,7 +1446,7 @@ function showMessage(msg)
         width: box.getWidth(),
         height: box.getHeight()
 	});
-	submessage = new Kinetic.Text({
+	var submessage = new Kinetic.Text({
         x: box.getX(),
         y: box.getY() + box.getHeight() - 30,
         text: "Click anywhere to continue.",
@@ -1410,8 +1473,7 @@ function showMessage(msg)
 		messageLayer.draw();
 
 		if (taskCompleted)
-		window.location.href = CONTINUE_URL;
-
+			window.location.href = CONTINUE_URL;
 	});
 }
 
@@ -1424,7 +1486,7 @@ function redraw()
 
 function showTutorial()
 {
-	background = new Kinetic.Rect({
+	var background = new Kinetic.Rect({
         x: 0,
         y: 0,
         strokeEnabled: false,
@@ -1435,7 +1497,7 @@ function showTutorial()
         shadowEnabled: false,
       });
 	
-	message1 = new Kinetic.Text({
+	var message1 = new Kinetic.Text({
         x: 0.15*STAGE_WIDTH,
         y: STAGE_HEIGHT/6,
         text: "1. Spread out nodes and arrange them\nto make things clearer",
@@ -1451,7 +1513,7 @@ function showTutorial()
         height: STAGE_HEIGHT/3
 	});
 	
-	message2 = new Kinetic.Text({
+	var message2 = new Kinetic.Text({
         x: STAGE_WIDTH*0.55,
         y: STAGE_HEIGHT/3,
         text: "2. When you click a node, \nits attributes can be\n inspected here.",
@@ -1467,7 +1529,7 @@ function showTutorial()
         height: STAGE_HEIGHT/3
 	});
 	
-	message3 = new Kinetic.Text({
+	var message3 = new Kinetic.Text({
         x: 0.46*STAGE_WIDTH,
         y: 0.84*STAGE_HEIGHT,
         text: "3. Highlight pairs of attributes\n that you find suspicious\n then click submit.",
@@ -1482,7 +1544,7 @@ function showTutorial()
         height: STAGE_HEIGHT/3
 	});
 	
-	arrow1 = new Kinetic.Image({
+	var arrow1 = new Kinetic.Image({
         image: staticImages["__arrow"],
         x: message1.getX() + 0.2*STAGE_WIDTH,
         y: message1.getY()+ 0.26* STAGE_HEIGHT,
@@ -1492,7 +1554,7 @@ function showTutorial()
         rotationDeg: 180
         });
 
-	arrow2 = new Kinetic.Image({
+	var arrow2 = new Kinetic.Image({
         image: staticImages["__arrow"],
         x: message2.getX() + 0.25*STAGE_WIDTH,
         y: message2.getY() - 0.20* STAGE_HEIGHT,
@@ -1501,7 +1563,7 @@ function showTutorial()
         draggable: false,
         rotationDeg:180,
         });
-	arrow3 = new Kinetic.Image({
+	var arrow3 = new Kinetic.Image({
         image: staticImages["__arrow2"],
         x: message3.getX() + 0.36*STAGE_WIDTH,
         y: message3.getY() + STAGE_HEIGHT/60,
@@ -1530,7 +1592,7 @@ function showTutorial()
 
 function showMedia(url)
 {
-	background = new Kinetic.Rect({
+	var background = new Kinetic.Rect({
         x: 0,
         y: 0,
         strokeEnabled: false,
@@ -1540,7 +1602,7 @@ function showMedia(url)
         height: STAGE_HEIGHT,
         shadowEnabled: false,
       });
-	box = new Kinetic.Rect({
+	var box = new Kinetic.Rect({
         x: 0.025*STAGE_WIDTH,
         y: 0.05*STAGE_HEIGHT,
         stroke: ATTRIBBOX_BORDER_COLOUR,
@@ -1556,7 +1618,7 @@ function showMedia(url)
 	mediaLayer.add(background);
 	mediaLayer.draw();
 	
-	anim = new Kinetic.Animation(function(frame) {
+	var anim = new Kinetic.Animation(function(frame) {
 		
 		mediaLayer.setOpacity(Math.min(1.0*frame.time/ 1000, 1));
 		if (2.0*frame.time/1000 >= 1.2)
@@ -1582,23 +1644,22 @@ function createAndAddMedia(url)
 			url = url + "?rel=0&autoplay=1&controls=0&showinfo=0&modestbranding=1";
 			document.getElementById('overlay').innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.8 + '" height="' +SCREEN_HEIGHT*0.8 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';		
 		}
-	else
+	else // if image
 	{
 		document.getElementById('overlay').innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
 	}
 				
-	// if image
 }
 
 function logDrag(shape)
 {
 	// find node belonging to this shape
-	node = null;
-	for (n in nodes)
+	var node = null;
+	for (var n in nodes)
 		if (nodes[n].image == shape)
 			node = nodes[n];
 	
-	message = "action=move&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+	var message = "action=move&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
 	
 	ajaxCall(LOG_URL, message, logResponse);
 }
@@ -1610,7 +1671,24 @@ function logResponse(response)
 
 function logClick(node, attribute, newState)
 {
-	message = "action=click&node=" + node + "&attribute=" + attribute + "&newState=" + newState;
+	var message = "action=click&node=" + node + "&attribute=" + attribute + "&newState=" + newState;
 	
 	ajaxCall(LOG_URL, message, logResponse);
+}
+
+function getName(shape)
+{
+	for (var n in nodes)
+		{
+			if (nodes[n].image == shape)
+			{
+				return nodes[n].attributes["prov:label"];
+			}
+		}
+	for (var e in edges)
+		{
+			if (edges[e].line == shape)
+				return edges[e].from.attributes["prov:label"] + " " + edges[e].attributes["name"] + " " + edges[e].to.attributes["prov:label"];
+		}
+	return null;
 }
