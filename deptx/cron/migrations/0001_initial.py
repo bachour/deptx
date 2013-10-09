@@ -8,21 +8,20 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'CronTracker'
-        db.create_table(u'cron_crontracker', (
+        # Adding model 'MissionInstance'
+        db.create_table(u'cron_missioninstance', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('cron', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['players.Cron'], unique=True)),
+            ('cron', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Cron'])),
             ('mission', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Mission'])),
             ('progress', self.gf('django.db.models.fields.IntegerField')(default=0)),
         ))
-        db.send_create_signal(u'cron', ['CronTracker'])
+        db.send_create_signal(u'cron', ['MissionInstance'])
 
         # Adding model 'CaseInstance'
         db.create_table(u'cron_caseinstance', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('case', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Case'])),
-            ('crontracker', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['cron.CronTracker'])),
-            ('solved', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('cron', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Cron'])),
         ))
         db.send_create_signal(u'cron', ['CaseInstance'])
 
@@ -31,13 +30,15 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('document', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Document'])),
             ('cron', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Cron'])),
+            ('provenanceState', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('solved', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal(u'cron', ['CronDocumentInstance'])
 
 
     def backwards(self, orm):
-        # Deleting model 'CronTracker'
-        db.delete_table(u'cron_crontracker')
+        # Deleting model 'MissionInstance'
+        db.delete_table(u'cron_missioninstance')
 
         # Deleting model 'CaseInstance'
         db.delete_table(u'cron_caseinstance')
@@ -50,43 +51,75 @@ class Migration(SchemaMigration):
         u'assets.case': {
             'Meta': {'object_name': 'Case'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'intro': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'isPublished': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'mission': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Mission']"}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'outro': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'rank': ('django.db.models.fields.IntegerField', [], {}),
-            'serial': ('django.db.models.fields.SlugField', [], {'default': "'d5154f26-0a6f-11e3-967d-14109fe17ee1'", 'max_length': '36'})
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'0a91303a-3080-11e3-bbd5'", 'max_length': '36'})
         },
         u'assets.document': {
             'Meta': {'object_name': 'Document'},
-            'case': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Case']"}),
-            'content': ('django.db.models.fields.TextField', [], {}),
+            'case': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Case']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'level': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'d5158b80-0a6f-11e3-8647-14109fe17ee1'", 'max_length': '36'}),
-            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Task']"}),
-            'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
+            'provenance': ('django.db.models.fields.related.OneToOneField', [], {'blank': 'True', 'related_name': "'document'", 'unique': 'True', 'null': 'True', 'to': u"orm['provmanager.Provenance']"}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'0a9141c2-3080-11e3-87e3'", 'max_length': '36'}),
+            'task': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['assets.Task']", 'unique': 'True', 'null': 'True', 'blank': 'True'})
         },
         u'assets.mission': {
             'Meta': {'object_name': 'Mission'},
+            'activity': ('django.db.models.fields.TextField', [], {'default': "'ENTER ACTIVITY TEXT FOR MISSION'"}),
+            'briefing': ('django.db.models.fields.TextField', [], {'default': "'ENTER BRIEFING FOR MISSION'"}),
+            'category': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'debriefing': ('django.db.models.fields.TextField', [], {'default': "'ENTER DEBRIEFING FOR MISSION'"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'intro': ('django.db.models.fields.TextField', [], {'default': "'ENTER INTRO FOR MISSION'"}),
+            'isPublished': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'rank': ('django.db.models.fields.IntegerField', [], {})
+            'outro': ('django.db.models.fields.TextField', [], {'default': "'ENTER OUTRO FOR MISSION'"}),
+            'rank': ('django.db.models.fields.IntegerField', [], {'unique': 'True'}),
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'0a85ef70-3080-11e3-b73b'", 'max_length': '50'})
         },
         u'assets.task': {
             'Meta': {'object_name': 'Task'},
             'description': ('django.db.models.fields.TextField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'level': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'d5160380-0a6f-11e3-be30-14109fe17ee1'", 'max_length': '36'}),
-            'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'0a90ce2e-3080-11e3-884e'", 'max_length': '36'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
         u'assets.unit': {
             'Meta': {'object_name': 'Unit'},
-            'description': ('django.db.models.fields.TextField', [], {}),
+            'description': ('django.db.models.fields.TextField', [], {'default': "'Working on Provenance'"}),
+            'handsOutDocuments': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'handsOutForms': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'isAdministrative': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'mail_assigning_document': ('django.db.models.fields.TextField', [], {'default': "'We have assigned document {{data}} to you'"}),
+            'mail_assigning_form': ('django.db.models.fields.TextField', [], {'default': "'We have assigned form {{data}} to you.'"}),
+            'mail_assigning_task': ('django.db.models.fields.TextField', [], {'default': "'We have assigned task {{data}} to you.'"}),
+            'mail_error_existing_document': ('django.db.models.fields.TextField', [], {'default': "'You already have access to document {{data}}.'"}),
+            'mail_error_existing_form': ('django.db.models.fields.TextField', [], {'default': "'You already have access to form {{data}}.'"}),
+            'mail_error_existing_task': ('django.db.models.fields.TextField', [], {'default': "'You have already been assigned to task {{data}}.'"}),
+            'mail_error_missing_document': ('django.db.models.fields.TextField', [], {'default': "'Your report can only be processed if you attach a document.'"}),
+            'mail_error_missing_form': ('django.db.models.fields.TextField', [], {'default': "'You did not attach a form. Please always attach a form.'"}),
+            'mail_error_no_subject': ('django.db.models.fields.TextField', [], {'default': "'Your mail could not be filtered automatically. Please choose an appropriate subject next time.'"}),
+            'mail_error_redundant_document': ('django.db.models.fields.TextField', [], {'default': "'You have attached an unnecessary document.'"}),
+            'mail_error_unassigned_task': ('django.db.models.fields.TextField', [], {'default': "'We could not find task {{data}} your report is about.'"}),
+            'mail_error_unfound_document': ('django.db.models.fields.TextField', [], {'default': "'Document {{data}} which you requested does not exist.'"}),
+            'mail_error_unfound_form': ('django.db.models.fields.TextField', [], {'default': "'Form {{data}} which you requested does not exist.'"}),
+            'mail_error_unfound_task': ('django.db.models.fields.TextField', [], {'default': "'Task {{data}} which you requested does not exist within this unit.'"}),
+            'mail_error_wrong_document': ('django.db.models.fields.TextField', [], {'default': "'Attached document {{data}} does not belong to report concerning task {{task}}.'"}),
+            'mail_error_wrong_form': ('django.db.models.fields.TextField', [], {'default': "'The type of form does not match your request.'"}),
+            'mail_error_wrong_unit': ('django.db.models.fields.TextField', [], {'default': "'Form {{data}} cannot be processed by us. Please send it to the appropriate unit.'"}),
+            'mail_report_fail': ('django.db.models.fields.TextField', [], {'default': "'Your report {{data}} was incorrect.'"}),
+            'mail_report_success': ('django.db.models.fields.TextField', [], {'default': "'Good work. Report {{data}} was correct.'"}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'d515ef30-0a6f-11e3-9371-14109fe17ee1'", 'max_length': '36'})
+            'serial': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '8'}),
+            'tagline': ('django.db.models.fields.CharField', [], {'default': "'Prov is all around you'", 'max_length': '256'})
         },
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
@@ -127,37 +160,50 @@ class Migration(SchemaMigration):
         u'cron.caseinstance': {
             'Meta': {'object_name': 'CaseInstance'},
             'case': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Case']"}),
-            'crontracker': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['cron.CronTracker']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'solved': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
+            'cron': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Cron']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
         u'cron.crondocumentinstance': {
             'Meta': {'object_name': 'CronDocumentInstance'},
             'cron': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Cron']"}),
             'document': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Document']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'provenanceState': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'solved': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         },
-        u'cron.crontracker': {
-            'Meta': {'object_name': 'CronTracker'},
-            'cron': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['players.Cron']", 'unique': 'True'}),
+        u'cron.missioninstance': {
+            'Meta': {'object_name': 'MissionInstance'},
+            'cron': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Cron']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'mission': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Mission']"}),
             'progress': ('django.db.models.fields.IntegerField', [], {'default': '0'})
         },
         u'players.cron': {
             'Meta': {'object_name': 'Cron'},
+            'activated': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'activationCode': ('django.db.models.fields.CharField', [], {'default': "'0a918a2e-3080-11e3-8c9a'", 'max_length': '36'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'player': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['players.Player']", 'unique': 'True'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'})
         },
         u'players.player': {
             'Meta': {'object_name': 'Player'},
-            'address': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75'}),
             'firstName': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'lastName': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'phone': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+            'lastName': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+        },
+        u'provmanager.provenance': {
+            'Meta': {'object_name': 'Provenance'},
+            'attribute1': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
+            'attribute2': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
+            'date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2013, 10, 9, 0, 0)', 'auto_now': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'node1': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
+            'node2': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'0a90fcc7-3080-11e3-afd2'", 'max_length': '36'}),
+            'store_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
         }
     }
 
