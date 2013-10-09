@@ -23,8 +23,6 @@ class DocumentInstance(models.Model):
     def save(self, *args, **kwargs):
         super(DocumentInstance, self).save(*args, **kwargs)
         #TODO what if object was not created?
-        self.mop.trust += self.getTrust()
-        self.mop.save()
         year, week, day = self.date.isocalendar()
         weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
         weekTrust.trust += self.getTrust()
@@ -71,8 +69,6 @@ class TaskInstance(models.Model):
         super(TaskInstance, self).save(*args, **kwargs)
         #TODO what if object was not created?
         if not self.status == self.STATUS_ACTIVE:
-            self.mop.trust += self.getTrust()
-            self.mop.save()
             year, week, day = self.date.isocalendar()
             weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
             weekTrust.trust += self.getTrust()
