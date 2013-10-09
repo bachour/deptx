@@ -356,7 +356,7 @@ def case_intro(request, mission_serial, case_serial):
     
     requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-    return render_to_response('cron/case_intro.html', {"user": request.user, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
+    return render_to_response('cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
                                     context_instance=RequestContext(request))
     
 @login_required(login_url='cron_login')
@@ -375,7 +375,7 @@ def case_outro(request, mission_serial, case_serial):
     
     requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-    return render_to_response('cron/case_outro.html', {"user": request.user, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
+    return render_to_response('cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
                                     context_instance=RequestContext(request))
     
 
@@ -467,11 +467,11 @@ def hq_case_intro(request, id):
     content = case.intro
     text = renderContent(content, request.user)
     requiredDocuments = case.document_set.all()
-    return render_to_response('cron/case_intro.html', {'text':text, 'case':case, 'document_list':requiredDocuments})
+    return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'document_list':requiredDocuments})
 
 @staff_member_required
 def hq_case_outro(request, id):
     case = Case.objects.get(id=id)
     content = case.outro
     text = renderContent(content, request.user)
-    return render_to_response('cron/case_intro.html', {'text':text, 'case':case })
+    return render_to_response('cron/case_outro.html', {'text':text, 'mission':case.mission, 'case':case })

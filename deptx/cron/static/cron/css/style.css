@@ -1,8 +1,8 @@
-@import"reset.css";@import"grid.css";
-/*
+@import"reset.css";
+@import"grid.css";
 @import url(http://fonts.googleapis.com/css?family=Anton);
 @import url(http://fonts.googleapis.com/css?family=Share+Tech+Mono);
-*/
+
 body{font:20px/26px Arial, Helvetica, sans-serif;color:#aaa;position:relative;min-width:960px; background:url(../images/bg.jpg) center 0 repeat-x #252525;}
 html,body{height:100%;}
 p{}
