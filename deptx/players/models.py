@@ -109,5 +109,5 @@ class Mop(models.Model):
     serial = models.CharField(max_length=36, default=generateUUID)
     
     def __unicode__(self):
-        return "%s - cron: %s - trust: %d - active: %s" % (self.user.username, self.player.cron.user.username, self.trust, self.active)
+        return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)
 
