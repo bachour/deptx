@@ -411,6 +411,7 @@ function initStage()
       		  }
       	}
 
+     getSaveState();
      setupAttribPanes();
        
      //showAttributes(nodes['helen_blank'], '1');
@@ -1641,7 +1642,7 @@ function createAndAddMedia(url)
 	// if video
 	if (url.indexOf("youtube")!= -1)
 		{
-			url = url + "?rel=0&autoplay=1&controls=0&showinfo=0&modestbranding=1";
+			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
 			document.getElementById('overlay').innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.8 + '" height="' +SCREEN_HEIGHT*0.8 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';		
 		}
 	else // if image
@@ -1659,7 +1660,7 @@ function logDrag(shape)
 		if (nodes[n].image == shape)
 			node = nodes[n];
 	
-	var message = "action=move&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+	var message = "action=move&mode="+ AJAX_MODE + "&serial=" + AJAX_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
 	
 	ajaxCall(LOG_URL, message, logResponse);
 }
@@ -1671,7 +1672,12 @@ function logResponse(response)
 
 function logClick(node, attribute, newState)
 {
-	var message = "action=click&node=" + node + "&attribute=" + attribute + "&newState=" + newState;
+	var message = "action=click" +
+				  "&mode="+ AJAX_MODE + 
+				  "&serial=" + AJAX_SERIAL + 
+				  "&node=" + node + 
+				  "&attribute=" + attribute + 
+				  "&state=" + newState;
 	
 	ajaxCall(LOG_URL, message, logResponse);
 }
@@ -1691,4 +1697,27 @@ function getName(shape)
 				return edges[e].from.attributes["prov:label"] + " " + edges[e].attributes["name"] + " " + edges[e].to.attributes["prov:label"];
 		}
 	return null;
+}
+
+function getSaveState()
+{
+	ajaxCall(GET_STATE_URL, "serial=" + AJAX_SERIAL, updateState);
+}
+
+function updateState(response)
+{
+	state = JSON && JSON.parse(response) || $.parseJSON(response);
+	for (var n in state)
+	{
+		nodes[n].image.setX(state[n].x);
+		nodes[n].image.setY(state[n].y);
+		
+    	for (var l in nodes[n].edges)
+		{
+			var edge = nodes[n].edges[l];
+			var points = getLinePoints(edge.from.image, edge.to.image);
+        	edge.line.setPoints(points);
+		}
+	}
+	redraw();
 }
