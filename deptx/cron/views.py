@@ -109,11 +109,7 @@ def index(request):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-def mopmaker(request, mission):
-    try:
-        missionInstance = MissionInstance.objects.get(mission=mission)
-    except:
-        return 
+def mopmaker(request, missionInstance):
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
@@ -168,14 +164,13 @@ def mission_cases(request, serial):
     missionInstance = None
     try:
         mission = Mission.objects.get(serial=serial)
-        print mission
         missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
     except:
         return
     
     if missionInstance.isCasesAllowed:
         if mission.category == Mission.CATEGORY_MOPMAKER:
-            return mopmaker(request, mission)
+            return mopmaker(request, missionInstance)
         
         case_list = Case.objects.filter(mission=mission).order_by('rank')
         caseInstance_list = []
