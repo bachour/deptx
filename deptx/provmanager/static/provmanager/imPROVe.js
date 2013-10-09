@@ -1708,7 +1708,6 @@ function getSaveState()
 
 function updateState(response)
 {
-	state = JSON && JSON.parse(response) || $.parseJSON(response);
 	for (var n in state)
 	{
 		nodes[state[n].node].image.setX(state[n].x);
