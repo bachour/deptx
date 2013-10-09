@@ -8,6 +8,7 @@ urlpatterns = patterns('',
 
     url(r'intranet/logout/', views.logout_view, name='mop_logout'),
     url(r'intranet/rules/', views.rules, name='mop_rules'),
+    url(r'intranet/performance/', views.performance, name='mop_performance'),
     url(r'intranet/tasks/', views.tasks, name='mop_tasks'),
     url(r'intranet/forms/blank', views.forms_blank, name='mop_forms_blank'),
     url(r'intranet/forms/signed', views.forms_signed, name='mop_forms_signed'),

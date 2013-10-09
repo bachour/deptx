@@ -7,7 +7,7 @@
 <table>
 <tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}
-	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
+	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
 {% endfor %}
 </table>
 {% else %}
@@ -19,7 +19,7 @@ No signed forms.
 <table>
 <tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_used_list %}
-	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.date}}</td></tr>
+	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
 {% endfor %}
 </table>
 {% else %}

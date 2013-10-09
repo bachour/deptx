@@ -2,6 +2,7 @@ from django.db import models
 
 from deptx.helpers import generateUUID, now
 from players.models import Cron
+from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
 
 class Provenance(models.Model):
@@ -14,7 +15,8 @@ class Provenance(models.Model):
     node2 = models.CharField(max_length=50, blank=True, null=True)
     attribute2 = models.CharField(max_length=50, blank=True, null=True)
     
-    date = models.DateTimeField(default=now(), auto_now=True)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     
     def __unicode__(self):
@@ -24,6 +26,9 @@ class ProvenanceLog(models.Model):
     cron = models.ForeignKey(Cron)
     store_id = models.IntegerField(blank=True, null=True)
     counter = models.IntegerField(default=0)
+    
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
          
     def __unicode__(self):
         return self.cron.user.username   
