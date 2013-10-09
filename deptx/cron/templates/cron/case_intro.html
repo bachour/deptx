@@ -19,8 +19,8 @@
 </table>
 <p>In order to acquire missing documents, login to the Ministry of Provenance  <a href="http://www.mofp.net">Intranet</a> and request the document following their standard procedures. Afterwards, compose a message and attach the document to it, but don't send it. Instead save it as a draft. Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>
 <br/>
-<p><a href="{% url 'cron_mission_cases' missionInstance.mission.serial %}">Case list</a></p>
+<p><a href="{% url 'cron_mission_cases' mission.serial %}">Case list</a></p>
 {% if caseInstance.isSolved %}
-	<p><a href="{% url 'cron_case_outro' missionInstance.mission.serial caseInstance.case.serial %}">Case outro</a></p>
+	<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">Case outro</a></p>
 {% endif %}
 {% endblock %}
