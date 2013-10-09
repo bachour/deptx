@@ -110,11 +110,11 @@ def generateBody(text, data=None):
     return t.render(c)
 
 def solveTask(taskInstance):
-    taskInstance.state = TaskInstance.STATE_SOLVED
+    taskInstance.status = TaskInstance.STATUS_SOLVED
     taskInstance.save()
     
 def failTask(taskInstance):
-    taskInstance.state = TaskInstance.STATE_FAILED
+    taskInstance.status = TaskInstance.STATUS_FAILED
     taskInstance.save()
 
 def requisitionBlankExists(mop, requisition):
@@ -167,7 +167,7 @@ def getTaskInstance(mail):
     try:
         task = getTask(mail)
         if not task == None:
-            taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, state=TaskInstance.STATE_ACTIVE)
+            taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, status=TaskInstance.STATUS_ACTIVE)
             if not taskInstance.task.unit == mail.unit:
                 return None
         else:

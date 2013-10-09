@@ -3,6 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
+
 from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -19,8 +20,9 @@ from django.template import Context, Template, loader
 from players.forms import MopForm
 
 from assets.models import Case, Mission, Document
-from cron.models import CaseInstance, CronDocumentInstance, CronTracker
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance
 from mop.models import DocumentInstance, Mail
+from players.models import Cron
 
 from deptx.settings import MEDIA_URL
 
@@ -70,38 +72,51 @@ def logout_view(request):
     logout(request)    
     return redirect('cron_index')
 
-#@login_required(login_url='cron_login')
-#@user_passes_test(isCron, login_url='cron_login')
+def getCurrentMissionInstance(cron):
+    mission_list = Mission.objects.filter(isPublished=True).order_by('rank')
+    for mission in mission_list:
+        missionInstance, created = MissionInstance.objects.get_or_create(cron=cron, mission=mission)
+        if created:
+            return missionInstance
+        if not missionInstance.progress == MissionInstance.PROGRESS_5_DONE:
+            return missionInstance
+    return None
+
+
 def index(request):
-    
     if not request.user == None and request.user.is_active and isCron(request.user):
         user = request.user
         cron = user.cron
-        try:
-            crontracker = CronTracker.objects.get(cron=request.user.cron)
-        except CronTracker.DoesNotExist:
-            firstMission = Mission.objects.get(rank=0)
-            crontracker = CronTracker(cron=request.user.cron, progress=0, mission=firstMission)
-            crontracker.save()
         
-        try:
-            provLog = ProvenanceLog.objects.get(cron=cron)
-        except ProvenanceLog.DoesNotExist:
-            provLog = None
+        missionInstance = getCurrentMissionInstance(request.user.cron)
+        mission_url = None
+        if not missionInstance == None:
+            if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
+                mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
+            elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
+                mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
+            elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
+                mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
+            elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
+                mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
+            elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
+                mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
          
-        context = { "cron": cron, "user":user, "mission":crontracker.mission, "provLog":provLog }
+        context = { "cron": cron, "user":user, "missionInstance":missionInstance, "mission_url":mission_url }
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-def mopmaker(request):
+def mopmaker(request, mission):
+    try:
+        missionInstance = MissionInstance.objects.get(mission=mission)
+    except:
+        return 
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
-        
-        print user_form
         
         if mop_form.is_valid() and user_form.is_valid():
             #TODO check if all saves work and catch the error if they don't
@@ -112,16 +127,14 @@ def mopmaker(request):
             mop.user = new_user
             mop.save()
 
-            crontracker = request.user.cron.crontracker
-            crontracker.progress = crontracker.progress + 1
-            crontracker.save()
+            missionInstance.makeProgress()
             
             log_mop(mop, 'mop account created')
             provlog_add_mop_register(request.user.cron, mop, request.session.session_key)
-            return redirect('cron_mission')
+            return redirect('cron_mission_debriefing', missionInstance.mission.serial)
         else:
             return render_to_response(   'cron/mopmaker.html',
-                                        {"mop_form": mop_form, "user_form": user_form, "user": request.user},
+                                        {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance},
                                         context_instance=RequestContext(request)
                                         )
     
@@ -129,121 +142,122 @@ def mopmaker(request):
         mop_form = MopForm(prefix="mop")
         user_form = UserCreationForm(prefix="user")
         return render_to_response(  'cron/mopmaker.html',
-                                    {"mop_form": mop_form, "user_form": user_form, "user": request.user},
+                                    {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance},
                                     context_instance=RequestContext(request)
                                 )
 
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def mission_intro(request, serial):
+    needed_progress = MissionInstance.PROGRESS_0_INTRO
+    context = getMissionOutput(request.user.cron, serial, needed_progress)   
+    return render_to_response('cron/mission.html', context)
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-def mission(request):
+def mission_briefing(request, serial):
+    needed_progress = MissionInstance.PROGRESS_1_BRIEFING
+    context = getMissionOutput(request.user.cron, serial, needed_progress)   
+    return render_to_response('cron/mission.html', context)
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def mission_cases(request, serial):
+    text = None
+    mission = None
+    missionInstance = None
+    try:
+        mission = Mission.objects.get(serial=serial)
+        missionInstance = MissionInstance.objects.get(mission=mission)
+    except:
+        return
     
-    crontracker = CronTracker.objects.get(cron=request.user.cron)
-       
-    #TODO remove magic numbers
-    if request.method == 'POST':
-        #progress 2 means the player needs to solve the cases and cannot progress just by pressing a button
-        if (crontracker.progress == 2):
-            pass
-        else:
-            crontracker.progress = crontracker.progress + 1
-            crontracker.save()
-    
-    #progress 2 means we should show the list of all the cases
-    if (crontracker.progress == 2):
-        #do something unusual in case we are in the tutorial mission
-        if (crontracker.mission.rank == 0):
-            return mopmaker(request)
+    if missionInstance.isCasesAllowed:
+        if mission.category == Mission.CATEGORY_MOPMAKER:
+            return mopmaker(request, mission)
         
-        case_published_list = Case.objects.filter(mission=crontracker.mission).filter(isPublished=True).order_by("rank")
+        case_list = Case.objects.filter(mission=mission).order_by('rank')
+        caseInstance_list = []
         finished = True
-        for case in case_published_list:
-            try:
-                caseInstance = CaseInstance.objects.get(case=case, crontracker=crontracker)
-                case.solved = caseInstance.solved
-                if not case.solved:
-                    finished = False
-            except CaseInstance.DoesNotExist:
-                finished = False
-        
-        case_unpublished_list = Case.objects.filter(mission=crontracker.mission).filter(isPublished=False)
-        if case_unpublished_list:
-            unpublished = True
-        else:
-            unpublished = False
-        
-        if not finished or unpublished:
-            return render_to_response('cron/case_list.html', {"user": request.user, "unpublished":unpublished, "finished":finished, "mission": crontracker.mission, "case_published_list": case_published_list},
-                                        context_instance=RequestContext(request)
-                                )
-        else:
-            crontracker.progress = 3
-            crontracker.save()
-            return redirect('cron_mission')
-        
-    elif (crontracker.progress == 5):
-        finishMission(crontracker)
-        return redirect('cron_index')
-    else:
-        if crontracker.progress == 0:
-            content = crontracker.mission.intro
-        elif crontracker.progress == 1:
-            content = crontracker.mission.briefing
-        elif crontracker.progress == 3:
-            content = crontracker.mission.debriefing
-        elif crontracker.progress == 4:
-            content = crontracker.mission.outro
-        
-        text = renderContent(content, request.user)
-                   
-        return render_to_response('cron/mission.html', {"user": request.user, "mission": crontracker.mission, "text":text},
-                                         context_instance=RequestContext(request)
-                                 )
-
-#TODO only if staff
-def mission_reset(request):
-    try:
-        crontracker = CronTracker.objects.get(cron=request.user.cron)
-    except CronTracker.DoesNotExist:
-        crontracker = None
-    
-    if not crontracker == None:
-        crontracker.progress = 0
-        crontracker.save()
-        case_list = Case.objects.filter(mission=crontracker.mission)
+        unpublished = False
         for case in case_list:
-            caseInstance_list = CaseInstance.objects.filter(case=case).filter(crontracker=crontracker)
-            for caseInstance in caseInstance_list:
-                caseInstance.solved = False
-                caseInstance.save()
-            document_list = Document.objects.filter(case=case)
-            for document in document_list:
-                cronDocumentInstance_list = CronDocumentInstance.objects.filter(document=document).filter(cron=request.user.cron)
-                for cronDocumentInstance in cronDocumentInstance_list:
-                    cronDocumentInstance.solved = False
-                    cronDocumentInstance.save()
+            if case.isPublished:
+                caseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case)
+                if not caseInstance.isSolved():
+                    finished = False
+                caseInstance_list.append(caseInstance)
+            else:
+                unpublished = True
+        if (finished and not unpublished):
+            missionInstance.makeProgress()
+        text = renderContent(mission.activity, request.user.cron)
+    return render_to_response('cron/case_list.html', {'user':request.user, 'cron':request.user.cron, 'text':text, 'missionInstance':missionInstance, 'caseInstance_list':caseInstance_list, 'unpublished':unpublished, 'finished':finished, 'MEDIA_URL': MEDIA_URL})
 
-    return HttpResponseRedirect(reverse('cron_profile'))
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def mission_debriefing(request, serial):
+    needed_progress = MissionInstance.PROGRESS_3_DEBRIEFING
+    context = getMissionOutput(request.user.cron, serial, needed_progress)   
+    return render_to_response('cron/mission.html', context)
 
-def mission_redo(request, mission_id):
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def mission_outro(request, serial):
+    needed_progress = MissionInstance.PROGRESS_4_OUTRO
+    context = getMissionOutput(request.user.cron, serial, needed_progress)   
+    return render_to_response('cron/mission.html', context)
+
+def getMissionOutput(cron, serial, needed_progress):
+    text = None
+    next_url = None
+    mission = None
+    missionInstance = None
+    
     try:
-        crontracker = CronTracker.objects.get(cron=request.user.cron)
-    except CronTracker.DoesNotExist:
-        crontracker = None
+        mission = Mission.objects.get(serial=serial)
+        missionInstance = MissionInstance.objects.get(cron=cron, mission=mission)
+    except:
+        pass
     
-    if not crontracker == None:
-        mission = Mission.objects.get(id=mission_id)
-        crontracker.mission = mission
-        crontracker.save()
+    if not mission == None and not missionInstance == None:
+        if needed_progress <= missionInstance.progress:
+            if needed_progress == MissionInstance.PROGRESS_0_INTRO:
+                content = mission.intro
+                next_url = reverse('cron_mission_briefing', args=(serial,))
+            elif needed_progress == MissionInstance.PROGRESS_1_BRIEFING:
+                content = mission.briefing
+                next_url = reverse('cron_mission_cases', args=(serial,))
+            elif needed_progress == MissionInstance.PROGRESS_2_CASES:
+                pass
+            elif needed_progress == MissionInstance.PROGRESS_3_DEBRIEFING:
+                content = mission.debriefing
+                next_url = reverse('cron_mission_outro', args=(serial,))
+            elif needed_progress == MissionInstance.PROGRESS_4_OUTRO:
+                content = mission.outro
+                next_url = reverse('cron_index')
+
+        text = renderContent(content, cron)
+        
+        if needed_progress == missionInstance.progress:
+            missionInstance.makeProgress()
+
+    else:
+        text = None
     
+     
+    context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url}        
+    return context
     
-    return HttpResponseRedirect(reverse('cron_profile'))
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def archive(request):
+    #TODO: Sort by mission.rank
+    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
+    return render_to_response('cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
 
-
-def renderContent(content, user):
-
+def renderContent(content, cron):
     try:
-        name = user.cron.user.username
+        name = cron.user.username
     except:
         name = 'ANONYMOUS_AGENT'
     
@@ -252,13 +266,44 @@ def renderContent(content, user):
     
     return t.render(c)
 
-def finishMission(crontracker):
-    currentMission = crontracker.mission
-    newRank = currentMission.rank + 1
-    newMission = Mission.objects.get(rank=newRank)
-    crontracker.mission = newMission
-    crontracker.progress = 0
-    crontracker.save()
+@staff_member_required
+def missionInstance_reset(request, serial):
+    mission = None
+    missionInstance = None
+    try:
+        mission = Mission.objects.get(serial=serial)
+        missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
+    except:
+        pass
+    
+    if not missionInstance == None:
+        missionInstance.progress = MissionInstance.PROGRESS_0_INTRO
+        missionInstance.save()
+        unsolveDocuments(request.user.cron, mission)
+    return HttpResponseRedirect(reverse('cron_profile'))
+
+@staff_member_required
+def missionInstance_delete(request, serial):
+    try:
+        mission = Mission.objects.get(serial=serial)
+        unsolveDocuments(request.user.cron, mission)
+        missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
+        missionInstance.delete()
+    except:
+        pass
+    
+    return HttpResponseRedirect(reverse('cron_profile'))
+        
+
+def unsolveDocuments(cron, mission):
+    case_list = Case.objects.filter(mission=mission)
+    for case in case_list:
+        document_list = Document.objects.filter(case=case)
+        for document in document_list:
+            cronDocumentInstance_list = CronDocumentInstance.objects.filter(document=document).filter(cron=cron)
+            for cronDocumentInstance in cronDocumentInstance_list:
+                cronDocumentInstance.solved = False
+                cronDocumentInstance.save()
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -267,15 +312,14 @@ def hack_document(request, serial):
     try:
         document = Document.objects.get(serial=serial)    
     except Document.DoesNotExist:
-        document = None
+        return
     
-    if not document == None:
-        good_mop, mop_list = accessMopServer(request.user.cron, document, mop_list)
+    good_mop, mop_list = accessMopServer(request.user.cron, document, mop_list)
 
     output_tpl = loader.get_template('cron/hack_document_output.txt')
     c = Context({"document":document, "good_mop":good_mop, "mop_list":mop_list})
     output = output_tpl.render(c).replace("\n", "\\n")
-    return render_to_response('cron/hack_document.html', {"document":document, "output":output})
+    return render_to_response('cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "document":document, "output":output})
 
 def accessMopServer(cron, document, mop_list):
         checked_mop_list = []
@@ -298,42 +342,41 @@ def accessMopServer(cron, document, mop_list):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-#TODO: Has user access to case?
-def case(request, serial):
-    case = Case.objects.get(serial=serial)
-    crontracker = request.user.cron.crontracker
-    caseInstance, created = CaseInstance.objects.get_or_create(case=case, crontracker=crontracker)
+def case_intro(request, mission_serial, case_serial):
+    try:
+        mission = Mission.objects.get(serial=mission_serial, isPublished=True)
+        case = Case.objects.get(serial=case_serial, isPublished=True)
+        missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
+        caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
+    except:
+        return
 
+    content = case.intro
+    text = renderContent(content, request.user)
     
-    if not (isSolved(caseInstance)):
-        content = case.intro
-        text = renderContent(content, request.user)
-        
-        requiredDocuments = getAllDocumentStates(request.user.cron, case)
+    requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-        return render_to_response('cron/case_intro.html', {"user": request.user, "case": case, "document_list": requiredDocuments, "text":text },
-                                        context_instance=RequestContext(request))
-    else:
-        content = case.outro
-        text = renderContent(content, request.user)
+    return render_to_response('cron/case_intro.html', {"user": request.user, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
+                                    context_instance=RequestContext(request))
+    
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')    
+def case_outro(request, mission_serial, case_serial):        
+    try:
+        mission = Mission.objects.get(serial=mission_serial, isPublished=True)
+        case = Case.objects.get(serial=case_serial, isPublished=True)
+        missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
+        caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
+    except:
+        return
 
-        return render_to_response('cron/case_outro.html', {"user": request.user, "case": case, "text": text},
-                                        context_instance=RequestContext(request))
+    content = case.outro
+    text = renderContent(content, request.user)
     
-    
-def isSolved(caseInstance):
-    document_list = Document.objects.filter(case=caseInstance.case)
-    for document in document_list:
-        try:
-            documentInstance = CronDocumentInstance.objects.get(document=document, cron=caseInstance.crontracker.cron)
-        except CronDocumentInstance.DoesNotExist:
-            return False
-        if not documentInstance.solved:
-            return False
-    #TODO remove caseInstance.solved from everywhere
-    caseInstance.solved = True
-    caseInstance.save()
-    return True
+    requiredDocuments = getAllDocumentStates(request.user.cron, case)
+
+    return render_to_response('cron/case_outro.html', {"user": request.user, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
+                                    context_instance=RequestContext(request))
     
 
 @login_required(login_url='cron_login')
@@ -358,21 +401,20 @@ def provenance(request, serial):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def profile(request):
-    
-    crontracker = CronTracker.objects.get(cron=request.user.cron)
-    currentMission = crontracker.mission
-    solved_mission_list = Mission.objects.filter(rank__lt=currentMission.rank).order_by("rank")
+    if request.user.is_staff:
+        missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
+    else:
+        missionInstance_list = None
     
     mop_list = Mop.objects.filter(player=request.user.cron.player)
   
 
-    return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, "currentMission":currentMission, "solved_mission_list": solved_mission_list,"mop_list":mop_list },
+    return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, 'missionInstance_list': missionInstance_list, "mop_list":mop_list },
                                          context_instance=RequestContext(request)
                                  )
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.document_set.all()
-    #TODO when document is put in draft, add it to CronDocumentInstance
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
             
     for required in requiredDocuments:

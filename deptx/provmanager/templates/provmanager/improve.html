@@ -6,6 +6,7 @@
    </audio>
  <p id="loading">Loading...</p>
 	<div id="container" ></div>
+	
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     
@@ -13,6 +14,7 @@
     	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
     	var AJAX_URL = "{% url 'provmanager_prov_check' %}";
     	var AJAX_MODE = "{{mode}}";
+    	var LOG_URL = "";
     	{% if case %}
     	var CONTINUE_URL = "{% url 'cron_case_detail' case.serial %}";
     	{% elif task %}
@@ -22,6 +24,7 @@
 		var MEDIA_URL = "{{MEDIA_URL}}";
 		var ARROW_URL_1 = "improve/arrow1.png";
 		var ARROW_URL_2 = "improve/arrow2.png";
+		var MAGNIFY_URL = "improve/magnify.png";
 		var FIRST_TIME = true;
     </script>
     <script src="{{MEDIA_URL}}improve/defaultKss.js"%}"></script>
@@ -39,6 +42,13 @@
 	  	loadImages(initStage);
 	  {% endif %}
       
+	    function hideOverlay()
+	    {
+	    	document.getElementById("overlay").innerHTML ="";
+	    	document.getElementById("overlay").style.display ="none";
+	    	mediaLayer.removeChildren();
+	    	mediaLayer.draw();
+	    }
     </script>
   </div>
 

@@ -2,15 +2,23 @@
 
 {% block content %}
 
-<h1>{{mission.name}}</h1>
-<p>{{user.username}}, please choose what you want to investigate next:</p>
+<h1>{{missionInstance.mission.name}}</h1>
+{% if text %}
+	{{text}}
+{% endif %}
 <table class="banner-1">
-{% for case in case_published_list %}
-		<tr><td>{% if case.solved %}<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>{% endif %}</td><td style='vertical-align:middle;text-align:left;'><a class='button' style:'width:100%' href="{% url "cron_case_detail" case.serial %}">{{ case.name }}</a></td></tr>
+{% for caseInstance in caseInstance_list %}
+		<tr><td style='vertical-align:middle'>{% if caseInstance.isSolved %}<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>{% endif %}</td><td style='vertical-align:middle;text-align:left;'>
+			<a class='button' style:'width:100%' href="{% if not caseInstance.isSolved %}{% url "cron_case_intro" missionInstance.mission.serial caseInstance.case.serial %}{% else %}{% url "cron_case_outro" missionInstance.mission.serial caseInstance.case.serial %}{% endif %}">{{ caseInstance.case.name }}</a></td></tr>
 {% endfor %}
 </table>
-{% if finished and unpublished %}
-	<h2>More cases coming soon...</h2>
+
+{% if finished %}
+	{% if unpublished %}
+		<p>More cases coming soon...</p>
+	{% else %}
+		<a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Continue</a>
+	{% endif %}
 {% endif %}
 
 {% endblock %}

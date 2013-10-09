@@ -1,0 +1,31 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
+<h1>Archive</h1>
+
+{% if missionInstance_list %}
+	{% for missionInstance in missionInstance_list %}
+		<h2>{{missionInstance.mission.name}}</h2>
+		{% if missionInstance.isIntroAllowed %}
+			<h3><a href="{% url 'cron_mission_intro' missionInstance.mission.serial %}">Intro</a></h3>
+		{% endif %}
+		{% if missionInstance.isBriefingAllowed %}
+			<h3><a href="{% url 'cron_mission_briefing' missionInstance.mission.serial %}">Briefing</a></h3>
+		{% endif %}
+		{% if missionInstance.isCasesAllowed %}
+			<h3><a href="{% url 'cron_mission_cases' missionInstance.mission.serial %}">Cases</a></h3>
+		{% endif %}
+		{% if missionInstance.isDebriefingAllowed %}
+		<h3><a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Debriefing</a></h3>
+		{% endif %}
+		{% if missionInstance.isOutroAllowed %}
+		<h3><a href="{% url 'cron_mission_outro' missionInstance.mission.serial %}">Outro</a></h3>
+		{% endif %}
+	{% endfor %}
+
+{% else %}
+No missions yet
+{% endif %}
+
+{% endblock %}

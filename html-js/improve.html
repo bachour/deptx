@@ -7,16 +7,34 @@
         padding: 0px;
       }
     </style>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript" src="custom.js"></script>
+	<link href='overlaypopup.css' rel='stylesheet' type='text/css'>
+	
   </head>
   <body style="overflow: hidden">
    <audio id="click" preload="auto">
     <source src="https://dl.dropboxusercontent.com/u/17451725/63532__florian-reinke__click2.wav" />  
    </audio>
- <p id="loading">Loading...</p>
-	<div id="container" ></div>
+<p id="loading">Loading...</p>
+<!-- 
+	<div class="main-content">
+	<p>Please <a class="show-popup" href="#">click here</a> to see the popup</p>
+</div>
+
+<div class="overlay-bg">
+	<div class="overlay-content" id="overlay">
+ -->
+	<div id = container style = "width:100%"></div>
+	<div id="overlay" text-align="center" style="display:none;width:100%;height: 100%;position: absolute;top: 0;left: 0;z-index: 10;margin: 0 auto 0 auto;";> </div>
+
+<!-- 	</div>
+</div>
+ -->
 	<script>
     	var AJAX_SERIAL = 123;
     	var AJAX_URL = "http://httpstat.us/200";
+    	var LOG_URL =  "http://httpstat.us/200";
     	var CONTINUE_URL = "http://who-is-awesome.com/who-is-awesome.jpg";
     	var AJAX_MODE = "cron";
     	var DEBUG = true;
@@ -24,18 +42,25 @@
     	var FIRST_TIME = true;
 		var ARROW_URL_1 = "improve/arrow1.png";
 		var ARROW_URL_2 = "improve/arrow2.png";
+		var MAGNIFY_URL = "improve/magnify.png";
     </script>
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="defaultKss.js"></script>
     <script src="../deptx/provmanager/static/provmanager/imPROVe.js"></script>
     <script>
-    
-      $.getJSON("https://dl.dropboxusercontent.com/u/17451725/PROV_Blood-1Kclean.json", function(json) {
+    $.getJSON("https://dl.dropboxusercontent.com/u/17451725/PROV_Blood-1Kclean.json", function(json) {
     	   loadJSONProv(json);
     	   loadImages(initStage);
     	 });
-      
+    
+    function hideOverlay()
+    {
+    	document.getElementById("overlay").innerHTML ="";
+    	document.getElementById("overlay").style.display ="none";
+    	mediaLayer.removeChildren();
+    	mediaLayer.draw();
+    }
     </script>
+    
   </body>
 </html>

@@ -45,7 +45,7 @@ class Requisition(models.Model):
     CATEGORY_DOCUMENT = 2
     CATEGORY_SUBMISSION = 3
     
-    CATEGORY_CHOICES = (
+    CHOICES_CATEGORY = (
         (CATEGORY_FORM, "request form"),
         (CATEGORY_TASK, "request task"),
         (CATEGORY_DOCUMENT, "request document"),
@@ -56,7 +56,7 @@ class Requisition(models.Model):
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=36, default=generateUUID)
     unit = models.ForeignKey(Unit)
-    category = models.IntegerField(choices=CATEGORY_CHOICES)
+    category = models.IntegerField(choices=CHOICES_CATEGORY)
     trust = models.IntegerField(default=25)
     isInitial = models.BooleanField(default=False)
     
@@ -64,29 +64,75 @@ class Requisition(models.Model):
         return self.name
 
 class Task(models.Model):
+    LEVEL_LOW = 0
+    LEVEL_MEDIUM = 1
+    LEVEL_HIGH = 2
+    
+    CHOICES_LEVEL = (
+        (LEVEL_LOW, "low"),
+        (LEVEL_MEDIUM, "medium"),
+        (LEVEL_HIGH, "high"),         
+    )    
+    
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=36, default=generateUUID)
-    trust = models.IntegerField(default=25)
     description = models.TextField()
     unit = models.ForeignKey(Unit)
-
+    level = models.IntegerField(choices=CHOICES_LEVEL, default=LEVEL_LOW)
+    
+    def getTrustSolved(self):
+        if self.level == self.LEVEL_LOW:
+            return 10
+        elif self.level == self.LEVEL_MEDIUM:
+            return 30
+        else:
+            return 50
+    
+    def getTrustFailed(self):
+        if self.level == self.LEVEL_LOW:
+            return -20
+        elif self.level == self.LEVEL_MEDIUM:
+            return -50
+        else:
+            return -100
+    
+    def getTrustUnsolved(self):
+        if self.level == self.LEVEL_LOW:
+            return -10
+        elif self.level == self.LEVEL_MEDIUM:
+            return -20
+        else:
+            return -30
+     
     def __unicode__(self):
         return self.name
 
 class Mission(models.Model):
-    name = models.CharField(max_length=50)
-    rank = models.IntegerField()
+    CATEGORY_CASES = 0
+    CATEGORY_MOPMAKER = 1
     
-    intro = models.TextField(blank=True, null=True)
-    briefing = models.TextField(blank=True, null=True)
-    debriefing = models.TextField(blank=True, null=True)
-    outro = models.TextField(blank=True, null=True)
+    CHOICES_CATEGORY = (
+        (CATEGORY_CASES, "investigate cases"),
+        (CATEGORY_MOPMAKER, "create mop account"),         
+    )
+    
+    name = models.CharField(max_length=50)
+    rank = models.IntegerField(unique=True)
+    serial = models.SlugField(default=generateUUID())
+    category = models.IntegerField(choices=CHOICES_CATEGORY, default=CATEGORY_CASES)
+    
+    intro = models.TextField(default="ENTER INTRO FOR MISSION")
+    briefing = models.TextField(default="ENTER BRIEFING FOR MISSION")
+    activity = models.TextField(default="ENTER ACTIVITY TEXT FOR MISSION")
+    debriefing = models.TextField(default="ENTER DEBRIEFING FOR MISSION")
+    outro = models.TextField(default="ENTER OUTRO FOR MISSION")
     
     isPublished = models.BooleanField(default=False)
     
     
     def __unicode__(self):
         return self.name + " (" + str(self.rank) + " - published: " + str(self.isPublished) + ")"
+    
 
   
 class Case(models.Model):
@@ -104,12 +150,30 @@ class Case(models.Model):
         return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ")"
 
 class Document(models.Model):
+    LEVEL_LOW = 0
+    LEVEL_MEDIUM = 1
+    LEVEL_HIGH = 2
+    
+    CHOICES_LEVEL = (
+        (LEVEL_LOW, "low"),
+        (LEVEL_MEDIUM, "medium"),
+        (LEVEL_HIGH, "high"),         
+    )    
+    
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=36, default=generateUUID)
     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
     case = models.ForeignKey(Case, blank=True, null=True)
     task = models.OneToOneField(Task, blank=True, null=True)
-    trust = models.IntegerField(default=25)
+    level = models.IntegerField(choices=CHOICES_LEVEL, default=LEVEL_LOW)
+    
+    def getTrust(self):
+        if self.level == self.LEVEL_LOW:
+            return 0
+        elif self.level == self.LEVEL_MEDIUM:
+            return -10
+        else:
+            return -20
             
     def __unicode__(self):
         return self.name

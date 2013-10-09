@@ -17,8 +17,15 @@ var MIN_ZOOM = -0.5;
 //sounds
 var clickSound = document.getElementById('click');
 
-//main active layer.
-var layer;
+//layers
+var stage;
+var layer; // main active layer
+var attribLayer; // attribute layer 
+var messageLayer; // layer for displaying messages
+var mediaLayer;  // layer for displaying media (video, images, ...)
+
+// html container:
+var CONTAINER = document.getElementById("container");
 
 //buttons
 var submitButton;
@@ -83,6 +90,7 @@ function loadStaticImages()
 {
 	staticSources["__arrow"] = MEDIA_URL + ARROW_URL_1;
 	staticSources["__arrow2"] = MEDIA_URL + ARROW_URL_2;
+	staticSources["__magnify"] = MEDIA_URL + MAGNIFY_URL;
 	
     for(name in staticSources) {
         numImages++;
@@ -122,15 +130,15 @@ function loadImages(callback) { // and sounds
 function initStage()
 {
 	// create stage
-	var stage = new Kinetic.Stage({
+	stage = new Kinetic.Stage({
         container: 'container',
         width: STAGE_WIDTH, 
         height: STAGE_HEIGHT,
-        scale:SCREEN_WIDTH/STAGE_WIDTH
+        scale:document.getElementById("container").offsetWidth/STAGE_WIDTH // scale to the size of the container
       });
 
-	document.getElementById('container').style.height = SCREEN_HEIGHT + "px";
-	//stage.setScale(STAGE_WIDTH/VIRTUAL_STAGE_WIDTH);
+	SCREEN_WIDTH = document.getElementById('container').offsetWidth;
+	SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
 
 	// create Kinetic Images for all objects and put them in nodes
 	for (name in sources)
@@ -192,6 +200,7 @@ function initStage()
 	attribLayer['2'] = new Kinetic.Layer();
 	allLayers = [layer,attribLayer['1'],attribLayer['2']];
 	messageLayer = new Kinetic.Layer();
+	mediaLayer = new Kinetic.Layer();
 	
 	// connectors first so they are behind images
 	for (k in lines)
@@ -335,7 +344,6 @@ function initStage()
                   //submitButton.setY(submitButton.getY()+10);
                   //submitText.setX(submitButton.getX());
                   //submitText.setY(submitButton.getY());
-                  
                   layer.draw();
           	}
         });
@@ -348,6 +356,8 @@ function initStage()
           	  layer.draw();
 	          if (shapePosition == shape.getX()*shape.getY())
 	        	  toggleNodeSelection(shape);
+	          else
+	        	  logDrag(shape);
           }
           else 
           	if (shape && (shape == submitButton || shape == submitText))
@@ -386,6 +396,7 @@ function initStage()
      stage.add(attribLayer['1']);
      stage.add(attribLayer['2']);
      stage.add(messageLayer);
+     stage.add(mediaLayer);
      
      if (FIRST_TIME)
     	 showTutorial();
@@ -845,10 +856,26 @@ function showAttributes(node, position)
 		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 		  });
 		  
-		  totalY = Y + node.attribImage.getHeight() + 20;
+		  if (node.attributes['mop:url'])
+		  {
+			  node.attribURL = new Kinetic.Image({
+				  x: node.attribImage.getX() + node.attribImage.getWidth() - 2,
+				  y: node.attribImage.getY() + node.attribImage.getHeight() - 2,
+				  width: 50,
+				  height: 50,
+				  image: staticImages[getType(node.attributes['mop:URL'])],
+				  shadowEnabled: false,
+				  strokeEnabled: false  
+			  });
+			  node.attribURL.setX(node.attribURL.getX() - node.attribURL.getWidth());
+			  node.attribURL.setY(node.attribURL.getY() - node.attribURL.getHeight());
+		  }
+		  
+		  totalY = node.attribImage.getHeight() + Y + 20;
+		  
 		  for (i in node.attributes)
 			  {
-			  	if (i != 'prov:label')
+			  	if (i != 'prov:label' && i != 'mop:url')
 			  	{
 			  		node.attribNames[i] = new Kinetic.Text({
 			  			x: node.attribImage.getX(),
@@ -875,14 +902,19 @@ function showAttributes(node, position)
 				  totalY += node.attribValues[i].getHeight() + 5;
 			  	}
 			  }
+		  node.attribValues['prov:label'] = node.attribName;
+		  node.attribValues['mop:image'] = node.attribImage;
+		  if (node.attribURL)
+			  node.attribValues['mop:URL'] = node.attribURL;
 	 }
 	 else
 	 {
 		 node.attribImage.setY(Y+10);
 		 setImageHighlight(node.attribImage, false, false, true);
+
 		 for (i in node.attribValues)
 		 {
-			 if (node.attribValues[i] != node.attribImage)
+			 if (node.attribValues[i] != node.attribImage && node.attribValues[i] != node.attribURL)
 				 setTextHighlight(node.attribValues[i], false, false);
 			 if (position == '1' && node.attribValues[i].getY() > 0.45*STAGE_HEIGHT)
 			 {
@@ -904,16 +936,20 @@ function showAttributes(node, position)
 	  //layer.add(textName);
 	  for (i in node.attribNames)
 		  {
-		  attribLayer[position].add(node.attribNames[i]);
-		  attribLayer[position].add(node.attribValues[i]);
+			  attribLayer[position].add(node.attribNames[i]);
+			  attribLayer[position].add(node.attribValues[i]);
 		  }
 	  attribLayer[position].add(node.attribImage);
 	  if (node.type != 'activity')
 		  attribLayer[position].add(node.attribName);
+	  if (node.attribURL)
+		  attribLayer[position].add(node.attribURL);
 	  attribLayer[position].draw();
-	  
-	  node.attribValues['name'] = node.attribName;
-	  node.attribValues['image'] = node.attribImage;
+}
+
+function getType(str)
+{
+	return "__magnify"; // "sound"; "video";
 }
 
 function wordWrap(string, maxChars)
@@ -955,6 +991,7 @@ function toggleNodeSelection(shape)
 		selectedAttributes['1'] = null;
 		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
+	    logClick(clickedNode.id, "none", false);
 		return;
 	}
 	else if (selectedNodes['2'] == clickedNode)
@@ -964,6 +1001,7 @@ function toggleNodeSelection(shape)
 		selectedAttributes['2'] = null;
 	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
+	    logClick(clickedNode.id, "none", false);
 		return;
 	}
 
@@ -979,12 +1017,14 @@ function toggleNodeSelection(shape)
 		selectedNodes['1'] = clickedNode;
 		showAttributes(clickedNode,'1');
 		setImageHighlight(clickedNode.image, true, false);
+		logClick(clickedNode.id, "none", true);
 	}
 	else
 	{
 		selectedNodes['2'] = clickedNode;
 		showAttributes(clickedNode,'2');
 		setImageHighlight(clickedNode.image, true, false);
+		logClick(clickedNode.id, "none", true);
 	}
 	clickSound.play();
 }
@@ -1012,7 +1052,7 @@ function toggleHighlightAttribute(shape,on)
 					if (on)
 					{
 						document.body.style.cursor = 'pointer';
-						if (shape == selectedNodes[i].attribImage)
+						if (shape == selectedNodes[i].attribImage || (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL))
 						{
 							setImageHighlight(shape, false, true, true);
 						}
@@ -1024,7 +1064,7 @@ function toggleHighlightAttribute(shape,on)
 					else
 					{
 		     	        document.body.style.cursor = 'default';
-						if (shape == selectedNodes[i].attribImage)
+						if (shape == selectedNodes[i].attribImage || (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL))
 						{
 							setImageHighlight(shape, false, false, true);
 						}
@@ -1043,7 +1083,6 @@ function toggleAttributeSelection(shape)
 	for (i in selectedAttributes)
 		if (selectedAttributes[i] && selectedNodes[i].attribValues[selectedAttributes[i]] == shape)
 		{
-			selectedAttributes[i] = null;
 			if (shape == selectedNodes[i].attribImage)
 				setImageHighlight(shape, false, false, true);
 			else
@@ -1051,6 +1090,8 @@ function toggleAttributeSelection(shape)
 				setTextHighlight(shape, false, false);
 			}
 			clickSound.play();
+			logClick(selectedNodes[i].id, selectedAttributes[i], false);
+			selectedAttributes[i] = null;
 			return;
 		}
 	
@@ -1060,6 +1101,13 @@ function toggleAttributeSelection(shape)
 			for (j in selectedNodes[i].attribValues)
 				if (selectedNodes[i].attribValues[j] == shape)
 				{
+					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
+						{
+							//alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
+							showMedia(selectedNodes[i].attributes["mop:url"])
+							logClick(selectedNodes[i].id, j, true);
+							return;
+						}
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
 					{
 						if (selectedNodes[i].attribValues[selectedAttributes[i]] == selectedNodes[i].attribImage)
@@ -1078,6 +1126,7 @@ function toggleAttributeSelection(shape)
 					{
 						setTextHighlight(shape, true, false);
 					}
+					logClick(selectedNodes[i].id, j, true);
 					clickSound.play();
 					return;
 				}
@@ -1172,9 +1221,9 @@ function submitPushed()
 	{
 		if (selectedAttributes['1'] && selectedAttributes['2'])
 		{
-			/*alert("You think there is something wrong with:\n" +
+			alert("You think there is something wrong with:\n" +
 				"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
-						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");*/
+						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");
 			validateSubmit();
 		}
 		else
@@ -1182,7 +1231,7 @@ function submitPushed()
 	}
 }
 
-function validateSubmit()
+function ajaxCall(URL, message, callback)
 {
 	var xmlhttp;
 	if (window.XMLHttpRequest)
@@ -1199,27 +1248,35 @@ function validateSubmit()
 	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
 	    {
 	      // alert("Server says:" + xmlhttp.responseText);
-	       handleResponse(xmlhttp.responseText);
+		  if (callback)
+			  callback(xmlhttp.responseText);
 	    }
 	 };
-	xmlhttp.open("POST",AJAX_URL,true);
+	xmlhttp.open("POST",URL,true);
 	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-	xmlhttp.send("node1=" + selectedNodes['1'].id + 
-					"&node2=" + selectedNodes['2'].id + 
-					"&attribute1=" + selectedAttributes['1'] +
-					"&attribute2=" +selectedAttributes['2'] +
-					"&serial=" + AJAX_SERIAL +
-					"&mode=" + AJAX_MODE);
+	xmlhttp.send(message);
 }
 
-function handleResponse(response)
+function validateSubmit()
 {
-	response = jQuery.parseJSON(response);
+	message = "node1=" + selectedNodes['1'].id + 
+	"&node2=" + selectedNodes['2'].id + 
+	"&attribute1=" + selectedAttributes['1'] +
+	"&attribute2=" +selectedAttributes['2'] +
+	"&serial=" + AJAX_SERIAL +
+	"&mode=" + AJAX_MODE;
+	
+	ajaxCall(AJAX_URL, message, handleValidateResponse);
+}
 
+function handleValidateResponse(response)
+{
 	if (DEBUG)
 	{
 		response = {"correct":true,"message":"You are correct! Press continue to continue."};
 	}
+	else
+		response = jQuery.parseJSON(response);
 
 	if (response.correct)
 	{
@@ -1469,4 +1526,91 @@ function showTutorial()
 		messageLayer.removeChildren();
 		messageLayer.draw();
 	});
+}
+
+function showMedia(url)
+{
+	background = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        strokeEnabled: false,
+        fill: 'black',
+        opacity: 1,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        shadowEnabled: false,
+      });
+	box = new Kinetic.Rect({
+        x: 0.025*STAGE_WIDTH,
+        y: 0.05*STAGE_HEIGHT,
+        stroke: ATTRIBBOX_BORDER_COLOUR,
+        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
+        fill: 'black',
+        width: 0.95*STAGE_WIDTH,
+        height: 0.9*STAGE_HEIGHT,
+        cornerRadius: 10
+      });
+	
+	mediaLayer.setOpacity(0);
+	
+	mediaLayer.add(background);
+	mediaLayer.draw();
+	
+	anim = new Kinetic.Animation(function(frame) {
+		
+		mediaLayer.setOpacity(Math.min(1.0*frame.time/ 1000, 1));
+		if (2.0*frame.time/1000 >= 1.2)
+		{
+			//mediaLayer.add(box);
+			media = createAndAddMedia(url);
+			this.stop();
+		}
+		
+		}, mediaLayer);
+	
+	anim.start();
+}
+
+function createAndAddMedia(url)
+{
+	document.getElementById('overlay').style.display = 'block';
+	document.getElementById('overlay').style.padding = SCREEN_HEIGHT*0.06 + 'px';
+
+	// if video
+	if (url.indexOf("youtube")!= -1)
+		{
+			url = url + "?rel=0&autoplay=1&controls=0&showinfo=0&modestbranding=1";
+			document.getElementById('overlay').innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.8 + '" height="' +SCREEN_HEIGHT*0.8 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';		
+		}
+	else
+	{
+		document.getElementById('overlay').innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
+	}
+				
+	// if image
+}
+
+function logDrag(shape)
+{
+	// find node belonging to this shape
+	node = null;
+	for (n in nodes)
+		if (nodes[n].image == shape)
+			node = nodes[n];
+	
+	message = "action=move&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+	
+	ajaxCall(LOG_URL, message, logResponse);
+}
+
+function logResponse(response)
+{
+	//alert("Logging response: " + response)
+}
+
+function logClick(node, attribute, newState)
+{
+	message = "action=click&node=" + node + "&attribute=" + attribute + "&newState=" + newState;
+	
+	ajaxCall(LOG_URL, message, logResponse);
 }

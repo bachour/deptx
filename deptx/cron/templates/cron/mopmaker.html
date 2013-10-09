@@ -11,8 +11,8 @@
 </script>
 
 <h1>Infiltration Account</h1>
-<p>Agent {{user.username}}, please fill in the following details which are required for each MoP employee. Although Cr0n hackers will bypass standard checks on new employees, there might be future background checks triggered by MoP Security. You should therefore create a persona that 'makes sense' but is not identical and cannot be traced back to your real self.</p>
-<form action="{% url 'cron_mopmaker' %}" method="post">{% csrf_token %}
+<p>{{missionInstance.mission.activity}}</p>
+<form action="{% url 'cron_mission_cases' missionInstance.mission.serial %}" method="post">{% csrf_token %}
 <hr/>
 <table>
 <tr><td>First Name:</td><td>{{mop_form.firstname}}</td><td>{{mop_form.firstname.errors}}</td></tr>

@@ -15,14 +15,14 @@ from players.models import Player, Mop
 from django.contrib.auth.models import User
 
 from assets.models import Task, Requisition, Document, Unit
-from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance
+from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance, WeekTrust
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from prov.model import ProvBundle, Namespace, Literal, PROV, XSD, Identifier
 import datetime
 #from persistence.models import save_bundle
 from prov.model.graph import prov_to_file
-from deptx.helpers import generateUUID
+from deptx.helpers import generateUUID, now
 from deptx.settings import MEDIA_ROOT
 from cron.models import CronDocumentInstance
 
@@ -31,6 +31,7 @@ from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logou
 
 from logger.logging import log_cron, log_mop
 import json
+from datetime import datetime
 
 from mop.mailserver import analyze_mail
 from django.views.decorators.csrf import csrf_exempt
@@ -54,9 +55,10 @@ def index(request):
         draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
         
                         
-        
+        total_trust = getTotalTrust(request.user.mop)
+        current_trust = getCurrentTrust(request.user.mop)
         log_mop(request.user.mop, 'index')
-        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
+        context = {'total_trust':total_trust, 'current_trust':current_trust, 'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
         return render(request, 'mop/index.html', context)
     
     else:
@@ -110,9 +112,9 @@ def rules(request):
 def tasks(request):
 
     #TODO handle the other states of the task instances as well
-    active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_ACTIVE)
-    failed_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_FAILED)
-    solved_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, state=TaskInstance.STATE_SOLVED)
+    active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_ACTIVE)
+    failed_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_FAILED)
+    solved_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_SOLVED)
     
     new_task_list = []
     tasks = Task.objects.all()
@@ -298,14 +300,14 @@ def mail_compose(request):
             #TODO code duplication between here and the else below
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
             form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-date')
-            form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
+            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
         form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-date')
-        form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
+        form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
 
 #TODO code duplication between mail_edit and mail_compose    
@@ -335,7 +337,7 @@ def mail_edit(request, mail_id):
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
             form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
-            form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
+            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form, 'mail':mail}, context_instance=RequestContext(request))
         
     else:
@@ -343,13 +345,15 @@ def mail_edit(request, mail_id):
         #TODO same with documents at all occurences
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
         form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
-        form.fields["subject"].choices = Mail.SUBJECT_CHOICES_SENDING
+        form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form, 'mail':mail}, context_instance=RequestContext(request))
 
 #@login_required(login_url='mop_login')
 #@user_passes_test(isMop, login_url='mop_login')
 @csrf_exempt
 def mail_check(request):
+    #TODO: compare with previous unread emails
+    #TODO: Emails need to be processed independent of player!!!
     if request.is_ajax():
         mail_count = analyze_mail(request.user.mop)
         total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count() 
@@ -408,4 +412,38 @@ def forms_signed(request):
     log_mop(request.user.mop, 'view filled forms')
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
 
+def getTotalTrust(mop):
+    trust = 0
+    weekTrust_list = WeekTrust.objects.filter(mop=mop)
+    for weekTrust in weekTrust_list:
+        trust += weekTrust.trust
+    return trust
 
+def getCurrentTrust(mop):
+    trust = 0
+    year, week, day = now().isocalendar()
+    weekTrust, created = WeekTrust.objects.get_or_create(mop=mop, year=year, week=week)
+    return weekTrust.trust
+    
+
+# def getTotalTrust(mop):
+#     trust = 0
+#     trustInstance_list = TrustInstance.objects.filter(mop=mop).order_by('date')    
+#     for trustInstance in trustInstance_list:
+#         trust += trustInstance.getTrust()
+#     return trust
+# 
+# def getWeekTrust(mop):
+#     trust = {}
+#     trustInstance_list = TrustInstance.objects.filter(mop=mop).order_by('-date')    
+#     for trustInstance in trustInstance_list:
+#         y, w, d = trustInstance.date.isocalendar()
+#         print "%s - %s" % (trustInstance.date.isocalendar(), trustInstance.getTrust())
+#         try:
+#             trust[str(w)] += trustInstance.getTrust()
+#         except:
+#             trust[str(w)] = trustInstance.getTrust()
+#     print trust
+#     return trust
+    
+    

@@ -4,16 +4,16 @@
 <h1>Personal Data</h1>
 <table>
 <tr><td>Name:</td><td>{{player.firstName}} {{player.lastName}}</td></tr>
-<tr><td>Address:</td><td>{{player.address}}</td></tr>
-<tr><td>Phone:</td><td>{{player.phone}}</td></tr>
 <tr><td>Email:</td><td>{{player.email}}</td></tr>
 </table>
 <hr/>
 <h1>Cron Data</h1>
 <table>
 <tr><td>User name:</td><td>{{cron.user.username}}</td></tr>
-<tr><td>Solved Missions:</td><td>{% for mission in solved_mission_list %}{{mission.name}} (<a href="{% url 'cron_mission_redo' mission.id %}">redo</a> (used for debug, press at your own risk))<br/>{% endfor %}</td></tr>
-<tr><td>Current Mission:</td><td>{{currentMission.name}} (<a href="{% url 'cron_mission_reset' %}">reset</a> (used for debug, press at your own risk))</td></tr>
+
+{% for missionInstance in missionInstance_list %}
+<tr><td>{{missionInstance.mission.name}}</td><td><a href="{% url 'cron_mission_reset' missionInstance.mission.serial %}">reset</a></td><td><a href="{% url 'cron_mission_delete' missionInstance.mission.serial %}">delete</a></td></tr>
+{% endfor %}
 </table>
 <hr/>
 <h1>MoP Data</h1>

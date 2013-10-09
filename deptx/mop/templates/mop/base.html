@@ -35,7 +35,7 @@
 		<table>
 		<tr>
 			<td class="nobox"><a class="button" href="{% url 'mop_index' %}"><input class="button" type="submit" value="control centre" /></a></td>
-			<td class="nobox">Citizen Employee: {{user.mop.firstname}} {{user.mop.lastname}}<br/>Trust level: {{user.mop.trust}}</td>
+			<td class="nobox">Citizen Employee: {{user.username}}<br/>Total Trust: {{total_trust}}<br/>Current Trust: {{current_trust}}</td>
 			<td class="nobox"><a class="button" href="{% url 'mop_logout' %}"><input class="button" type="submit" value="logout" /></a></td> 
 			<td class="nobox"><span id="checkmail" /></span></td>
 			<td class="nobox"><div id="spinner" style="-webkit-transform:scale(.35);"></div></td>
