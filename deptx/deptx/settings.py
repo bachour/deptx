@@ -128,7 +128,7 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     
     'south', # for db migration
-
+    'django_extensions',
     'players',
     'mop',
     'cron',

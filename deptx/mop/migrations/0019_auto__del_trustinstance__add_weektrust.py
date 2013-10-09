@@ -8,43 +8,34 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'MissionInstance'
-        db.create_table(u'cron_missioninstance', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('cron', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Cron'])),
-            ('mission', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Mission'])),
-            ('progress', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal(u'cron', ['MissionInstance'])
+        # Deleting model 'TrustInstance'
+        db.delete_table(u'mop_trustinstance')
 
-        # Adding model 'CaseInstance'
-        db.create_table(u'cron_caseinstance', (
+        # Adding model 'WeekTrust'
+        db.create_table(u'mop_weektrust', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('case', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Case'])),
-            ('cron', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Cron'])),
+            ('mop', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Mop'])),
+            ('trust', self.gf('django.db.models.fields.IntegerField')(default=0)),
+            ('year', self.gf('django.db.models.fields.IntegerField')(default=2013)),
+            ('week', self.gf('django.db.models.fields.IntegerField')(default=41)),
         ))
-        db.send_create_signal(u'cron', ['CaseInstance'])
-
-        # Adding model 'CronDocumentInstance'
-        db.create_table(u'cron_crondocumentinstance', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('document', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['assets.Document'])),
-            ('cron', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Cron'])),
-            ('provenanceState', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('solved', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal(u'cron', ['CronDocumentInstance'])
+        db.send_create_signal(u'mop', ['WeekTrust'])
 
 
     def backwards(self, orm):
-        # Deleting model 'MissionInstance'
-        db.delete_table(u'cron_missioninstance')
+        # Adding model 'TrustInstance'
+        db.create_table(u'mop_trustinstance', (
+            ('documentInstance', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['mop.DocumentInstance'], null=True, blank=True)),
+            ('weekModifier', self.gf('django.db.models.fields.IntegerField')(default=None, null=True, blank=True)),
+            ('taskInstance', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['mop.TaskInstance'], null=True, blank=True)),
+            ('mop', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['players.Mop'])),
+            ('date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime(2013, 10, 9, 0, 0))),
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+        ))
+        db.send_create_signal(u'mop', ['TrustInstance'])
 
-        # Deleting model 'CaseInstance'
-        db.delete_table(u'cron_caseinstance')
-
-        # Deleting model 'CronDocumentInstance'
-        db.delete_table(u'cron_crondocumentinstance')
+        # Deleting model 'WeekTrust'
+        db.delete_table(u'mop_weektrust')
 
 
     models = {
@@ -57,7 +48,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'outro': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'rank': ('django.db.models.fields.IntegerField', [], {}),
-            'serial': ('django.db.models.fields.SlugField', [], {'default': "'0a91303a-3080-11e3-bbd5'", 'max_length': '36'})
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'ea2443f3-3076-11e3-ab76'", 'max_length': '36'})
         },
         u'assets.document': {
             'Meta': {'object_name': 'Document'},
@@ -66,7 +57,7 @@ class Migration(SchemaMigration):
             'level': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'provenance': ('django.db.models.fields.related.OneToOneField', [], {'blank': 'True', 'related_name': "'document'", 'unique': 'True', 'null': 'True', 'to': u"orm['provmanager.Provenance']"}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'0a9141c2-3080-11e3-87e3'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'ea2462b3-3076-11e3-9df3'", 'max_length': '36'}),
             'task': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['assets.Task']", 'unique': 'True', 'null': 'True', 'blank': 'True'})
         },
         u'assets.mission': {
@@ -81,7 +72,17 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'outro': ('django.db.models.fields.TextField', [], {'default': "'ENTER OUTRO FOR MISSION'"}),
             'rank': ('django.db.models.fields.IntegerField', [], {'unique': 'True'}),
-            'serial': ('django.db.models.fields.SlugField', [], {'default': "'0a85ef70-3080-11e3-b73b'", 'max_length': '50'})
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'ea06c9bd-3076-11e3-83e7'", 'max_length': '50'})
+        },
+        u'assets.requisition': {
+            'Meta': {'object_name': 'Requisition'},
+            'category': ('django.db.models.fields.IntegerField', [], {}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'isInitial': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'ea260f8f-3076-11e3-81b6'", 'max_length': '36'}),
+            'trust': ('django.db.models.fields.IntegerField', [], {'default': '25'}),
+            'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
         u'assets.task': {
             'Meta': {'object_name': 'Task'},
@@ -89,7 +90,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'level': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'serial': ('django.db.models.fields.CharField', [], {'default': "'0a90ce2e-3080-11e3-884e'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'ea25dde1-3076-11e3-a1fe'", 'max_length': '36'}),
             'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']"})
         },
         u'assets.unit': {
@@ -157,34 +158,79 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        u'cron.caseinstance': {
-            'Meta': {'object_name': 'CaseInstance'},
-            'case': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Case']"}),
-            'cron': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Cron']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
-        },
-        u'cron.crondocumentinstance': {
-            'Meta': {'object_name': 'CronDocumentInstance'},
-            'cron': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Cron']"}),
+        u'mop.documentinstance': {
+            'Meta': {'object_name': 'DocumentInstance'},
+            'correct': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2013, 10, 9, 0, 0)', 'auto_now': 'True', 'blank': 'True'}),
             'document': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Document']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
             'provenanceState': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'solved': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
+            'used': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         },
-        u'cron.missioninstance': {
-            'Meta': {'object_name': 'MissionInstance'},
-            'cron': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Cron']"}),
+        u'mop.mail': {
+            'Meta': {'object_name': 'Mail'},
+            'body': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2013, 10, 9, 0, 0)', 'auto_now': 'True', 'blank': 'True'}),
+            'documentInstance': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['mop.DocumentInstance']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'mission': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Mission']"}),
-            'progress': ('django.db.models.fields.IntegerField', [], {'default': '0'})
+            'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
+            'processed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'read': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'requisitionInstance': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['mop.RequisitionInstance']", 'null': 'True', 'blank': 'True'}),
+            'state': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'subject': ('django.db.models.fields.IntegerField', [], {'default': '1', 'null': 'True', 'blank': 'True'}),
+            'type': ('django.db.models.fields.IntegerField', [], {}),
+            'unit': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Unit']", 'null': 'True', 'blank': 'True'})
         },
-        u'players.cron': {
-            'Meta': {'object_name': 'Cron'},
-            'activated': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'activationCode': ('django.db.models.fields.CharField', [], {'default': "'0a918a2e-3080-11e3-8c9a'", 'max_length': '36'}),
+        u'mop.requisitionblank': {
+            'Meta': {'object_name': 'RequisitionBlank'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'player': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['players.Player']", 'unique': 'True'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'})
+            'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
+            'requisition': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Requisition']"})
+        },
+        u'mop.requisitioninstance': {
+            'Meta': {'object_name': 'RequisitionInstance'},
+            'blank': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['mop.RequisitionBlank']"}),
+            'data': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
+            'date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2013, 10, 9, 0, 0)', 'auto_now': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'used': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
+        },
+        u'mop.taskinstance': {
+            'Meta': {'object_name': 'TaskInstance'},
+            'date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2013, 10, 9, 0, 0)', 'auto_now': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
+            'status': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'task': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['assets.Task']"})
+        },
+        u'mop.weektrust': {
+            'Meta': {'object_name': 'WeekTrust'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'mop': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Mop']"}),
+            'trust': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'week': ('django.db.models.fields.IntegerField', [], {'default': '41'}),
+            'year': ('django.db.models.fields.IntegerField', [], {'default': '2013'})
+        },
+        u'players.mop': {
+            'Meta': {'object_name': 'Mop'},
+            'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'dob': ('django.db.models.fields.DateField', [], {}),
+            'eyes': ('django.db.models.fields.IntegerField', [], {}),
+            'firstname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'gender': ('django.db.models.fields.IntegerField', [], {}),
+            'hair': ('django.db.models.fields.IntegerField', [], {}),
+            'height': ('django.db.models.fields.IntegerField', [], {}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'lastname': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'marital': ('django.db.models.fields.IntegerField', [], {}),
+            'player': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['players.Player']"}),
+            'serial': ('django.db.models.fields.CharField', [], {'default': "'ea25251c-3076-11e3-9d69'", 'max_length': '36'}),
+            'trust': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'user': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['auth.User']", 'unique': 'True'}),
+            'weight': ('django.db.models.fields.IntegerField', [], {})
         },
         u'players.player': {
             'Meta': {'object_name': 'Player'},
@@ -202,9 +248,9 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
             'node1': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
             'node2': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
-            'serial': ('django.db.models.fields.SlugField', [], {'default': "'0a90fcc7-3080-11e3-afd2'", 'max_length': '36'}),
+            'serial': ('django.db.models.fields.SlugField', [], {'default': "'ea25f44a-3076-11e3-9ee2'", 'max_length': '36'}),
             'store_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
         }
     }
 
-    complete_apps = ['cron']
+    complete_apps = ['mop']

@@ -110,11 +110,11 @@ def generateBody(text, data=None):
     return t.render(c)
 
 def solveTask(taskInstance):
-    taskInstance.state = TaskInstance.STATE_SOLVED
+    taskInstance.status = TaskInstance.STATUS_SOLVED
     taskInstance.save()
     
 def failTask(taskInstance):
-    taskInstance.state = TaskInstance.STATE_FAILED
+    taskInstance.status = TaskInstance.STATUS_FAILED
     taskInstance.save()
 
 def requisitionBlankExists(mop, requisition):
@@ -139,7 +139,7 @@ def documentInstanceExists(mop, document):
         return False
 
 def getRequisition(mail):
-    if not mail.unit.isAdministrative:
+    if not mail.unit.handsOutForms:
         return None
     try:
         requisition = Requisition.objects.get(serial=mail.requisitionInstance.data)
@@ -155,8 +155,10 @@ def getTask(mail):
     return task
 
 def getDocument(mail):
+    if not mail.unit.handsOutDocuments:
+        return None
     try:
-        document = Document.objects.get(serial=mail.requisitionInstance.data, unit=mail.unit)
+        document = Document.objects.get(serial=mail.requisitionInstance.data)
     except Document.DoesNotExist:
         document = None
     return document
@@ -165,7 +167,7 @@ def getTaskInstance(mail):
     try:
         task = getTask(mail)
         if not task == None:
-            taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, state=TaskInstance.STATE_ACTIVE)
+            taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, status=TaskInstance.STATUS_ACTIVE)
             if not taskInstance.task.unit == mail.unit:
                 return None
         else:

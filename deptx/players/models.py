@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 
 from deptx.helpers import generateUUID
 
+
+
 #TODO move Player into CRON
 #TODO move Cron and Mop into appropriate apps
 class Player(models.Model):
@@ -104,12 +106,8 @@ class Mop(models.Model):
     marital = models.IntegerField(choices=MARITAL_CHOICES)
     hair = models.IntegerField(choices=HAIR_CHOICES)
     eyes = models.IntegerField(choices=EYES_CHOICES)
-    
-    trust = models.IntegerField(default=30)
     serial = models.CharField(max_length=36, default=generateUUID)
-
-    
     
     def __unicode__(self):
-        return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + " / active: " + self.active.__str__() + ")"
+        return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)
 

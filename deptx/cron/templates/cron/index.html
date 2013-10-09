@@ -2,9 +2,8 @@
 
 {% block content %}
 
-<h1>{% if mission.isPublished %}<a href="{% url 'cron_mission' %}">Mission: {{mission.name}}</a>{% else %} No new mission available{% endif %}</h1>
-{% if provLog %}<h1><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provLog.store_id}}/flattened/" target='_blank'>View your Provenance</a></li></h1>{% endif %}
+<h1>{% if missionInstance %}<a href="{{mission_url}}">Mission: {{missionInstance.mission.name}}</a>{% else %} Currently no mission assigned{% endif %}</h1>
 <h1><a href="{% url 'cron_profile' %}">Profile</a></li></h1>
-<h1>Archive (not active yet)</h1>
+<h1><a href="{% url 'cron_archive' %}">Archive</a></h1>
 
 {% endblock %}

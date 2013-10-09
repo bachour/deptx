@@ -2,12 +2,15 @@
 
 {% block content %}
 
-<h1>{{mission.name}}</h1>
+{% if missionInstance or mission %}
+	<h1>{{mission.name}}</h1>
+	{% if text %}
+		{{text}}
+	
+	<br/><br/>
+	<a class='inputbutton' href="{{next_url}}">Continue</a>
+	{% endif %}
 
-{{text}}
-
-<form action="{% url 'cron_mission' %}" method="post">{% csrf_token %}
-<input class="button proceed" type="submit" value="Proceed" name="proceed" />
-</form>
+{% endif %}
 
 {% endblock %}

@@ -14,7 +14,21 @@ class DocumentInstance(models.Model):
     modified = models.BooleanField(default=False)
     correct = models.BooleanField(default=False)
     used = models.BooleanField(default=False)
-    date = models.DateTimeField(default=now(), auto_now=True)
+    #TODO re-add auto_now
+    date = models.DateTimeField(default=now())
+    
+    def getTrust(self):
+        return self.document.getTrust()
+    
+    def save(self, *args, **kwargs):
+        super(DocumentInstance, self).save(*args, **kwargs)
+        #TODO what if object was not created?
+        year, week, day = self.date.isocalendar()
+        weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
+        weekTrust.trust += self.getTrust()
+        weekTrust.save()
+        
+#         trustTracker, created = TrustInstance.objects.get_or_create(mop=self.mop, documentInstance=self)
     
     def __unicode__(self):
         if (self.modified):
@@ -24,21 +38,44 @@ class DocumentInstance(models.Model):
         return self.document.serial + " (" + status + ")"
 
 class TaskInstance(models.Model):
-    STATE_ACTIVE = 2
-    STATE_SOLVED = 4
-    STATE_FAILED = 5
+    STATUS_ACTIVE = 0
+    STATUS_SOLVED = 1
+    STATUS_FAILED = 2
+    STATUS_UNSOLVED = 3
     
-    STATE_CHOICES = (
-        (STATE_ACTIVE, "active"),
-        (STATE_SOLVED, "solved"),
-        (STATE_FAILED, "failed"),
+    CHOICES_STATUS = (
+        (STATUS_ACTIVE, "active"),
+        (STATUS_SOLVED, "solved"),
+        (STATUS_FAILED, "failed"),
+        (STATUS_UNSOLVED, "unsolved"),
     )
     
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
-    state = models.IntegerField(choices=STATE_CHOICES, default=STATE_ACTIVE)
+    status = models.IntegerField(choices=CHOICES_STATUS, default=STATUS_ACTIVE)
     date = models.DateTimeField(default=now(), auto_now=True)
     
+    def getTrust(self):
+        if self.status == self.STATUS_SOLVED:
+            return self.task.getTrustSolved()
+        elif self.status == self.STATUS_FAILED:
+            return self.task.getTrustFailed()
+        elif self.status == self.STATUS_UNSOLVED:
+            return self.task.getTrustUnsolved()
+        else:
+            return 0
+    
+    def save(self, *args, **kwargs):
+        super(TaskInstance, self).save(*args, **kwargs)
+        #TODO what if object was not created?
+        if not self.status == self.STATUS_ACTIVE:
+            year, week, day = self.date.isocalendar()
+            weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
+            weekTrust.trust += self.getTrust()
+            weekTrust.save()
+
+#             trustTracker, created = TrustInstance.objects.get_or_create(mop=self.mop, taskInstance=self)
+
     def __unicode__(self):
         return self.task.name + " / " + self.mop.user.username
 
@@ -64,7 +101,7 @@ class Mail(models.Model):
     TYPE_SENT = 1
     TYPE_DRAFT = 2
     
-    TYPE_CHOICES = (
+    CHOICES_TYPE = (
         (TYPE_RECEIVED, "received"),
         (TYPE_SENT, "sent"),
         (TYPE_DRAFT, "draft")
@@ -74,7 +111,7 @@ class Mail(models.Model):
     STATE_TRASHED = 1
     STATE_DELETED = 2
     
-    STATE_CHOICES = (
+    CHOICES_STATE = (
         (STATE_NORMAL, "normal"),
         (STATE_TRASHED, "trashed"),
         (STATE_DELETED, "deleted")
@@ -96,7 +133,7 @@ class Mail(models.Model):
     SUBJECT_REPORT_EVALUATION = 213
     SUBJECT_UNCAUGHT_CASE = 214
     
-    SUBJECT_CHOICES_SENDING = (
+    CHOICES_SUBJECT_SENDING = (
         (SUBJECT_EMPTY, "---------"),
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
         (SUBJECT_REQUEST_TASK, "Requesting Task"),
@@ -105,7 +142,7 @@ class Mail(models.Model):
     )
     
     
-    SUBJECT_CHOICES_RECEIVING = (
+    CHOICES_SUBJECT_RECEIVING = (
         (SUBJECT_RECEIVE_FORM, "Assigning Form"),
         (SUBJECT_RECEIVE_TASK, "Assigning Task"),
         (SUBJECT_RECEIVE_DOCUMENT, "Assigning Document"),
@@ -115,17 +152,17 @@ class Mail(models.Model):
         (SUBJECT_UNCAUGHT_CASE, "dfjhsjdvnvewe;efhjk")
     )
     
-    SUBJECT_CHOICES = SUBJECT_CHOICES_SENDING + SUBJECT_CHOICES_RECEIVING
+    CHOICES_SUBJECT = CHOICES_SUBJECT_SENDING + CHOICES_SUBJECT_RECEIVING
     
     
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit, blank=True, null=True)
     date = models.DateTimeField(default=now(), auto_now=True)
-    subject = models.IntegerField(choices=SUBJECT_CHOICES, default=SUBJECT_EMPTY, blank=True, null=True)
+    subject = models.IntegerField(choices=CHOICES_SUBJECT, default=SUBJECT_EMPTY, blank=True, null=True)
     body = models.TextField(blank=True, null=True)
     read = models.BooleanField(default=False)
-    state = models.IntegerField(choices=STATE_CHOICES, default=STATE_NORMAL)
-    type = models.IntegerField(choices=TYPE_CHOICES)
+    state = models.IntegerField(choices=CHOICES_STATE, default=STATE_NORMAL)
+    type = models.IntegerField(choices=CHOICES_TYPE)
     processed = models.BooleanField(default=False)
     
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
@@ -138,9 +175,49 @@ class Mail(models.Model):
             subject = self.get_subject_display()
         return "%s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, str(self.processed))
 
+class WeekTrust(models.Model):
+    mop = models.ForeignKey(Mop)
+    trust = models.IntegerField(default=0)
+    year = models.IntegerField(default=now().isocalendar()[0])
+    week = models.IntegerField(default=now().isocalendar()[1])
     
-    
-    
+    def __unicode__(self):
+        return "%s - %d-%d - %d" % (self.mop.user.username, self.year, self.week, self.trust)
+
+# class TrustInstance(models.Model):
+#     mop = models.ForeignKey(Mop)
+#     date = models.DateTimeField(default=now())
+#     taskInstance = models.ForeignKey(TaskInstance, blank=True, null=True)
+#     documentInstance = models.ForeignKey(DocumentInstance, blank=True, null=True)
+#     weekModifier = models.IntegerField(default=None, blank=True, null=True)
+#     #TODO add trust cost for mail errors
+#     #Mail = models.ForeignKey(Mail, blank=True, null=True)
+#     
+#     def getTrust(self):
+#         if not self.taskInstance == None:
+#             return self.taskInstance.getTrust()
+#         elif not self.documentInstance == None:
+#             return self.documentInstance.getTrust()
+#         elif not self.weekModifier == None:
+#             return self.weekModifier
+#         else:
+#             return 0
+#     
+#     def getCategory(self):
+#         if not self.taskInstance == None:
+#             return "TASK"
+#         elif not self.documentInstance == None:
+#             return "DOCUMENT"
+#         elif not self.weekModifier == None:
+#             return "WEEK"
+#         else:
+#             return "!!!NOTHING!!!"
+#         
+#     def __unicode__(self):
+#         return "%s %s %s" % (self.mop.user.username, self.getCategory(), self.getTrust())
+#         
+#     
+#     
 
     
     
