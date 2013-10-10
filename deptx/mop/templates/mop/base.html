@@ -35,7 +35,7 @@
 		<table>
 		<tr>
 			<td class="nobox"><a class="button" href="{% url 'mop_index' %}"><input class="button" type="submit" value="control centre" /></a></td>
-			<td class="nobox">Citizen Employee: {{user.username}}<br/>Total Performance: {{user.mop.getTotalTrust}}<br/>Current Performance: {{user.mop.getCurrentTrust}}</td>
+			<td class="nobox">Citizen Employee: {{user.username}}<br/>Total Performance: {{user.mop.totalTrust}}<br/>Current Performance: {{user.mop.trust}}<br/>Credit: {{user.mop.credit}}<br/>Clearance: {{user.mop.get_clearance_display}}</td>
 			<td class="nobox"><a class="button" href="{% url 'mop_logout' %}"><input class="button" type="submit" value="logout" /></a></td> 
 			<td class="nobox"><span id="checkmail" /></span></td>
 			<td class="nobox"><div id="spinner" style="-webkit-transform:scale(.35);"></div></td>

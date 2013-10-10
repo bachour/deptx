@@ -26,5 +26,7 @@ urlpatterns = patterns('',
     url(r'intranet/mail/compose/$', views.mail_compose, name='mop_mail_compose'),
     url(r'intranet/mail/compose/(\d+)', views.mail_edit, name='mop_mail_edit'),
     url(r'intranet/mail/check/', views.mail_check, name='mop_mail_check'),
+    
+    url(r'intranet/control/$', views.control, name='mop_control'),
           
 )
