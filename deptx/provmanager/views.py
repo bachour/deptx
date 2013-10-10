@@ -33,7 +33,7 @@ MODE_MOP = "mop"
 
 @staff_member_required    
 def index(request):
-    provenance_list = Provenance.objects.all().order_by("-date")
+    provenance_list = Provenance.objects.all().order_by("-modifiedAt")
     
     for provenance in provenance_list:
         provenance.cron_document_list = Document.objects.filter(provenance=provenance).exclude(case__isnull=True)
