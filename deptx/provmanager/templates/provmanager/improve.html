@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load dummyimage_tags %}
 
 <div style="background-image:url({{MEDIA_URL}}improve/paper.jpg);width:100%">
    <audio id="click" preload="auto">
@@ -27,6 +28,7 @@
 		var ARROW_URL_2 = "improve/arrow2.png";
 		var MAGNIFY_URL = "improve/magnify.png";
 		var FIRST_TIME = true;
+		var GENERATED_IMAGE_URL = '{% get_dummyimage_url 600 400 png %}'
     </script>
     <script src="{{MEDIA_URL}}improve/defaultKss.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>

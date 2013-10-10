@@ -3,8 +3,7 @@ from deptx.helpers import now
 
 from players.models import Mop
 from assets.models import Unit, Task, Requisition, Document
-
-
+from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
 class DocumentInstance(models.Model):
     document = models.ForeignKey(Document)
@@ -14,8 +13,8 @@ class DocumentInstance(models.Model):
     modified = models.BooleanField(default=False)
     correct = models.BooleanField(default=False)
     used = models.BooleanField(default=False)
-    #TODO re-add auto_now
-    date = models.DateTimeField(default=now())
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def getTrust(self):
         return self.document.getTrust()
@@ -53,7 +52,8 @@ class TaskInstance(models.Model):
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
     status = models.IntegerField(choices=CHOICES_STATUS, default=STATUS_ACTIVE)
-    date = models.DateTimeField(default=now(), auto_now=True)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def getTrust(self):
         if self.status == self.STATUS_SOLVED:
@@ -82,6 +82,8 @@ class TaskInstance(models.Model):
 class RequisitionBlank(models.Model):
     mop = models.ForeignKey(Mop)
     requisition = models.ForeignKey(Requisition)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         return self.requisition.name + " - " + self.mop.user.username 
@@ -89,8 +91,9 @@ class RequisitionBlank(models.Model):
 class RequisitionInstance(models.Model):
     blank = models.ForeignKey(RequisitionBlank)
     data = models.CharField(max_length=256)
-    date = models.DateTimeField(default=now(), auto_now=True)
     used = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         return self.blank.requisition.unit.serial + ": " + self.blank.requisition.serial + " (" + str(self.date) + ")"
@@ -157,7 +160,7 @@ class Mail(models.Model):
     
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit, blank=True, null=True)
-    date = models.DateTimeField(default=now(), auto_now=True)
+
     subject = models.IntegerField(choices=CHOICES_SUBJECT, default=SUBJECT_EMPTY, blank=True, null=True)
     body = models.TextField(blank=True, null=True)
     read = models.BooleanField(default=False)
@@ -168,6 +171,9 @@ class Mail(models.Model):
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
     documentInstance = models.ForeignKey(DocumentInstance, null=True, blank=True)  
     
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
     def __unicode__(self):
         if self.subject == None:
             subject = "no subject"
@@ -176,10 +182,55 @@ class Mail(models.Model):
         return "%s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, str(self.processed))
 
 class WeekTrust(models.Model):
+    CLEARANCE_LOW = 'BLUE'
+    CLEARANCE_MEDIUM = 'RED'
+    CLEARANCE_HIGH = 'ULTRAVIOLET'
+    
     mop = models.ForeignKey(Mop)
     trust = models.IntegerField(default=0)
     year = models.IntegerField(default=now().isocalendar()[0])
     week = models.IntegerField(default=now().isocalendar()[1])
+    
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    def getBadge(self):
+        if self.trust < 0:
+            return "black orchid"
+        elif self.trust < 10:
+            return "blue orchid"
+        elif self.trust < 30:
+            return "purple orchid"
+        elif self.trust < 50:
+            return "red orchid"
+        elif self.trust < 100:
+            return "yellow orchid"
+        elif self.trust < 150:
+            return "white orchid"
+        elif self.trust < 200:
+            return "bronze orchid"
+        elif self.trust < 250:
+            return "silver orchid"
+        elif self.trust < 300:
+            return "gold orchid"
+        elif self.trust < 500:
+            return "platinum orchid"
+        elif self.trust < 750:
+            return "diamond orchid"
+        elif self.trust < 1000:
+            return "oxygen orchid"
+        else:
+            return "atomic orchid"
+    
+    def getClearance(self):
+        if self.trust >= 500:
+            return self.CLEARANCE_HIGH
+        elif self.trust >= 100:
+            return self.CLEARANCE_MEDIUM
+        else:
+            return self.CLEARANCE_LOW
+        
+        
     
     def __unicode__(self):
         return "%s - %d-%d - %d" % (self.mop.user.username, self.year, self.week, self.trust)

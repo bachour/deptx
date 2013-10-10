@@ -1,5 +1,5 @@
 from django.db import models
-
+from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron
 from assets.models import Mission, Case, Document
 
@@ -25,6 +25,8 @@ class MissionInstance(models.Model):
     cron = models.ForeignKey(Cron)
     mission = models.ForeignKey(Mission)
     progress = models.IntegerField(choices=CHOICES_PROGRESS, default=PROGRESS_0_INTRO)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def makeProgress(self):
         if not self.progress == self.PROGRESS_5_DONE:
@@ -54,6 +56,8 @@ class MissionInstance(models.Model):
 class CaseInstance(models.Model):
     case = models.ForeignKey(Case)
     cron = models.ForeignKey(Cron)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def isSolved(self):
         document_list = Document.objects.filter(case=self.case)
@@ -79,6 +83,8 @@ class CronDocumentInstance(models.Model):
     cron = models.ForeignKey(Cron)
     provenanceState = models.TextField(blank=True, null=True)
     solved = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         if (self.solved):
