@@ -79,9 +79,7 @@ def login(request):
             auth.login(request, user)
             log_mop(request.user.mop, 'login')
             provlog_add_mop_login(request.user.mop, request.session.session_key)
-            
-            #Checking mail when logging in
-            analyze_mail(request.user.mop)
+
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -183,8 +181,6 @@ def document_provenance(request, documentInstance_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
-    #checking mail when checking inbox
-    analyze_mail(request.user.mop)
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
     log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
@@ -372,12 +368,15 @@ def mail_edit(request, mail_id):
 #@user_passes_test(isMop, login_url='mop_login')
 @csrf_exempt
 def mail_check(request):
-    #TODO: compare with previous unread emails
-    #TODO: Emails need to be processed independent of player!!!
-    if request.is_ajax():
-        mail_count = analyze_mail(request.user.mop)
-        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count() 
-        json_data = json.dumps({"mail_count":mail_count, 'total_unread':total_unread})
+    #TODO: populate with current unread count
+    if request.is_ajax() and request.method == 'POST':
+        last_unread = request.POST.get('last_unread', 0)
+        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        new_mail=False
+        if total_unread > last_unread:
+            new_mail = True
+         
+        json_data = json.dumps({'total_unread':total_unread, 'new_mail':new_mail})
     
         return HttpResponse(json_data, mimetype="application/json")
 
