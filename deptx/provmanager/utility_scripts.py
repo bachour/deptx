@@ -42,6 +42,11 @@ def get_random_graph(graph):
                 #print 'selected ',i, ': ', identifiers[i]
                 for j in range(len(identifiers[i])):
                     identifiers[i][j] = '?' + identifiers[i][j]
+            else:
+                #choose one of the values and place it everywhere
+                selected = identifiers[i][random.randint(1, len(identifiers[i]))]
+                for j in range(len(identifiers[i])):
+                    identifiers[i][j] = selected
             duplicate_count -= 1
     
     #replace every element in the graph with an element from the randomly generated list
