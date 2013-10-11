@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
 from deptx.helpers import generateUUID
-from mop.trustmanager import tm_getTotalTrust, tm_getCurrentTrust, tm_getCurrentTrustCredit, tm_getCurrentClearance
+#from mop.trustmanager import tm_getTotalTrust, tm_getCurrentTrust, tm_getCurrentTrustCredit, tm_getCurrentClearance
 
 
 #TODO move Player into CRON
@@ -101,6 +101,18 @@ class Mop(models.Model):
         (EYE_VIOLET, 'violet'),
     )
     
+    CLEARANCE_0_NONE = -1
+    CLEARANCE_1_LOW = 0
+    CLEARANCE_2_MEDIUM = 1
+    CLEARANCE_3_HIGH = 2
+    
+    CHOICES_CLEARANCE = (
+        (CLEARANCE_0_NONE, 'NONE'),
+        (CLEARANCE_1_LOW, 'BLUE'),
+        (CLEARANCE_2_MEDIUM, 'RED'),
+        (CLEARANCE_3_HIGH, 'ULTRAVIOLET'),
+    )
+    
     player = models.ForeignKey(Player)
     user = models.OneToOneField(User)
     active = models.BooleanField(default=True)
@@ -118,17 +130,22 @@ class Mop(models.Model):
     eyes = models.IntegerField(choices=EYES_CHOICES)
     serial = models.CharField(max_length=36, default=generateUUID)
     
-    def getTotalTrust(self):
-        return tm_getTotalTrust(self)
+    totalTrust = models.IntegerField(default=0)
+    trust = models.IntegerField(default=0)
+    credit = models.IntegerField(default=0)
+    clearance = models.IntegerField(choices=CHOICES_CLEARANCE, default=CLEARANCE_1_LOW)
     
-    def getCurrentTrust(self):
-        return tm_getCurrentTrust(self)
-    
-    def getCurrentTrustCredit(self):
-        return tm_getCurrentTrustCredit(self)
-    
-    def getCurrentClearance(self):
-        return tm_getCurrentClearance(self)
+#     def getTotalTrust(self):
+#         return tm_getTotalTrust(self)
+#     
+#     def getCurrentTrust(self):
+#         return tm_getCurrentTrust(self)
+#     
+#     def getCurrentTrustCredit(self):
+#         return tm_getCurrentTrustCredit(self)
+#     
+#     def getCurrentClearance(self):
+#         return tm_getCurrentClearance(self)
     
     def __unicode__(self):
         return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)

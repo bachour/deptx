@@ -3,14 +3,14 @@
 {% block content %}
 
 <h1>Performance Report</h1>
-<p>Performance (total): {{user.mop.getTotalTrust}}</p>
-<p>Performance (current week): {{user.mop.getCurrentTrust}}</p>
-<p>Allowance (current week): {{user.mop.getCurrentTrustCredit}}</p>
-<p>Clearance Level: {{user.mop.getCurrentClearance}}</p>
+<p>Performance (total): {{user.mop.totalTrust}}</p>
+<p>Performance (current week): {{user.mop.trust}}</p>
+<p>Allowance (current week): {{user.mop.credit}}</p>
+<p>Clearance Level: {{user.mop.get_clearance_display}}</p>
 <table>
-<tr><th>Performance</th><th>Badge</th><th>Year</th><th>Week</th></tr>
-{% for weekTrust in weekTrust_list %}
-<tr><td>{{weekTrust.trust}}</td><td>{{weekTrust.getBadge}}</td><td>{{weekTrust.year}}</td><td>{{weekTrust.week}}</td></tr>
+<tr><th>Badge</th><th>Date</th></tr>
+{% for badge in badge_list %}
+<tr><td>{{badge.get_badge_display}}</td><td>{{badge.modifiedAt|date:"SHORT_DATE_FORMAT"}}</td></tr>
 {% endfor %}
 </table>
 {% endblock %}

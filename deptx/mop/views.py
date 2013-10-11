@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 
 from django.template import RequestContext
 from django.contrib import auth
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -15,7 +16,7 @@ from players.models import Player, Mop
 from django.contrib.auth.models import User
 
 from assets.models import Task, Requisition, Document, Unit
-from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance, WeekTrust
+from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance, Badge#, WeekTrust
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from prov.model import ProvBundle, Namespace, Literal, PROV, XSD, Identifier
@@ -34,6 +35,7 @@ import json
 from datetime import date, timedelta
 
 from mop.mailserver import analyze_mail
+from mop.performer import analyze_performance
 from django.views.decorators.csrf import csrf_exempt
 
 def isMop(user):
@@ -77,9 +79,7 @@ def login(request):
             auth.login(request, user)
             log_mop(request.user.mop, 'login')
             provlog_add_mop_login(request.user.mop, request.session.session_key)
-            
-            #Checking mail when logging in
-            analyze_mail(request.user.mop)
+
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -106,6 +106,7 @@ def rules(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def performance(request):
+    badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
     
 #     taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE).order_by('modifiedAt')
 #     print taskInstance_list
@@ -119,9 +120,9 @@ def performance(request):
 #     lastMonday = today - timedelta(days=today.weekday())
 #     print nextMonday
 #     print lastMonday
-    weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
+#     weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
     log_mop(request.user.mop, 'read performance')
-    return render(request, 'mop/performance.html', {'weekTrust_list':weekTrust_list})
+    return render(request, 'mop/performance.html', {'badge_list':badge_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -180,8 +181,6 @@ def document_provenance(request, documentInstance_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
-    #checking mail when checking inbox
-    analyze_mail(request.user.mop)
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
     log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
@@ -294,6 +293,7 @@ def mail_deleting(request, mail_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_compose(request):
+    #TODO Mail needs a sentAt / savedAt value so that trashing email does not change its date
     if request.method == 'POST':
         mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
         if 'send' in request.POST:
@@ -368,12 +368,15 @@ def mail_edit(request, mail_id):
 #@user_passes_test(isMop, login_url='mop_login')
 @csrf_exempt
 def mail_check(request):
-    #TODO: compare with previous unread emails
-    #TODO: Emails need to be processed independent of player!!!
-    if request.is_ajax():
-        mail_count = analyze_mail(request.user.mop)
-        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count() 
-        json_data = json.dumps({"mail_count":mail_count, 'total_unread':total_unread})
+    #TODO: populate with current unread count
+    if request.is_ajax() and request.method == 'POST':
+        last_unread = request.POST.get('last_unread', 0)
+        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        new_mail=False
+        if total_unread > last_unread:
+            new_mail = True
+         
+        json_data = json.dumps({'total_unread':total_unread, 'new_mail':new_mail})
     
         return HttpResponse(json_data, mimetype="application/json")
 
@@ -429,7 +432,15 @@ def forms_signed(request):
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
 
 
-       
+@staff_member_required
+def control(request):
+    output = None
+    if request.method == 'POST':
+        if 'mail' in request.POST:
+            output = analyze_mail()
+        elif 'performance' in request.POST:
+            output = analyze_performance()
+    return render(request, 'mop/control.html', {'output':output})       
 
 # def getTotalTrust(mop):
 #     trust = 0

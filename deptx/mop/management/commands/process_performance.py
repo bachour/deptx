@@ -1,9 +1,8 @@
 from django.core.management.base import NoArgsCommand
 
-from mop.mailserver import analyze_mail
+from mop.performer import analyze_performance
 
 class Command(NoArgsCommand):
-    help = "Automated Mailserver"
+    help = "Automated Performance Evaluator"
     def handle_noargs(self, **options):
-        pass
-        analyze_mail()
+        analyze_performance()

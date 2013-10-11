@@ -4,9 +4,12 @@ from assets.models import Requisition, Task, Document
 from django.template import Context, loader, Template
 import logging
 
-def analyze_mail(mop):
-    mail_list = Mail.objects.filter(mop=mop).filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
-
+def analyze_mail():
+    output = []
+    mail_list = Mail.objects.filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
+    #TODO add more output
+    output.append("Unprocessed mails: %d" % mail_list.count())
+    
     for mail in mail_list:
         newMail = prepareMail(mail)
         if mail.unit == None:
@@ -95,14 +98,12 @@ def analyze_mail(mop):
         mail.processed = True
         mail.save()
         newMail.save()
-        print newMail.body
         if newMail.subject == Mail.SUBJECT_ERROR:
             if not mail.documentInstance == None:
                 mail.documentInstance.used = False
                 mail.documentInstance.save()
     
-    return mail_list.count()
-
+    return output
 
 def generateBody(text, data=None):
     t = Template(text)

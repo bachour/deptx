@@ -25,7 +25,7 @@ var audioGotMail;
 $(function() {
 	target = document.getElementById('spinner');
 	audioGotMail = document.createElement('audio');
-	audioGotMail.setAttribute('src', '{% static 'mop/sound/mail.mp3' %}');
+	audioGotMail.setAttribute('src', NEW_MAIL_AUDIO );
 	
 });
 
@@ -42,18 +42,18 @@ window.setInterval(function(){
 		(
 			{
 		    	type: "POST",
-		    	url:"{% url 'mop_mail_check' %}",
+		    	url: CHECK_MAIL_URL,
 		    	data:
 		    	{
 		    		'test': 'success',
 	    		},
 	    		success: function(data)
 	    		{
-	      			if (data.mail_count==0) {
+	      			if (data.new_mail==false) {
 	      				mailfield.html('no new messages');
 	      			}
 	      			else {
-	      				mailfield.html(data.mail_count + ' new message(s)');
+	      				mailfield.html(data.total_unread + ' unread message(s)');
 	      				inboxfield.val('inbox (' + data.total_unread + ')');
 	      				audioGotMail.play();
 	      			};
