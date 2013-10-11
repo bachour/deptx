@@ -2,7 +2,9 @@ import json
 import random
 import string
 
-RANDOM_FILES_PATH = "C:\\Users\\kqb.CS\\Dropbox\\Dept.X\\prov-docs\\grinding\\"
+from deptx.settings import MEDIA_ROOT
+
+RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
 
 # takes a json for a graph with randomizable content, randomizes all values in the graph, randomly chooses one set
 # of critical values and makes at least one of them different from the others. adds question mark before all these values
