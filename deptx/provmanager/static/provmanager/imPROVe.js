@@ -135,11 +135,13 @@ function initStage()
         container: 'container',
         width: STAGE_WIDTH, 
         height: STAGE_HEIGHT,
-        scale:document.getElementById("container").offsetWidth/STAGE_WIDTH // scale to the size of the container
+        scale:CONTAINER.offsetWidth/STAGE_WIDTH // scale to the size of the container
       });
 
-	SCREEN_WIDTH = document.getElementById('container').offsetWidth;
+	SCREEN_WIDTH = CONTAINER.offsetWidth;
 	SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
+	
+	CONTAINER.offsetHeight = SCREEN_HEIGHT;
 
 	// create Kinetic Images for all objects and put them in nodes
 	for (var name in sources)
