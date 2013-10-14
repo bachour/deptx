@@ -2,42 +2,12 @@ from django.db import models
 from deptx.helpers import now 
 
 from players.models import Mop
-from assets.models import Unit, Task, Requisition, Document
+from assets.models import Unit, Task, Requisition, Document, CLEARANCE_LOW, CLEARANCE_MEDIUM, CLEARANCE_HIGH, CLEARANCE_MAX
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from provmanager.models import Provenance
+from deptx.helpers import generateUUID
 
-class DocumentInstance(models.Model):
-    document = models.ForeignKey(Document)
-    mop = models.ForeignKey(Mop)
-    
-    provenanceState = models.TextField(blank=True, null=True)
-    modified = models.BooleanField(default=False)
-    correct = models.BooleanField(default=False)
-    used = models.BooleanField(default=False)
-    createdAt = CreationDateTimeField()
-    modifiedAt = ModificationDateTimeField()
-    
-    def getTrust(self):
-        return self.document.getTrust()
-    
-    def save(self, *args, **kwargs):
-        super(DocumentInstance, self).save(*args, **kwargs)
-        self.mop.totalTrust += self.getTrust()
-        self.mop.trust += self.getTrust()
-        self.mop.save()
-        #TODO what if object was not created?
-#         year, week, day = self.date.isocalendar()
-#         weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
-#         weekTrust.trust += self.getTrust()
-#         weekTrust.save()
-        
-#         trustTracker, created = TrustInstance.objects.get_or_create(mop=self.mop, documentInstance=self)
-    
-    def __unicode__(self):
-        if (self.modified):
-            status = "modified"
-        else:
-            status = "original"
-        return self.document.serial + " (" + status + ")"
+
 
 class TaskInstance(models.Model):
     STATUS_ACTIVE = 0
@@ -55,6 +25,8 @@ class TaskInstance(models.Model):
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
     status = models.IntegerField(choices=CHOICES_STATUS, default=STATUS_ACTIVE)
+    serial = models.CharField(max_length=36, default=generateUUID)
+    provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="taskInstance")
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
@@ -70,21 +42,76 @@ class TaskInstance(models.Model):
     
     def save(self, *args, **kwargs):
         super(TaskInstance, self).save(*args, **kwargs)
+        #TODO remove acquired=True
+        documentInstance, created = DocumentInstance.objects.get_or_create(mop=self.mop, taskInstance=self, acquired=True)
         #TODO what if object was not created?
         if not self.status == self.STATUS_ACTIVE:
             self.mop.totalTrust += self.getTrust()
             self.mop.trust += self.getTrust()
             self.mop.save()
-#             year, week, day = self.date.isocalendar()
-#             weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
-#             weekTrust.trust += self.getTrust()
-#             weekTrust.save()
-
-#             trustTracker, created = TrustInstance.objects.get_or_create(mop=self.mop, taskInstance=self)
 
     def __unicode__(self):
         return "%s - %s - %s " % (self.task.name, self.mop.user.username, self.get_status_display())
 
+class DocumentInstance(models.Model):
+    mop = models.ForeignKey(Mop)
+    used = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    #stuff needed if it is a mop-document
+    serial = models.CharField(max_length=36, default=generateUUID)
+    taskInstance = models.OneToOneField(TaskInstance, related_name='documentInstance', blank=True, null=True)
+    acquired = models.BooleanField(default=False)
+    modified = models.BooleanField(default=False)
+    correct = models.BooleanField(default=False)
+    provenanceState = models.TextField(blank=True, null=True)
+    #stuff needed if it is a cron document
+    document = models.ForeignKey(Document, blank=True, null=True)
+    
+    def getTrust(self):
+        if self.getClearance() == CLEARANCE_LOW:
+            return 0
+        elif self.getClearance() == CLEARANCE_MEDIUM:
+            return 10
+        elif self.getClearance() == CLEARANCE_HIGH:
+            return 20
+        else:
+            return 30
+    
+    def getClearance(self):
+        if self.isMop():
+            return self.taskInstance.task.clearance
+        elif self.isCron():
+            return CLEARANCE_MAX
+        else:
+            return None
+    
+    def isMop(self):
+        if not self.taskInstance == None:
+            return True
+        else:
+            return False
+    
+    def isCron(self):
+        if not self.document == None:
+            return True
+        else:
+            return False
+    
+    def save(self, *args, **kwargs):
+        super(DocumentInstance, self).save(*args, **kwargs)
+        self.mop.totalTrust += self.getTrust()
+        self.mop.trust += self.getTrust()
+        self.mop.save()
+    
+    def __unicode__(self):
+        if self.isMop():
+            return self.serial
+        elif self.isCron():
+            return self.document.serial
+        else:
+            return 'ERROR'
+        
 class RequisitionBlank(models.Model):
     mop = models.ForeignKey(Mop)
     requisition = models.ForeignKey(Requisition)
@@ -102,7 +129,7 @@ class RequisitionInstance(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return self.blank.requisition.unit.serial + ": " + self.blank.requisition.serial + " (" + str(self.date) + ")"
+        return self.blank.requisition.unit.serial + ": " + self.blank.requisition.serial + " (" + str(self.modifiedAt) + ")"
     
 
 class Mail(models.Model):
@@ -224,95 +251,5 @@ class Badge(models.Model):
     
     def __unicode__(self):
         return "%s - %s" % (self.mop.user.username, self.get_badge_display())
-
-# class WeekTrust(models.Model):
-#     CLEARANCE_LOW = 'BLUE'
-#     CLEARANCE_MEDIUM = 'RED'
-#     CLEARANCE_HIGH = 'ULTRAVIOLET'
-#     
-#     mop = models.ForeignKey(Mop)
-#     trust = models.IntegerField(default=0)
-#     year = models.IntegerField(default=now().isocalendar()[0])
-#     week = models.IntegerField(default=now().isocalendar()[1])
-#     
-#     createdAt = CreationDateTimeField()
-#     modifiedAt = ModificationDateTimeField()
-#     
-#     def getBadge(self):
-#         if self.trust < 0:
-#             return "black orchid"
-#         elif self.trust < 10:
-#             return "blue orchid"
-#         elif self.trust < 30:
-#             return "purple orchid"
-#         elif self.trust < 50:
-#             return "red orchid"
-#         elif self.trust < 100:
-#             return "yellow orchid"
-#         elif self.trust < 150:
-#             return "white orchid"
-#         elif self.trust < 200:
-#             return "bronze orchid"
-#         elif self.trust < 250:
-#             return "silver orchid"
-#         elif self.trust < 300:
-#             return "gold orchid"
-#         elif self.trust < 500:
-#             return "platinum orchid"
-#         elif self.trust < 750:
-#             return "diamond orchid"
-#         elif self.trust < 1000:
-#             return "oxygen orchid"
-#         else:
-#             return "atomic orchid"
-#     
-#     def getClearance(self):
-#         if self.trust >= 500:
-#             return self.CLEARANCE_HIGH
-#         elif self.trust >= 100:
-#             return self.CLEARANCE_MEDIUM
-#         else:
-#             return self.CLEARANCE_LOW
-#         
-#         
-#     
-#     def __unicode__(self):
-#         return "%s - %d-%d - %d" % (self.mop.user.username, self.year, self.week, self.trust)
-
-# class TrustInstance(models.Model):
-#     mop = models.ForeignKey(Mop)
-#     date = models.DateTimeField(default=now())
-#     taskInstance = models.ForeignKey(TaskInstance, blank=True, null=True)
-#     documentInstance = models.ForeignKey(DocumentInstance, blank=True, null=True)
-#     weekModifier = models.IntegerField(default=None, blank=True, null=True)
-#     #TODO add trust cost for mail errors
-#     #Mail = models.ForeignKey(Mail, blank=True, null=True)
-#     
-#     def getTrust(self):
-#         if not self.taskInstance == None:
-#             return self.taskInstance.getTrust()
-#         elif not self.documentInstance == None:
-#             return self.documentInstance.getTrust()
-#         elif not self.weekModifier == None:
-#             return self.weekModifier
-#         else:
-#             return 0
-#     
-#     def getCategory(self):
-#         if not self.taskInstance == None:
-#             return "TASK"
-#         elif not self.documentInstance == None:
-#             return "DOCUMENT"
-#         elif not self.weekModifier == None:
-#             return "WEEK"
-#         else:
-#             return "!!!NOTHING!!!"
-#         
-#     def __unicode__(self):
-#         return "%s %s %s" % (self.mop.user.username, self.getCategory(), self.getTrust())
-#         
-#     
-#     
-
     
     

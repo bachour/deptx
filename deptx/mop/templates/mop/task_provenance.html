@@ -1,0 +1,21 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
+<h1>Improvement of Provenance</h1>
+
+<table>
+<tr><th>Task</th><td>{{taskInstance.task.name}}</td></tr>
+<tr><th>Identifier</th><td>{{taskInstance.serial}}</td></tr>
+<tr><th>Document</th><td>{{ taskInstance.documentInstance.serial }}</td></tr>
+</table>
+
+{% include 'provmanager/improve.html' with provenance=taskInstance.provenance %}
+
+{% endblock %}
+
+{% block help %}
+<p>
+This is the provenance record of the requested document.
+</p>
+{% endblock %}

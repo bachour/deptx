@@ -8,9 +8,14 @@
 	<tr><th>Name</th><th>Identification Code</th><th>state</th></tr>
 	{% for documentInstance in documentInstance_list %}
 		<tr>
-		<td>{{documentInstance.document.name}}</td>
-		<td>{{documentInstance.document.serial}}</td>
-		<td>{% if documentInstance.modified %}modified{% else %}-{% endif %} (debug info:{{documentInstance.correct}})</td>
+		{% if documentInstance.isMop %}
+			<td>{{documentInstance.taskInstance.task.name}}</td>
+			<td>{{documentInstance.serial}}</td>
+		{% elif documentInstance.isCron %}
+			<td>{{documentInstance.document.name}}</td>
+			<td>{{documentInstance.document.serial}}</td>
+		{% endif %}
+		<td>{% if documentInstance.modified %}modified{% else %}-{% endif %}</td>
 		</tr>
 	{% endfor %}
 	</table>

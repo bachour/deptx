@@ -4,14 +4,27 @@ from provmanager.models import Provenance
 
 from deptx.helpers import generateUUID
 
+CLEARANCE_LOW = 0
+CLEARANCE_MEDIUM = 10
+CLEARANCE_HIGH = 20
+CLEARANCE_MAX = 100
+
+CHOICES_CLEARANCE_TASK = (
+    (CLEARANCE_LOW, "BLUE"),
+    (CLEARANCE_MEDIUM, "ORANGE"),
+    (CLEARANCE_HIGH, "RED"),         
+)
+
+CHOICES_CLEARANCE_DOCUMENT = (
+    (CLEARANCE_MAX, "ULTRAVIOLET"),
+)
 
 class Unit(models.Model):
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=8, unique=True)
     description = models.TextField(default="Working on Provenance")
     tagline = models.CharField(max_length=256, default="Prov is all around you", help_text="one sentence descripion; their motto")
-    handsOutForms = models.BooleanField(default=False)
-    handsOutDocuments = models.BooleanField(default=False)
+
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
@@ -67,44 +80,34 @@ class Requisition(models.Model):
         return self.name
 
 class Task(models.Model):
-    LEVEL_LOW = 0
-    LEVEL_MEDIUM = 1
-    LEVEL_HIGH = 2
-    
-    CHOICES_LEVEL = (
-        (LEVEL_LOW, "BLUE"),
-        (LEVEL_MEDIUM, "RED"),
-        (LEVEL_HIGH, "ULTRAVIOLET"),         
-    )    
-    
     name = models.CharField(max_length=256)
-    serial = models.CharField(max_length=36, default=generateUUID)
     description = models.TextField()
     unit = models.ForeignKey(Unit)
-    level = models.IntegerField(choices=CHOICES_LEVEL, default=LEVEL_LOW)
+    clearance = models.IntegerField(choices=CHOICES_CLEARANCE_TASK, default=CLEARANCE_LOW)
+    provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="task")
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
     def getTrustSolved(self):
-        if self.level == self.LEVEL_LOW:
+        if self.clearance == CLEARANCE_LOW:
             return 10
-        elif self.level == self.LEVEL_MEDIUM:
+        elif self.clearance == CLEARANCE_MEDIUM:
             return 30
         else:
             return 50
     
     def getTrustFailed(self):
-        if self.level == self.LEVEL_LOW:
+        if self.clearance == CLEARANCE_LOW:
             return -20
-        elif self.level == self.LEVEL_MEDIUM:
+        elif self.clearance == CLEARANCE_MEDIUM:
             return -50
         else:
             return -100
     
     def getTrustUnsolved(self):
-        if self.level == self.LEVEL_LOW:
+        if self.clearance == CLEARANCE_LOW:
             return -10
-        elif self.level == self.LEVEL_MEDIUM:
+        elif self.clearance == CLEARANCE_MEDIUM:
             return -20
         else:
             return -30
@@ -159,32 +162,19 @@ class Case(models.Model):
         return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ")"
 
 class Document(models.Model):
-    LEVEL_LOW = 0
-    LEVEL_MEDIUM = 1
-    LEVEL_HIGH = 2
-    
-    CHOICES_LEVEL = (
-        (LEVEL_LOW, "low"),
-        (LEVEL_MEDIUM, "medium"),
-        (LEVEL_HIGH, "high"),         
-    )    
-    
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=36, default=generateUUID)
     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
     case = models.ForeignKey(Case, blank=True, null=True)
-    task = models.OneToOneField(Task, blank=True, null=True)
-    level = models.IntegerField(choices=CHOICES_LEVEL, default=LEVEL_LOW)
+    clearance = models.IntegerField(choices=CHOICES_CLEARANCE_DOCUMENT, default=CLEARANCE_MAX)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
     def getTrust(self):
-        if self.level == self.LEVEL_LOW:
-            return 0
-        elif self.level == self.LEVEL_MEDIUM:
-            return -10
-        else:
-            return -20
+        return -20
+    
+    def getLevel(self):
+        return "ULTRAVIOLET"
             
     def __unicode__(self):
         return self.name

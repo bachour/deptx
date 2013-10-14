@@ -3,6 +3,7 @@ from cron.models import CronDocumentInstance
 from assets.models import Requisition, Task, Document
 from django.template import Context, loader, Template
 import logging
+from provmanager.views import randomize_task
 
 def analyze_mail():
     output = []
@@ -53,28 +54,32 @@ def analyze_mail():
                 newMail.subject = Mail.SUBJECT_RECEIVE_FORM
                 newMail.body = generateBody(mail.unit.mail_assigning_form, mail.requisitionInstance.data)
         elif mail.subject == Mail.SUBJECT_REQUEST_TASK:
+            #TODO check for clearance etc. Tasks can no longer be 'unfound'
             task = getTask(mail)
             if task == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unfound_task, mail.requisitionInstance.data)
-            elif taskInstanceExists(mail.mop, task):
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_existing_task, mail.requisitionInstance.data)
+#            #no longer needed as each 'task' is unique
+#             elif taskInstanceExists(mail.mop, task):
+#                 newMail.subject = Mail.SUBJECT_ERROR
+#                 newMail.body = generateBody(mail.unit.mail_error_existing_task, mail.requisitionInstance.data)
             else:
-                assignTask(mail.mop, task)
+                serial = assignTask(mail.mop, task)
                 newMail.subject = Mail.SUBJECT_RECEIVE_TASK
-                newMail.body = generateBody(mail.unit.mail_assigning_task, mail.requisitionInstance.data)
+                newMail.body = generateBody(mail.unit.mail_assigning_task, serial)
         elif mail.subject == Mail.SUBJECT_REQUEST_DOCUMENT:
-            document = getDocument(mail)
-            if document == None:
+            #The serial inside the form could be either for a mop or for a cron 'document'
+            cronDocument = getCronDocument(mail)
+            mopDocumentInstance = getMopDocumentInstance(mail)
+            if cronDocument == None and mopDocumentInstance == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unfound_document, mail.requisitionInstance.data)
-            elif documentInstanceExists(mail.mop, document):
+            elif documentInstanceExists(mail.mop, cronDocument, mopDocumentInstance):
                 #TODO what if document is used?
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_existing_document, mail.requisitionInstance.data)
             else:
-                assignDocument(mail.mop, document)
+                assignDocument(mail.mop, cronDocument, mopDocumentInstance)
                 newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
                 newMail.body = generateBody(mail.unit.mail_assigning_document, mail.requisitionInstance.data)
         elif mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
@@ -132,16 +137,17 @@ def taskInstanceExists(mop, task):
     except TaskInstance.DoesNotExist:
         return False
 
-def documentInstanceExists(mop, document):
-    try:
-        documentInstance = DocumentInstance.objects.get(mop=mop, document=document)
-        return True
-    except DocumentInstance.DoesNotExist:
-        return False
+def documentInstanceExists(mop, cronDocument, mopDocumentInstance):
+    if not cronDocument == None:
+        try:
+            documentInstance = DocumentInstance.objects.get(mop=mop, document=cronDocument)
+            return True
+        except DocumentInstance.DoesNotExist:
+            return False
+    return mopDocumentInstance.acquired
+            
 
 def getRequisition(mail):
-    if not mail.unit.handsOutForms:
-        return None
     try:
         requisition = Requisition.objects.get(serial=mail.requisitionInstance.data)
     except Requisition.DoesNotExist:
@@ -149,20 +155,23 @@ def getRequisition(mail):
     return requisition
 
 def getTask(mail):
-    try:
-        task = Task.objects.get(serial=mail.requisitionInstance.data, unit=mail.unit)
-    except Task.DoesNotExist:
-        task = None
-    return task
+    return Task.objects.filter(unit=mail.unit).order_by('?')[0]
+    #TODO filter for clearance
+    
 
-def getDocument(mail):
-    if not mail.unit.handsOutDocuments:
-        return None
+def getCronDocument(mail):
     try:
         document = Document.objects.get(serial=mail.requisitionInstance.data)
     except Document.DoesNotExist:
         document = None
     return document
+
+def getMopDocumentInstance(mail):
+    try:
+        documentInstance = DocumentInstance.objects.get(serial=mail.requisitionInstance.data, mop=mail.mop)
+    except DocumentInstance.DoesNotExist:
+        documentInstance = None
+    return documentInstance
 
 def getTaskInstance(mail):
     try:
@@ -222,10 +231,19 @@ def assignRequisition(mop, requisition):
     requisitionBlank, created = RequisitionBlank.objects.get_or_create(mop=mop, requisition=requisition)
        
 def assignTask(mop, task):
-    taskInstance, created = TaskInstance.objects.get_or_create(mop=mop, task=task)
+    #taskInstance, created = TaskInstance.objects.get_or_create(mop=mop, task=task)
+    #documentInstance, created = DocumentInstance.objects.get_or_create(mop=mop, taskInstance=taskInstance)
+    taskInstance = randomize_task(task, mop)
+    print taskInstance
+    return taskInstance.serial
     
-def assignDocument(mop, document):
-    documentInstance, created = DocumentInstance.objects.get_or_create(mop=mop, document=document)
+def assignDocument(mop, cronDocument, mopDocumentInstance):
+    if not cronDocument == None:
+        documentInstance, created = DocumentInstance.objects.get_or_create(mop=mop, document=cronDocument)
+    else:
+        mopDocumentInstance.acquired = True
+        mopDocumentInstance.save()
+
 
 
 def prepareMail(mail):

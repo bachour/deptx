@@ -130,24 +130,10 @@ def tasks(request):
 
     #TODO handle the other states of the task instances as well
     active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_ACTIVE)
-    failed_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_FAILED)
-    solved_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_SOLVED)
-    
-    new_task_list = []
-    tasks = Task.objects.all()
-    
-    #TODO optimize so that not everything needs to be read everytime
-    for task in tasks:
-        try:
-            taskInstance = TaskInstance.objects.get(task=task, mop=request.user.mop)
-        except TaskInstance.DoesNotExist:
-            taskInstance = None
-        
-        if taskInstance == None:
-            new_task_list.append(task)
+    finished_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE)
     
     log_mop(request.user.mop, 'view tasks')   
-    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "failed_taskInstance_list": failed_taskInstance_list, "solved_taskInstance_list": solved_taskInstance_list, "new_task_list": new_task_list})
+    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "finished_taskInstance_list": finished_taskInstance_list })
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -160,22 +146,23 @@ def documents(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def document_provenance(request, documentInstance_id):
+def task_provenance(request, serial):
+    #TODO check if document is acquired
+    #TODO check if mop-document
     try:
-        documentInstance = DocumentInstance.objects.get(id=documentInstance_id, mop=request.user.mop)
-        documentInstance.save()
-    except DocumentInstance.DoesNotExist:
-        documentInstance = None
+        taskInstance = TaskInstance.objects.get(mop=request.user.mop, serial=serial)
+    except taskInstance.DoesNotExist:
+        taskInstance = None
 
-    if not documentInstance == None:
+    if not taskInstance == None and taskInstance.documentInstance.isMop() and taskInstance.documentInstance.acquired:
 
-        doc ={}
-        doc['id'] = documentInstance.document.id
-        doc['name'] = documentInstance.document.name
-        doc['store_id'] = documentInstance.document.provenance.store_id    
-        log_mop(request.user.mop, 'view provenance', json.dumps(doc))
+#         doc ={}
+#         doc['id'] = documentInstance.document.id
+#         doc['name'] = documentInstance.document.name
+#         doc['store_id'] = documentInstance.document.provenance.store_id    
+#         log_mop(request.user.mop, 'view provenance', json.dumps(doc))
 
-    return render(request, 'mop/documents_provenance.html', {'documentInstance': documentInstance, 'mode':MODE_MOP})
+        return render(request, 'mop/task_provenance.html', {'taskInstance': taskInstance, 'mode':MODE_MOP})
 
 
 @login_required(login_url='mop_login')
@@ -371,7 +358,10 @@ def mail_check(request):
     #TODO: populate with current unread count
     if request.is_ajax() and request.method == 'POST':
         last_unread = request.POST.get('last_unread', 0)
-        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        try:
+            total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        except:
+            total_unread = None
         new_mail=False
         if total_unread > last_unread:
             new_mail = True
