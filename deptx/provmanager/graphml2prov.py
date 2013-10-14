@@ -173,7 +173,18 @@ def convert_attributes(element, attributes):
             if key in attributes:
                 value = data.text
                 if value:
-                    results[attributes[key]] = to_unicode_or_bust(value)
+                    #print 'Converting ', key, ' ', attributes[key], '.', value
+                    if str(attributes[key]).find('free') >= 0:
+                        colon_pos = value.find(':')
+                        actual_attribute_name = convert_attribute_name(value[0: colon_pos])
+                        if colon_pos >= len(value)-1:
+                            actual_value = ''
+                        else:
+                            actual_value = value[colon_pos + 2:]
+                        #print 'Converted ', key, ' ', attributes[key], '.', value, ' to ', actual_attribute_name, '.', actual_value
+                        results[actual_attribute_name] = to_unicode_or_bust(actual_value)
+                    else:
+                        results[attributes[key]] = to_unicode_or_bust(value)
         return results
 
 
