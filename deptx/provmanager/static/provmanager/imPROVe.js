@@ -1701,9 +1701,12 @@ function getName(shape)
 
 function getSaveState()
 {
-    $.getJSON(GET_STATE_URL, function(json) {
- 	   updateState(json);
- 	 });
+    if (IS_TEST==false)
+    {
+	    $.getJSON(GET_STATE_URL, function(json) {
+	 	   updateState(json);
+	 	 });
+	}
 }
 
 function updateState(state)

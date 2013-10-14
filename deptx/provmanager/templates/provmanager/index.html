@@ -28,7 +28,7 @@ td { border:2px black solid; padding:4px;}
 		<td>{{provenance.name}}</td>
 		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
 		<td>{% for document in provenance.cron_document_list %}{{document.case.name}} ({{document.name}})<br/>{% endfor %}</td>
-		<td>{% for document in provenance.mop_document_list %}{{document.task.name}} ({{document.name}})<br/>{% endfor %}</td>
+		<td>{% for taskInstance in provenance.mop_taskInstance_list %}{{taskInstance.serial}} ({{taskInstance.task.name}})<br/>{% endfor %}</td>
 		<td>{{provenance.modifiedAt}}</td>		
 	</tr>
 {% endfor %}

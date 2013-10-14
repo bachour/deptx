@@ -16,7 +16,14 @@
     	var AJAX_URL = "{% url 'provmanager_prov_check' %}";
     	var AJAX_MODE = "{{mode}}";
     	var LOG_URL = "{% url 'provmanager_prov_log_action' %}";
-    	var GET_STATE_URL = "{% url 'provmanager_improve_saved_state' provenance.serial mode %}";
+    	
+    	{% if is_test %}
+    		var IS_TEST = true;
+    		var GET_STATE_URL = "";
+    	{% else %}
+    		var IS_TEST = false;
+    		var GET_STATE_URL = "{% url 'provmanager_improve_saved_state' provenance.serial mode %}";
+    	{% endif %}
     	{% if case %}
     	var CONTINUE_URL = "{% url 'cron_case_intro' mission.serial case.serial %}";
     	{% elif task %}
