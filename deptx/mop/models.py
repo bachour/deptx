@@ -3,8 +3,7 @@ from deptx.helpers import now
 
 from players.models import Mop
 from assets.models import Unit, Task, Requisition, Document
-
-
+from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
 class DocumentInstance(models.Model):
     document = models.ForeignKey(Document)
@@ -14,19 +13,22 @@ class DocumentInstance(models.Model):
     modified = models.BooleanField(default=False)
     correct = models.BooleanField(default=False)
     used = models.BooleanField(default=False)
-    #TODO re-add auto_now
-    date = models.DateTimeField(default=now())
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def getTrust(self):
         return self.document.getTrust()
     
     def save(self, *args, **kwargs):
         super(DocumentInstance, self).save(*args, **kwargs)
+        self.mop.totalTrust += self.getTrust()
+        self.mop.trust += self.getTrust()
+        self.mop.save()
         #TODO what if object was not created?
-        year, week, day = self.date.isocalendar()
-        weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
-        weekTrust.trust += self.getTrust()
-        weekTrust.save()
+#         year, week, day = self.date.isocalendar()
+#         weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
+#         weekTrust.trust += self.getTrust()
+#         weekTrust.save()
         
 #         trustTracker, created = TrustInstance.objects.get_or_create(mop=self.mop, documentInstance=self)
     
@@ -53,7 +55,8 @@ class TaskInstance(models.Model):
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
     status = models.IntegerField(choices=CHOICES_STATUS, default=STATUS_ACTIVE)
-    date = models.DateTimeField(default=now(), auto_now=True)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def getTrust(self):
         if self.status == self.STATUS_SOLVED:
@@ -69,19 +72,24 @@ class TaskInstance(models.Model):
         super(TaskInstance, self).save(*args, **kwargs)
         #TODO what if object was not created?
         if not self.status == self.STATUS_ACTIVE:
-            year, week, day = self.date.isocalendar()
-            weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
-            weekTrust.trust += self.getTrust()
-            weekTrust.save()
+            self.mop.totalTrust += self.getTrust()
+            self.mop.trust += self.getTrust()
+            self.mop.save()
+#             year, week, day = self.date.isocalendar()
+#             weekTrust, created = WeekTrust.objects.get_or_create(mop=self.mop, year=year, week=week)
+#             weekTrust.trust += self.getTrust()
+#             weekTrust.save()
 
 #             trustTracker, created = TrustInstance.objects.get_or_create(mop=self.mop, taskInstance=self)
 
     def __unicode__(self):
-        return self.task.name + " / " + self.mop.user.username
+        return "%s - %s - %s " % (self.task.name, self.mop.user.username, self.get_status_display())
 
 class RequisitionBlank(models.Model):
     mop = models.ForeignKey(Mop)
     requisition = models.ForeignKey(Requisition)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         return self.requisition.name + " - " + self.mop.user.username 
@@ -89,8 +97,9 @@ class RequisitionBlank(models.Model):
 class RequisitionInstance(models.Model):
     blank = models.ForeignKey(RequisitionBlank)
     data = models.CharField(max_length=256)
-    date = models.DateTimeField(default=now(), auto_now=True)
     used = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         return self.blank.requisition.unit.serial + ": " + self.blank.requisition.serial + " (" + str(self.date) + ")"
@@ -157,7 +166,7 @@ class Mail(models.Model):
     
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit, blank=True, null=True)
-    date = models.DateTimeField(default=now(), auto_now=True)
+
     subject = models.IntegerField(choices=CHOICES_SUBJECT, default=SUBJECT_EMPTY, blank=True, null=True)
     body = models.TextField(blank=True, null=True)
     read = models.BooleanField(default=False)
@@ -168,6 +177,9 @@ class Mail(models.Model):
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
     documentInstance = models.ForeignKey(DocumentInstance, null=True, blank=True)  
     
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
     def __unicode__(self):
         if self.subject == None:
             subject = "no subject"
@@ -175,14 +187,97 @@ class Mail(models.Model):
             subject = self.get_subject_display()
         return "%s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, str(self.processed))
 
-class WeekTrust(models.Model):
+class Badge(models.Model):
+    BADGE_0 = 0
+    BADGE_1 = 1
+    BADGE_2 = 2
+    BADGE_3 = 3
+    BADGE_4 = 4
+    BADGE_5 = 5
+    BADGE_6 = 6
+    BADGE_7 = 7
+    BADGE_8 = 8
+    BADGE_9 = 9
+    BADGE_10 = 10
+    BADGE_11 = 11
+    
+    CHOICES_BADGE = (
+        (BADGE_0, 'Black ORCHID'),
+        (BADGE_1, 'Green ORCHID'),
+        (BADGE_2, 'Blue ORCHID'),
+        (BADGE_3, 'Orange ORCHID'),
+        (BADGE_4, 'Yellow ORCHID'),
+        (BADGE_5, 'Beige ORCHID'),
+        (BADGE_6, 'Purple ORCHID'),
+        (BADGE_7, 'Turquois ORCHID'),
+        (BADGE_8, 'Mint ORCHID'),
+        (BADGE_9, 'Brown ORCHID'),
+        (BADGE_10, 'White ORCHID'),
+        (BADGE_10, 'Ultraviolet ORCHID'),                 
+    )
+    
+    
     mop = models.ForeignKey(Mop)
-    trust = models.IntegerField(default=0)
-    year = models.IntegerField(default=now().isocalendar()[0])
-    week = models.IntegerField(default=now().isocalendar()[1])
+    badge = models.IntegerField(choices=CHOICES_BADGE)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return "%s - %d-%d - %d" % (self.mop.user.username, self.year, self.week, self.trust)
+        return "%s - %s" % (self.mop.user.username, self.get_badge_display())
+
+# class WeekTrust(models.Model):
+#     CLEARANCE_LOW = 'BLUE'
+#     CLEARANCE_MEDIUM = 'RED'
+#     CLEARANCE_HIGH = 'ULTRAVIOLET'
+#     
+#     mop = models.ForeignKey(Mop)
+#     trust = models.IntegerField(default=0)
+#     year = models.IntegerField(default=now().isocalendar()[0])
+#     week = models.IntegerField(default=now().isocalendar()[1])
+#     
+#     createdAt = CreationDateTimeField()
+#     modifiedAt = ModificationDateTimeField()
+#     
+#     def getBadge(self):
+#         if self.trust < 0:
+#             return "black orchid"
+#         elif self.trust < 10:
+#             return "blue orchid"
+#         elif self.trust < 30:
+#             return "purple orchid"
+#         elif self.trust < 50:
+#             return "red orchid"
+#         elif self.trust < 100:
+#             return "yellow orchid"
+#         elif self.trust < 150:
+#             return "white orchid"
+#         elif self.trust < 200:
+#             return "bronze orchid"
+#         elif self.trust < 250:
+#             return "silver orchid"
+#         elif self.trust < 300:
+#             return "gold orchid"
+#         elif self.trust < 500:
+#             return "platinum orchid"
+#         elif self.trust < 750:
+#             return "diamond orchid"
+#         elif self.trust < 1000:
+#             return "oxygen orchid"
+#         else:
+#             return "atomic orchid"
+#     
+#     def getClearance(self):
+#         if self.trust >= 500:
+#             return self.CLEARANCE_HIGH
+#         elif self.trust >= 100:
+#             return self.CLEARANCE_MEDIUM
+#         else:
+#             return self.CLEARANCE_LOW
+#         
+#         
+#     
+#     def __unicode__(self):
+#         return "%s - %d-%d - %d" % (self.mop.user.username, self.year, self.week, self.trust)
 
 # class TrustInstance(models.Model):
 #     mop = models.ForeignKey(Mop)

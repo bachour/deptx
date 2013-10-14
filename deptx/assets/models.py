@@ -1,5 +1,5 @@
 from django.db import models
-
+from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
 
 from deptx.helpers import generateUUID
@@ -12,6 +12,8 @@ class Unit(models.Model):
     tagline = models.CharField(max_length=256, default="Prov is all around you", help_text="one sentence descripion; their motto")
     handsOutForms = models.BooleanField(default=False)
     handsOutDocuments = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     mail_error_no_subject = models.TextField(default="Your mail could not be filtered automatically. Please choose an appropriate subject next time.", help_text="when there is no subject selected")
     mail_error_missing_form = models.TextField(default="You did not attach a form. Please always attach a form.", help_text="when no form was attached")
@@ -58,6 +60,8 @@ class Requisition(models.Model):
     unit = models.ForeignKey(Unit)
     category = models.IntegerField(choices=CHOICES_CATEGORY)
     isInitial = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         return self.name
@@ -68,9 +72,9 @@ class Task(models.Model):
     LEVEL_HIGH = 2
     
     CHOICES_LEVEL = (
-        (LEVEL_LOW, "low"),
-        (LEVEL_MEDIUM, "medium"),
-        (LEVEL_HIGH, "high"),         
+        (LEVEL_LOW, "BLUE"),
+        (LEVEL_MEDIUM, "RED"),
+        (LEVEL_HIGH, "ULTRAVIOLET"),         
     )    
     
     name = models.CharField(max_length=256)
@@ -78,6 +82,8 @@ class Task(models.Model):
     description = models.TextField()
     unit = models.ForeignKey(Unit)
     level = models.IntegerField(choices=CHOICES_LEVEL, default=LEVEL_LOW)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def getTrustSolved(self):
         if self.level == self.LEVEL_LOW:
@@ -127,6 +133,8 @@ class Mission(models.Model):
     outro = models.TextField(default="ENTER OUTRO FOR MISSION")
     
     isPublished = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     
     def __unicode__(self):
@@ -144,6 +152,8 @@ class Case(models.Model):
     outro = models.TextField(blank=True, null=True)
     
     isPublished = models.BooleanField(default=False)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
         return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ")"
@@ -165,6 +175,8 @@ class Document(models.Model):
     case = models.ForeignKey(Case, blank=True, null=True)
     task = models.OneToOneField(Task, blank=True, null=True)
     level = models.IntegerField(choices=CHOICES_LEVEL, default=LEVEL_LOW)
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
     def getTrust(self):
         if self.level == self.LEVEL_LOW:

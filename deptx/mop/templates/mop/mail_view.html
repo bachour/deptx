@@ -5,9 +5,9 @@
 <table>
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
 <tr><th>Unit</th><td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DEMON{% endif %}</td></tr>
-<tr><th>Timestamp</th><td>{{ mail.date }}</td></tr>
+<tr><th>Timestamp</th><td>{{ mail.createdAt }}</td></tr>
 {% if mail.body %}<tr><th>Message</th><td>{% if mail.unit %}Citizen Employee {{mail.mop.firstname}} {{mail.mop.lastname}},<br/><br/>{{ mail.body|linebreaksbr }}<br/>{% with unit=mail.unit %}{% include 'mop/mail/sig.txt'%}{% endwith %}{% else %}{{mail.body|linebreaksbr}}{% endif %}</td></tr>{% endif %}
-<tr><th>Form</th><td>{{ mail.requisitionInstance.blank.requisition.serial}} {{mail.requisitionInstance.date}}</td></tr>
+<tr><th>Form</th><td>{{ mail.requisitionInstance.blank.requisition.serial}} {{mail.requisitionInstance.modifiedAt}}</td></tr>
 <tr><th>Document</th><td>{{ mail.documentInstance.document.serial}}</td></tr>
 </table>
 {% endblock %}

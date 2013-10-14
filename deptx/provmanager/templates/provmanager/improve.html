@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load dummyimage_tags %}
 
 <div style="background-image:url({{MEDIA_URL}}improve/paper.jpg);width:100%">
    <audio id="click" preload="auto">
@@ -14,9 +15,17 @@
     	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
     	var AJAX_URL = "{% url 'provmanager_prov_check' %}";
     	var AJAX_MODE = "{{mode}}";
-    	var LOG_URL = "";
+    	var LOG_URL = "{% url 'provmanager_prov_log_action' %}";
+    	
+    	{% if is_test %}
+    		var IS_TEST = true;
+    		var GET_STATE_URL = "";
+    	{% else %}
+    		var IS_TEST = false;
+    		var GET_STATE_URL = "{% url 'provmanager_improve_saved_state' provenance.serial mode %}";
+    	{% endif %}
     	{% if case %}
-    	var CONTINUE_URL = "{% url 'cron_case_detail' case.serial %}";
+    	var CONTINUE_URL = "{% url 'cron_case_intro' mission.serial case.serial %}";
     	{% elif task %}
     	var CONTINUE_URL = "{% url 'mop_documents' %}";
     	{% endif %}
@@ -26,6 +35,7 @@
 		var ARROW_URL_2 = "improve/arrow2.png";
 		var MAGNIFY_URL = "improve/magnify.png";
 		var FIRST_TIME = true;
+		var GENERATED_IMAGE_URL = '{% get_dummyimage_url 600 400 png %}'
     </script>
     <script src="{{MEDIA_URL}}improve/defaultKss.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>

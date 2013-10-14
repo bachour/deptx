@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 
 from django.template import RequestContext
 from django.contrib import auth
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -15,11 +16,11 @@ from players.models import Player, Mop
 from django.contrib.auth.models import User
 
 from assets.models import Task, Requisition, Document, Unit
-from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance, WeekTrust
+from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance, Badge#, WeekTrust
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from prov.model import ProvBundle, Namespace, Literal, PROV, XSD, Identifier
-import datetime
+
 #from persistence.models import save_bundle
 from prov.model.graph import prov_to_file
 from deptx.helpers import generateUUID, now
@@ -31,9 +32,10 @@ from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logou
 
 from logger.logging import log_cron, log_mop
 import json
-from datetime import datetime
+from datetime import date, timedelta
 
 from mop.mailserver import analyze_mail
+from mop.performer import analyze_performance
 from django.views.decorators.csrf import csrf_exempt
 
 def isMop(user):
@@ -53,12 +55,9 @@ def index(request):
         outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
         trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
         draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
-        
-                        
-        total_trust = getTotalTrust(request.user.mop)
-        current_trust = getCurrentTrust(request.user.mop)
+
         log_mop(request.user.mop, 'index')
-        context = {'total_trust':total_trust, 'current_trust':current_trust, 'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
         return render(request, 'mop/index.html', context)
     
     else:
@@ -80,9 +79,7 @@ def login(request):
             auth.login(request, user)
             log_mop(request.user.mop, 'login')
             provlog_add_mop_login(request.user.mop, request.session.session_key)
-            
-            #Checking mail when logging in
-            analyze_mail(request.user.mop)
+
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -106,6 +103,26 @@ def rules(request):
     log_mop(request.user.mop, 'read rules')
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def performance(request):
+    badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
+    
+#     taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE).order_by('modifiedAt')
+#     print taskInstance_list
+#     
+#     #creationDate = request.user.mop.created
+#     creationDate = request.user.mop.created - timedelta(weeks=-3)
+#     today = now()
+#     print creationDate
+#     print today
+#     nextMonday = timedelta(days=-today.weekday(), weeks=1)
+#     lastMonday = today - timedelta(days=today.weekday())
+#     print nextMonday
+#     print lastMonday
+#     weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
+    log_mop(request.user.mop, 'read performance')
+    return render(request, 'mop/performance.html', {'badge_list':badge_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -164,23 +181,21 @@ def document_provenance(request, documentInstance_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
-    #checking mail when checking inbox
-    analyze_mail(request.user.mop)
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-date')
+    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
     log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_outbox(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-date')
+    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-createdAt')
     log_mop(request.user.mop, 'view outbox')
     return render(request, 'mop/mail_outbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_draft(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-date')
+    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-createdAt')
     log_mop(request.user.mop, 'view drafts')
     return render(request, 'mop/mail_draft.html', {"mail_list": mail_list})
 
@@ -188,7 +203,7 @@ def mail_draft(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_trash(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-date')
+    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-createdAt')
     log_mop(request.user.mop, 'view trash')
     return render(request, 'mop/mail_trash.html', {"mail_list": mail_list})
 
@@ -278,6 +293,7 @@ def mail_deleting(request, mail_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_compose(request):
+    #TODO Mail needs a sentAt / savedAt value so that trashing email does not change its date
     if request.method == 'POST':
         mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
         if 'send' in request.POST:
@@ -298,15 +314,15 @@ def mail_compose(request):
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
-            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
-            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-date')
+            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
         
     else:
         form =  MailForm()
-        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
-        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-date')
+        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form,}, context_instance=RequestContext(request))
 
@@ -335,7 +351,7 @@ def mail_edit(request, mail_id):
             mail = form.save()
             return redirect('mop_index')
         else:
-            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
+            form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render_to_response('mop/mail_compose.html', {'form' : form, 'mail':mail}, context_instance=RequestContext(request))
@@ -343,7 +359,7 @@ def mail_edit(request, mail_id):
     else:
         form = MailForm(instance=mail)
         #TODO same with documents at all occurences
-        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-date')
+        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
         form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render_to_response('mop/mail_compose.html', {'form' : form, 'mail':mail}, context_instance=RequestContext(request))
@@ -352,12 +368,15 @@ def mail_edit(request, mail_id):
 #@user_passes_test(isMop, login_url='mop_login')
 @csrf_exempt
 def mail_check(request):
-    #TODO: compare with previous unread emails
-    #TODO: Emails need to be processed independent of player!!!
-    if request.is_ajax():
-        mail_count = analyze_mail(request.user.mop)
-        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count() 
-        json_data = json.dumps({"mail_count":mail_count, 'total_unread':total_unread})
+    #TODO: populate with current unread count
+    if request.is_ajax() and request.method == 'POST':
+        last_unread = request.POST.get('last_unread', 0)
+        total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        new_mail=False
+        if total_unread > last_unread:
+            new_mail = True
+         
+        json_data = json.dumps({'total_unread':total_unread, 'new_mail':new_mail})
     
         return HttpResponse(json_data, mimetype="application/json")
 
@@ -406,25 +425,22 @@ def form_fill(request, reqBlank_id):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def forms_signed(request):
-    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-date")
-    requisitionInstance_used_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-date")
+    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-modifiedAt")
+    requisitionInstance_used_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
     
     log_mop(request.user.mop, 'view filled forms')
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
 
-def getTotalTrust(mop):
-    trust = 0
-    weekTrust_list = WeekTrust.objects.filter(mop=mop)
-    for weekTrust in weekTrust_list:
-        trust += weekTrust.trust
-    return trust
 
-def getCurrentTrust(mop):
-    trust = 0
-    year, week, day = now().isocalendar()
-    weekTrust, created = WeekTrust.objects.get_or_create(mop=mop, year=year, week=week)
-    return weekTrust.trust
-    
+@staff_member_required
+def control(request):
+    output = None
+    if request.method == 'POST':
+        if 'mail' in request.POST:
+            output = analyze_mail()
+        elif 'performance' in request.POST:
+            output = analyze_performance()
+    return render(request, 'mop/control.html', {'output':output})       
 
 # def getTotalTrust(mop):
 #     trust = 0

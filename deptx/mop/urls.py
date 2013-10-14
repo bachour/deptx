@@ -8,6 +8,7 @@ urlpatterns = patterns('',
 
     url(r'intranet/logout/', views.logout_view, name='mop_logout'),
     url(r'intranet/rules/', views.rules, name='mop_rules'),
+    url(r'intranet/performance/', views.performance, name='mop_performance'),
     url(r'intranet/tasks/', views.tasks, name='mop_tasks'),
     url(r'intranet/forms/blank', views.forms_blank, name='mop_forms_blank'),
     url(r'intranet/forms/signed', views.forms_signed, name='mop_forms_signed'),
@@ -25,5 +26,7 @@ urlpatterns = patterns('',
     url(r'intranet/mail/compose/$', views.mail_compose, name='mop_mail_compose'),
     url(r'intranet/mail/compose/(\d+)', views.mail_edit, name='mop_mail_edit'),
     url(r'intranet/mail/check/', views.mail_check, name='mop_mail_check'),
+    
+    url(r'intranet/control/$', views.control, name='mop_control'),
           
 )

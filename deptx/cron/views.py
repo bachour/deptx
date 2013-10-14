@@ -109,11 +109,7 @@ def index(request):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-def mopmaker(request, mission):
-    try:
-        missionInstance = MissionInstance.objects.get(mission=mission)
-    except:
-        return 
+def mopmaker(request, missionInstance):
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
@@ -168,13 +164,13 @@ def mission_cases(request, serial):
     missionInstance = None
     try:
         mission = Mission.objects.get(serial=serial)
-        missionInstance = MissionInstance.objects.get(mission=mission)
+        missionInstance = MissionInstance.objects.get(cron=request.user.cron, mission=mission)
     except:
         return
     
     if missionInstance.isCasesAllowed:
         if mission.category == Mission.CATEGORY_MOPMAKER:
-            return mopmaker(request, mission)
+            return mopmaker(request, missionInstance)
         
         case_list = Case.objects.filter(mission=mission).order_by('rank')
         caseInstance_list = []
@@ -382,9 +378,11 @@ def case_outro(request, mission_serial, case_serial):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 #TODO: Has user access to case and document?
-def provenance(request, serial):
+def provenance(request, mission_serial, case_serial, document_serial):
     
-    document = Document.objects.get(serial=serial)
+    mission = Mission.objects.get(serial=mission_serial)
+    case = Case.objects.get(serial=case_serial)
+    document = Document.objects.get(serial=document_serial)
     documentInstance = CronDocumentInstance.objects.get(document=document, cron=request.user.cron)
     
     doc ={}
@@ -393,7 +391,7 @@ def provenance(request, serial):
     doc['store_id'] = document.provenance.store_id    
     log_cron(request.user.cron, 'view provenance', json.dumps(doc))
     
-    return render_to_response('cron/provenance.html', {"user": request.user, "documentInstance": documentInstance, "mode":MODE_CRON },
+    return render_to_response('cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "documentInstance": documentInstance, "mode":MODE_CRON },
                                          context_instance=RequestContext(request)
                                  )
     
@@ -467,7 +465,7 @@ def hq_case_intro(request, id):
     content = case.intro
     text = renderContent(content, request.user)
     requiredDocuments = case.document_set.all()
-    return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'document_list':requiredDocuments})
+    return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'document_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
 def hq_case_outro(request, id):

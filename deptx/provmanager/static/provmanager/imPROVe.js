@@ -590,9 +590,9 @@ function isSelected(node)
 }
 
 /*
- * http://dummyimage.com/600x400/fed37f/000.jpg&text=AGENT
- * http://dummyimage.com/600x400/fffc87/000.jpg&text=ENTITY
- * http://dummyimage.com/600x400/9fb1fc/000.jpg&text=ACTIVITY
+ * GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=AGENT
+ * GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=ENTITY
+ * GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=ACTIVITY
  */
 function loadJSONProv (json)
 {
@@ -614,7 +614,7 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["mop:image"];
 				
 				if (!nodeImage)
-					nodeImage = "http://dummyimage.com/600x400/fed37f/000.jpg&text=" + nodeName;
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName 
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}
@@ -632,7 +632,7 @@ function loadJSONProv (json)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
-					nodeImage = "http://dummyimage.com/600x400/fffc87/000.jpg&text=" + nodeName;
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=" + nodeName
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}
@@ -651,7 +651,7 @@ function loadJSONProv (json)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
-					nodeImage = "http://dummyimage.com/600x400/9fb1fc/000.jpg&text=" + nodeName;
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=" + nodeName
 				else
 					nodeImage = MEDIA_URL + nodeImage;
 				attribs = {}				
@@ -1703,20 +1703,24 @@ function getName(shape)
 
 function getSaveState()
 {
-	ajaxCall(GET_STATE_URL, "serial=" + AJAX_SERIAL, updateState);
+    if (IS_TEST==false)
+    {
+	    $.getJSON(GET_STATE_URL, function(json) {
+	 	   updateState(json);
+	 	 });
+	}
 }
 
-function updateState(response)
+function updateState(state)
 {
-	state = JSON && JSON.parse(response) || $.parseJSON(response);
 	for (var n in state)
 	{
-		nodes[n].image.setX(state[n].x);
-		nodes[n].image.setY(state[n].y);
+		nodes[state[n].node].image.setX(parseInt(state[n].x));
+		nodes[state[n].node].image.setY(parseInt(state[n].y));
 		
-    	for (var l in nodes[n].edges)
+    	for (var l in nodes[state[n].node].edges)
 		{
-			var edge = nodes[n].edges[l];
+			var edge = nodes[state[n].node].edges[l];
 			var points = getLinePoints(edge.from.image, edge.to.image);
         	edge.line.setPoints(points);
 		}
