@@ -12,9 +12,10 @@ converter is a tool for extracting PROV annotations from a graphML file
 @license:    TBD
 
 @contact:    trungdong@donggiang.com
-@deffield    updated: 2013-09-13
+@deffield    updated: 2013-10-15
 '''
 
+import codecs
 import sys
 import os
 import logging
@@ -367,11 +368,11 @@ def convert_graphml_file(filepath):
         logger.info('Converting file %s...' % filepath)
         tree = etree.parse(filepath)
         prov_doc = convert_xml_root(tree.getroot())
-        with open(root + '.provn', 'w') as f:
+        with codecs.open(root + '.provn', 'w', encoding='utf-8') as f:
             logger.debug('Writing to %s.provn' % root)
             provn = prov_doc.get_provn()
             f.write(provn)
-        with open(root + '.json', 'w') as f:
+        with codecs.open(root + '.json', 'w', encoding='utf-8') as f:
             logger.debug('Writing to %s.json' % root)
             provjson = prov_doc.get_provjson(indent=2)
             f.write(provjson)
