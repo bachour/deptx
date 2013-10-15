@@ -150,6 +150,7 @@ class Case(models.Model):
     mission = models.ForeignKey(Mission)
     rank = models.IntegerField()
     serial = models.SlugField(max_length=36, default=generateUUID)
+    preCase = models.ForeignKey('self', blank=True, null=True)
     
     intro = models.TextField(blank=True, null=True)
     outro = models.TextField(blank=True, null=True)

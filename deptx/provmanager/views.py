@@ -9,7 +9,7 @@ from provmanager.models import Provenance, ProvenanceLog
 from prov.model import ProvBundle, Namespace
 
 from deptx.secrets import api_username, api_key
-from assets.models import Document
+from assets.models import Document, Task
 from cron.models import CronDocumentInstance
 from mop.models import DocumentInstance, TaskInstance
 
@@ -34,11 +34,12 @@ MODE_MOP = "mop"
 
 @staff_member_required    
 def index(request):
+    
     provenance_list = Provenance.objects.all().order_by("-modifiedAt")
     
     for provenance in provenance_list:
-        provenance.cron_document_list = Document.objects.filter(provenance=provenance).exclude(case__isnull=True)
-        provenance.mop_taskInstance_list = TaskInstance.objects.filter(provenance=provenance).exclude(task__isnull=True)
+        if provenance.getType() == 'CRON':
+            return provenance.document
     
     return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
 
@@ -46,11 +47,12 @@ def index(request):
 def view(request, id):
     provenance = Provenance.objects.get(id=id)
     bundle = API.get_document(provenance.store_id)
-    svg = getProvSvg(provenance)
+    #svg = getProvSvg(provenance)
     #xml = api.get_document(provenance.store_id, format="xml")
     json_str = getProvJsonStr(provenance)
-
-    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'svg':svg, 'mode':MODE_CRON})
+    
+    #TODO fix mode
+    return render(request, 'provmanager/view.html', {'provenance': provenance, 'bundle':bundle, 'json':json_str, 'mode':MODE_CRON})
     #return render(request, 'provmanager/improve.html', {'provenance': provenance})
 
 @staff_member_required
@@ -58,19 +60,20 @@ def create(request):
     if request.method == 'POST':
         if 'convert' in request.POST:
             graphml_str = request.POST["graphml"]
+            filename = request.POST["filename"]
             provn_str = convert_graphml_string(graphml_str)
             valid, validation_url = validate(provn_str)
             if valid:
                 json_str = provn_str.get_provjson()
             else:
                 json_str={}
-            return render_to_response('provmanager/create.html', {"is_test":True, "graphml_str": graphml_str, "json_str": json_str, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
+            return render_to_response('provmanager/create.html', {"is_test":True, "filename":filename, "graphml_str": graphml_str, "json_str": json_str, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
         elif 'save' in request.POST:
             graphml_str = request.POST["graphml"]
             provn_str = convert_graphml_string(graphml_str)
             valid, validation_url = validate(provn_str)
             if valid:
-                name = request.POST["name"]
+                name = request.POST["filename"]
                 if name=="":
                     name = "PLEASE ENTER A NAME"
                 store_id = API.submit_document(provn_str, name, public=False)
@@ -90,7 +93,7 @@ def randomize_task(task, mop):
     bundle = ProvBundle.from_provjson(json.dumps(random_graph))
     name = "%s (randomized for %s)" % (task.name, mop.user.username)
     store_id = API.submit_document(bundle, name, public=False)
-    provenance = Provenance(name=name, store_id=store_id)
+    provenance = Provenance(name=name, store_id=store_id, type=Provenance.TYPE_MOP_INSTANCE)
     provenance.save()
 
     taskInstance = TaskInstance.objects.create(mop=mop, task=task, provenance=provenance)

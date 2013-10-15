@@ -178,10 +178,19 @@ def mission_cases(request, serial):
         unpublished = False
         for case in case_list:
             if case.isPublished:
-                caseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case)
-                if not caseInstance.isSolved():
-                    finished = False
-                caseInstance_list.append(caseInstance)
+                try:
+                    preCase = Case.objects.get(preCase=case)
+                    preCaseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=preCase)
+                    preCaseCondition = preCaseInstance.isSolved()
+                except Case.DoesNotExist:
+                    preCase = None
+                    preCaseInstance = None
+                    preCaseCondition = True
+                if preCaseCondition:
+                    caseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case)
+                    if not caseInstance.isSolved():
+                        finished = False
+                    caseInstance_list.append(caseInstance)        
             else:
                 unpublished = True
         if (finished and not unpublished):

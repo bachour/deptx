@@ -5,6 +5,8 @@
 <body>
 <form action="{% url 'provmanager_create' %}" method="post">{% csrf_token %}
 <textarea name="graphml" id="drop_zone" style="width:480px; height:80px">{{graphml_str}}</textarea><br/>
+<input id="filename" type="text" name="filename" value="{{filename}}" size="50"/>
+<br/><br/>
 <input type="submit" value="Convert" name="convert" />
 
 {% if valid == None %}
@@ -23,8 +25,6 @@
 	{% include 'provmanager/improve.html' %}
 	<br/><br/>
 	{% if valid %}
-	Provenance name: <input type="text" name="name" value=""/>
-	<br/><br/>
 	<input type="submit" value="Save" name="save" />
 	{% endif %}
 {% endif %}
@@ -41,6 +41,7 @@
          document.getElementById('drop_zone').value = event.target.result;
     }        
     reader.readAsText(files[0],"UTF-8");
+    document.getElementById('filename').value = files[0].name;
   }
 
   function handleDragOver(evt) {

@@ -6,6 +6,11 @@ from django_extensions.db.fields import CreationDateTimeField, ModificationDateT
 
 
 class Provenance(models.Model):
+    TYPE_NONE = "NONE"
+    TYPE_CRON = "CRON"
+    TYPE_MOP_TEMPLATE = "MOP_TEMPLATE"
+    TYPE_MOP_INSTANCE = "MOP_INSTANCE"
+    
     name = models.CharField(max_length=50)
     store_id = models.IntegerField(blank=True, null=True)
     serial = models.SlugField(max_length=36, default=generateUUID)
@@ -18,9 +23,26 @@ class Provenance(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    def getType(self):
+        try:
+            self.document
+            return self.TYPE_CRON
+        except:
+            pass
+        try:
+            self.task
+            return self.TYPE_MOP_TEMPLATE
+        except:
+            pass
+        try:
+            self.taskInstance
+            return self.TYPE_MOP_INSTANCE
+        except:
+            pass
+        return self.TYPE_NONE
     
     def __unicode__(self):
-        return self.name + " - store: " + self.store_id.__str__()
+        return "%s - %s - store: %d" % (self.getType(), self.name, self.store_id)
 
 class ProvenanceLog(models.Model):
     cron = models.ForeignKey(Cron)

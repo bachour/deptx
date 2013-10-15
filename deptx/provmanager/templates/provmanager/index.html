@@ -17,18 +17,21 @@ td { border:2px black solid; padding:4px;}
 <tr>
 	<th></th>
 	<th></th>
-	<th>ProvStore</th>
-	<th>cr0n: case (document)</th>
-	<th>MoP: task (document)</th>
+	<th></th>
+	<th>Assigned to</th>
+	<th>Store</th>
 	<th>modified</th>
 </tr>
 {% for provenance in provenance_list %}
 	<tr>
 		<td>{% if provenance.store_id %}<a href="{% url 'provmanager_view' provenance.id %}">view</a>{% endif %}</td>
 		<td>{{provenance.name}}</td>
+		<td>{{provenance.getType}}</td>
+		<td>{{provenance.document}} 
+			{{provenance.task}}
+			{{provenance.taskInstance}}
+		</td>
 		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
-		<td>{% for document in provenance.cron_document_list %}{{document.case.name}} ({{document.name}})<br/>{% endfor %}</td>
-		<td>{% for taskInstance in provenance.mop_taskInstance_list %}{{taskInstance.serial}} ({{taskInstance.task.name}})<br/>{% endfor %}</td>
 		<td>{{provenance.modifiedAt}}</td>		
 	</tr>
 {% endfor %}
