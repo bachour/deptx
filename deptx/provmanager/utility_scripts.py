@@ -24,7 +24,7 @@ def get_random_graph(graph):
             continue
         for e in graph[c]: #individual elements
             for a in graph[c][e]:
-                if graph[c][e][a][0] == '$' or graph[c][e][a][0] == '%':
+                if graph[c][e][a][0] == '$' or graph[c][e][a][0] == '&':
                     values = graph[c][e][a].split()
                     file = values[0][1:]
                     id = values[1]
@@ -37,11 +37,11 @@ def get_random_graph(graph):
                     else:
                         identifiers[id].append(identifiers[id][random.randint(0,1)])
                         triplicate_count += 1
-                        if graph[c][e][a][0] == '%':
+                        if graph[c][e][a][0] == '&':
                             print "WARNING: main attribute for identifier that has more than 2 occurences: ", id
                         
                     # if this is the main attribute, store its value
-                    if graph[c][e][a][0] == '%':
+                    if graph[c][e][a][0] == '&':
                         if identifier_main_att.has_key(id):
                             print "WARNING: multiple main attributes detected for identifier: ", id
                         identifier_main_att[id] = identifiers[id][-1]
@@ -74,7 +74,7 @@ def get_random_graph(graph):
             continue
         for e in graph[c]: #individual elements
             for a in graph[c][e]:
-                if graph[c][e][a][0] == '$':
+                if graph[c][e][a][0] == '$' or graph[c][e][a][0] == '&':
                     values = graph[c][e][a].split()
                     id = values[1]
                     graph[c][e][a] = identifiers[id].pop(0)
@@ -122,3 +122,6 @@ def get_random_from_file(file, not_in):
         
         
     return lines[random.randint(0, len(lines)-1)].strip()
+
+#grph = json.load(file.open("/Users/khaled/Documents/amptest.json"))
+#get_random_graph()
