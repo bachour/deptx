@@ -12,9 +12,10 @@ converter is a tool for extracting PROV annotations from a graphML file
 @license:    TBD
 
 @contact:    trungdong@donggiang.com
-@deffield    updated: 2013-09-13
+@deffield    updated: 2013-10-15
 '''
 
+import codecs
 import sys
 import os
 import logging
@@ -22,7 +23,7 @@ import traceback
 import urllib2
 import datetime
 from StringIO import StringIO
-from prov.model import ProvException
+from prov.model import ProvException, PROV
 logger = logging.getLogger(__name__)
 import re
 from argparse import ArgumentParser
@@ -45,16 +46,17 @@ PROFILE = 0
 def logging_intercept(fn, level=logging.DEBUG):
     def wrapping_fn(*args, **kwargs):
         log_stream = StringIO()
-        handler = logging.StreamHandler(log_stream)  # 1000 should be enough for a small
+        handler = logging.StreamHandler(log_stream)  # 1000 should be enough for a small function
         handler.setLevel(level=level)
         logger.addHandler(handler)  # Use the existing logger, but could also use the global logger
         result = fn(*args, **kwargs)
         logger.removeHandler(handler)
         logs = log_stream.getvalue()
-        print logs  # Do whatever we want with the logs here
-#         return result, logs  # We could also return the logs along with the actual result
         log_stream.close()
+
+        # Do whatever we want with the logs here
         return result
+#         return result, logs  # We could also return the logs along with the actual result
     return wrapping_fn
 
 
@@ -89,6 +91,7 @@ GRAPH_ML_DATA = etree.QName(NS_URI_GRAPH_ML, 'data')
 
 NS_MOP = prov.model.Namespace('mop', 'http://mofp.net/ns#')
 CUSTOM_ATTRIBUTES = {
+    'Role': PROV['role'],
     'date_of_birth': NS_MOP['birthdate'],
 }
 
@@ -173,16 +176,11 @@ def convert_attributes(element, attributes):
             if key in attributes:
                 value = data.text
                 if value:
-                    #print 'Converting ', key, ' ', attributes[key], '.', value
+                    # Converting custom (free) attributes in the form of <attr_name>:<attr_value>
                     if str(attributes[key]).find('free') >= 0:
-                        colon_pos = value.find(':')
-                        actual_attribute_name = convert_attribute_name(value[0: colon_pos])
-                        if colon_pos >= len(value)-1:
-                            actual_value = ''
-                        else:
-                            actual_value = value[colon_pos + 2:]
-                        #print 'Converted ', key, ' ', attributes[key], '.', value, ' to ', actual_attribute_name, '.', actual_value
-                        results[actual_attribute_name] = to_unicode_or_bust(actual_value)
+                        attr_name, attr_value = value.split(':', 1)
+                        attr_name = convert_attribute_name(attr_name)
+                        results[attr_name] = to_unicode_or_bust(attr_value) if attr_value else ""
                     else:
                         results[attributes[key]] = to_unicode_or_bust(value)
         return results
@@ -283,6 +281,9 @@ class GraphMLProvConverter(object):
         else:
             prov_type = EDGE_PROV_CODE[edge_type]
         attributes = convert_attributes(edge, self.edge_attributes)
+        # Checking for missing prov:role
+        if PROV['role'] not in attributes:
+            logger.warn("A role was not specified for edge %s" % edge_id)
         try:
             PROV_RELATION_FUNCTION[prov_type](self.prov, source_rec, target_rec, other_attributes=attributes)
         except ProvException, e:
@@ -367,11 +368,11 @@ def convert_graphml_file(filepath):
         logger.info('Converting file %s...' % filepath)
         tree = etree.parse(filepath)
         prov_doc = convert_xml_root(tree.getroot())
-        with open(root + '.provn', 'w') as f:
+        with codecs.open(root + '.provn', 'w', encoding='utf-8') as f:
             logger.debug('Writing to %s.provn' % root)
             provn = prov_doc.get_provn()
             f.write(provn)
-        with open(root + '.json', 'w') as f:
+        with codecs.open(root + '.json', 'w', encoding='utf-8') as f:
             logger.debug('Writing to %s.json' % root)
             provjson = prov_doc.get_provjson(indent=2)
             f.write(provjson)

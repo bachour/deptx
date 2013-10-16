@@ -13,7 +13,7 @@
 		</h2>
 		{% for case in case_list %}
 			{% if case.mission.id == mission.id %}
-				<h2>{{case.rank}} - {{case.name}} ({% if case.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h2>
+				<h2>{{case.rank}} - {{case.name}} {% if case.preCase %} - requires: {{case.preCase.rank}} - {{case.preCase.name}} {% endif %}({% if case.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h2>
 				<h3>
 					<a href="{% url 'cron_hq_case_intro' case.id %}">Intro</a>
 					<a href="{% url 'cron_hq_case_outro' case.id %}">Outro</a>

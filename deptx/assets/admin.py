@@ -7,8 +7,6 @@ class CaseDocumentInline(admin.StackedInline):
  
 class CaseAdmin(admin.ModelAdmin):
     inlines = [CaseDocumentInline]
-    
-
 
 admin.site.register(Unit)
 admin.site.register(Requisition)
