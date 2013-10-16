@@ -11,6 +11,7 @@ RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
 # returns the resulting graph as a json object
 def get_random_graph(graph):
     identifiers = {}
+    identifier_main_att = {}
     duplicate_count = 0
     triplicate_count = 0
     
@@ -20,7 +21,7 @@ def get_random_graph(graph):
             continue
         for e in graph[c]: #individual elements
             for a in graph[c][e]:
-                if graph[c][e][a][0] == '$':
+                if graph[c][e][a][0] == '$' or graph[c][a][0] == '%':
                     values = graph[c][e][a].split()
                     file = values[0][1:]
                     id = values[1]
@@ -33,6 +34,14 @@ def get_random_graph(graph):
                     else:
                         identifiers[id].append(identifiers[id][random.randint(0,1)])
                         triplicate_count += 1
+                        if graph[c][a][0] == '%':
+                            print "WARNING: main attribute for identifier that has more than 2 occurences: ", id
+                        
+                    # if this is the main attribute, store its value
+                    if graph[c][a][0] == '%':
+                        if identifier_main_att.has_key(id):
+                            print "WARNING: multiple main attributes detected for identifier: ", id
+                        identifier_main_att[id] = identifiers[id][-1]
                         
     #make duplicate_count a random number between 0 and duplicate_count
     duplicate_count = duplicate_count - random.randint(1,duplicate_count)
@@ -46,7 +55,12 @@ def get_random_graph(graph):
                     identifiers[i][j] = '?' + identifiers[i][j]
             else:
                 #choose one of the values and place it everywhere
-                selected = identifiers[i][random.randint(0, len(identifiers[i])-1)]
+                if (identifier_main_att.has_key(i)):
+                    #main attrbute found, use it
+                    selected = identifier_main_att[i]
+                else: #otherwise just choose at random
+                    selected = identifiers[i][random.randint(0, len(identifiers[i])-1)]
+                    
                 for j in range(len(identifiers[i])):
                     identifiers[i][j] = selected
             duplicate_count -= 1
