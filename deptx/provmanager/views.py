@@ -37,10 +37,6 @@ def index(request):
     
     provenance_list = Provenance.objects.all().order_by("-modifiedAt")
     
-    for provenance in provenance_list:
-        if provenance.getType() == 'CRON':
-            return provenance.document
-    
     return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
 
 @staff_member_required
