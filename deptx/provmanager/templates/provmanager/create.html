@@ -4,35 +4,54 @@
 </head>
 <body>
 <form action="{% url 'provmanager_create' %}" method="post">{% csrf_token %}
-<textarea name="graphml" id="drop_zone" style="width:480px; height:80px">{{graphml_str}}</textarea><br/>
-<input id="filename" type="text" name="filename" value="{{filename}}" size="50"/>
-<br/><br/>
-<input type="submit" value="Convert" name="convert" />
-<br/><br/>
-{% for output in output_list %}
-	{% with output|slice:':1' as start %}
-		{% if start == 'W' %}
-			<span style='color:red'>
+<table>
+<tr>
+	<td>
+		<strong>GraphML Input:</strong><br/>
+		<textarea name="graphml" id="drop_zone" style="width:480px; height:80px">{{graphml_str}}</textarea><br/><br/>
+		{% if valid == None %}
 		{% else %}
-			<span style='color:green'>
+			{% if valid %}
+				<strong>JSON Output:</strong><br/>
+				<textarea name="json" style="width:480px; height:80px">{{json_str}}</textarea><br/><br/>
+			{% endif %}
 		{% endif %}
-	{% endwith %}
-	{{output}}</span><br/>
-{% endfor %}
-<br/>
+		<strong>Filename:</strong>
+		<input id="filename" type="text" name="filename" value="{{filename}}" size="50"/>
+	</td>
+	<td>
+		{% for output in output_list %}
+			{% with output|slice:':1' as start %}
+				{% if start == 'W' %}
+					<span style='color:red'>
+				{% else %}
+					<span style='color:green'>
+				{% endif %}
+			{% endwith %}
+			{{output}}</span><br/>
+		{% endfor %}
+		<br/>
+		{% if valid == None %}
+		{% else %}
+			{% if valid %}Valid document!
+			{% else %} INVALID DOCUMENT!
+			{% endif %}
+			<a href="{{validation_url}}" target="_blank">Check Report</a><br/>
+		{% endif %}
+	</td>
+</tr>
+</table>
+<input type="submit" value="Convert" name="convert" />
 {% if valid == None %}
 {% else %}
-
-	{% if valid %}Valid document!
-	{% else %} INVALID DOCUMENT!
+	{% if valid %}
+		<input type="submit" value="Randomize" name="randomize" />
 	{% endif %}
-	<a href="{{validation_url}}" target="_blank">Check Report</a><br/>
-	<br/><br/>
-	
-	<textarea name="json" style="width:480px; height:80px">{{json_str}}</textarea>
-	<br/><br/>
-	Ingame preview:
-	<br/><br/>
+{% endif %}
+<br/><br/>
+{% if valid == None %}
+{% else %}
+	<strong>Ingame preview:</strong><br/>
 	{% include 'provmanager/improve.html' %}
 	<br/><br/>
 	{% if valid %}

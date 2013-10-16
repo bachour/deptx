@@ -54,23 +54,27 @@ def view(request, id):
 @staff_member_required
 def create(request):
     if request.method == 'POST':
-        if 'convert' in request.POST:
+        if 'convert' in request.POST or 'randomize' in request.POST:
             graphml_str = request.POST["graphml"]
             filename = request.POST["filename"]
             provn_str, output = convert_graphml_string(graphml_str)
             output_list = output.splitlines()
             output_list.sort()
-            
-            
+ 
             valid, validation_url = validate(provn_str)
             if valid:
                 json_str = provn_str.get_provjson()
             else:
                 json_str={}
+                
+            if 'randomize' in request.POST:
+                json_str = json.dumps(get_random_graph(json.loads(json_str)))
+            
             return render_to_response('provmanager/create.html', {"is_test":True, "output_list":output_list, "filename":filename, "graphml_str": graphml_str, "json_str": json_str, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
+
         elif 'save' in request.POST:
             graphml_str = request.POST["graphml"]
-            provn_str = convert_graphml_string(graphml_str)
+            provn_str, output = convert_graphml_string(graphml_str)
             valid, validation_url = validate(provn_str)
             if valid:
                 name = request.POST["filename"]
