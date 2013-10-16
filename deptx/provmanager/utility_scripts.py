@@ -3,11 +3,11 @@ import random
 import string
 
 try:
-    from deptx.settings_production import MEDIA_ROOT
+    from deptx.settings_production import MEDIA_URL
 except:
-    from deptx.settings import MEDIA_ROOT
+    from deptx.settings import MEDIA_URL
 
-RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
+RANDOM_FILES_PATH = MEDIA_URL + "GRINDING/"
 
 # takes a json for a graph with randomizable content, randomizes all values in the graph, randomly chooses one set
 # of critical values and makes at least one of them different from the others. adds question mark before all these values
