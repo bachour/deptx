@@ -8,7 +8,18 @@
 <input id="filename" type="text" name="filename" value="{{filename}}" size="50"/>
 <br/><br/>
 <input type="submit" value="Convert" name="convert" />
-
+<br/><br/>
+{% for output in output_list %}
+	{% with output|slice:':1' as start %}
+		{% if start == 'W' %}
+			<span style='color:red'>
+		{% else %}
+			<span style='color:green'>
+		{% endif %}
+	{% endwith %}
+	{{output}}</span><br/>
+{% endfor %}
+<br/>
 {% if valid == None %}
 {% else %}
 

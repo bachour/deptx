@@ -48,15 +48,18 @@ def logging_intercept(fn, level=logging.DEBUG):
         log_stream = StringIO()
         handler = logging.StreamHandler(log_stream)  # 1000 should be enough for a small function
         handler.setLevel(level=level)
+        # create formatter
+        formatter = logging.Formatter('%(levelname)s: %(message)s')
+        # add formatter to ch
+        handler.setFormatter(formatter)
         logger.addHandler(handler)  # Use the existing logger, but could also use the global logger
         result = fn(*args, **kwargs)
         logger.removeHandler(handler)
         logs = log_stream.getvalue()
         log_stream.close()
-
         # Do whatever we want with the logs here
-        return result
-#         return result, logs  # We could also return the logs along with the actual result
+        #return result
+        return result, logs  # We could also return the logs along with the actual result
     return wrapping_fn
 
 
@@ -190,6 +193,10 @@ def convert_time(date, time):
     str_datetime = ' '.join((date, time))
     return datetime.datetime.strptime(str_datetime, '%d/%m/%Y %H:%M')
 
+def get_string_from_node(record):
+    source_str = "%s" % record
+    type = source_str.split('(', 1)[0]
+    return type + ':' + source_str.split(':', 1)[1].split(',', 1)[0]
 
 class GraphMLProvConverter(object):
     def __init__(self, root):
@@ -267,6 +274,8 @@ class GraphMLProvConverter(object):
         target_id = edge.attrib['target']
         source_rec = self.nodes[source_id]
         target_rec = self.nodes[target_id]
+        source_str = get_string_from_node(source_rec)
+        target_str = get_string_from_node(target_rec)
 
         edge_type_data = edge.find("g:data[@key='%s']" % self.edge_type_key, GRAPHML_PREFIXES)
         edge_type = edge_type_data.text if edge_type_data is not None else None
@@ -274,20 +283,20 @@ class GraphMLProvConverter(object):
             # Trying to find a default relation
             try:
                 prov_type = PROV_DEFAULT_RELATION[(source_rec.get_type(), target_rec.get_type())]
-                logger.info('Cannot determine the PROV relation (%s) for edge %s, creating the default relation (%s) for this edge.' % (edge_type, edge_id, prov.model.PROV_N_MAP[prov_type]))
+                logger.info('Cannot determine the PROV relation (%s) for edge %s between %s and %s, creating the default relation (%s) for this edge.' % (edge_type, edge_id, source_str, target_str, prov.model.PROV_N_MAP[prov_type]))
             except KeyError:
-                logger.warn('Cannot determine the PROV relation (%s) for edge %s. Ignored this edge.' % (edge_type, edge_id))
+                logger.warn('Cannot determine the PROV relation (%s) for edge %s between %s and %s. Ignored this edge.' % (edge_type, edge_id, source_str, target_str))
                 return  # Stop processing
         else:
             prov_type = EDGE_PROV_CODE[edge_type]
         attributes = convert_attributes(edge, self.edge_attributes)
         # Checking for missing prov:role
         if PROV['role'] not in attributes:
-            logger.warn("A role was not specified for edge %s" % edge_id)
+            logger.warn("A role was not specified for edge %s between %s and %s." % (edge_id, source_str, target_str))
         try:
             PROV_RELATION_FUNCTION[prov_type](self.prov, source_rec, target_rec, other_attributes=attributes)
         except ProvException, e:
-            logger.warn("Cannot create relation for edge %s (type %s - %s). Ignored this edge.\n%s" % (edge_id, edge_type, prov.model.PROV_N_MAP[prov_type], repr(e)))
+            logger.warn("Cannot create relation for edge %s between %s and %s (type %s - %s). Ignored this edge.\n%s" % (edge_id, source_str, target_str, edge_type, prov.model.PROV_N_MAP[prov_type], repr(e)))
 
     def convert_entity(self, identifier, attributes):
         return self.prov.entity(identifier, other_attributes=attributes)
