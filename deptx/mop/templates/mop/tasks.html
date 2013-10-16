@@ -12,7 +12,7 @@
 	{% for taskInstance in active_taskInstance_list %}
 		<tr>
 			{% if taskInstance.documentInstance.acquired %}
-				<td class="nobox"><a href="{% url 'mop_task_provenance' taskInstance.serial %}">work on task</a></td>
+				<td class="nobox"><a href="{% url 'mop_task_provenance' taskInstance.serial %}">work</a></td>
 			{% else %}
 				<td>document missing</td>
 			{% endif %}

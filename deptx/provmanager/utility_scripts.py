@@ -2,7 +2,10 @@ import json
 import random
 import string
 
-from deptx.settings import MEDIA_ROOT
+try:
+    from deptx.settings_production import MEDIA_ROOT
+except:
+    from deptx.settings import MEDIA_ROOT
 
 RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
 

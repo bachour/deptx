@@ -93,7 +93,7 @@ def randomize_task(task, mop):
     bundle = ProvBundle.from_provjson(json.dumps(random_graph))
     name = "%s (randomized for %s)" % (task.name, mop.user.username)
     store_id = API.submit_document(bundle, name, public=False)
-    provenance = Provenance(name=name, store_id=store_id, type=Provenance.TYPE_MOP_INSTANCE)
+    provenance = Provenance(name=name, store_id=store_id)
     provenance.save()
 
     taskInstance = TaskInstance.objects.create(mop=mop, task=task, provenance=provenance)
