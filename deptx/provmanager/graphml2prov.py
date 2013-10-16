@@ -358,7 +358,9 @@ def convert_xml_root(root):
 
 
 def convert_graphml_string(content):
-    root = etree.fromstring(content)
+    utf8_parser = etree.XMLParser(encoding='utf-8')
+    s = content.encode('utf-8')
+    root =  etree.fromstring(s, parser=utf8_parser)
     return convert_xml_root(root)
 
 
