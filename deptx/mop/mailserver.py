@@ -231,10 +231,7 @@ def assignRequisition(mop, requisition):
     requisitionBlank, created = RequisitionBlank.objects.get_or_create(mop=mop, requisition=requisition)
        
 def assignTask(mop, task):
-    #taskInstance, created = TaskInstance.objects.get_or_create(mop=mop, task=task)
-    #documentInstance, created = DocumentInstance.objects.get_or_create(mop=mop, taskInstance=taskInstance)
     taskInstance = randomize_task(task, mop)
-    print taskInstance
     return taskInstance.serial
     
 def assignDocument(mop, cronDocument, mopDocumentInstance):

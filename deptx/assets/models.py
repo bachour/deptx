@@ -150,7 +150,7 @@ class Case(models.Model):
     mission = models.ForeignKey(Mission)
     rank = models.IntegerField()
     serial = models.SlugField(max_length=36, default=generateUUID)
-    preCase = models.ForeignKey('self', blank=True, null=True)
+    preCase = models.ForeignKey('self', blank=True, null=True, help_text="The preCase has to be solved before this case is accesible to the players. Before you can select a preCase, the current Case needs to be saved and added to a mission.")
     
     intro = models.TextField(blank=True, null=True)
     outro = models.TextField(blank=True, null=True)

@@ -1,7 +1,16 @@
 {% load staticfiles %}
 {% load dummyimage_tags %}
 
-<div style="background-image:url({{MEDIA_URL}}improve/paper.jpg);width:100%">
+{% if is_test %}
+<h3>This is just a test</h3>
+{% endif %}
+
+{% if provenance.get_type_display == 'CRON' %} 
+<div style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);width:100%">
+{% else %}
+<div style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);width:100%">
+{% endif %}
+
    <audio id="click" preload="auto">
     <source src="https://dl.dropboxusercontent.com/u/17451725/63532__florian-reinke__click2.wav" />  
    </audio>
@@ -12,32 +21,35 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     
     <script>
-    	var AJAX_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
-    	var AJAX_URL = "{% url 'provmanager_prov_check' %}";
-    	var AJAX_MODE = "{{mode}}";
-    	var LOG_URL = "{% url 'provmanager_prov_log_action' %}";
+    	var PROV_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
+    	var URL_CHECK = "{% url 'provmanager_prov_check' %}";
+    	var URL_LOG = "{% url 'provmanager_prov_log_action' %}";
     	
     	{% if is_test %}
     		var IS_TEST = true;
-    		var GET_STATE_URL = "";
+    		var URL_GET_STATE = "";
     	{% else %}
     		var IS_TEST = false;
-    		var GET_STATE_URL = "{% url 'provmanager_improve_saved_state' provenance.serial mode %}";
+    		var URL_GET_STATE = "{% url 'provmanager_improve_saved_state' provenance.serial %}";
     	{% endif %}
     	{% if case %}
-    	var CONTINUE_URL = "{% url 'cron_case_intro' mission.serial case.serial %}";
-    	{% elif task %}
-    	var CONTINUE_URL = "{% url 'mop_documents' %}";
+    	var URL_CONTINUE = "{% url 'cron_case_intro' mission.serial case.serial %}";
+    	{% elif taskInstance %}
+    	var URL_CONTINUE = "{% url 'mop_tasks' %}";
     	{% endif %}
 		var DEBUG = false;
-		var MEDIA_URL = "{{MEDIA_URL}}";
-		var ARROW_URL_1 = "improve/arrow1.png";
-		var ARROW_URL_2 = "improve/arrow2.png";
-		var MAGNIFY_URL = "improve/magnify.png";
+		var URL_MEDIA = "{{MEDIA_URL}}";
+		var URL_ARROW_1 = "improve/arrow1.png";
+		var URL_ARROW_2 = "improve/arrow2.png";
+		var URL_MAGNIFY = "improve/magnify.png";
 		var FIRST_TIME = true;
-		var GENERATED_IMAGE_URL = '{% get_dummyimage_url 600 400 png %}'
+		var URL_GENERATED_IMAGE = '{% get_dummyimage_url 600 400 png %}'
     </script>
-    <script src="{{MEDIA_URL}}improve/defaultKss.js"%}"></script>
+{% if provenance.get_type_display == 'CRON' %}
+    <script src="{{MEDIA_URL}}improve/cronKss.js"%}"></script>
+{% else %}
+	<script src="{{MEDIA_URL}}improve/mopKss.js"%}"></script>
+{% endif %}
     <script src="{% static "provmanager/imPROVe.js"%}"></script>
     
     <script>

@@ -13,26 +13,30 @@ td { border:2px black solid; padding:4px;}
 <h1>PROVmanager</h1>
 <a href="{% url 'provmanager_create' %}">create new provenance</a>
 <br/><br/>
+Assigned Provenances have the following colors:<br/>
+<span style="background-color:#9bb6d4">CRON</span> <span style="background-color:#729e52">MOP_TEMPLATE</span> <span style="background-color:#cfd681">MOP_INSTANCE</span>
 <table>
 <tr>
 	<th></th>
 	<th></th>
-	<th></th>
+	<th>Attribute 1</th>
+	<th>Attribute 2</th>
 	<th>Assigned to</th>
 	<th>Store</th>
 	<th>modified</th>
 </tr>
 {% for provenance in provenance_list %}
-	<tr>
+	<tr style="background-color:{% if provenance.get_type_display == 'CRON' %}#9bb6d4{% elif provenance.get_type_display == 'MOP_TEMPLATE' %}#729e52{% elif provenance.get_type_display == 'MOP_INSTANCE' %}#cfd681{% else %}white{% endif %}">
 		<td>{% if provenance.store_id %}<a href="{% url 'provmanager_view' provenance.id %}">view</a>{% endif %}</td>
-		<td>{{provenance.name}}</td>
-		<td>{{provenance.getType}}</td>
+		<td style="white-space: nowrap">{{provenance.name}}</td>
+		<td>{{provenance.attribute1}}</td>
+		<td>{{provenance.attribute2}}</td>
 		<td>{{provenance.document}} 
 			{{provenance.task}}
-			{{provenance.taskInstance}}
+			{{provenance.taskInstance.task}} {{provenance.taskInstance.mop.user.username}}
 		</td>
 		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
-		<td>{{provenance.modifiedAt}}</td>		
+		<td style="white-space:nowrap">{{provenance.modifiedAt|date:'d.m.y. H:i'}}</td>		
 	</tr>
 {% endfor %}
 </table>

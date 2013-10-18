@@ -42,8 +42,8 @@ class TaskInstance(models.Model):
     
     def save(self, *args, **kwargs):
         super(TaskInstance, self).save(*args, **kwargs)
-        #TODO remove acquired=True
-        documentInstance, created = DocumentInstance.objects.get_or_create(mop=self.mop, taskInstance=self, acquired=True)
+
+        documentInstance, created = DocumentInstance.objects.get_or_create(mop=self.mop, taskInstance=self)
         #TODO what if object was not created?
         if not self.status == self.STATUS_ACTIVE:
             self.mop.totalTrust += self.getTrust()
