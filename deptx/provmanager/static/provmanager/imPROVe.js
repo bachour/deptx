@@ -43,7 +43,7 @@ var revisiting = false;
 
 //Object declarations
 // graph node
-function ProvNode (type, id, ressource, attributes)
+function ProvNode (type, id, ressource, attributes, showLabel)
 {
 	this.type = type;
 	this.id = id;
@@ -51,12 +51,15 @@ function ProvNode (type, id, ressource, attributes)
 	this.attributes = attributes;
 
 	this.image = null;
+	this.label = null;
 	this.edges = [];
 	
 	this.attribImage = null;
 	this.attribName = null;
 	this.attribValues = {};
 	this.attribNames = {};
+	
+	this.showlabel = showLabel;
 	
 	sources[id] = ressource;
 	nodes[id] = this;
@@ -283,9 +286,9 @@ function initStage()
 		var shape = evt.targetNode;
 	    if (shape && shape != tooltipText)
 	    {
-	    	tooltipText.setText(getName(shape));
 	        if (shape.isDraggable())
 	        {
+		    	tooltipText.setText(getName(shape));
 	        	document.body.style.cursor = 'pointer'; 
 	        	toggleHighlightShape(shape,true);
 	        }
@@ -296,7 +299,10 @@ function initStage()
 	            
 	    	}
 	        else if (shape.getClassName() == 'Line')
+	        {
+		    	tooltipText.setText(getName(shape));
 	        	toggleHighlightLine(shape, true);//alert("Line!");
+	        }
 	        
 	        layer.draw();
 	    }
@@ -600,6 +606,7 @@ function loadJSONProv (json)
 	var nodeName;
 	var nodeImage;
 	var attribs;
+	var showLabel;
 	
 	// first create nodes
 	for (var i in json)
@@ -614,14 +621,20 @@ function loadJSONProv (json)
 				nodeImage = json[i][j]["mop:image"];
 				
 				if (!nodeImage)
-					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName 
+				{
+					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName
+					showLabel = true;
+				}
 				else
+				{
 					nodeImage = MEDIA_URL + nodeImage;
+					showLabel = false;
+				}
 				attribs = {}
 				for (var k in json[i][j])
 					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];
-				node = new ProvNode("agent", j, nodeImage,attribs);
+				node = new ProvNode("agent", j, nodeImage,attribs,showLabel);
 			}
 			break;
 		case "entity":
