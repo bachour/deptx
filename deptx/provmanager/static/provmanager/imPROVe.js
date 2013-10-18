@@ -1252,7 +1252,7 @@ function setTextHighlight(shape, selected, highlighted)
 
 function createButtons()
 {
-	var submitButton = new Kinetic.Rect({
+	submitButton = new Kinetic.Rect({
 	        x: 0.83 * STAGE_WIDTH,
 	        y: 0.90 * STAGE_HEIGHT,
 	        stroke: BUTTON_BORDER_COLOUR,
@@ -1267,7 +1267,7 @@ function createButtons()
 	        shadowOpacity: BUTTON_SHADOW_OPACITY,
 	        cornerRadius: BUTTON_CORNER_RADIUS
 	      });
-	var submitText = new Kinetic.Text({
+	submitText = new Kinetic.Text({
 		    x: submitButton.getX(),
 	        y: submitButton.getY(),
 	        text: 'Submit!',
