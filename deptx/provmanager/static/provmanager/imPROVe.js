@@ -43,12 +43,13 @@ var revisiting = false;
 
 //Object declarations
 // graph node
-function ProvNode (type, id, ressource, attributes, showLabel)
+function ProvNode (type, id, ressource, attributes, showLabel, name)
 {
 	this.type = type;
 	this.id = id;
 	this.ressource = ressource;
 	this.attributes = attributes;
+	this.name = name;
 
 	this.image = null;
 	this.label = null;
@@ -59,7 +60,7 @@ function ProvNode (type, id, ressource, attributes, showLabel)
 	this.attribValues = {};
 	this.attribNames = {};
 	
-	this.showlabel = showLabel;
+	this.showLabel = showLabel;
 	
 	sources[id] = ressource;
 	nodes[id] = this;
@@ -95,6 +96,9 @@ function loadStaticImages(callback)
 	staticSources["__arrow"] = MEDIA_URL + ARROW_URL_1;
 	staticSources["__arrow2"] = MEDIA_URL + ARROW_URL_2;
 	staticSources["__magnify"] = MEDIA_URL + MAGNIFY_URL;
+//	staticSources["__agent"] = MEDIA_URL + AGENT_BG_IMAGE;
+//	staticSources["__activity"] = MEDIA_URL + ACTIVITY_BG_IMAGE;
+//	staticSources["__entity"] = MEDIA_URL + ENTITY_BG_IMAGE;
 	
     for(var name in staticSources) {
         numImages++;
@@ -168,6 +172,25 @@ function initStage()
 		  var scale = Math.sqrt(1.0 * NODE_DEFAULT_SIZE / (nodes[name].image.getWidth()*nodes[name].image.getHeight()));
 		  nodes[name].image.setWidth(nodes[name].image.getWidth()*scale);
 		  nodes[name].image.setHeight(nodes[name].image.getHeight()*scale);
+		  
+		  if (nodes[name].showLabel)
+		  {
+			  nodes[name].label = new Kinetic.Text({
+				x: nodes[name].image.getX(),
+				y: nodes[name].image.getX(),
+				width: nodes[name].image.getWidth(),
+				text: wordWrap(nodes[name].name, 10),
+		        fontSize: NODE_FONT_SIZE,
+		        //fontFamily: NODE_FONT_FAMILY,
+		        fontStyle: NODE_FONT_STYLE,
+		        fill: NODE_FONT_FILL,
+		        draggable: NODE_DRAGGABLE,
+		        align:'center'
+		        
+			  });
+			  nodes[name].label.setY(nodes[name].image.getY() + (nodes[name].image.getHeight() - nodes[name].label.getHeight())/2);
+			  nodes[name].image.setShadowEnabled(false);
+		  }
 		}
 	// create connectors for all edges
 	for (var i in edges)
@@ -216,52 +239,14 @@ function initStage()
 	{
 		var node = nodes[j];
 		layer.add(node.image);
-		
 		// now for each edge that links to this node, update its x and y
-        node.image.on('dragmove', function(evt) {
-        	// Set horizontal move boundaries
-        	offset =  this.getWidth()/Math.abs(Math.cos(this.getRotation()));
-        	if (this.getRotation > 0)
-        		offset += this.getHeight()*Math.abs(Math.sin(this.getRotation()));
-        	if (this.getX() + offset > 0.8*STAGE_WIDTH)
-        		this.setX( 0.8*STAGE_WIDTH - offset);
-        	if (this.getRotation() > 0)
-        		offset = this.getHeight()*Math.abs(Math.sin(this.getRotation()));
-        	else offset = 0;
-        	if (this.getX() < 10 + offset)
-        		this.setX(10 + offset);
-        	
-        	
-        	// Set vertical move boundaries
-        	if (this.getRotation() < 0)
-        		offset = this.getWidth()*Math.abs(Math.sin(this.getRotation()));
-        	else offset = 0;
-        	if (this.getY() < 8 + offset)
-        		this.setY(8 + offset);
-        	
-        	offset = this.getHeight()/Math.abs(Math.cos(this.getRotation()))
-        	if (this.getRotation() > 0)	
-        		offset += this.getWidth()*Math.abs(Math.sin(this.getRotation()));      
-        	if (this.getY() + offset > 0.95*STAGE_HEIGHT)
-        		this.setY(0.97*STAGE_HEIGHT - offset);
-        	
-        	var targetNode;
-        	
-        	for (var n in nodes)
-        		if (nodes[n].image == evt.targetNode)
-        			{
-        				 targetNode = nodes[n];
-        			}
-        	for (var l in targetNode.edges)
-        		{
-        			var edge = targetNode.edges[l];
-        			var points = getLinePoints(edge.from.image, edge.to.image);
-                	edge.line.setPoints(points);
-        		}
-        	layer.draw();
-        	//attribLayer['1'].draw();
-        	//attribLayer['2'].draw();
-        });
+        node.image.on('dragmove', updateDrag);
+        
+        if (node.showLabel)
+        {
+			layer.add(node.label);
+			node.label.on('dragmove', updateDrag);
+        }
 	}
 	
 	createButtons();
@@ -281,6 +266,40 @@ function initStage()
         height: 30
 	});
 		
+	setupMouseInteractions();
+      
+        var zoom = function(e) {
+      	   zoomAmount = e.wheelDeltaY*0.0001;
+      	  if (currentZoom + zoomAmount > MAX_ZOOM || currentZoom + zoomAmount < MIN_ZOOM)
+      		  return;
+      	  if ((currentZoom < MAX_ZOOM && zoomAmount > 0) || ((currentZoom > MIN_ZOOM && zoomAmount < 0)))
+      		  {
+		      	  currentZoom += zoomAmount;
+		      	  layer.setScale(layer.getScale().x+zoomAmount)
+		      	  layer.draw();
+      		  }
+      	}
+
+     getSaveState();
+     setupAttribPanes();
+       
+     //showAttributes(nodes['helen_blank'], '1');
+     //showAttributes(nodes['french_transcript'], '2');
+     layer.add(tooltipText);
+     //document.getElementById("container").addEventListener("mousewheel", zoom, false);
+     document.getElementById("loading").innerHTML = "";
+     stage.add(layer);
+     stage.add(attribLayer['1']);
+     stage.add(attribLayer['2']);
+     stage.add(messageLayer);
+     stage.add(mediaLayer);
+     
+     if (FIRST_TIME)
+    	 showTutorial();
+   } // end of function init stage
+
+function setupMouseInteractions()
+{
 	// add mouseover effect for objects pointed at
     layer.on('mouseover', function(evt) {
 		var shape = evt.targetNode;
@@ -329,12 +348,6 @@ function initStage()
         layer.draw();
       });
       
-      /*layer.on('dblclick', function(evt) {
-           shape = evt.targetNode;
-        	  toggleNodeSelection(shape);
-          	  redraw();
-        });
-      */
       for (var l in attribLayer)
       {
     	 /* attribLayer[l].on('dblclick', function(evt) {
@@ -362,9 +375,10 @@ function initStage()
  
       layer.on('mousedown', function(evt) {
     	  var shape = evt.targetNode;
+    	  var node = getNodeFromShape(shape);
           if (shape && shape.isDraggable())
           {
-	          shape.moveToTop();
+	          moveNodeToTop(node);
 	          tooltipText.moveToTop();
           	  layer.draw();
           
@@ -386,8 +400,6 @@ function initStage()
     	  var shape = evt.targetNode;
           if (shape && shape.isDraggable())
           {
-	          shape.moveToTop();
-          	  layer.draw();
 	          if (shapePosition == shape.getX()*shape.getY())
 	        	  toggleNodeSelection(shape);
 	          else
@@ -397,45 +409,84 @@ function initStage()
           	if (shape && (shape == submitButton || shape == submitText))
           	{
                   submitButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
-                  //submitButton.setX(submitButton.getX()-10);
-                  //submitButton.setY(submitButton.getY()-10);
-                  //submitText.setX(submitButton.getX());
-                  //submitText.setY(submitButton.getY());
                   layer.draw();
                   submitPushed();
           	}
           
         });
-      
-        var zoom = function(e) {
-      	   zoomAmount = e.wheelDeltaY*0.0001;
-      	  if (currentZoom + zoomAmount > MAX_ZOOM || currentZoom + zoomAmount < MIN_ZOOM)
-      		  return;
-      	  if ((currentZoom < MAX_ZOOM && zoomAmount > 0) || ((currentZoom > MIN_ZOOM && zoomAmount < 0)))
-      		  {
-		      	  currentZoom += zoomAmount;
-		      	  layer.setScale(layer.getScale().x+zoomAmount)
-		      	  layer.draw();
-      		  }
-      	}
+}
 
-     getSaveState();
-     setupAttribPanes();
-       
-     //showAttributes(nodes['helen_blank'], '1');
-     //showAttributes(nodes['french_transcript'], '2');
-     layer.add(tooltipText);
-     //document.getElementById("container").addEventListener("mousewheel", zoom, false);
-     document.getElementById("loading").innerHTML = "";
-     stage.add(layer);
-     stage.add(attribLayer['1']);
-     stage.add(attribLayer['2']);
-     stage.add(messageLayer);
-     stage.add(mediaLayer);
-     
-     if (FIRST_TIME)
-    	 showTutorial();
-   } // end of function init stage
+// when a node is dragged, update all it's edges and label if available
+function updateDrag(evt) {
+	// Set horizontal move boundaries
+	targetNode = getNodeFromShape(this);
+	shape = targetNode.image;
+	
+	if (shape != this)
+	{
+		shape.setX(this.getX());
+		shape.setY(this.getY() - (shape.getHeight() - this.getHeight())/2);
+	}
+	
+	offset =  shape.getWidth()/Math.abs(Math.cos(shape.getRotation()));
+	if (shape.getRotation > 0)
+		offset += shape.getHeight()*Math.abs(Math.sin(shape.getRotation()));
+	if (shape.getX() + offset > 0.8*STAGE_WIDTH)
+		shape.setX( 0.8*STAGE_WIDTH - offset);
+	if (shape.getRotation() > 0)
+		offset = shape.getHeight()*Math.abs(Math.sin(shape.getRotation()));
+	else offset = 0;
+	if (shape.getX() < 10 + offset)
+		shape.setX(10 + offset);
+	
+	
+	// Set vertical move boundaries
+	if (shape.getRotation() < 0)
+		offset = shape.getWidth()*Math.abs(Math.sin(shape.getRotation()));
+	else offset = 0;
+	if (shape.getY() < 8 + offset)
+		shape.setY(8 + offset);
+	
+	offset = shape.getHeight()/Math.abs(Math.cos(shape.getRotation()))
+	if (shape.getRotation() > 0)	
+		offset += shape.getWidth()*Math.abs(Math.sin(shape.getRotation()));      
+	if (shape.getY() + offset > 0.95*STAGE_HEIGHT)
+		shape.setY(0.97*STAGE_HEIGHT - offset);
+	
+	var targetNode = getNodeFromShape(shape);
+	
+	if (shape == targetNode.image && targetNode.showLabel)
+	{
+		targetNode.label.setX(shape.getX());
+		targetNode.label.setY(targetNode.image.getY() + (targetNode.image.getHeight() - targetNode.label.getHeight())/2);
+		
+	}
+	else
+	{
+		targetNode.image.setX(shape.getX());
+		targetNode.image.setY(shape.getY());
+	}
+	
+	for (var l in targetNode.edges)
+		{
+			var edge = targetNode.edges[l];
+			var points = getLinePoints(edge.from.image, edge.to.image);
+        	edge.line.setPoints(points);
+		}
+	layer.draw();
+	//attribLayer['1'].draw();
+	//attribLayer['2'].draw();
+}
+
+function getNodeFromShape(shape)
+{
+	for (node in nodes)
+	{
+		if (nodes[node].image == shape || nodes[node].label == shape)
+			return nodes[node];
+	}
+	return null;
+}
 
 // toggle highlighting for shapes when mouse over
 // if on, triggers highlight for target node and all
@@ -451,12 +502,8 @@ function toggleHighlightShape(target, on)
 	 */
 	
 	// first find the ProvNode holding this image
-	for (var n in nodes)
-		if (nodes[n].image == target)
-			{
-				targetNode = nodes[n];
-				break;
-			}
+	targetNode = getNodeFromShape(target);
+	
 	// now highlight the image if it is not already highlighted
 	if (!isSelected(targetNode))
 	{
@@ -622,7 +669,8 @@ function loadJSONProv (json)
 				
 				if (!nodeImage)
 				{
-					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName
+					//nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName;
+					nodeImage = MEDIA_URL + AGENT_BG_IMAGE;
 					showLabel = true;
 				}
 				else
@@ -634,7 +682,7 @@ function loadJSONProv (json)
 				for (var k in json[i][j])
 					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];
-				node = new ProvNode("agent", j, nodeImage,attribs,showLabel);
+				node = new ProvNode("agent", j, nodeImage,attribs,showLabel,nodeName);
 			}
 			break;
 		case "entity":
@@ -645,14 +693,21 @@ function loadJSONProv (json)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
-					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=" + nodeName
+				{
+					//nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=" + nodeName;
+					nodeImage = MEDIA_URL + ENTITY_BG_IMAGE;
+					showLabel = true;
+				}
 				else
+				{
 					nodeImage = MEDIA_URL + nodeImage;
+					showLabel = false;
+				}
 				attribs = {}
 				for ( k in json[i][j])
 					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];
-				node = new ProvNode("entity", j, nodeImage,attribs);
+				node = new ProvNode("entity", j, nodeImage,attribs, showLabel, nodeName);
 			}
 			break;
 		case "activity":
@@ -664,14 +719,20 @@ function loadJSONProv (json)
 					nodeName = j;
 				nodeImage = json[i][j]["mop:image"];
 				if (!nodeImage)
-					nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=" + nodeName
+				{
+				//	nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=" + nodeName;
+					nodeImage = MEDIA_URL + ACTIVITY_BG_IMAGE;
+					showLabel = true;
+				}
 				else
+				{
 					nodeImage = MEDIA_URL + nodeImage;
+				}
 				attribs = {}				
 				for ( k in json[i][j])
 					if (k!= "mop:image")
 						attribs[k]=json[i][j][k];				
-				node = new ProvNode("activity", j, nodeImage,attribs);
+				node = new ProvNode("activity", j, nodeImage,attribs, showLabel, nodeName);
 
 			}
 		    break;
@@ -1019,8 +1080,8 @@ function showAttributes(node, position)
 			  attribLayer[position].add(node.attribValues[i]);
 		  }
 	  attribLayer[position].add(node.attribImage);
-	  if (node.type != 'activity')
-		  attribLayer[position].add(node.attribName);
+	  //if (node.type != 'activity')
+      attribLayer[position].add(node.attribName);
 	  if (node.attribURL)
 		  attribLayer[position].add(node.attribURL);
 	  attribLayer[position].draw();
@@ -1067,10 +1128,8 @@ function toggleHighlightLine(line, on)
 function toggleNodeSelection(shape)
 {
 	// find node that was clicked on
-	var clickedNode = null;
-	for (var n in nodes)
-		if (nodes[n].image == shape)
-			clickedNode = nodes[n];
+	var clickedNode = getNodeFromShape(shape);
+
 	if (clickedNode == null)
 		toggleAttributeSelection(shape);
 	
@@ -1670,11 +1729,8 @@ function createAndAddMedia(url)
 function logDrag(shape)
 {
 	// find node belonging to this shape
-	var node = null;
-	for (var n in nodes)
-		if (nodes[n].image == shape)
-			node = nodes[n];
-	
+	var node = getNodeFromShape(shape);
+		
 	var message = "action=move&mode="+ AJAX_MODE + "&serial=" + AJAX_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
 	
 	ajaxCall(LOG_URL, message, logResponse);
@@ -1701,7 +1757,7 @@ function getName(shape)
 {
 	for (var n in nodes)
 		{
-			if (nodes[n].image == shape)
+			if (nodes[n].image == shape || nodes[n].label == shape)
 			{
 				return nodes[n].attributes["prov:label"];
 			}
@@ -1739,4 +1795,12 @@ function updateState(state)
 		}
 	}
 	redraw();
+}
+
+function moveNodeToTop(node)
+{
+	node.image.moveToTop();
+	if (node.showLabel)
+		node.label.moveToTop();
+	layer.draw();
 }
