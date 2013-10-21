@@ -27,7 +27,7 @@ from players.models import Cron
 from deptx.settings import MEDIA_URL
 
 from provmanager.models import ProvenanceLog
-from provmanager.views import MODE_CRON
+
 from logger.logging import log_cron, log_mop
 from provmanager.provlogging import provlog_add_cron_login, provlog_add_cron_logout, provlog_add_mop_register
 
@@ -400,7 +400,7 @@ def provenance(request, mission_serial, case_serial, document_serial):
     doc['store_id'] = document.provenance.store_id    
     log_cron(request.user.cron, 'view provenance', json.dumps(doc))
     
-    return render_to_response('cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "documentInstance": documentInstance, "mode":MODE_CRON },
+    return render_to_response('cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "documentInstance": documentInstance },
                                          context_instance=RequestContext(request)
                                  )
     

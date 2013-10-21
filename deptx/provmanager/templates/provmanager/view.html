@@ -1,9 +1,7 @@
 <h1>{{provenance.name}} - {{provenance.store_id}}</h1>
-{{document_list}}
-{{task_list}}
-{% include 'provmanager/improve.html' %}
-<hr/>
-<hr/>
-<pre>{{bundle}}</pre>
+{% if provenance.get_type_display == 'MOP_TEMPLATE' %}
+	<a href='{% url 'provmanager_view_randomize' provenance.id %}'>randomize me</a>
+{% endif %}
+{% include 'provmanager/improve.html' with is_test=True %}
 <hr/>
 <pre>{{json}}</pre>

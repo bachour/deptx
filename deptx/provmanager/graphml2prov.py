@@ -183,6 +183,7 @@ def convert_attributes(element, attributes):
                     if str(attributes[key]).find('free') >= 0:
                         attr_name, attr_value = value.split(':', 1)
                         attr_name = convert_attribute_name(attr_name)
+                        attr_value = attr_value.strip();
                         results[attr_name] = to_unicode_or_bust(attr_value) if attr_value else ""
                     else:
                         results[attributes[key]] = to_unicode_or_bust(value)

@@ -5,10 +5,11 @@
 <h1>Tasks</h1>
 
 
+
 <h2>Active</h2>
 {% if active_taskInstance_list %}
 	<table>
-	<tr><th class="nobox"></th><th>Unit</th><th>Task</th><th>Identification Code</th><th>Document</th></tr>
+	<tr><th class="nobox"></th><th>Status</th><th>Unit</th><th>Task</th><th>Identification Code</th><th>Document</th></tr>
 	{% for taskInstance in active_taskInstance_list %}
 		<tr>
 			{% if taskInstance.documentInstance.acquired %}
@@ -16,6 +17,7 @@
 			{% else %}
 				<td>document missing</td>
 			{% endif %}
+			<td>{{taskInstance.documentInstance.modified|yesno:'please submit, needs processing'}}</td>
 			<td>{{taskInstance.task.unit.serial}}</td>
 			<td>{{taskInstance.task.name}}</td>
 			<td>{{taskInstance.serial}}</td>

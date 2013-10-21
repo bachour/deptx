@@ -52,10 +52,10 @@
 {% if valid == None %}
 {% else %}
 	<strong>Ingame preview:</strong><br/>
-	{% include 'provmanager/improve.html' %}
+	{% include 'provmanager/improve.html' with is_test=True %}
 	<br/><br/>
 	{% if valid %}
-	<input type="submit" value="Save" name="save" />
+	<input type="submit" value="Save" name="save" /> 
 	{% endif %}
 {% endif %}
 </form>

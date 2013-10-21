@@ -93,12 +93,9 @@ function ProvLink (id, from, to, type, role, attributes)
 
 function loadStaticImages(callback)
 {
-	staticSources["__arrow"] = MEDIA_URL + ARROW_URL_1;
-	staticSources["__arrow2"] = MEDIA_URL + ARROW_URL_2;
-	staticSources["__magnify"] = MEDIA_URL + MAGNIFY_URL;
-//	staticSources["__agent"] = MEDIA_URL + AGENT_BG_IMAGE;
-//	staticSources["__activity"] = MEDIA_URL + ACTIVITY_BG_IMAGE;
-//	staticSources["__entity"] = MEDIA_URL + ENTITY_BG_IMAGE;
+	staticSources["__arrow"] = URL_MEDIA + URL_ARROW_1;
+	staticSources["__arrow2"] = URL_MEDIA + URL_ARROW_2;
+	staticSources["__magnify"] = URL_MEDIA + URL_MAGNIFY;
 	
     for(var name in staticSources) {
         numImages++;
@@ -643,9 +640,9 @@ function isSelected(node)
 }
 
 /*
- * GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=AGENT
- * GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=ENTITY
- * GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=ACTIVITY
+ * URL_GENERATED_IMAGE + "?bgcolor=!fed37f&text=AGENT
+ * URL_GENERATED_IMAGE + "?bgcolor=!fffc87&text=ENTITY
+ * URL_GENERATED_IMAGE + "?bgcolor=!9fb1fc&text=ACTIVITY
  */
 function loadJSONProv (json)
 {
@@ -670,12 +667,12 @@ function loadJSONProv (json)
 				if (!nodeImage)
 				{
 					//nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fed37f&text=" + nodeName;
-					nodeImage = MEDIA_URL + AGENT_BG_IMAGE;
+					nodeImage = URL_MEDIA + AGENT_BG_IMAGE;
 					showLabel = true;
 				}
 				else
 				{
-					nodeImage = MEDIA_URL + nodeImage;
+					nodeImage = URL_MEDIA + nodeImage;
 					showLabel = false;
 				}
 				attribs = {}
@@ -695,12 +692,12 @@ function loadJSONProv (json)
 				if (!nodeImage)
 				{
 					//nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!fffc87&text=" + nodeName;
-					nodeImage = MEDIA_URL + ENTITY_BG_IMAGE;
+					nodeImage = URL_MEDIA + ENTITY_BG_IMAGE;
 					showLabel = true;
 				}
 				else
 				{
-					nodeImage = MEDIA_URL + nodeImage;
+					nodeImage = URL_MEDIA + nodeImage;
 					showLabel = false;
 				}
 				attribs = {}
@@ -721,12 +718,12 @@ function loadJSONProv (json)
 				if (!nodeImage)
 				{
 				//	nodeImage = GENERATED_IMAGE_URL + "?bgcolor=!9fb1fc&text=" + nodeName;
-					nodeImage = MEDIA_URL + ACTIVITY_BG_IMAGE;
+					nodeImage = URL_MEDIA + ACTIVITY_BG_IMAGE;
 					showLabel = true;
 				}
 				else
 				{
-					nodeImage = MEDIA_URL + nodeImage;
+					nodeImage = URL_MEDIA + nodeImage;
 				}
 				attribs = {}				
 				for ( k in json[i][j])
@@ -1352,7 +1349,7 @@ function submitPushed()
 {
 	if (taskCompleted)
 	{
-		window.location.href = CONTINUE_URL;
+		window.location.href = URL_CONTINUE;
 	}
 	else
 	{
@@ -1400,10 +1397,10 @@ function validateSubmit()
 	"&node2=" + selectedNodes['2'].id + 
 	"&attribute1=" + selectedAttributes['1'] +
 	"&attribute2=" +selectedAttributes['2'] +
-	"&serial=" + AJAX_SERIAL +
-	"&mode=" + AJAX_MODE;
+	"&serial=" + PROV_SERIAL +
+	"&is_test=" + IS_TEST;
 	
-	ajaxCall(AJAX_URL, message, handleValidateResponse);
+	ajaxCall(URL_CHECK, message, handleValidateResponse);
 }
 
 function handleValidateResponse(response)
@@ -1411,14 +1408,17 @@ function handleValidateResponse(response)
 	var response;
 	if (DEBUG)
 	{
-		response = {"correct":true,"message":"You are correct! Press continue to continue."};
+		response = {"close_prov":true,"message":"You are correct! Press continue to continue."};
 	}
 	else
 		response = jQuery.parseJSON(response);
 
-	if (response.correct)
+	if (response.close_prov)
 	{
-		taskCompleted = true;
+		if (IS_TEST==false)
+		{
+			taskCompleted = true;
+		}
 	}
 	showMessage(response.message);
 }
@@ -1548,7 +1548,7 @@ function showMessage(msg)
 		messageLayer.draw();
 
 		if (taskCompleted)
-			window.location.href = CONTINUE_URL;
+			window.location.href = URL_CONTINUE;
 	});
 }
 
@@ -1728,12 +1728,16 @@ function createAndAddMedia(url)
 
 function logDrag(shape)
 {
+	if (IS_TEST == false)
+	{
 	// find node belonging to this shape
-	var node = getNodeFromShape(shape);
-		
-	var message = "action=move&mode="+ AJAX_MODE + "&serial=" + AJAX_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+		var node = getNodeFromShape(shape);
 	
-	ajaxCall(LOG_URL, message, logResponse);
+		var message = "action=move&serial=" + PROV_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+		
+		ajaxCall(URL_LOG, message, logResponse);
+	
+	}
 }
 
 function logResponse(response)
@@ -1743,14 +1747,16 @@ function logResponse(response)
 
 function logClick(node, attribute, newState)
 {
-	var message = "action=click" +
-				  "&mode="+ AJAX_MODE + 
-				  "&serial=" + AJAX_SERIAL + 
-				  "&node=" + node + 
-				  "&attribute=" + attribute + 
-				  "&state=" + newState;
-	
-	ajaxCall(LOG_URL, message, logResponse);
+	if (IS_TEST==false)
+	{
+		var message = "action=click" +
+					  "&serial=" + PROV_SERIAL + 
+					  "&node=" + node + 
+					  "&attribute=" + attribute + 
+					  "&state=" + newState;
+		
+		ajaxCall(URL_LOG, message, logResponse);
+	}
 }
 
 function getName(shape)
@@ -1774,7 +1780,7 @@ function getSaveState()
 {
     if (IS_TEST==false)
     {
-	    $.getJSON(GET_STATE_URL, function(json) {
+	    $.getJSON(URL_GET_STATE, function(json) {
 	 	   updateState(json);
 	 	 });
 	}

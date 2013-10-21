@@ -32,6 +32,7 @@ $(function() {
 window.setInterval(function(){
 	mailfield = $('#checkmail');
 	inboxfield = $('#inbox');
+	imagefield = $('#mailimage');
 	
 	spinner = new Spinner(opts).spin(target);
 	mailfield.html('checking mail...');
@@ -49,13 +50,18 @@ window.setInterval(function(){
 	    		},
 	    		success: function(data)
 	    		{
-	      			if (data.new_mail==false) {
+	      			if (data.total_unread==0) {
 	      				mailfield.html('no new messages');
+	      				imagefield.css('visibility', 'hidden');
 	      			}
 	      			else {
 	      				mailfield.html(data.total_unread + ' unread message(s)');
 	      				inboxfield.val('inbox (' + data.total_unread + ')');
-	      				audioGotMail.play();
+	      				if (data.has_new_mail) {
+	      					audioGotMail.play();
+	      					imagefield.css('visibility', 'visible');
+	      					
+	      				}
 	      			};
 	      			spinner.stop();
 	      			
@@ -73,4 +79,4 @@ window.setInterval(function(){
 	
 	
   
-}, 10000);
+}, 60000);
