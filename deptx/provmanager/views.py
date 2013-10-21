@@ -277,6 +277,7 @@ def prov_log_action(request):
             documentInstance = DocumentInstance.objects.get(taskInstance=provenance.taskInstance, mop=request.user.mop)
         else:
             message = "no document instance found"
+            error = True
         
         if documentInstance is not None:
         
@@ -298,11 +299,14 @@ def prov_log_action(request):
                 documentInstance.provenanceState = json.dumps(stored_data)
                 documentInstance.save()
                 message = 'position updated'
+                error = False
             
             elif action == 'click':
+                #TODO log clicking
                 message = 'click registered but not yet stored'
+                error = False
 
-        json_data = json.dumps({"message":message})            
+        json_data = json.dumps({"message":message, "error":error})            
         return HttpResponse("json_data", mimetype="application/json") 
         
   
