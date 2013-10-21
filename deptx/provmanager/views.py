@@ -275,7 +275,7 @@ def prov_log_action(request):
             documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
         elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
             documentInstance = DocumentInstance.objects.get(taskInstance=provenance.taskInstance, mop=request.user.mop)
-        else
+        else:
             message = "no document instance found"
         
         if documentInstance is not None:
