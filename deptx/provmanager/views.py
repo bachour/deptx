@@ -275,29 +275,38 @@ def prov_log_action(request):
             documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
         elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
             documentInstance = DocumentInstance.objects.get(taskInstance=provenance.taskInstance, mop=request.user.mop)
+        else:
+            message = "no document instance found"
+            error = True
         
-        if action == 'move':
-            try:
-                stored_data = json.loads(documentInstance.provenanceState)
-            except:
-                stored_data = []
-            updated = False
-            for data in stored_data:
-                if data['node'] == node:
-                    print 'equal'
-                    data['x'] = x
-                    data['y'] = y
-                    updated = True
-                    break
-            if not updated:
-                stored_data.append({"node":node, "x":x, "y":y})
-            documentInstance.provenanceState = json.dumps(stored_data)
-            documentInstance.save()
-            #documentInstance.provenanceState += json_data
-            #documentInstance.save()
-        elif action == 'click':
-            pass
+        if documentInstance is not None:
         
+            if action == 'move':
+                try:
+                    stored_data = json.loads(documentInstance.provenanceState)
+                except:
+                    stored_data = []
+                updated = False
+                for data in stored_data:
+                    if data['node'] == node:
+                        print 'equal'
+                        data['x'] = x
+                        data['y'] = y
+                        updated = True
+                        break
+                if not updated:
+                    stored_data.append({"node":node, "x":x, "y":y})
+                documentInstance.provenanceState = json.dumps(stored_data)
+                documentInstance.save()
+                message = 'position updated'
+                error = False
+            
+            elif action == 'click':
+                #TODO log clicking
+                message = 'click registered but not yet stored'
+                error = False
+
+        json_data = json.dumps({"message":message, "error":error})            
         return HttpResponse("json_data", mimetype="application/json") 
         
   

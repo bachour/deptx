@@ -1,5 +1,4 @@
 {% load staticfiles %}
-{% load dummyimage_tags %}
 
 {% if is_test %}
 <h3>This is just a test</h3>
@@ -41,7 +40,6 @@
 		var URL_MEDIA = "{{MEDIA_URL}}";
 
 		var FIRST_TIME = true;
-		var URL_GENERATED_IMAGE = '{% get_dummyimage_url 600 400 png %}'
     </script>
 {% if provenance.get_type_display == 'CRON' %}
     <script src="{{MEDIA_URL}}improve/cronKss.js"%}"></script>
