@@ -1792,6 +1792,11 @@ function updateState(state)
 	{
 		nodes[state[n].node].image.setX(parseInt(state[n].x));
 		nodes[state[n].node].image.setY(parseInt(state[n].y));
+		if (nodes[state[n].node].showLabel)
+			{
+				nodes[state[n].node].label.setX(nodes[state[n].node].image.getX());
+				nodes[state[n].node].label.setY(nodes[state[n].node].image.getY() + (nodes[state[n].node].image.getHeight()-nodes[state[n].node].label.getHeight())/2);
+			}
 		
     	for (var l in nodes[state[n].node].edges)
 		{
