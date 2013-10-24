@@ -176,14 +176,14 @@ function initStage()
 				x: nodes[name].image.getX(),
 				y: nodes[name].image.getX(),
 				width: nodes[name].image.getWidth(),
-				text: wordWrap(nodes[name].name, 10),
+				text: nodes[name].name, //wordWrap(nodes[name].name, 10),
 		        fontSize: NODE_FONT_SIZE,
-		        //fontFamily: NODE_FONT_FAMILY,
+		        fontFamily: NODE_FONT_FAMILY,
 		        fontStyle: NODE_FONT_STYLE,
 		        fill: NODE_FONT_FILL,
 		        draggable: NODE_DRAGGABLE,
+		        padding: 10,
 		        align:'center'
-		        
 			  });
 			  nodes[name].label.setY(nodes[name].image.getY() + (nodes[name].image.getHeight() - nodes[name].label.getHeight())/2);
 			  nodes[name].image.setShadowEnabled(false);
@@ -336,7 +336,7 @@ function setupMouseInteractions()
         else if (shape && (shape == submitButton || shape == submitText))
     	{
             submitButton.setFill(SUBMIT_FILL);
-            document.body.style.cursor = 'pointer';
+            document.body.style.cursor = 'default';
     	}
         else if (shape && shape.getClassName() == 'Line')
         {
@@ -953,9 +953,9 @@ function showAttributes(node, position)
 	var X = 0.83 * STAGE_WIDTH;
 	var Y;
 	if (position == '1')
-		Y = 5;
+		Y = 10;
 	else
-		Y = 0.45*STAGE_HEIGHT;
+		Y = 0.45*STAGE_HEIGHT + 5;
 	
 	attribLayer[position].removeChildren();
 
@@ -1427,7 +1427,7 @@ function setupAttribPanes()
 {
 	var X = 0.83 * STAGE_WIDTH;
 	var Y;
-	var y = {'1':5, '2':0.45*STAGE_HEIGHT};
+	var y = {'1':10, '2':0.45*STAGE_HEIGHT + 5};
 	
 	for (var i in y)
 	{
@@ -1453,10 +1453,11 @@ function setupAttribPanes()
 	
 }
 
+
 function clearAttributePane(position)
 {
 	var X = 0.83 * STAGE_WIDTH;
-	var y = {'1':5, '2':0.45*STAGE_HEIGHT};
+	var y = {'1':10, '2':0.45*STAGE_HEIGHT + 5};
 	var Y = y[position];
 	
 	var text = new Kinetic.Text({
@@ -1479,6 +1480,7 @@ function clearAttributePane(position)
 	attribLayer[position].draw();
 }
 
+// display popup message for user
 function showMessage(msg)
 {
 	var background = new Kinetic.Rect({
@@ -1552,6 +1554,7 @@ function showMessage(msg)
 	});
 }
 
+// redraw all persistent layers
 function redraw()
 {
 	layer.draw();
@@ -1559,6 +1562,7 @@ function redraw()
 	attribLayer['2'].draw();
 }
 
+// show basic tutorial on how to use the system
 function showTutorial()
 {
 	var background = new Kinetic.Rect({
@@ -1665,6 +1669,7 @@ function showTutorial()
 	});
 }
 
+// setup and display the fade-out and background of the media display
 function showMedia(url)
 {
 	var background = new Kinetic.Rect({
@@ -1708,6 +1713,7 @@ function showMedia(url)
 	anim.start();
 }
 
+// setup and display the media represented in the the string url
 function createAndAddMedia(url)
 {
 	document.getElementById('overlay').style.display = 'block';
@@ -1726,6 +1732,7 @@ function createAndAddMedia(url)
 				
 }
 
+// Send an ajax request to log the movement of a node on the graph
 function logDrag(shape)
 {
 	if (IS_TEST == false)
@@ -1740,11 +1747,14 @@ function logDrag(shape)
 	}
 }
 
+
+// Handle response from the log request
 function logResponse(response)
 {
 	//alert("Logging response: " + response)
 }
 
+// Send an ajax request to log the click of a user on a node/attriibute in the graph
 function logClick(node, attribute, newState)
 {
 	if (IS_TEST==false)
@@ -1759,6 +1769,7 @@ function logClick(node, attribute, newState)
 	}
 }
 
+// get name corresponding to the current shape (node or edge)
 function getName(shape)
 {
 	for (var n in nodes)
@@ -1776,6 +1787,7 @@ function getName(shape)
 	return null;
 }
 
+// fetch the save state from server
 function getSaveState()
 {
     if (IS_TEST==false)
@@ -1786,6 +1798,7 @@ function getSaveState()
 	}
 }
 
+// load node positions from state json
 function updateState(state)
 {
 	for (var n in state)
