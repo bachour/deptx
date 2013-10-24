@@ -190,10 +190,10 @@ def prov_check(request):
         
         try:
             provenance = Provenance.objects.get(serial=serial)
-            if provenance.attribute1 is not None and provenance.attribute2 is not None: 
+            try: 
                 attribute1_json = json.loads(provenance.attribute1)
                 attribute2_json = json.loads(provenance.attribute2)
-            else:
+            except:
                 attribute1_json = []
                 attribute2_json = []
         #if we have no proper serial in the post, then we are probably looking at a randomized MOP_TEMPLATE
