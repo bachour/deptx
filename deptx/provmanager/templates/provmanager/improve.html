@@ -54,7 +54,6 @@
 	      $.getJSON("{% url 'provmanager_improve' provenance.serial %}", function(json) {
 	    	   loadJSONProv(json);
 	    	   loadImages(initStage);
-	    	   document.getElementById("container").style.visibility = "visible";
 	    	 });
 	  {% else %}
 	  	loadJSONProv({{json_str|safe}});
