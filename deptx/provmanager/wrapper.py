@@ -121,11 +121,13 @@ class Api(object):
         response = self.request("documents/", data)
         return response['id']
 
-    def get_document(self, doc_id, format=None):
+    def get_document(self, doc_id, format=None, flattened=False, view=None):
         """Returns a ProvBundle object of the document with the ID provided or raises ApiNotFoundError"""
 
         extension = format if format is not None else 'json'
-        response = self.request("documents/%d.%s" % (doc_id, extension), raw=True)
+        view = "/views/%s" % view if view in ['data', 'process', 'responsibility'] else ""
+        url = "documents/%d%s%s.%s" % (doc_id, "/flattened" if flattened else "", view, extension)
+        response = self.request(url, raw=True)
 
         if format is None:
             # Try to decode it as a ProvBundle
