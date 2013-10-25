@@ -157,7 +157,6 @@ def getRequisition(mail):
 def getTask(mail):
     return Task.objects.filter(unit=mail.unit).order_by('?')[0]
     #TODO filter for clearance
-    
 
 def getCronDocument(mail):
     try:
@@ -177,7 +176,7 @@ def getTaskInstance(mail):
     try:
         task = getTask(mail)
         if not task == None:
-            taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, status=TaskInstance.STATUS_ACTIVE)
+            taskInstance = TaskInstance.objects.get(mop=mail.mop, task=task, serial=mail.requisitionInstance.data, status=TaskInstance.STATUS_ACTIVE)
             if not taskInstance.task.unit == mail.unit:
                 return None
         else:
