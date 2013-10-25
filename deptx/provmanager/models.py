@@ -24,8 +24,8 @@ class Provenance(models.Model):
     
     type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_NONE)
     
-    attribute1 = models.CharField(max_length=50, blank=True, null=True)
-    attribute2 = models.CharField(max_length=50, blank=True, null=True)
+    attribute1 = models.CharField(max_length=500, blank=True, null=True)
+    attribute2 = models.CharField(max_length=500, blank=True, null=True)
     
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
