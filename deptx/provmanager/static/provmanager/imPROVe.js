@@ -186,7 +186,6 @@ function initStage()
 		        align:'center'
 			  });
 			  nodes[name].label.setY(nodes[name].image.getY() + (nodes[name].image.getHeight() - nodes[name].label.getHeight())/2);
-			  nodes[name].image.setShadowEnabled(false);
 		  }
 		}
 	// create connectors for all edges
