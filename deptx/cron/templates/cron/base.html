@@ -1,22 +1,4 @@
-{% load staticfiles %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  	<title>cr0n</title>
-  	<meta charset="utf-8">
-    <meta cr0nogram="enable">
-    <meta name="keywords" content="cr0n, MoP, MofP, provenance, ministry, privacy, documents, data center, domestic spying, spying, monitor, W3C PROV, freedom, five eyes, FVEY, PRISM, GCHQ, MI5, NSA">
-    <meta name="description" content="People across the globe working together to expose the Ministry of Provenance.">
-    <meta name="author" content="cr0n.org">
-    <link rel="stylesheet" href="{% static "cron/css/style.css" %}">
-    <link rel="stylesheet" href="{% static "cron/cron.css" %}">
-    <link rel="icon" href="{% static "cron/images/favicon.ico" %}" type="image/x-icon">
-	<link rel="shortcut icon" href="{% static "cron/images/favicon.ico" %}" type="image/x-icon" />
-
-	<script src="{{MEDIA_URL}}ANALYTICS/cr0n.js"></script>
-</head>
-
+{% include cron/header.html %}
 <body>
 
 <!-- Cr0nogram Header -->

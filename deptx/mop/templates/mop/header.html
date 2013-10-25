@@ -1,0 +1,20 @@
+{% load staticfiles %}
+<head>
+<link rel="stylesheet" type="text/css" href="{% static "mop/mop.css" %}">
+
+<script src="{{MEDIA_URL}}ANALYTICS/mofp.js"></script>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="{% static "mop/js/spin.js" %}"></script>
+
+<script type="text/javascript">
+CHECK_MAIL_URL = '{% url 'mop_mail_check' %}';
+NEW_MAIL_AUDIO = '{% static 'mop/sound/mail.mp3' %}';
+</script>
+
+<script src="{% static "mop/js/checkmail.js" %}"></script>
+
+{% block head %}
+{% endblock %}
+
+</head>
