@@ -4,17 +4,20 @@
 <h3>This is just a test</h3>
 {% endif %}
 
-{% if provenance.get_type_display == 'CRON' %} 
-<div style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);width:100%">
-{% else %}
-<div style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);width:100%">
-{% endif %}
+<div id="preload">
+
 
    <audio id="click" preload="auto">
     <source src="https://dl.dropboxusercontent.com/u/17451725/63532__florian-reinke__click2.wav" />  
    </audio>
  <p id="loading">Loading...</p>
-	<div id="container" style="padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;"></div>
+ 
+	{% if provenance.get_type_display == 'CRON' %} 
+	<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
+	{% else %}
+	<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
+	{% endif %}
+ 	</div>
 	
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
