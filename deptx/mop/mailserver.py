@@ -217,11 +217,11 @@ def missingDocument(mail):
 def wrongDocument(mail):
     if mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
         try:
-            task = Task.objects.get(serial=mail.requisitionInstance.data)
-        except Task.DoesNotExist:
-            task = None
-        if not task == None:
-            if not mail.documentInstance.document == task.document:
+            taskInstance = TaskInstance.objects.get(serial=mail.requisitionInstance.data, mop=mail.mop)
+        except TaskInstance.DoesNotExist:
+            taskInstance = None
+        if not taskInstance == None:
+            if not mail.documentInstance.document == taskInstance.documentInstance.document:
                 return True
     return False
 
