@@ -107,6 +107,10 @@ def analyze_mail():
             if not mail.documentInstance == None:
                 mail.documentInstance.used = False
                 mail.documentInstance.save()
+        else:
+            if not mail.documentInstance == None:
+                mail.documentInstance.used = True
+                mail.documentInstance.save()
     
     return output
 
