@@ -148,5 +148,6 @@ class Mop(models.Model):
 #         return tm_getCurrentClearance(self)
     
     def __unicode__(self):
-        return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)
+        return "haha"
+        #return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)
 
