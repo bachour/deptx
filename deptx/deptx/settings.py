@@ -156,7 +156,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 logging.basicConfig(
     level = logging.INFO,
     format = '%(asctime)s %(levelname)s %(message)s',
-    filename = '../tmp/djangoLog.log',)
+    filename = '/tmp/djangoLog.log',)
 
 LOGGING = {
     'version': 1,
