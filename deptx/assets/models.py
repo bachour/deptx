@@ -3,6 +3,8 @@ from django_extensions.db.fields import CreationDateTimeField, ModificationDateT
 from provmanager.models import Provenance
 
 from deptx import friendly_id
+from deptx.helpers import random_chars
+import string
 
 CLEARANCE_LOW = 0
 CLEARANCE_MEDIUM = 10
@@ -191,7 +193,7 @@ class Document(models.Model):
     def save(self, *args, **kwargs):
         super(Document, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            self.serial = friendly_id.encode(self.id)
+            self.serial = "DOC-%s-%s-%s-%s" % (random_chars(size=2, chars="QUVWXYZ79"), friendly_id.encode(self.id), random_chars(chars="1234567"), random_chars(chars="URBANANGEL"))
             super(Document, self).save(*args, **kwargs)
             
     def __unicode__(self):

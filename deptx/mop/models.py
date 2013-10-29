@@ -104,7 +104,7 @@ class DocumentInstance(models.Model):
     def save(self, *args, **kwargs):
         super(DocumentInstance, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            self.serial = "DOC-%s-%s-%s-%s" % (random_chars(size=2, chars=string.ascii_uppercase), friendly_id.encode(self.id), random_chars(chars="PROVENANCE8003"), random_chars(chars="MIXEDREALITYLAB0000099999"))
+            self.serial = "DOC-%s%s-%s-%s-%s" % (random_chars(size=1, chars="ABCDEFGHIJKLMNOPRST"), random_chars(size=1, chars="01234568"), friendly_id.encode(self.id), random_chars(chars="PROVENANCE8003"), random_chars(chars="MIXEDREALITYLAB0000099999"))
             super(DocumentInstance, self).save(*args, **kwargs)
         self.mop.totalTrust += self.getTrust()
         self.mop.trust += self.getTrust()
