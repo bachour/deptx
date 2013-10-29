@@ -2,7 +2,7 @@ from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
 
-from deptx.helpers import generateUUID
+from deptx import friendly_id
 
 CLEARANCE_LOW = 0
 CLEARANCE_MEDIUM = 10
@@ -69,15 +69,15 @@ class Requisition(models.Model):
     
     
     name = models.CharField(max_length=256)
-    serial = models.CharField(max_length=36, default=generateUUID)
+    serial = models.CharField(max_length=16, unique=True)
     unit = models.ForeignKey(Unit)
     category = models.IntegerField(choices=CHOICES_CATEGORY)
     isInitial = models.BooleanField(default=False)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
-    
+
     def __unicode__(self):
-        return self.name
+        return self.serial
 
 class Task(models.Model):
     name = models.CharField(max_length=256)
@@ -126,7 +126,7 @@ class Mission(models.Model):
     
     name = models.CharField(max_length=50)
     rank = models.IntegerField(unique=True)
-    serial = models.SlugField(default=generateUUID())
+    serial = models.SlugField(blank=True, null=True, unique=True)
     category = models.IntegerField(choices=CHOICES_CATEGORY, default=CATEGORY_CASES)
     
     intro = models.TextField(default="ENTER INTRO FOR MISSION")
@@ -139,9 +139,14 @@ class Mission(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    def save(self, *args, **kwargs):
+        super(Mission, self).save(*args, **kwargs)
+        if self.id and not self.serial:
+            self.serial = friendly_id.encode(self.id)
+            super(Mission, self).save(*args, **kwargs)
     
     def __unicode__(self):
-        return self.name + " (" + str(self.rank) + " - published: " + str(self.isPublished) + ")"
+        return self.name + " (" + str(self.rank) + " - published: " + str(self.isPublished) + ") " + self.serial
     
 
   
@@ -149,7 +154,7 @@ class Case(models.Model):
     name = models.CharField(max_length=50)
     mission = models.ForeignKey(Mission)
     rank = models.IntegerField()
-    serial = models.SlugField(max_length=36, default=generateUUID)
+    serial = models.SlugField(max_length=36, blank=True, null=True, unique=True)
     preCase = models.ForeignKey('self', blank=True, null=True, help_text="The preCase has to be solved before this case is accesible to the players. Before you can select a preCase, the current Case needs to be saved and added to a mission.")
     
     intro = models.TextField(blank=True, null=True)
@@ -159,12 +164,18 @@ class Case(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    def save(self, *args, **kwargs):
+        super(Case, self).save(*args, **kwargs)
+        if self.id and not self.serial:
+            self.serial = friendly_id.encode(self.id)
+            super(Case, self).save(*args, **kwargs)
+    
     def __unicode__(self):
-        return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ")"
+        return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ") " + self.serial 
 
 class Document(models.Model):
     name = models.CharField(max_length=256)
-    serial = models.CharField(max_length=36, default=generateUUID)
+    serial = models.CharField(max_length=36, blank=True, null=True, unique=True)
     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
     case = models.ForeignKey(Case, blank=True, null=True)
     clearance = models.IntegerField(choices=CHOICES_CLEARANCE_DOCUMENT, default=CLEARANCE_MAX)
@@ -176,9 +187,15 @@ class Document(models.Model):
     
     def getLevel(self):
         return "ULTRAVIOLET"
+    
+    def save(self, *args, **kwargs):
+        super(Document, self).save(*args, **kwargs)
+        if self.id and not self.serial:
+            self.serial = friendly_id.encode(self.id)
+            super(Document, self).save(*args, **kwargs)
             
     def __unicode__(self):
-        return self.name
+        return "%s (%s)" % (self.name, self.serial)
 
         
 

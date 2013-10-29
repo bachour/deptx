@@ -5,9 +5,9 @@ from players.models import Mop
 from assets.models import Unit, Task, Requisition, Document, CLEARANCE_LOW, CLEARANCE_MEDIUM, CLEARANCE_HIGH, CLEARANCE_MAX
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
-from deptx.helpers import generateUUID
-
-
+from deptx.helpers import random_chars
+import deptx.friendly_id as friendly_id
+import string
 
 class TaskInstance(models.Model):
     STATUS_ACTIVE = 0
@@ -25,7 +25,7 @@ class TaskInstance(models.Model):
     task = models.ForeignKey(Task)
     mop = models.ForeignKey(Mop)
     status = models.IntegerField(choices=CHOICES_STATUS, default=STATUS_ACTIVE)
-    serial = models.CharField(max_length=36, default=generateUUID)
+    serial = models.CharField(max_length=32, blank=True, null=True, unique=True)
     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="taskInstance")
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
@@ -42,6 +42,9 @@ class TaskInstance(models.Model):
     
     def save(self, *args, **kwargs):
         super(TaskInstance, self).save(*args, **kwargs)
+        if self.id and not self.serial:
+            self.serial = "T-%s-%s-%s" % (random_chars(size=3, chars=string.ascii_uppercase), friendly_id.encode(self.id), random_chars(chars=self.task.unit.serial))
+            super(TaskInstance, self).save(*args, **kwargs)
 
         documentInstance, created = DocumentInstance.objects.get_or_create(mop=self.mop, taskInstance=self)
         #TODO what if object was not created?
@@ -51,7 +54,7 @@ class TaskInstance(models.Model):
             self.mop.save()
 
     def __unicode__(self):
-        return "%s - %s - %s " % (self.task.name, self.mop.user.username, self.get_status_display())
+        return "%s - %s - %s - %s" % (self.task.name, self.mop.user.username, self.get_status_display(), self.serial)
 
 class DocumentInstance(models.Model):
     mop = models.ForeignKey(Mop)
@@ -59,7 +62,7 @@ class DocumentInstance(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     #stuff needed if it is a mop-document
-    serial = models.CharField(max_length=36, default=generateUUID)
+    serial = models.CharField(max_length=36, blank=True, null=True, unique=True)
     taskInstance = models.OneToOneField(TaskInstance, related_name='documentInstance', blank=True, null=True)
     acquired = models.BooleanField(default=False)
     modified = models.BooleanField(default=False)
@@ -100,6 +103,9 @@ class DocumentInstance(models.Model):
     
     def save(self, *args, **kwargs):
         super(DocumentInstance, self).save(*args, **kwargs)
+        if self.id and not self.serial:
+            self.serial = "DOC-%s-%s-%s-%s" % (random_chars(size=2, chars=string.ascii_uppercase), friendly_id.encode(self.id), random_chars(chars="PROVENANCE8003"), random_chars(chars="MIXEDREALITYLAB0000099999"))
+            super(DocumentInstance, self).save(*args, **kwargs)
         self.mop.totalTrust += self.getTrust()
         self.mop.trust += self.getTrust()
         self.mop.save()
@@ -123,7 +129,7 @@ class RequisitionBlank(models.Model):
 
 class RequisitionInstance(models.Model):
     blank = models.ForeignKey(RequisitionBlank)
-    data = models.CharField(max_length=256)
+    data = models.CharField(max_length=256, blank=True, null=True)
     used = models.BooleanField(default=False)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
