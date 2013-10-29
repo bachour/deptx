@@ -9,7 +9,7 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Removing unique constraint on 'Unit', fields ['serial']
-        db.delete_unique(u'assets_unit', ['serial'])
+        #db.delete_unique(u'assets_unit', ['serial'])
 
 
         # Changing field 'Unit.serial'
