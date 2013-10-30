@@ -48,7 +48,11 @@ class TaskInstance(models.Model):
         if self.id and not self.serial:
             self.serial = "T-%s-%s-%s" % (random_chars(size=3, chars=string.ascii_uppercase), friendly_id.encode(self.id), random_chars(chars=self.task.unit.serial))
             super(TaskInstance, self).save(*args, **kwargs)
-        documentInstance, created = DocumentInstance.objects.get_or_create(mop=self.mop, taskInstance=self)
+        try:
+            documentInstance = DocumentInstance.objects.get(mop=self.mop, taskInstance=self)
+        except DocumentInstance.DoesNotExist:
+            documentInstance = DocumentInstance(mop=self.mop, taskInstance=self)
+            documentInstance.save()
         #TODO what if object was not created?
         if not self.status == self.STATUS_ACTIVE:
             self.mop.totalTrust += self.getTrust()
@@ -107,9 +111,7 @@ class DocumentInstance(models.Model):
         super(DocumentInstance, self).save(*args, **kwargs)
         if self.id and not self.serial:
             self.serial = "DOC-%s%s-%s-%s-%s" % (random_chars(size=1, chars="ABCDEFGHIJKLMNOPRST"), random_chars(size=1, chars="01234568"), friendly_id.encode(self.id), random_chars(chars="PROVENANCE8003"), random_chars(chars="MIXEDREALITYLAB0000099999"))
-            logger.error("documentinstance save inside %s %s") % (self.id, self.serial)
             super(DocumentInstance, self).save(*args, **kwargs)
-            logger.error("documentinstance save inside after")
         self.mop.totalTrust += self.getTrust()
         self.mop.trust += self.getTrust()
         self.mop.save()
