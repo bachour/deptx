@@ -8,9 +8,7 @@ from provmanager.models import Provenance
 from deptx.helpers import random_chars
 import deptx.friendly_id as friendly_id
 import string
-
-import logging
-logger = logging.getLogger(__name__)
+import re
 
 class TaskInstance(models.Model):
     STATUS_ACTIVE = 0
@@ -143,6 +141,9 @@ class RequisitionInstance(models.Model):
     def __unicode__(self):
         return self.blank.requisition.unit.serial + ": " + self.blank.requisition.serial + " (" + str(self.modifiedAt) + ")"
     
+    def save(self, *args, **kwargs):
+        self.data = re.sub("[^0-9A-Z-]", "", self.data)
+        super(RequisitionInstance, self).save(*args, **kwargs)
 
 class Mail(models.Model):
     TYPE_RECEIVED = 0
