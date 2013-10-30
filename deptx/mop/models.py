@@ -104,12 +104,10 @@ class DocumentInstance(models.Model):
             return False
     
     def save(self, *args, **kwargs):
-        logger.error("documentinstance save")
         super(DocumentInstance, self).save(*args, **kwargs)
-        logger.error("documentinstance save after")
         if self.id and not self.serial:
             self.serial = "DOC-%s%s-%s-%s-%s" % (random_chars(size=1, chars="ABCDEFGHIJKLMNOPRST"), random_chars(size=1, chars="01234568"), friendly_id.encode(self.id), random_chars(chars="PROVENANCE8003"), random_chars(chars="MIXEDREALITYLAB0000099999"))
-            logger.error("documentinstance save inside")
+            logger.error("documentinstance save inside %s %s") % (self.id, self.serial)
             super(DocumentInstance, self).save(*args, **kwargs)
             logger.error("documentinstance save inside after")
         self.mop.totalTrust += self.getTrust()
