@@ -9,6 +9,9 @@ from deptx.helpers import random_chars
 import deptx.friendly_id as friendly_id
 import string
 
+import logging
+logger = logging.getLogger(__name__)
+
 class TaskInstance(models.Model):
     STATUS_ACTIVE = 0
     STATUS_SOLVED = 1
@@ -101,10 +104,14 @@ class DocumentInstance(models.Model):
             return False
     
     def save(self, *args, **kwargs):
+        logger.error("documentinstance save")
         super(DocumentInstance, self).save(*args, **kwargs)
+        logger.error("documentinstance save after")
         if self.id and not self.serial:
             self.serial = "DOC-%s%s-%s-%s-%s" % (random_chars(size=1, chars="ABCDEFGHIJKLMNOPRST"), random_chars(size=1, chars="01234568"), friendly_id.encode(self.id), random_chars(chars="PROVENANCE8003"), random_chars(chars="MIXEDREALITYLAB0000099999"))
+            logger.error("documentinstance save inside")
             super(DocumentInstance, self).save(*args, **kwargs)
+            logger.error("documentinstance save inside after")
         self.mop.totalTrust += self.getTrust()
         self.mop.trust += self.getTrust()
         self.mop.save()
