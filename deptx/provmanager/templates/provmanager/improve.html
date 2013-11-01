@@ -1,7 +1,9 @@
 {% load staticfiles %}
-<body style="overflow:hidden">
 {% if is_test %}
+<body>
 <h3>This is just a test</h3>
+{% else %}
+<body style="overflow:hidden">
 {% endif %}
 
 <div id="preload">

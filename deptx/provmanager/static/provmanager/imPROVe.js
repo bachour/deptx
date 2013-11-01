@@ -1249,7 +1249,6 @@ function toggleAttributeSelection(shape)
 				{
 					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
 						{
-							//alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
 							showMedia(selectedNodes[i].attributes["mop:url"])
 							logClick(selectedNodes[i].id, j, true);
 							return;
@@ -1354,9 +1353,6 @@ function submitPushed()
 	{
 		if (selectedAttributes['1'] && selectedAttributes['2'])
 		{
-			alert("You think there is something wrong with:\n" +
-				"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
-						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");
 			validateSubmit();
 		}
 		else
