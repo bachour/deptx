@@ -304,7 +304,9 @@ def mail_compose(request):
             if not mail.requisitionInstance == None:
                 mail.requisitionInstance.used = True
                 mail.requisitionInstance.save()
-                
+            
+            #TODO remove for real game
+            analyze_mail()    
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
@@ -343,6 +345,13 @@ def mail_edit(request, mail_id):
         if form.is_valid():
             mail.processed = False
             mail = form.save()
+            
+            if not mail.requisitionInstance == None:
+                mail.requisitionInstance.used = True
+                mail.requisitionInstance.save()
+            
+            #TODO remove for real game
+            analyze_mail()    
             return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
