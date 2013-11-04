@@ -8,7 +8,7 @@ class TaskInstanceAdmin(admin.ModelAdmin):
         form.base_fields['provenance'].queryset = form.base_fields['provenance'].queryset.filter(type=Provenance.TYPE_MOP_INSTANCE)
         return form
 
-admin.site.register(TaskInstance)
+admin.site.register(TaskInstance, TaskInstanceAdmin)
 admin.site.register(Mail)
 admin.site.register(RequisitionInstance)
 admin.site.register(RequisitionBlank)

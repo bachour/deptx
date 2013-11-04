@@ -1249,7 +1249,6 @@ function toggleAttributeSelection(shape)
 				{
 					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
 						{
-							//alert("Clicked on URL: " + selectedNodes[i].attributes["mop:url"]);
 							showMedia(selectedNodes[i].attributes["mop:url"])
 							logClick(selectedNodes[i].id, j, true);
 							return;
@@ -1354,9 +1353,6 @@ function submitPushed()
 	{
 		if (selectedAttributes['1'] && selectedAttributes['2'])
 		{
-			alert("You think there is something wrong with:\n" +
-				"attribute " + selectedAttributes['1'] + " of node " + selectedNodes['1'].id + "\n" +
-						"and attribute " + selectedAttributes['2']  + " of node " + selectedNodes['2'].id + ".");
 			validateSubmit();
 		}
 		else
@@ -1719,7 +1715,7 @@ function createAndAddMedia(url)
 	document.getElementById('overlay').style.padding = SCREEN_HEIGHT*0.06 + 'px';
 
 	// if video
-	if (url.indexOf("youtube")!= -1)
+	if (url.indexOf("youtu")!= -1)
 		{
 			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
 			document.getElementById('overlay').innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.8 + '" height="' +SCREEN_HEIGHT*0.8 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';		
