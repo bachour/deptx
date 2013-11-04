@@ -55,6 +55,12 @@ var NODE_HIGHLIGHTED_OUTLINE = true;
 var NODE_HIGHLIGHTED_OUTLINE_COLOUR = 'black';
 var NODE_HIGHLIGHTED_OUTLINE_WIDTH = 2;
 
+//fonts
+var NODE_FONT_SIZE = 28;
+var NODE_FONT_FAMILY = 'Calibri';
+var NODE_FONT_STYLE = 'normal';
+var NODE_FONT_FILL = 'black';
+
 //other
 //background colours: background colours for nodes that don't have an image.
 //In the CR0N version only activities area affected, since agents and entities have images
@@ -62,6 +68,17 @@ var NODE_HIGHLIGHTED_OUTLINE_WIDTH = 2;
 var AGENT_BACKGROUND_COLOUR = 'fed37f';
 var ENTITY_BACKGROUND_COLOUR = 'fffc87';
 var ACTIVITY_BACKGROUND_COLOUR = '9fb1fc';
+
+//background images for nodes
+var AGENT_BG_IMAGE = "improve/cron-agent.png";
+var ACTIVITY_BG_IMAGE = "improve/cron-activity.jpg";
+var ENTITY_BG_IMAGE = "improve/cron-entity.jpg";
+
+// static icons
+var URL_ARROW_1 = "improve/arrow1.png";
+var URL_ARROW_2 = "improve/arrow2.png";
+var URL_MAGNIFY = "improve/magnify.png";
+
 
 
 //--------------------------------
@@ -85,7 +102,7 @@ var EDGE_COLOURS = { // use this to specify different colours for different edge
 		alternateOf:'#222222',
 		specializationOf:'#222222',
 		hadMember:'#222222'}; 
-var EDGE_WIDTH = 2; // the thickness of the line
+var EDGE_WIDTH = 5; // the thickness of the line
 var EDGE_ARROWHEAD_WIDTH = 20; // the size of the arrowhead
 
 //shadows
@@ -113,7 +130,7 @@ var EDGE_HIGHLIGHTED_COLOURS = {
 		alternateOf:'red',
 		specializationOf:'red',
 		hadMember:'red'};
-var EDGE_HIGHLIGHTED_WIDTH = 2;
+var EDGE_HIGHLIGHTED_WIDTH = 5;
 
 //shadows - highlighted
 var EDGE_HIGHLIGHTED_SHADOWS = true;
@@ -177,7 +194,7 @@ var THUMB_HIGHLIGHTED_SHADOW_OPACITY = 1;
 var THUMB_HIGHLIGHTED_SHADOW_COLOUR = 'black';
 
 //outlines - highlighted
-var THUMB_HIGHLIGHTED_OUTLINE = true;
+var THUMB_HIGHLIGHTED_OUTLINE = false;
 var THUMB_HIGHLIGHTED_OUTLINE_COLOUR = 'black';
 var THUMB_HIGHLIGHTED_OUTLINE_WIDTH = 5;
 
