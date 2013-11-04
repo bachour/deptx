@@ -1722,6 +1722,7 @@ function createAndAddMedia(url)
 		}
 	else // if image
 	{
+		url = URL_MEDIA + url;
 		document.getElementById('overlay').innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
 	}
 				
