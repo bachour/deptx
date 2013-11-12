@@ -26,6 +26,7 @@ import json
 
 from mop.mailserver import analyze_mail
 from mop.performer import analyze_performance
+from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
 
 def isMop(user):
@@ -451,6 +452,8 @@ def control(request):
             output = analyze_mail()
         elif 'performance' in request.POST:
             output = analyze_performance()
+        elif 'randomizer' in request.POST:
+            output = create_documents()
     return render(request, 'mop/control.html', {'output':output})       
 
 

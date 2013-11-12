@@ -38,7 +38,7 @@ class RandomizedDocument(models.Model):
                 beginning = "KLMNP56"
                 end = "NOTTINGHAM5656"
             self.serial = "DOC-%s-%s-%s-%s" % (self.mopDocument.unit.serial, random_chars(size=2, chars=beginning), friendly_id.encode(self.id), random_chars(chars=end))
-            super(RandomizedDocument, self).save(*args, **kwargs)
+            super(RandomizedDocument, self).save()
 
 class MopDocumentInstance(models.Model):
     STATUS_ACTIVE = 0
