@@ -1392,7 +1392,7 @@ function validateSubmit()
 	"&node2=" + selectedNodes['2'].id + 
 	"&attribute1=" + selectedAttributes['1'] +
 	"&attribute2=" +selectedAttributes['2'] +
-	"&serial=" + PROV_SERIAL +
+	"&id=" + PROV_ID +
 	"&is_test=" + IS_TEST;
 	
 	ajaxCall(URL_CHECK, message, handleValidateResponse);
@@ -1736,7 +1736,7 @@ function logDrag(shape)
 	// find node belonging to this shape
 		var node = getNodeFromShape(shape);
 	
-		var message = "action=move&serial=" + PROV_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+		var message = "action=move&id=" + PROV_ID + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
 		
 		ajaxCall(URL_LOG, message, logResponse);
 	
@@ -1750,13 +1750,13 @@ function logResponse(response)
 	//alert("Logging response: " + response)
 }
 
-// Send an ajax request to log the click of a user on a node/attriibute in the graph
+// Send an ajax request to log the click of a user on a node/attribute in the graph
 function logClick(node, attribute, newState)
 {
 	if (IS_TEST==false)
 	{
 		var message = "action=click" +
-					  "&serial=" + PROV_SERIAL + 
+					  "&id=" + PROV_id + 
 					  "&node=" + node + 
 					  "&attribute=" + attribute + 
 					  "&state=" + newState;

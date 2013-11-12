@@ -1,9 +1,9 @@
-from mop.models import Mail, TaskInstance, DocumentInstance, RequisitionBlank
+from mop.models import Mail, MopDocumentInstance, RequisitionBlank, RandomizedDocument
 from cron.models import CronDocumentInstance
-from assets.models import Requisition, Task, Document
+from assets.models import Requisition, CronDocument
 from django.template import Context, loader, Template
 import logging
-from provmanager.views import randomize_task
+from provmanager.views import randomize_document
 
 def analyze_mail():
     output = []
@@ -53,65 +53,41 @@ def analyze_mail():
                 assignRequisition(mail.mop, requisition)
                 newMail.subject = Mail.SUBJECT_RECEIVE_FORM
                 newMail.body = generateBody(mail.unit.mail_assigning_form, mail.requisitionInstance.data)
-        elif mail.subject == Mail.SUBJECT_REQUEST_TASK:
-            #TODO check for clearance etc. Tasks can no longer be 'unfound'
-            task = getTask(mail)
-            if task == None:
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_unfound_task, mail.requisitionInstance.data)
-#            #no longer needed as each 'task' is unique
-#             elif taskInstanceExists(mail.mop, task):
-#                 newMail.subject = Mail.SUBJECT_ERROR
-#                 newMail.body = generateBody(mail.unit.mail_error_existing_task, mail.requisitionInstance.data)
-            else:
-                serial = assignTask(mail.mop, task)
-                newMail.subject = Mail.SUBJECT_RECEIVE_TASK
-                newMail.body = generateBody(mail.unit.mail_assigning_task, serial)
         elif mail.subject == Mail.SUBJECT_REQUEST_DOCUMENT:
             #The serial inside the form could be either for a mop or for a cron 'document'
             cronDocument = getCronDocument(mail)
-            mopDocumentInstance = getMopDocumentInstance(mail)
-            if cronDocument == None and mopDocumentInstance == None:
+            randomizedDocument = getRandomizedDocument(mail)
+            if cronDocument == None and randomizedDocument == None:
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_unfound_document, mail.requisitionInstance.data)
-            elif documentInstanceExists(mail.mop, cronDocument, mopDocumentInstance):
+            elif mopDocumentInstanceExists(mail.mop, cronDocument, randomizedDocument):
                 #TODO what if document is used?
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.body = generateBody(mail.unit.mail_error_existing_document, mail.requisitionInstance.data)
             else:
-                assignDocument(mail.mop, cronDocument, mopDocumentInstance)
+                assignDocument(mail.mop, cronDocument, randomizedDocument)
                 newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
                 newMail.body = generateBody(mail.unit.mail_assigning_document, mail.requisitionInstance.data)
-        elif mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
-            taskInstance = getTaskInstance(mail)
-            if taskInstance == None:
-                newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_unassigned_task, mail.requisitionInstance.data)
+        elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
+            mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_REPORTED
+            mail.mopDocumentInstance.save()
+            newMail.subject = Mail.SUBJECT_REPORT_EVALUATION
+            if mail.mopDocumentInstance.correct:
+                newMail.body = generateBody(mail.unit.mail_report_success, mail.requisitionInstance.data)
             else:
-                newMail.subject = Mail.SUBJECT_REPORT_EVALUATION
-                if mail.documentInstance.correct:
-                    solveTask(taskInstance)
-                    newMail.body = generateBody(mail.unit.mail_report_success, mail.requisitionInstance.data)
-                else:
-                    failTask(taskInstance)
-                    newMail.body = generateBody(mail.unit.mail_report_fail, mail.requisitionInstance.data)
+                newMail.body = generateBody(mail.unit.mail_report_fail, mail.requisitionInstance.data)
         else:
             newMail.subject = Mail.SUBJECT_UNCAUGHT_CASE
             newMail.body = "Yo35ur ma$$@il could%#34 n#$2ot b24e del$#i%#ve%#red. Som$#et2222hing we42 nt w@$rong."
-        
 
         mail.processed = True
         mail.save()
         newMail.save()
         if newMail.subject == Mail.SUBJECT_ERROR:
-            if not mail.documentInstance == None:
-                mail.documentInstance.used = False
-                mail.documentInstance.save()
-        else:
-            if not mail.documentInstance == None:
-                mail.documentInstance.used = True
-                mail.documentInstance.save()
-    
+            if not mail.mopDocumentInstance == None:
+                mail.mopDocumentInstance.used = False
+                mail.mopDocumentInstance.save()
+   
     return output
 
 def generateBody(text, data=None):
@@ -119,13 +95,13 @@ def generateBody(text, data=None):
     c = Context({"data": data})
     return t.render(c)
 
-def solveTask(taskInstance):
-    taskInstance.status = TaskInstance.STATUS_SOLVED
-    taskInstance.save()
-    
-def failTask(taskInstance):
-    taskInstance.status = TaskInstance.STATUS_FAILED
-    taskInstance.save()
+# def solveTask(taskInstance):
+#     taskInstance.status = TaskInstance.STATUS_SOLVED
+#     taskInstance.save()
+#     
+# def failTask(taskInstance):
+#     taskInstance.status = TaskInstance.STATUS_FAILED
+#     taskInstance.save()
 
 def requisitionBlankExists(mop, requisition):
     try:
@@ -134,22 +110,21 @@ def requisitionBlankExists(mop, requisition):
     except RequisitionBlank.DoesNotExist:
         return False
 
-def taskInstanceExists(mop, task):
-    try:
-        taskInstance = TaskInstance.objects.get(mop=mop, task=task)
-        return True
-    except TaskInstance.DoesNotExist:
-        return False
 
-def documentInstanceExists(mop, cronDocument, mopDocumentInstance):
+def mopDocumentInstanceExists(mop, cronDocument, randomizedDocument):
     if not cronDocument == None:
         try:
-            documentInstance = DocumentInstance.objects.get(mop=mop, document=cronDocument)
+            mopDocumentInstance = MopDocumentInstance.objects.get(mop=mop, cronDocument=cronDocument)
             return True
-        except DocumentInstance.DoesNotExist:
+        except MopDocumentInstance.DoesNotExist:
             return False
-    return mopDocumentInstance.acquired
-            
+    elif not randomizedDocument == None:
+        try:
+            mopDocumentInstance = MopDocumentInstance.objects.get(mop=mop, randomizedDocument=randomizedDocument)
+            return True
+        except MopDocumentInstance.DoesNotExist:
+            return False
+           
 
 def getRequisition(mail):
     try:
@@ -158,67 +133,71 @@ def getRequisition(mail):
         requisition = None
     return requisition
 
-def getTask(mail):
-    return Task.objects.filter(unit=mail.unit).order_by('?')[0]
-    #TODO filter for clearance
+# def getTask(mail):
+#     return Task.objects.filter(unit=mail.unit).order_by('?')[0]
+#     #TODO filter for clearance
 
 def getCronDocument(mail):
     try:
-        document = Document.objects.get(serial=mail.requisitionInstance.data)
-    except Document.DoesNotExist:
-        document = None
-    return document
+        cronDocument = CronDocument.objects.get(serial=mail.requisitionInstance.data, unit=mail.unit)
+    except CronDocument.DoesNotExist:
+        cronDocument = None
+    return cronDocument
 
-def getMopDocumentInstance(mail):
+def getRandomizedDocument(mail):
     try:
-        documentInstance = DocumentInstance.objects.get(serial=mail.requisitionInstance.data, mop=mail.mop)
-    except DocumentInstance.DoesNotExist:
-        documentInstance = None
-    return documentInstance
+        randomizedDocument = RandomizedDocument.objects.get(serial=mail.requisitionInstance.data)
+        if not randomizedDocument.mopDocument.unit == mail.unit:
+            randomizedDocument = None 
+    except RandomizedDocument.DoesNotExist:
+        randomizedDocument = None
+    return randomizedDocument
 
-def getTaskInstance(mail):
-    try:
-        taskInstance = TaskInstance.objects.get(mop=mail.mop, serial=mail.requisitionInstance.data, status=TaskInstance.STATUS_ACTIVE)
-    except TaskInstance.DoesNotExist:
-        taskInstance = None
-    return taskInstance
-    
 def subjectMatchesRequisition(mail):
     if int(mail.subject) == int(Mail.SUBJECT_REQUEST_FORM):
         if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
             logging.info("subject matches request form");
             return True
-    elif mail.subject == Mail.SUBJECT_REQUEST_TASK:
-        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_TASK:
-            return True
     elif mail.subject == Mail.SUBJECT_REQUEST_DOCUMENT:
         if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_DOCUMENT:
             return True
-    elif mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
+    elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
         if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SUBMISSION:
             return True
     return False
 
 def redundantDocument(mail):
-    if not mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
-        if not mail.documentInstance == None:
+    if not mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
+        if not mail.mopDocumentInstance == None:
             return True
     return False
 
 def missingDocument(mail):
-    if mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
-        if mail.documentInstance == None:
+    if mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
+        if mail.mopDocumentInstance == None:
             return True
     return False
 
 def wrongDocument(mail):
-    if mail.subject == Mail.SUBJECT_SUBMIT_REPORT:
-        try:
-            taskInstance = TaskInstance.objects.get(serial=mail.requisitionInstance.data, mop=mail.mop)
-        except TaskInstance.DoesNotExist:
-            taskInstance = None
-        if not taskInstance == None:
-            if not mail.documentInstance.document == taskInstance.documentInstance.document:
+    if mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
+        cronDocument = getCronDocument(mail)
+        randomizedDocument = getRandomizedDocument(mail)
+        mopDocumentInstance = None
+        if not cronDocument is None:
+            try:
+                mopDocumentInstance = MopDocumentInstance.objects.get(cronDocument=cronDocument, mop=mail.mop)
+            except MopDocumentInstance.DoesNotExist:
+                pass
+        elif not randomizedDocument is None:
+            try:
+                mopDocumentInstance = MopDocumentInstance.objects.get(randomizedDocument=randomizedDocument, mop=mail.mop)
+            except MopDocumentInstance.DoesNotExist:
+                pass
+
+        if not mopDocumentInstance is None:
+            if not mail.mopDocumentInstance.cronDocument == mopDocumentInstance.cronDocument:
+                return True
+            elif not mail.mopDocumentInstance.randomizedDocument == mopDocumentInstance.randomizedDocument:
                 return True
     return False
 
@@ -227,16 +206,12 @@ def wrongDocument(mail):
 def assignRequisition(mop, requisition):
     requisitionBlank, created = RequisitionBlank.objects.get_or_create(mop=mop, requisition=requisition)
        
-def assignTask(mop, task):
-    taskInstance = randomize_task(task, mop)
-    return taskInstance.serial
     
-def assignDocument(mop, cronDocument, mopDocumentInstance):
+def assignDocument(mop, cronDocument, randomizedDocument):
     if not cronDocument == None:
-        documentInstance, created = DocumentInstance.objects.get_or_create(mop=mop, document=cronDocument)
+        mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, cronDocument=cronDocument, type=MopDocumentInstance.TYPE_CRON)
     else:
-        mopDocumentInstance.acquired = True
-        mopDocumentInstance.save()
+        mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, randomizedDocument=randomizedDocument, type=MopDocumentInstance.TYPE_MOP)
 
 
 

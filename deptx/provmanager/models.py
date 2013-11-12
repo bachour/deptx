@@ -20,7 +20,6 @@ class Provenance(models.Model):
     
     name = models.CharField(max_length=50)
     store_id = models.IntegerField(blank=True, null=True)
-    serial = models.SlugField(max_length=36, default=generateUUID)
     
     type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_NONE)
     

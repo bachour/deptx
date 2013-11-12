@@ -4,22 +4,6 @@ from provmanager.models import Provenance
 
 from deptx import friendly_id
 from deptx.helpers import random_chars
-import string
-
-CLEARANCE_LOW = 0
-CLEARANCE_MEDIUM = 10
-CLEARANCE_HIGH = 20
-CLEARANCE_MAX = 100
-
-CHOICES_CLEARANCE_TASK = (
-    (CLEARANCE_LOW, "BLUE"),
-    (CLEARANCE_MEDIUM, "ORANGE"),
-    (CLEARANCE_HIGH, "RED"),         
-)
-
-CHOICES_CLEARANCE_DOCUMENT = (
-    (CLEARANCE_MAX, "ULTRAVIOLET"),
-)
 
 class Unit(models.Model):
     name = models.CharField(max_length=256)
@@ -36,37 +20,31 @@ class Unit(models.Model):
     mail_error_wrong_form = models.TextField(default="The type of form does not match your request.", help_text="when subject and form do not match")
     mail_error_redundant_document = models.TextField(default="You have attached an unnecessary document.", help_text="when a document was attached despite not being required")
     mail_error_missing_document = models.TextField(default="Your report can only be processed if you attach a document.", help_text="trying to submit a report without attaching a document")
-    mail_error_wrong_document = models.TextField(default="Attached document {{data}} does not belong to report concerning task {{task}}.", help_text="when the document does not belong to the task from the form")
+    mail_error_wrong_document = models.TextField(default="Attached document {{data}} does not match the report.", help_text="when the document is not the document from the form")
     mail_error_unfound_form = models.TextField(default="Form {{data}} which you requested does not exist.", help_text="when no form with the serial could be found")
-    mail_error_unfound_task = models.TextField(default="Task {{data}} which you requested does not exist within this unit.", help_text="when the requested task does not correspond to a task by this unit (or any task)")
     mail_error_unfound_document = models.TextField(default="Document {{data}} which you requested does not exist.", help_text="when the requested document does not correspond to a document by this unit (or any document)")
     mail_error_existing_form = models.TextField(default="You already have access to form {{data}}.", help_text="when the player already has the blank form")
-    mail_error_existing_task = models.TextField(default="You have already been assigned to task {{data}}.", help_text="when the player has already worked on the task (and maybe even finished it)")
     mail_error_existing_document = models.TextField(default="You already have access to document {{data}}.", help_text="when the player has already gotten the document")
-    mail_error_unassigned_task = models.TextField(default="We could not find task {{data}} your report is about.", help_text="when the player is not working on the task (or it is by another unit)")
     mail_assigning_form = models.TextField(default="We have assigned form {{data}} to you.", help_text="when the user gets a new form")
-    mail_assigning_task = models.TextField(default="We have assigned task {{data}} to you.", help_text="when the user gets a new task")
     mail_assigning_document = models.TextField(default="We have assigned document {{data}} to you", help_text="when the user gets a new document")
     mail_report_fail = models.TextField(default="Your report {{data}} was incorrect.", help_text="when the provenance investigation was incorrect")
     mail_report_success = models.TextField(default="Good work. Report {{data}} was correct.", help_text="when the provenance investigation was correct")
-
-    
-    
+ 
     def __unicode__(self):
         return self.serial
 
 #TODO Check if unit can have this type of requisition    
 class Requisition(models.Model):
     CATEGORY_FORM = 0
-    CATEGORY_TASK = 1
+#   CATEGORY_TASK = 1
     CATEGORY_DOCUMENT = 2
     CATEGORY_SUBMISSION = 3
     
     CHOICES_CATEGORY = (
         (CATEGORY_FORM, "request form"),
-        (CATEGORY_TASK, "request task"),
+#         (CATEGORY_TASK, "request task"),
         (CATEGORY_DOCUMENT, "request document"),
-        (CATEGORY_SUBMISSION, "submit report"),
+        (CATEGORY_SUBMISSION, "submit document"),
     )
     
     
@@ -81,8 +59,6 @@ class Requisition(models.Model):
     def get_category_acr(self):
         if self.category == self.CATEGORY_FORM:
             return "FO"
-        if self.category == self.CATEGORY_TASK:
-            return "TK"
         if self.category == self.CATEGORY_DOCUMENT:
             return "DC"
         if self.category == self.CATEGORY_SUBMISSION:
@@ -99,41 +75,7 @@ class Requisition(models.Model):
     def __unicode__(self):
         return self.serial
 
-class Task(models.Model):
-    name = models.CharField(max_length=256)
-    description = models.TextField()
-    unit = models.ForeignKey(Unit)
-    clearance = models.IntegerField(choices=CHOICES_CLEARANCE_TASK, default=CLEARANCE_LOW)
-    provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="task")
-    createdAt = CreationDateTimeField()
-    modifiedAt = ModificationDateTimeField()
-    
-    def getTrustSolved(self):
-        if self.clearance == CLEARANCE_LOW:
-            return 10
-        elif self.clearance == CLEARANCE_MEDIUM:
-            return 30
-        else:
-            return 50
-    
-    def getTrustFailed(self):
-        if self.clearance == CLEARANCE_LOW:
-            return -20
-        elif self.clearance == CLEARANCE_MEDIUM:
-            return -50
-        else:
-            return -100
-    
-    def getTrustUnsolved(self):
-        if self.clearance == CLEARANCE_LOW:
-            return -10
-        elif self.clearance == CLEARANCE_MEDIUM:
-            return -20
-        else:
-            return -30
-     
-    def __unicode__(self):
-        return self.name
+
 
 class Mission(models.Model):
     CATEGORY_CASES = 0
@@ -167,8 +109,6 @@ class Mission(models.Model):
     
     def __unicode__(self):
         return self.name + " (" + str(self.rank) + " - published: " + str(self.isPublished) + ") " + self.serial
-    
-
   
 class Case(models.Model):
     name = models.CharField(max_length=50)
@@ -193,29 +133,199 @@ class Case(models.Model):
     def __unicode__(self):
         return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ") " + self.serial 
 
-class Document(models.Model):
-    name = models.CharField(max_length=256)
-    serial = models.CharField(max_length=36, blank=True, null=True, unique=True, help_text="leave blank, will be generated by system")
-    provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
-    case = models.ForeignKey(Case, blank=True, null=True)
-    clearance = models.IntegerField(choices=CHOICES_CLEARANCE_DOCUMENT, default=CLEARANCE_MAX)
+class AbstractDocument(models.Model):
+    class meta:
+        abstract = True
+    
+    CLEARANCE_LOW = 0
+    CLEARANCE_MEDIUM = 10
+    CLEARANCE_HIGH = 20
+    CLEARANCE_MAX = 100
+
+    unit = models.ForeignKey(Unit)
+    provenance = models.OneToOneField(Provenance, related_name="document")
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
-    def getTrust(self):
-        return -20
+    def getTrustCost(self):
+        if self.clearance == self.CLEARANCE_LOW:
+            return 0
+        elif self.clearance == self.CLEARANCE_MEDIUM:
+            return 10
+        elif self.clearance == self.CLEARANCE_HIGH:
+            return 20
+        elif self.clearance == self.CLEARANCE_MAX:
+            return 30
     
-    def getLevel(self):
-        return "ULTRAVIOLET"
+    def getTrustSolved(self):
+        if self.clearance == self.CLEARANCE_LOW:
+            return 10
+        elif self.clearance == self.CLEARANCE_MEDIUM:
+            return 30
+        elif self.clearance == self.CLEARANCE_HIGH:
+            return 50
+        elif self.clearance == self.CLEARANCE_MAX:
+            return 100
+    
+    def getTrustFailed(self):
+        if self.clearance == self.CLEARANCE_LOW:
+            return -20
+        elif self.clearance == self.CLEARANCE_MEDIUM:
+            return -50
+        elif self.clearance == self.CLEARANCE_HIGH:
+            return -100
+        elif self.clearance == self.CLEARANCE_MAX:
+            return -500
+    
+    def getTrustUnsolved(self):
+        if self.clearance == self.CLEARANCE_LOW:
+            return -10
+        elif self.clearance == self.CLEARANCE_MEDIUM:
+            return -20
+        elif self.clearance == self.CLEARANCE_HIGH:
+            return -30
+        elif self.clearance == self.CLEARANCE_MAX:
+            return -100
+
+class CronDocument(AbstractDocument):
+    CHOICES_CLEARANCE = (
+        (AbstractDocument.CLEARANCE_MAX, "ULTRAVIOLET"),
+    )
+    
+    case = models.ForeignKey(Case)
+    serial = models.CharField(max_length=36, blank=True, null=True, unique=True, help_text="leave blank, will be generated by system")
+    clearance = models.IntegerField(choices=CHOICES_CLEARANCE, default=AbstractDocument.CLEARANCE_MAX)
+
+    
+    def __unicode__(self):
+        return "%s" % (self.serial)
     
     def save(self, *args, **kwargs):
-        super(Document, self).save(*args, **kwargs)
+        super(CronDocument, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            self.serial = "DOC-%s-%s-%s-%s" % (random_chars(size=2, chars="QUVWXYZ79"), friendly_id.encode(self.id), random_chars(chars="1234567"), random_chars(chars="URBANANGEL"))
-            super(Document, self).save(*args, **kwargs)
-            
+            self.serial = "DOC-%s-%s-%s-%s" % (self.unit, random_chars(size=2, chars="QWXYZ79"), friendly_id.encode(self.id), random_chars(chars="URBANANGEL7979"))
+            super(CronDocument, self).save(*args, **kwargs)
+
+class MopDocument(AbstractDocument):
+        
+    CHOICES_CLEARANCE = (
+        (AbstractDocument.CLEARANCE_LOW, "BLUE"),
+        (AbstractDocument.CLEARANCE_MEDIUM, "ORANGE"),
+        (AbstractDocument.CLEARANCE_HIGH, "RED"),
+    )
+
+    clearance = models.IntegerField(choices=CHOICES_CLEARANCE, default=AbstractDocument.CLEARANCE_LOW)
+    
     def __unicode__(self):
-        return "%s (%s)" % (self.name, self.serial)
+        return "%s - %s - %s" % (self.unit.serial, self.get_clearance_display(), self.provenance.name)
+
+
+# class Document(models.Model):
+#     CLEARANCE_LOW = 0
+#     CLEARANCE_MEDIUM = 10
+#     CLEARANCE_HIGH = 20
+#     CLEARANCE_MAX = 100
+#     
+#     CHOICES_CLEARANCE = (
+#         (CLEARANCE_LOW, "BLUE"),
+#         (CLEARANCE_MEDIUM, "ORANGE"),
+#         (CLEARANCE_HIGH, "RED"),
+#         (CLEARANCE_MAX, "ULTRAVIOLET"),         
+#     )
+#     
+#     TYPE_MOP = 0
+#     TYPE_CRON = 1
+#     
+#     CHOICES_TYPE = (
+#         (TYPE_MOP, "MOP"),
+#         (TYPE_CRON, "CRON"),
+#     )
+# 
+#     unit = models.ForeignKey(Unit)
+#     serial = models.CharField(max_length=36, blank=True, null=True, unique=True, help_text="leave blank, will be generated by system")
+#     type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_MOP)
+#     clearance = models.IntegerField(choices=CHOICES_CLEARANCE, default=CLEARANCE_LOW, help_text="cron documents should always have highest value")
+#     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
+#     case = models.ForeignKey(Case, blank=True, null=True)
+#     createdAt = CreationDateTimeField()
+#     modifiedAt = ModificationDateTimeField()
+# 
+#     def __unicode__(self):
+#         return "%s" % (self.serial)
+#     
+#     def getTrustCost(self):
+#         if self.getClearance() == self.CLEARANCE_LOW:
+#             return 0
+#         elif self.getClearance() == self.CLEARANCE_MEDIUM:
+#             return 10
+#         elif self.getClearance() == self.CLEARANCE_HIGH:
+#             return 20
+#         elif self.getClearance() == self.CLEARANCE_MAX:
+#             return 30
+#     
+#     def getTrustSolved(self):
+#         if self.clearance == self.CLEARANCE_LOW:
+#             return 10
+#         elif self.clearance == self.CLEARANCE_MEDIUM:
+#             return 30
+#         elif self.clearance == self.CLEARANCE_HIGH:
+#             return 50
+#         elif self.clearance == self.CLEARANCE_MAX:
+#             return 100
+#     
+#     def getTrustFailed(self):
+#         if self.clearance == self.CLEARANCE_LOW:
+#             return -20
+#         elif self.clearance == self.CLEARANCE_MEDIUM:
+#             return -50
+#         elif self.clearance == self.CLEARANCE_HIGH:
+#             return -100
+#         elif self.clearance == self.CLEARANCE_MAX:
+#             return -500
+#     
+#     def getTrustUnsolved(self):
+#         if self.clearance == self.CLEARANCE_LOW:
+#             return -10
+#         elif self.clearance == self.CLEARANCE_MEDIUM:
+#             return -20
+#         elif self.clearance == self.CLEARANCE_HIGH:
+#             return -30
+#         elif self.clearance == self.CLEARANCE_MAX:
+#             return -100
+#     
+#     def save(self, *args, **kwargs):
+#         super(Document, self).save(*args, **kwargs)
+#         if self.id and not self.serial:
+#             if self.clearance == self.CLEARANCE_MAX:
+#                 self.serial = "DOC-%s-%s-%s-%s" % (self.unit, random_chars(size=2, chars="QWXYZ79"), friendly_id.encode(self.id), random_chars(chars="URBANANGEL7979"))
+#             else:
+#                 self.serial = "no serial"
+#             super(Document, self).save(*args, **kwargs)
+
+
+# class Document(models.Model):
+#     name = models.CharField(max_length=256)
+#     serial = models.CharField(max_length=36, blank=True, null=True, unique=True, help_text="leave blank, will be generated by system")
+#     provenance = models.OneToOneField(Provenance, blank=True, null=True, related_name="document")
+#     case = models.ForeignKey(Case, blank=True, null=True)
+#     clearance = models.IntegerField(choices=CHOICES_CLEARANCE_DOCUMENT, default=CLEARANCE_MAX)
+#     createdAt = CreationDateTimeField()
+#     modifiedAt = ModificationDateTimeField()
+#     
+#     def getTrust(self):
+#         return -20
+#     
+#     def getLevel(self):
+#         return "ULTRAVIOLET"
+#     
+#     def save(self, *args, **kwargs):
+#         super(Document, self).save(*args, **kwargs)
+#         if self.id and not self.serial:
+#             self.serial = "DOC-%s-%s-%s-%s" % (random_chars(size=2, chars="QUVWXYZ79"), friendly_id.encode(self.id), random_chars(chars="1234567"), random_chars(chars="URBANANGEL"))
+#             super(Document, self).save(*args, **kwargs)
+#             
+#     def __unicode__(self):
+#         return "%s (%s)" % (self.name, self.serial)
 
         
 

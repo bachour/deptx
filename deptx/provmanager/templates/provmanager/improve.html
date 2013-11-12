@@ -23,7 +23,7 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     
     <script>
-    	var PROV_SERIAL = {% if provenance %}"{{provenance.serial}}"{% else %}"-"{% endif %};
+    	var PROV_ID = {% if provenance %}{{provenance.id}}{% else %}0{% endif %};
     	var URL_CHECK = "{% url 'provmanager_prov_check' %}";
     	var URL_LOG = "{% url 'provmanager_prov_log_action' %}";
     	
@@ -32,12 +32,12 @@
     		var URL_GET_STATE = "";
     	{% else %}
     		var IS_TEST = false;
-    		var URL_GET_STATE = "{% url 'provmanager_improve_saved_state' provenance.serial %}";
+    		var URL_GET_STATE = "{% url 'provmanager_improve_saved_state' provenance.id %}";
     	{% endif %}
     	{% if case %}
     	var URL_CONTINUE = "{% url 'cron_case_intro' mission.serial case.serial %}";
-    	{% elif taskInstance %}
-    	var URL_CONTINUE = "{% url 'mop_tasks' %}";
+    	{% elif mopDocumentInstance %}
+    	var URL_CONTINUE = "{% url 'mop_documents' %}";
     	{% endif %}
 		var DEBUG = false;
 		var URL_MEDIA = "{{MEDIA_URL}}";
@@ -54,7 +54,7 @@
     <script>
     
       {% if provenance %}
-	      $.getJSON("{% url 'provmanager_improve' provenance.serial %}", function(json) {
+	      $.getJSON("{% url 'provmanager_improve' provenance.id %}", function(json) {
 	    	   loadJSONProv(json);
 	    	   loadImages(initStage);
 	    	 });

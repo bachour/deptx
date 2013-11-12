@@ -1,7 +1,7 @@
 from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron
-from assets.models import Mission, Case, Document
+from assets.models import Mission, Case, CronDocument
 
   
 class MissionInstance(models.Model):
@@ -60,13 +60,13 @@ class CaseInstance(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     def isSolved(self):
-        document_list = Document.objects.filter(case=self.case)
-        for document in document_list:
+        cronDocument_list = CronDocument.objects.filter(case=self.case)
+        for cronDocument in cronDocument_list:
             try:
-                documentInstance = CronDocumentInstance.objects.get(document=document, cron=self.cron)
+                cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=self.cron)
             except CronDocumentInstance.DoesNotExist:
                 return False
-            if not documentInstance.solved:
+            if not cronDocumentInstance.solved:
                 return False
         return True
     
@@ -79,7 +79,7 @@ class CaseInstance(models.Model):
     
 
 class CronDocumentInstance(models.Model):
-    document = models.ForeignKey(Document)
+    cronDocument = models.ForeignKey(CronDocument)
     cron = models.ForeignKey(Cron)
     provenanceState = models.TextField(blank=True, null=True)
     solved = models.BooleanField(default=False)
@@ -91,4 +91,4 @@ class CronDocumentInstance(models.Model):
             status = "SOLVED"
         else:
             status = "IN PROGRESS"
-        return self.document.name + " / " + self.cron.user.username + " (" + status + ")"
+        return self.cronDocument.serial + " / " + self.cron.user.username + " (" + status + ")"

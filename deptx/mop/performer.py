@@ -1,8 +1,6 @@
-from mop.models import Mail, TaskInstance, DocumentInstance, RequisitionBlank, Badge
+from mop.models import Badge
 from players.models import Mop
-from assets.models import Requisition, Task, Document
-from django.template import Context, loader, Template
-import logging
+
 
 def analyze_performance():
     output = []
