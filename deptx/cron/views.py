@@ -7,12 +7,10 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.context_processors import csrf
-from django.views.decorators.csrf import csrf_protect
 
-from players.models import Player, Cron, Mop
+from players.models import Cron, Mop
 from django.contrib.auth.forms import UserCreationForm
 from django.template import Context, Template, loader
 

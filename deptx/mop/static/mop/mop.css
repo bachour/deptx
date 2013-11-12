@@ -136,7 +136,42 @@ td.nobox {
 	border:0px;
 }
 
+td.nopadding {
+	padding:0px;	
+}
+
 th.nobox {
 	border:0px;
 	background-color:#eee;
 }
+
+
+.styled-select {
+	overflow: hidden;
+	float: left;
+	width: 340px;
+	margin-right: 10px;
+	background-color:#3ea255;
+	border-radius:10px;
+	padding:0px;
+}
+
+.styled-select select {
+	font-size: 16px;
+	border-radius: 0;
+	border: none;
+	background: transparent;
+	width: 340px;
+	overflow: hidden;
+	text-indent: 10px;
+	color: #ffffff;
+	padding-top:10px;
+	padding-bottom:10px;
+	font-family:courier;
+	-webkit-appearance: none;
+
+	//-moz-appearance: none;
+    text-overflow: '';
+
+}
+

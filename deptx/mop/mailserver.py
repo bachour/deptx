@@ -1,9 +1,7 @@
 from mop.models import Mail, MopDocumentInstance, RequisitionBlank, RandomizedDocument
-from cron.models import CronDocumentInstance
 from assets.models import Requisition, CronDocument
 from django.template import Context, loader, Template
 import logging
-from provmanager.views import randomize_document
 
 def analyze_mail():
     output = []
