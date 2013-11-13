@@ -475,7 +475,7 @@ def hq_case_intro(request, id):
     case = Case.objects.get(id=id)
     content = case.intro
     text = renderContent(content, request.user)
-    requiredDocuments = case.cronDocument_set.all()
+    requiredDocuments = case.crondocument_set.all()
     return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'document_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
