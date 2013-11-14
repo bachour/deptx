@@ -1,10 +1,10 @@
 from django.db import models
 
 from players.models import Mop
-from assets.models import Unit, Requisition, CronDocument, MopDocument, AbstractDocument
+from assets.models import Unit, Requisition, CronDocument, MopDocument
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
-from deptx.helpers import random_chars
+from deptx.helpers import random_chars, Clearance
 import deptx.friendly_id as friendly_id
 import re
 
@@ -28,13 +28,13 @@ class RandomizedDocument(models.Model):
     def save(self, *args, **kwargs):
         super(RandomizedDocument, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            if self.mopDocument.clearance == AbstractDocument.CLEARANCE_LOW:
+            if self.mopDocument.clearance == Clearance.CLEARANCE_LOW:
                 beginning = "ABCDE12"
                 end = "MIXEDREALITYLAB1212"
-            elif self.mopDocument.clearance == AbstractDocument.CLEARANCE_MEDIUM:
+            elif self.mopDocument.clearance == Clearance.CLEARANCE_MEDIUM:
                 beginning = "FGHIJ34"
                 end = "PROVENANCE3434"
-            elif self.mopDocument.clearance == AbstractDocument.CLEARANCE_HIGH:
+            elif self.mopDocument.clearance == Clearance.CLEARANCE_HIGH:
                 beginning = "KLMNP56"
                 end = "NOTTINGHAM5656"
             self.serial = "DOC-%s-%s-%s-%s" % (self.mopDocument.unit.serial, random_chars(size=2, chars=beginning), friendly_id.encode(self.id), random_chars(chars=end))

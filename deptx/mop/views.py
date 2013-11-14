@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Requisition, Unit
+from assets.models import Requisition, Unit, CronDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, Badge
 from mop.forms import MailForm, RequisitionInstanceForm
 
@@ -151,17 +151,22 @@ def documents(request):
 @user_passes_test(isMop, login_url='mop_login')
 def provenance(request, serial):
     try:
-        randomizedDocument = RandomizedDocument.objects.get(serial=serial)
-        mopDocumentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, randomizedDocument=randomizedDocument)
-    except randomizedDocument.DoesNotExist:
-        randomizedDocument == None
-    except MopDocumentInstance.DoesNotExist:
-        mopDocumentInstance == None
+        document = RandomizedDocument.objects.get(serial=serial)
+        clearance = document.mopDocument.clearance
+    except RandomizedDocument.DoesNotExist:
+        document = None
     
-    #TODO check access rights
-    #TODO could also be a cron document
-    
-    return render(request, 'mop/provenance.html', {'mopDocumentInstance': mopDocumentInstance})
+    if document is None:
+        try:
+            document = CronDocument.objects.get(serial=serial)
+            clearance = document.clearance
+        except CronDocument.DoesNotExist:
+            document = None
+
+    if clearance <= request.user.mop.clearance:
+        return render(request, 'mop/provenance.html', {'document': document})
+    else:
+        return render(request, 'mop/provenance_noclearance.html', {'document': document})
 
 
 @login_required(login_url='mop_login')

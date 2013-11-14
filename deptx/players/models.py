@@ -3,8 +3,7 @@ from django.contrib.auth.models import User
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
-from deptx.helpers import generateUUID
-#from mop.trustmanager import tm_getTotalTrust, tm_getCurrentTrust, tm_getCurrentTrustCredit, tm_getCurrentClearance
+from deptx.helpers import generateUUID, Clearance
 
 
 #TODO move Player into CRON
@@ -101,18 +100,6 @@ class Mop(models.Model):
         (EYE_VIOLET, 'violet'),
     )
     
-    CLEARANCE_0_NONE = -1
-    CLEARANCE_1_LOW = 0
-    CLEARANCE_2_MEDIUM = 1
-    CLEARANCE_3_HIGH = 2
-    
-    CHOICES_CLEARANCE = (
-        (CLEARANCE_0_NONE, 'NONE'),
-        (CLEARANCE_1_LOW, 'BLUE'),
-        (CLEARANCE_2_MEDIUM, 'RED'),
-        (CLEARANCE_3_HIGH, 'ULTRAVIOLET'),
-    )
-    
     player = models.ForeignKey(Player)
     user = models.OneToOneField(User)
     active = models.BooleanField(default=True)
@@ -133,7 +120,7 @@ class Mop(models.Model):
     totalTrust = models.IntegerField(default=0)
     trust = models.IntegerField(default=0)
     credit = models.IntegerField(default=0)
-    clearance = models.IntegerField(choices=CHOICES_CLEARANCE, default=CLEARANCE_1_LOW)
+    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW)
     
 #     def getTotalTrust(self):
 #         return tm_getTotalTrust(self)
