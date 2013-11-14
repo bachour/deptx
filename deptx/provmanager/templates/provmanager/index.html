@@ -31,9 +31,7 @@ Assigned Provenances have the following colors:<br/>
 		<td style="white-space: nowrap">{{provenance.name}}</td>
 		<td>{{provenance.attribute1}}</td>
 		<td>{{provenance.attribute2}}</td>
-		<td>{{provenance.document}} 
-			{{provenance.task}}
-			{{provenance.taskInstance.task}} {{provenance.taskInstance.mop.user.username}}
+		<td>{{provenance.cronDocument.serial}}{{provenance.randomizedDocument.serial}} (id: {{provenance.cronDocument.id}}{{provenance.randomizedDocument.id}})
 		</td>
 		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
 		<td style="white-space:nowrap">{{provenance.modifiedAt|date:'d.m.y. H:i'}}</td>		

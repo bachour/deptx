@@ -8,7 +8,7 @@
 <tr><th>Timestamp</th><td>{{ mail.createdAt }}</td></tr>
 {% if mail.body %}<tr><th>Message</th><td>{% if mail.unit %}Citizen Employee {{mail.mop.firstname}} {{mail.mop.lastname}},<br/><br/>{{ mail.body|linebreaksbr }}<br/>{% with unit=mail.unit %}{% include 'mop/mail/sig.txt'%}{% endwith %}{% else %}{{mail.body|linebreaksbr}}{% endif %}</td></tr>{% endif %}
 <tr><th>Form</th><td>{{ mail.requisitionInstance.blank.requisition.serial}} {{mail.requisitionInstance.modifiedAt}}</td></tr>
-<tr><th>Document</th><td>{{ mail.documentInstance.document.serial}}</td></tr>
+<tr><th>Document</th><td>{{ mail.mopDocumentInstance.getDocumentSerial}}</td></tr>
 </table>
 {% endblock %}
 

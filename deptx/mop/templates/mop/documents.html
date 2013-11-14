@@ -2,20 +2,18 @@
 
 {% block content %}
 
-<h1>Documents</h1>
-{% if documentInstance_list %}
+<h1>Document Drawer</h1>
+{% if mopDocumentInstance_list %}
 	<table>
-	<tr><th>Name</th><th>Identification Code</th><th>state</th></tr>
-	{% for documentInstance in documentInstance_list %}
+	<tr><th class="nobox"></th><th>Status</th><th>Unit</th><th>Identification Code</th><th>Clearance Level</th><th>Assigned</th></tr>
+	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
-		{% if documentInstance.isMop %}
-			<td>{{documentInstance.taskInstance.task.name}}</td>
-			<td>{{documentInstance.serial}}</td>
-		{% elif documentInstance.isCron %}
-			<td>{{documentInstance.document.name}}</td>
-			<td>{{documentInstance.document.serial}}</td>
-		{% endif %}
-		<td>{% if documentInstance.modified %}modified{% else %}-{% endif %}</td>
+		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
+		<td>{{mopDocumentInstance.modified|yesno:'please submit, needs processing'}}</td>
+		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
+		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
+		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.get_clearance_display}}{{mopDocumentInstance.cronDocument.get_clearance_display}}</td>
+		<td>{{mopDocumentInstance.createdAt}}</td>
 		</tr>
 	{% endfor %}
 	</table>

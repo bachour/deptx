@@ -7,26 +7,20 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.context_processors import csrf
-from django.views.decorators.csrf import csrf_protect
 
-from players.models import Player, Cron, Mop
-from django.contrib.auth.models import User
+from players.models import Cron, Mop
 from django.contrib.auth.forms import UserCreationForm
 from django.template import Context, Template, loader
 
 from players.forms import MopForm
 
-from assets.models import Case, Mission, Document
+from assets.models import Case, Mission, CronDocument
 from cron.models import CaseInstance, CronDocumentInstance, MissionInstance
-from mop.models import DocumentInstance, Mail
-from players.models import Cron
+from mop.models import Mail
 
 from deptx.settings import MEDIA_URL
-
-from provmanager.models import ProvenanceLog
 
 from logger.logging import log_cron, log_mop
 from provmanager.provlogging import provlog_add_cron_login, provlog_add_cron_logout, provlog_add_mop_register
@@ -303,9 +297,9 @@ def missionInstance_delete(request, serial):
 def unsolveDocuments(cron, mission):
     case_list = Case.objects.filter(mission=mission)
     for case in case_list:
-        document_list = Document.objects.filter(case=case)
-        for document in document_list:
-            cronDocumentInstance_list = CronDocumentInstance.objects.filter(document=document).filter(cron=cron)
+        cronDocument_list = CronDocument.objects.filter(case=case)
+        for cronDocument in cronDocument_list:
+            cronDocumentInstance_list = CronDocumentInstance.objects.filter(cronDocument=cronDocument).filter(cron=cron)
             for cronDocumentInstance in cronDocumentInstance_list:
                 cronDocumentInstance.solved = False
                 cronDocumentInstance.save()
@@ -315,29 +309,29 @@ def unsolveDocuments(cron, mission):
 def hack_document(request, serial):
     mop_list = Mop.objects.filter(player=request.user.cron.player).filter(active=True)
     try:
-        document = Document.objects.get(serial=serial)    
-    except Document.DoesNotExist:
+        cronDocument = CronDocument.objects.get(serial=serial)    
+    except CronDocument.DoesNotExist:
         return
     
-    good_mop, mop_list = accessMopServer(request.user.cron, document, mop_list)
+    good_mop, mop_list = accessMopServer(request.user.cron, cronDocument, mop_list)
 
     output_tpl = loader.get_template('cron/hack_document_output.txt')
-    c = Context({"document":document, "good_mop":good_mop, "mop_list":mop_list})
+    c = Context({"cronDocument":cronDocument, "good_mop":good_mop, "mop_list":mop_list})
     output = output_tpl.render(c).replace("\n", "\\n")
-    return render_to_response('cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "document":document, "output":output})
+    return render_to_response('cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
 
-def accessMopServer(cron, document, mop_list):
+def accessMopServer(cron, cronDocument, mop_list):
         checked_mop_list = []
         for mop in mop_list:
             mail_list = Mail.objects.filter(type=Mail.TYPE_DRAFT).filter(mop=mop).filter(state=Mail.STATE_NORMAL)
             checked_mop_list.append(mop)
             for mail in mail_list:
-                if not mail.documentInstance == None:
-                    if mail.documentInstance.document == document:
-                        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, document=document)
+                if not mail.mopDocumentInstance == None:
+                    if mail.mopDocumentInstance.cronDocument == cronDocument:
+                        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
                         #Document gets removed
-                        mail.documentInstance.used = True
-                        mail.documentInstance.save()
+                        mail.mopDocumentInstance.used = True
+                        mail.mopDocumentInstance.save()
                         #Mail gets deleted
                         mail.state = Mail.STATE_DELETED
                         mail.save()
@@ -361,7 +355,7 @@ def case_intro(request, mission_serial, case_serial):
     
     requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-    return render_to_response('cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
+    return render_to_response('cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "cronDocument_list": requiredDocuments, "text":text },
                                     context_instance=RequestContext(request))
     
 @login_required(login_url='cron_login')
@@ -391,16 +385,16 @@ def provenance(request, mission_serial, case_serial, document_serial):
     
     mission = Mission.objects.get(serial=mission_serial)
     case = Case.objects.get(serial=case_serial)
-    document = Document.objects.get(serial=document_serial)
-    documentInstance = CronDocumentInstance.objects.get(document=document, cron=request.user.cron)
+    cronDocument = CronDocument.objects.get(serial=document_serial)
+    cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
     
     doc ={}
-    doc['id'] = document.id
-    doc['name'] = document.name
-    doc['store_id'] = document.provenance.store_id    
+    doc['id'] = cronDocument.id
+    doc['serial'] = cronDocument.serial
+    doc['store_id'] = cronDocument.provenance.store_id    
     log_cron(request.user.cron, 'view provenance', json.dumps(doc))
     
-    return render_to_response('cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "documentInstance": documentInstance },
+    return render_to_response('cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance },
                                          context_instance=RequestContext(request)
                                  )
     
@@ -421,13 +415,13 @@ def profile(request):
                                  )
 
 def getAllDocumentStates(cron, case):
-    requiredDocuments = case.document_set.all()
+    requiredDocuments = case.crondocument_set.all()
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
             
     for required in requiredDocuments:
         required.available = False
         for available in availableDocumentInstances:
-            if (required==available.document):
+            if (required==available.cronDocument):
                 required.available = True
 
     return requiredDocuments
@@ -469,12 +463,20 @@ def hq_mission_outro(request, id):
     return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
 
 @staff_member_required
+def hq_cases(request, id):
+    mission = Mission.objects.get(id=id)
+    content = mission.activity
+    text = renderContent(content, request.user)
+    return render_to_response('cron/case_list.html', {'text':text, 'mission':mission})
+
+
+@staff_member_required
 def hq_case_intro(request, id):
     case = Case.objects.get(id=id)
     content = case.intro
     text = renderContent(content, request.user)
-    requiredDocuments = case.document_set.all()
-    return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'document_list':requiredDocuments, 'cheat':True})
+    requiredDocuments = case.crondocument_set.all()
+    return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
 def hq_case_outro(request, id):

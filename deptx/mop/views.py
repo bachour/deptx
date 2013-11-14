@@ -15,27 +15,18 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Task, Requisition, Document, Unit
-from mop.models import TaskInstance, Mail, RequisitionInstance, RequisitionBlank, DocumentInstance, Badge#, WeekTrust
+from assets.models import Requisition, Unit
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, Badge
 from mop.forms import MailForm, RequisitionInstanceForm
 
-from prov.model import ProvBundle, Namespace, Literal, PROV, XSD, Identifier
-
-#from persistence.models import save_bundle
-from prov.model.graph import prov_to_file
-from deptx.helpers import generateUUID, now
-from deptx.settings import MEDIA_ROOT
-from cron.models import CronDocumentInstance
-
-from provmanager.views import getProvJson, getProvSvg
 from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
 
 from logger.logging import log_cron, log_mop
 import json
-from datetime import date, timedelta
 
 from mop.mailserver import analyze_mail
 from mop.performer import analyze_performance
+from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
 
 def isMop(user):
@@ -48,7 +39,7 @@ def isMop(user):
 #@login_required(login_url='mop_login')
 #@user_passes_test(isMop, login_url='mop_login')
 def index(request):
-    
+
     if not request.user == None and request.user.is_active and isMop(request.user):
         #MAIL MANAGING
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
@@ -104,7 +95,7 @@ def logout_view(request):
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
     unit_list = Unit.objects.all()
-    requisition_list = Requisition.objects.all()
+    requisition_list = Requisition.objects.all().order_by('category')
     log_mop(request.user.mop, 'read rules')
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
@@ -131,42 +122,46 @@ def performance(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def tasks(request):
+def pool(request):
 
-    active_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop, status=TaskInstance.STATUS_ACTIVE)
-    finished_taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE)
+    randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
-    log_mop(request.user.mop, 'view tasks')   
-    return render(request, 'mop/tasks.html', {"active_taskInstance_list": active_taskInstance_list, "finished_taskInstance_list": finished_taskInstance_list })
+        
+    for randomizedDocument in randomizedDocument_list:
+        for mopDocumentInstance in mopDocumentInstance_list:
+            if mopDocumentInstance.randomizedDocument == randomizedDocument:
+                randomizedDocument.exists = True
+                break
+        
+ 
+    log_mop(request.user.mop, 'view pool')   
+    return render(request, 'mop/pool.html', {"randomizedDocument_list": randomizedDocument_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    documentInstance_list = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False)
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(status=MopDocumentInstance.STATUS_ACTIVE)
     
     log_mop(request.user.mop, 'view documents')
-    return render(request, 'mop/documents.html', {"documentInstance_list": documentInstance_list})
+    return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def task_provenance(request, serial):
-    #TODO check if document is acquired
-    #TODO check if mop-document
+def provenance(request, serial):
     try:
-        taskInstance = TaskInstance.objects.get(mop=request.user.mop, serial=serial)
-    except taskInstance.DoesNotExist:
-        taskInstance = None
-
-    if not taskInstance == None and taskInstance.documentInstance.isMop() and taskInstance.documentInstance.acquired:
-
-#         doc ={}
-#         doc['id'] = documentInstance.document.id
-#         doc['name'] = documentInstance.document.name
-#         doc['store_id'] = documentInstance.document.provenance.store_id    
-#         log_mop(request.user.mop, 'view provenance', json.dumps(doc))
-
-        return render(request, 'mop/task_provenance.html', {'taskInstance': taskInstance})
+        randomizedDocument = RandomizedDocument.objects.get(serial=serial)
+        mopDocumentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, randomizedDocument=randomizedDocument)
+    except randomizedDocument.DoesNotExist:
+        randomizedDocument == None
+    except MopDocumentInstance.DoesNotExist:
+        mopDocumentInstance == None
+    
+    #TODO check access rights
+    #TODO could also be a cron document
+    
+    return render(request, 'mop/provenance.html', {'mopDocumentInstance': mopDocumentInstance})
 
 
 @login_required(login_url='mop_login')
@@ -301,9 +296,14 @@ def mail_compose(request):
         if form.is_valid():
             mail.processed = False
             mail = form.save()
-            if not mail.requisitionInstance == None:
-                mail.requisitionInstance.used = True
-                mail.requisitionInstance.save()
+            if mail.type == Mail.TYPE_SENT:
+                if not mail.requisitionInstance == None:
+                    mail.requisitionInstance.used = True
+                    mail.requisitionInstance.save()
+                if not mail.mopDocumentInstance == None:
+                    mail.mopDocumentInstance.used = True
+                    mail.mopDocumentInstance.save()
+            
             
             #TODO remove for real game
             analyze_mail()    
@@ -311,14 +311,14 @@ def mail_compose(request):
         else:
             #TODO code duplication between here and the else below
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render(request, 'mop/mail_compose.html', {'form' : form,})
         
     else:
         form =  MailForm()
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form,})
 
@@ -346,16 +346,20 @@ def mail_edit(request, mail_id):
             mail.processed = False
             mail = form.save()
             
-            if not mail.requisitionInstance == None:
-                mail.requisitionInstance.used = True
-                mail.requisitionInstance.save()
+            if mail.type == Mail.TYPE_SENT:
+                if not mail.requisitionInstance == None:
+                    mail.requisitionInstance.used = True
+                    mail.requisitionInstance.save()
+                if not mail.mopDocumentInstance == None:
+                    mail.mopDocumentInstance.used = True
+                    mail.mopDocumentInstance.save()
             
             #TODO remove for real game
             analyze_mail()    
             return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop)
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
         
@@ -363,7 +367,7 @@ def mail_edit(request, mail_id):
         form = MailForm(instance=mail)
         #TODO same with documents at all occurences
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["documentInstance"].queryset = DocumentInstance.objects.filter(mop=request.user.mop)
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop)
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 
@@ -398,7 +402,7 @@ def forms_blank(request):
     for initial in initialRequisitions:
         RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
             
-    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop)            
+    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__category')            
     
     log_mop(request.user.mop, 'blank forms')
     return render(request, 'mop/forms_blank.html', {"blank_list": blank_list})
@@ -448,6 +452,8 @@ def control(request):
             output = analyze_mail()
         elif 'performance' in request.POST:
             output = analyze_performance()
+        elif 'randomizer' in request.POST:
+            output = create_documents()
     return render(request, 'mop/control.html', {'output':output})       
 
 

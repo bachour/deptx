@@ -9,7 +9,8 @@
 
 <form action="{% url 'mop_control' %}" method="post">{% csrf_token %}
 <input class="button" type="submit" value="process mail" name="mail" /><br/>
-<input class="button" type="submit" value="process performance" name="performance" />
+<input class="button" type="submit" value="process performance" name="performance" /><br/>
+<input class="button" type="submit" value="process randomizer" name="randomizer" />
 </form>
 
 {% endblock %}

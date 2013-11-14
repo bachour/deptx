@@ -9,9 +9,9 @@ from provmanager.models import Provenance, ProvenanceLog
 from prov.model import ProvBundle, Namespace
 
 from deptx.secrets import api_username, api_key
-from assets.models import Document, Task
 from cron.models import CronDocumentInstance
-from mop.models import DocumentInstance, TaskInstance
+from mop.models import MopDocumentInstance, RandomizedDocument
+from assets.models import CronDocument
 
 
 from django.views.decorators.csrf import csrf_exempt
@@ -32,7 +32,7 @@ API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 @staff_member_required    
 def index(request):
     
-    provenance_list = Provenance.objects.all().order_by("-modifiedAt")
+    provenance_list = Provenance.objects.all().order_by("type", "-modifiedAt")
     
     return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
 
@@ -112,10 +112,10 @@ def create(request):
             
     return render_to_response('provmanager/create.html', context_instance=RequestContext(request))
 
-def randomize_task(task, mop):
+def randomize_document(mopDocument):
     #bundle = API.get_document(task.provenance.store_id)
     #TODO randomize provn/json
-    json_graph = getProvJson(task.provenance)
+    json_graph = getProvJson(mopDocument.provenance)
     random_graph = get_random_graph(json_graph)
     inconsistencies_list, clean_graph = get_inconsistencies(random_graph)
 
@@ -123,13 +123,13 @@ def randomize_task(task, mop):
     attribute2 = json.dumps(inconsistencies_list[1])
 
     bundle = ProvBundle.from_provjson(json.dumps(clean_graph))
-    name = "%s (randomized for %s)" % (task.name, mop.user.username)
+    name = "%s (randomized)" % (mopDocument.provenance.name)
     store_id = API.submit_document(bundle, name, public=False)
     provenance = Provenance(name=name, store_id=store_id, attribute1=attribute1, attribute2=attribute2, type=Provenance.TYPE_MOP_INSTANCE)
     provenance.save()
-
-    taskInstance = TaskInstance.objects.create(mop=mop, task=task, provenance=provenance)
-    return taskInstance
+        
+    randomizedDocument = RandomizedDocument.objects.create(mopDocument=mopDocument, provenance=provenance)
+    return randomizedDocument
 
 @staff_member_required
 def convert(request, id):
@@ -150,17 +150,25 @@ def getProvSvg(provenance):
     svg = API.get_document(provenance.store_id, format="svg")
     return svg
 
-def improve(request, serial):
-    provenance = Provenance.objects.get(serial=serial)
+def improve(request, id):
+    provenance = Provenance.objects.get(id=id)
     json_str = getProvJsonStr(provenance)
     return HttpResponse(json_str, content_type="application/json")
 
-def improve_saved_state(request, serial):
-    provenance = Provenance.objects.get(serial=serial)
+def improve_saved_state(request, id):
+    provenance = Provenance.objects.get(id=id)
     if provenance.type == Provenance.TYPE_CRON:
-            documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+            try:
+                cronDocument = CronDocument.objects.get(provenance=provenance)
+                documentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
+            except:
+                pass
     elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
-            documentInstance = DocumentInstance.objects.get(taskInstance=provenance.taskInstance, mop=request.user.mop)
+            try:
+                randomizedDocument = RandomizedDocument.objects.get(provenance=provenance)
+                documentInstance = MopDocumentInstance.objects.get(randomizedDocument=randomizedDocument, mop=request.user.mop)
+            except RandomizedDocument.DoesNotExist:
+                pass
     try:
         json_load = json.loads(documentInstance.provenanceState)
         json_str = json.dumps(json_load, indent=4, sort_keys=True)
@@ -178,7 +186,7 @@ def prov_check(request):
 
     #if request.is_ajax():
     if request.method == 'POST':
-        serial = request.POST.get('serial', "")
+        id = request.POST.get('id', "")
         post_node1 = request.POST.get('node1', "")
         post_node2 = request.POST.get('node2', "")
         post_attribute1 = request.POST.get('attribute1', "")
@@ -189,7 +197,7 @@ def prov_check(request):
         player_attribute2 = makeAttributeString(post_node2, post_attribute2)
         
         try:
-            provenance = Provenance.objects.get(serial=serial)
+            provenance = Provenance.objects.get(id=id)
             try: 
                 attribute1_json = json.loads(provenance.attribute1)
                 attribute2_json = json.loads(provenance.attribute2)
@@ -227,7 +235,7 @@ def prov_check(request):
                 if correct:
                     message = "You found the suspicious data! Great job, proceed to your debrief."
                     #TODO check properly for cron-user and if Instance exists
-                    cronDocumentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+                    cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
                     cronDocumentInstance.solved = True
                     cronDocumentInstance.save()
                     close_prov = True
@@ -238,10 +246,10 @@ def prov_check(request):
             elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
                 message = "Provenance modification saved. Please submit document now."  
                 #TODO check properly for mop-user and if Instance exists
-                documentInstance = DocumentInstance.objects.get(taskInstance=provenance.taskInstance, mop=request.user.mop)
-                documentInstance.modified = True
-                documentInstance.correct = correct
-                documentInstance.save()
+                mopDocumentInstance = MopDocumentInstance.objects.get(randomizedDocument=provenance.randomizedDocument, mop=request.user.mop)
+                mopDocumentInstance.modified = True
+                mopDocumentInstance.correct = correct
+                mopDocumentInstance.save()
                 close_prov = True
 
         
@@ -261,7 +269,7 @@ def prov_log_action(request):
 
     #if request.is_ajax():
     if request.method == 'POST':
-        serial = request.POST.get('serial', None)
+        id = request.POST.get('id', None)
         action = request.POST.get('action', None) #'move' or 'click'
         node = request.POST.get('node', None)
         x = request.POST.get('x', None)
@@ -270,11 +278,11 @@ def prov_log_action(request):
         state = request.POST.get('state', None)
         
         #TODO log everything, including clicking
-        provenance = Provenance.objects.get(serial=serial)
+        provenance = Provenance.objects.get(id=id)
         if provenance.type == Provenance.TYPE_CRON:
-            documentInstance = CronDocumentInstance.objects.get(document=provenance.document, cron=request.user.cron)
+            documentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
         elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
-            documentInstance = DocumentInstance.objects.get(taskInstance=provenance.taskInstance, mop=request.user.mop)
+            documentInstance = MopDocumentInstance.objects.get(randomizedDocument=provenance.randomizedDocument, mop=request.user.mop)
         else:
             message = "no document instance found"
             error = True

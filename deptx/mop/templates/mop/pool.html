@@ -1,0 +1,38 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
+<h1>Document Pool</h1>
+
+{% if randomizedDocument_list %}
+	<table>
+	<tr><th>Unit</th><th>Identification Code</th><th>Clearance Level</th><th>Published</th></tr>
+	{% for randomizedDocument in randomizedDocument_list %}
+		{% if randomizedDocument.exists %}
+		{% else %}
+			<tr>
+			<td>{{randomizedDocument.mopDocument.unit.serial}}</td>
+			<td>{{randomizedDocument.serial}}</td>
+			<td>{{randomizedDocument.mopDocument.get_clearance_display}}</td>
+			<td>{{randomizedDocument.createdAt}}</td>
+			</tr>
+		{% endif %}
+	{% endfor %}
+	</table>
+{% else %}
+No documents available.
+{% endif %}
+
+{% endblock %}
+
+{% block help %}
+<p>
+This is your list of active, available, and completed tasks. You will need to request each task to be assigned to you if you wish to complete it. You will also need to request any necessary document for tasks that have been assigned to you.
+</p>
+<p>
+To request a new task assignment or a new document, go to the <a href="{% url 'mop_mail_compose' %}">Compose</a> of your message center.
+</p>
+<p>
+Friendly advice: Gain more trust to gain access to more tasks!
+</p>
+{% endblock %}

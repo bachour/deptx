@@ -91,8 +91,8 @@ def provlog_add_mop_issue_form(mop, mail, new_requisition, session_key):
     addBundle(mop.player.cron, bundle, bundle_id)
 
 
-def provlog_add_mop_issue_document(mop, mail, documentInstance, session_key):
-    bundle_id, bundle = create_bundle_mop_issue_document(mop.id, session_key, mail.id, mail.requisitionInstance.blank.requisition.serial, mail.requisitionInstance.id, documentInstance.document.serial, documentInstance.id, mail.unit.serial)
+def provlog_add_mop_issue_document(mop, mail, mopDocumentInstance, session_key):
+    bundle_id, bundle = create_bundle_mop_issue_document(mop.id, session_key, mail.id, mail.requisitionInstance.blank.requisition.serial, mail.requisitionInstance.id, mopDocumentInstance.getDocumentSerial(), mopDocumentInstance.id, mail.unit.serial)
     addBundle(mop.player.cron, bundle, bundle_id)
 
 
@@ -242,7 +242,7 @@ def create_bundle_mop_issue_document(user_id, session_key, email_id, blank_form_
     b.used(a, em)
     d = b.entity('document:%s' % document_serial, [('prov:type', 'asset:Document')])
     b.used(a, d)
-    di = b.entity('document:%s/%d' % (document_serial, document_instance_id), [('prov:type', 'asset:DocumentInstance')])
+    di = b.entity('document:%s/%d' % (document_serial, document_instance_id), [('prov:type', 'asset:MopDocumentInstance')])
     b.wasGeneratedBy(di, a)
     b.wasDerivedFrom(di, sf)
     b.wasDerivedFrom(di, d)

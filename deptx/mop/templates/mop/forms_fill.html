@@ -5,9 +5,8 @@
 <h1>{{reqBlank.requisition.name}}</h1>
 Please enter the identification code of the 
 {% if reqBlank.requisition.category == 0 %}<b>form</b> you want to request
-{% elif reqBlank.requisition.category == 1 %}<b>task</b> you want to request
 {% elif reqBlank.requisition.category == 2 %}<b>document</b> you want to request
-{% elif reqBlank.requisition.category == 3 %}<b>task</b> you are submitting
+{% elif reqBlank.requisition.category == 3 %}<b>document</b> you are submitting
 {% endif %}
  and then send the form to the {{reqBlank.requisition.unit.name}}.<br>
 <form method="post" action="">
@@ -28,6 +27,6 @@ If you are unsure what "data" to enter, check the relevant reference page:
 </p>
 <ul>
 <li>if you are requesting a form, check the <a href="{% url 'mop_rules' %}">Guidebook</a> for the list of Form IDs.</li>
-<li>if you are requesting a document for completing a task, find the necessary document ID in the <a href="{% url 'mop_tasks' %}">Tasks</a> page.
+<li>if you are requesting a document for completing a task, find the necessary document ID in the <a href="{% url 'mop_pool' %}">Document Pool</a> page.
 </ul>
 {% endblock %}
