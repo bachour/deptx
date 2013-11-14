@@ -44,18 +44,19 @@ def get_random_graph(graph):
                             print "WARNING: main attribute for identifier that has more than 2 occurences: ", id
                         
                     # if this is the main attribute, store its value
-                    if graph[c][e][a][0] == '&' and not graph[c][e][a][1] == '&&':
+                    if graph[c][e][a][0] == '&' and not graph[c][e][a][1] == '&':
                         if identifier_main_att.has_key(id) or identifier_super_main_att.has_key(id):
                             print "WARNING: multiple main attributes detected for identifier: ", id
                         identifier_main_att[id] = identifiers[id][-1]
                     # if this is a super main attribute, store it's value
-                    elif graph[c][e][a][0] == '&' and not graph[c][e][a][1] == '&&':
+                    elif graph[c][e][a][0] == '&' and graph[c][e][a][1] == '&':
                         if identifier_main_att.has_key(id)  or identifier_super_main_att.has_key(id):
                             print "WARNING: multiple main attributes detected for identifier: ", id
                         identifier_super_main_att[id] = identifiers[id][-1]
                         
     #make duplicate_count a random number between 0 and duplicate_count
-    duplicate_count = duplicate_count - random.randint(1,duplicate_count) - len(indentifier_super_main_att)
+    duplicate_count = duplicate_count - len(identifier_super_main_att)
+    duplicate_count = duplicate_count - random.randint(1,duplicate_count)
                      
     #choose duplicate_countTH duplicated identifier, and add ?'s to it's value           
     for i in identifiers:
@@ -65,7 +66,7 @@ def get_random_graph(graph):
             for j in range(len(identifiers[i])):
                 identifiers[i][j] = selected
         #now deal with the rest
-        if len(identifiers[i]) >= 2:
+        elif len(identifiers[i]) >= 2:
             if (duplicate_count == 0):
                 #print 'selected ',i, ': ', identifiers[i]
                 for j in range(len(identifiers[i])):
@@ -137,5 +138,6 @@ def get_random_from_file(file, not_in):
         
     return lines[random.randint(0, len(lines)-1)].strip()
 
-#grph = json.load(file.open("/Users/khaled/Documents/amptest.json"))
-#get_random_graph()
+#RANDOM_FILES_PATH = '/Users/khaled/Dropbox/Dept.X/MEDIA/GRINDING/'
+#grph = json.load(open("/Users/khaled/Documents/amptest.json",'r'))
+#print get_inconsistencies(get_random_graph(grph))
