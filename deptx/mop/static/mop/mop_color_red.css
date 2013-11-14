@@ -1,0 +1,18 @@
+input.button, a {
+	background-color:#ff3333;
+	border-color:#ff3333;
+}
+
+a:hover, input.button:hover {
+	color:#ff3333;
+}
+
+td {
+	border-color:#ff3333;
+}
+
+.styled-select {
+	background-color:#ff3333;
+}
+
+

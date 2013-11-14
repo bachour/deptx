@@ -1,6 +1,6 @@
 from mop.models import Badge
 from players.models import Mop
-from deptx.helpers import Clearance
+from mop.clearance import Clearance
 
 def analyze_performance():
     output = []
@@ -25,7 +25,7 @@ def analyze_performance():
         
 
 def getClearance(trust):
-    if trust >= 500:
+    if trust >= 10000:
         return Clearance.CLEARANCE_MAX
     elif trust >= 100:
         return Clearance.CLEARANCE_HIGH

@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
-from deptx.helpers import generateUUID, Clearance
+from deptx.helpers import generateUUID
+from mop.clearance import Clearance
 
 
 #TODO move Player into CRON
@@ -122,17 +123,13 @@ class Mop(models.Model):
     credit = models.IntegerField(default=0)
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW)
     
-#     def getTotalTrust(self):
-#         return tm_getTotalTrust(self)
-#     
-#     def getCurrentTrust(self):
-#         return tm_getCurrentTrust(self)
-#     
-#     def getCurrentTrustCredit(self):
-#         return tm_getCurrentTrustCredit(self)
-#     
-#     def getCurrentClearance(self):
-#         return tm_getCurrentClearance(self)
+    def getCssUrl(self):
+        return Clearance(self.clearance).getCssUrl()
+    
+    def addTrust(self, trust):
+        self.totalTrust += trust
+        self.trust += trust
+        self.save()
     
     def __unicode__(self):
         return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)

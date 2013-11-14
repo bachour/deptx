@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>Signed Forms</h1>
+<h1>Archived Forms</h1>
 {% if requisitionInstance_list %}
 <table>
 <tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
@@ -11,14 +11,14 @@
 {% endfor %}
 </table>
 {% else %}
-No signed forms.
+No archived forms.
 {% endif %}
 
 {% endblock %}
 
 {% block help %}
 <p>
-This is where all your signed forms are stored. Attach these forms to your outgoing mail.
+This is where a copy of all your archived forms is stored.
 </p>
 <p>If you want to fill in a new form, you must go to the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</p>
 {% endblock %}

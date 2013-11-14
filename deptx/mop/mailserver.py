@@ -2,6 +2,7 @@ from mop.models import Mail, MopDocumentInstance, RequisitionBlank, RandomizedDo
 from assets.models import Requisition, CronDocument
 from django.template import Context, loader, Template
 import logging
+from mop.clearance import Clearance
 
 def analyze_mail():
     output = []
@@ -13,93 +14,100 @@ def analyze_mail():
         newMail = prepareMail(mail)
         if mail.unit == None:
             newMail.subject = Mail.SUBJECT_ERROR
-            mail_tpl = loader.get_template('mop/mail/no_unit.txt')
-            c = Context()
-            newMail.body = mail_tpl.render(c)
+            newMail.bodyType = Mail.BODY_ERROR_MISSING_UNIT
+            #if there is no unit an error is generated automatically - no need to set it manually
         elif mail.subject == Mail.SUBJECT_EMPTY:
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_no_subject)
+            newMail.bodyType = Mail.BODY_ERROR_NO_SUBJECT
         elif mail.requisitionInstance == None:
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_missing_form)
+            newMail.bodyType = Mail.BODY_ERROR_MISSING_FORM
         elif not mail.unit == mail.requisitionInstance.blank.requisition.unit:
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_wrong_unit, mail.requisitionInstance.blank.requisition.serial)
+            newMail.bodyType = Mail.BODY_ERROR_WRONG_UNIT
         elif not (subjectMatchesRequisition(mail)):
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_wrong_form)
+            newMail.bodyType = Mail.BODY_ERROR_WRONG_FORM
         elif redundantDocument(mail):
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_redundant_document, mail.requisitionInstance.data)
+            newMail.bodyType = Mail.BODY_ERROR_REDUNDANT_DOCUMENT
+            newMail.bodyData
         elif missingDocument(mail):
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_missing_document)
+            newMail.bodyType = Mail.BODY_ERROR_MISSING_DOCUMENT
         elif wrongDocument(mail):
             newMail.subject = Mail.SUBJECT_ERROR
-            newMail.body = generateBody(mail.unit.mail_error_wrong_document, mail.requisitionInstance.data)
+            newMail.bodyType = Mail.BODY_ERROR_WRONG_DOCUMENT
         #Now the mail should be formally correct
         #Let's see about the content!
         elif mail.subject == Mail.SUBJECT_REQUEST_FORM:
             requisition = getRequisition(mail)
             if requisition == None:
                 newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_unfound_form, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_ERROR_UNFOUND_FORM
             elif requisitionBlankExists(mail.mop, requisition):
                 newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_existing_form, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_ERROR_EXISTING_FORM
             else:
-                assignRequisition(mail.mop, requisition)
+                requisitionBlank = assignRequisition(mail.mop, requisition)
+                newMail.requisitionBlank = requisitionBlank
                 newMail.subject = Mail.SUBJECT_RECEIVE_FORM
-                newMail.body = generateBody(mail.unit.mail_assigning_form, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_ASSIGNING_FORM
         elif mail.subject == Mail.SUBJECT_REQUEST_DOCUMENT:
             #The serial inside the form could be either for a mop or for a cron 'document'
             cronDocument = getCronDocument(mail)
             randomizedDocument = getRandomizedDocument(mail)
             if cronDocument == None and randomizedDocument == None:
                 newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_unfound_document, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_ERROR_UNFOUND_DOCUMENT
             elif mopDocumentInstanceExists(mail.mop, cronDocument, randomizedDocument):
                 #TODO what if document is used?
                 newMail.subject = Mail.SUBJECT_ERROR
-                newMail.body = generateBody(mail.unit.mail_error_existing_document, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_ERROR_EXISTING_DOCUMENT
             else:
-                assignDocument(mail.mop, cronDocument, randomizedDocument)
+                mopDocumentInstance = assignDocument(mail.mop, cronDocument, randomizedDocument)
+                newMail.mopDocumentInstance = mopDocumentInstance
+                clearance = Clearance(mopDocumentInstance.getClearance())
+                newMail.trust = clearance.getTrustRequested()
                 newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
-                newMail.body = generateBody(mail.unit.mail_assigning_document, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_ASSIGNING_DOCUMENT
         elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
             mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_REPORTED
             mail.mopDocumentInstance.save()
+            clearance = Clearance(mail.mopDocumentInstance.getClearance())
             newMail.subject = Mail.SUBJECT_REPORT_EVALUATION
             if mail.mopDocumentInstance.correct:
-                newMail.body = generateBody(mail.unit.mail_report_success, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_REPORT_SUCCESS
+                newMail.trust = clearance.getTrustReportedCorrect()
             else:
-                newMail.body = generateBody(mail.unit.mail_report_fail, mail.requisitionInstance.data)
+                newMail.bodyType = Mail.BODY_REPORT_FAIL
+                newMail.trust = clearance.getTrustReportedIncorrect()
         else:
             newMail.subject = Mail.SUBJECT_UNCAUGHT_CASE
-            newMail.body = "Yo35ur ma$$@il could%#34 n#$2ot b24e del$#i%#ve%#red. Som$#et2222hing we42 nt w@$rong."
+            newMail.body = Mail.BODY_UNCAUGHT_CASE
+            
 
-        mail.processed = True
-        mail.save()
-        newMail.save()
         if newMail.subject == Mail.SUBJECT_ERROR:
+            newMail.trust = -1
             if not mail.mopDocumentInstance == None:
                 mail.mopDocumentInstance.used = False
                 mail.mopDocumentInstance.save()
+
+        mail.processed = True
+        mail.save()
+        newMail.replyTo = mail
+        newMail.save()
+        
+        if newMail.trust is not None:
+            mail.mop.addTrust(newMail.trust)
+
    
     return output
 
-def generateBody(text, data=None):
-    t = Template(text)
-    c = Context({"data": data})
-    return t.render(c)
-
-# def solveTask(taskInstance):
-#     taskInstance.status = TaskInstance.STATUS_SOLVED
-#     taskInstance.save()
-#     
-# def failTask(taskInstance):
-#     taskInstance.status = TaskInstance.STATUS_FAILED
-#     taskInstance.save()
+# def generateBody(text, data=None):
+#     t = Template(text)
+#     c = Context({"data": data})
+#     return t.render(c)
 
 def requisitionBlankExists(mop, requisition):
     try:
@@ -131,9 +139,6 @@ def getRequisition(mail):
         requisition = None
     return requisition
 
-# def getTask(mail):
-#     return Task.objects.filter(unit=mail.unit).order_by('?')[0]
-#     #TODO filter for clearance
 
 def getCronDocument(mail):
     try:
@@ -203,6 +208,7 @@ def wrongDocument(mail):
 #TODO display attachments when viewing mails
 def assignRequisition(mop, requisition):
     requisitionBlank, created = RequisitionBlank.objects.get_or_create(mop=mop, requisition=requisition)
+    return requisitionBlank
        
     
 def assignDocument(mop, cronDocument, randomizedDocument):
@@ -210,8 +216,7 @@ def assignDocument(mop, cronDocument, randomizedDocument):
         mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, cronDocument=cronDocument, type=MopDocumentInstance.TYPE_CRON)
     else:
         mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, randomizedDocument=randomizedDocument, type=MopDocumentInstance.TYPE_MOP)
-
-
+    return mopDocumentInstance
 
 def prepareMail(mail):
     newMail = Mail()

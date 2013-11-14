@@ -150,19 +150,19 @@ def getProvSvg(provenance):
     svg = API.get_document(provenance.store_id, format="svg")
     return svg
 
-def improve(request, id):
-    provenance = Provenance.objects.get(id=id)
+def improve(request, serial):
+    provenance = Provenance.objects.get(serial=serial)
     json_str = getProvJsonStr(provenance)
     return HttpResponse(json_str, content_type="application/json")
 
-def improve_saved_state(request, id):
-    provenance = Provenance.objects.get(id=id)
+def improve_saved_state(request, serial):
+    provenance = Provenance.objects.get(serial=serial)
     if provenance.type == Provenance.TYPE_CRON:
-            try:
-                cronDocument = CronDocument.objects.get(provenance=provenance)
-                documentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
-            except:
-                pass
+        try:
+            cronDocument = CronDocument.objects.get(provenance=provenance)
+            documentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
+        except:
+            pass
     elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
             try:
                 randomizedDocument = RandomizedDocument.objects.get(provenance=provenance)
@@ -186,7 +186,7 @@ def prov_check(request):
 
     #if request.is_ajax():
     if request.method == 'POST':
-        id = request.POST.get('id', "")
+        serial = request.POST.get('serial', "")
         post_node1 = request.POST.get('node1', "")
         post_node2 = request.POST.get('node2', "")
         post_attribute1 = request.POST.get('attribute1', "")
@@ -197,7 +197,7 @@ def prov_check(request):
         player_attribute2 = makeAttributeString(post_node2, post_attribute2)
         
         try:
-            provenance = Provenance.objects.get(id=id)
+            provenance = Provenance.objects.get(serial=serial)
             try: 
                 attribute1_json = json.loads(provenance.attribute1)
                 attribute2_json = json.loads(provenance.attribute2)
@@ -269,7 +269,7 @@ def prov_log_action(request):
 
     #if request.is_ajax():
     if request.method == 'POST':
-        id = request.POST.get('id', None)
+        serial = request.POST.get('serial', None)
         action = request.POST.get('action', None) #'move' or 'click'
         node = request.POST.get('node', None)
         x = request.POST.get('x', None)
@@ -278,7 +278,7 @@ def prov_log_action(request):
         state = request.POST.get('state', None)
         
         #TODO log everything, including clicking
-        provenance = Provenance.objects.get(id=id)
+        provenance = Provenance.objects.get(serial=serial)
         if provenance.type == Provenance.TYPE_CRON:
             documentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
         elif provenance.type == Provenance.TYPE_MOP_INSTANCE:

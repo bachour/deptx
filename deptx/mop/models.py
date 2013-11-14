@@ -4,9 +4,10 @@ from players.models import Mop
 from assets.models import Unit, Requisition, CronDocument, MopDocument
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
-from deptx.helpers import random_chars, Clearance
+from mop.clearance import Clearance
 import deptx.friendly_id as friendly_id
 import re
+from django.template import Context, loader, Template
 
 class RandomizedDocument(models.Model):
     mopDocument = models.ForeignKey(MopDocument)
@@ -23,21 +24,14 @@ class RandomizedDocument(models.Model):
         else:
             active = "INACTIVE"
         return "%s: %s (%s)" % (active, self.serial, self.mopDocument.provenance.name)
-        #return "%s" % (self.serial)
+    
+    def getBadgeUrl(self):
+        return Clearance(self.mopDocument.clearance).getBadgeUrl()
     
     def save(self, *args, **kwargs):
         super(RandomizedDocument, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            if self.mopDocument.clearance == Clearance.CLEARANCE_LOW:
-                beginning = "ABCDE12"
-                end = "MIXEDREALITYLAB1212"
-            elif self.mopDocument.clearance == Clearance.CLEARANCE_MEDIUM:
-                beginning = "FGHIJ34"
-                end = "PROVENANCE3434"
-            elif self.mopDocument.clearance == Clearance.CLEARANCE_HIGH:
-                beginning = "KLMNP56"
-                end = "NOTTINGHAM5656"
-            self.serial = "DOC-%s-%s-%s-%s" % (self.mopDocument.unit.serial, random_chars(size=2, chars=beginning), friendly_id.encode(self.id), random_chars(chars=end))
+            self.serial = Clearance(self.mopDocument.clearance).generateSerial(self.mopDocument)
             super(RandomizedDocument, self).save()
 
 class MopDocumentInstance(models.Model):
@@ -70,10 +64,33 @@ class MopDocumentInstance(models.Model):
     used = models.BooleanField(default=False)
     correct = models.BooleanField(default=False)
     provenanceState = models.TextField(blank=True, null=True)
+
     #stuff needed if it is a mop-document or cron-document
     type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_MOP)
     randomizedDocument = models.ForeignKey(RandomizedDocument, blank=True, null=True)
     cronDocument = models.ForeignKey(CronDocument, blank=True, null=True)
+    
+    def getClearance(self):
+        if self.type == self.TYPE_CRON:
+            return self.cronDocument.clearance
+        else:
+            return self.randomizedDocument.mopDocument.clearance
+    
+    def getTrustFinal(self):
+        clearance = Clearance(self.getClearance())
+        if self.status == self.STATUS_REPORTED:
+            if self.correct:
+                return clearance.getTrustReportedCorrect()
+            else:
+                return clearance.getTrustReportedIncorrect()
+        elif self.status == self.STATUS_REVOKED:
+            return clearance.getTrustRevoked(clearance)
+        else:
+            return 0
+    
+    def getTrustRequested(self):
+        clearance = Clearance(self.getClearance())
+        return clearance.getTrustRequested()
 
     def getDocumentSerial(self):
         if self.type == self.TYPE_MOP:
@@ -82,7 +99,6 @@ class MopDocumentInstance(models.Model):
             return self.cronDocument.serial
 
     def __unicode__(self):
-        #return "%s - %s - %s - %s" % (self.get_type_display(), self.mop.user.username, self.get_status_display(), self.getDocumentSerial())
         return "%s" % (self.getDocumentSerial())
         
 class RequisitionBlank(models.Model):
@@ -106,7 +122,7 @@ class RequisitionInstance(models.Model):
         return "%s-%s" % (self.blank.requisition.serial, self.serial)
     
     def save(self, *args, **kwargs):
-        self.data = re.sub("[^0-9A-Z-]", "", self.data)
+        self.data = re.sub("[^0-9A-Za-z-]", "", self.data)
         super(RequisitionInstance, self).save(*args, **kwargs)
         if self.id and not self.serial:
             self.serial = "%s" % (friendly_id.encode(self.id))
@@ -166,6 +182,51 @@ class Mail(models.Model):
     
     CHOICES_SUBJECT = CHOICES_SUBJECT_SENDING + CHOICES_SUBJECT_RECEIVING
     
+    BODY_UNCAUGHT_CASE = -1
+    BODY_ERROR_NO_SUBJECT = 0
+    
+    BODY_ERROR_MISSING_FORM = 10
+    BODY_ERROR_MISSING_DOCUMENT = 11
+    BODY_ERROR_MISSING_UNIT = 12
+    
+    BODY_ERROR_WRONG_UNIT = 20
+    BODY_ERROR_WRONG_FORM = 21
+    BODY_ERROR_WRONG_DOCUMENT = 22
+    
+    BODY_ERROR_REDUNDANT_DOCUMENT = 30
+        
+    BODY_ERROR_UNFOUND_FORM = 40
+    BODY_ERROR_UNFOUND_DOCUMENT = 41
+    
+    BODY_ERROR_EXISTING_FORM = 50
+    BODY_ERROR_EXISTING_DOCUMENT = 51
+    
+    BODY_ASSIGNING_FORM = 100
+    BODY_ASSIGNING_DOCUMENT = 101
+    
+    BODY_REPORT_FAIL = 110
+    BODY_REPORT_SUCCESS = 111
+    
+    CHOICES_BODY_TYPE = (
+        (BODY_UNCAUGHT_CASE, 'BODY_UNCAUGHT_CASE'),
+        (BODY_ERROR_NO_SUBJECT, 'BODY_ERROR_NO_SUBJECT'),
+        (BODY_ERROR_MISSING_FORM, 'BODY_ERROR_MISSING_FORM'),
+        (BODY_ERROR_MISSING_DOCUMENT, 'BODY_ERROR_MISSING_DOCUMENT'),
+        (BODY_ERROR_MISSING_UNIT, 'BODY_ERROR_MISSING_UNIT'),
+        (BODY_ERROR_WRONG_UNIT, 'BODY_ERROR_WRONG_UNIT'),
+        (BODY_ERROR_WRONG_FORM, 'BODY_ERROR_WRONG_FORM'),
+        (BODY_ERROR_WRONG_DOCUMENT, 'BODY_ERROR_WRONG_DOCUMENT'),
+        (BODY_ERROR_REDUNDANT_DOCUMENT, 'BODY_ERROR_REDUNDANT_DOCUMENT'),
+        (BODY_ERROR_UNFOUND_FORM, 'BODY_ERROR_UNFOUND_FORM'),
+        (BODY_ERROR_UNFOUND_DOCUMENT, 'BODY_ERROR_UNFOUND_DOCUMENT'),
+        (BODY_ERROR_EXISTING_FORM, 'BODY_ERROR_EXISTING_FORM'),
+        (BODY_ERROR_EXISTING_DOCUMENT, 'BODY_ERROR_EXISTING_DOCUMENT'),
+        (BODY_ASSIGNING_FORM, 'BODY_ASSIGNING_FORM'),
+        (BODY_ASSIGNING_DOCUMENT, 'BODY_ASSIGNING_DOCUMENT'), 
+        (BODY_REPORT_FAIL, 'BODY_REPORT_FAIL'),
+        (BODY_REPORT_SUCCESS, 'BODY_REPORT_SUCCESS'),
+    )
+    
     
     mop = models.ForeignKey(Mop)
     unit = models.ForeignKey(Unit, blank=True, null=True)
@@ -176,19 +237,68 @@ class Mail(models.Model):
     state = models.IntegerField(choices=CHOICES_STATE, default=STATE_NORMAL)
     type = models.IntegerField(choices=CHOICES_TYPE)
     processed = models.BooleanField(default=False)
+    trust = models.IntegerField(blank=True, null=True)
+    bodyType = models.IntegerField(choices=CHOICES_BODY_TYPE, blank=True, null=True)
+    replyTo = models.ForeignKey('self', blank=True, null=True)
     
+    requisitionBlank = models.ForeignKey(RequisitionBlank, null=True, blank=True)
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
     mopDocumentInstance = models.ForeignKey(MopDocumentInstance, null=True, blank=True)  
     
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    def generateBody(self):
+        try:
+            data = self.replyTo.requisitionInstance.data
+        except:
+            data = None
+        
+        if self.bodyType == self.BODY_UNCAUGHT_CASE:
+            text = "Yo35ur ma$$@il could%#34 n#$2ot b24e del$#i%#ve%#red. Som$#et2222hing we42 nt w@$rong."
+        elif self.bodyType == self.BODY_ERROR_NO_SUBJECT:
+            text = self.unit.mail_error_no_subject
+        elif self.bodyType == self.BODY_ERROR_MISSING_FORM:
+            text = self.unit.mail_error_missing_form
+        elif self.bodyType == self.BODY_ERROR_MISSING_DOCUMENT:
+            text = self.unit.mail_error_missing_document
+        elif self.bodyType == self.BODY_ERROR_MISSING_UNIT:
+            text = "Hi. This is the mop-mail-send program at mail3.mofp.net.<br/>I'm afraid I wasn't able to deliver your message to the following addresses. This is a permanent error; I've given up. Sorry it didn't work out.<br/><br/>ERR341: %%NO ADRESS SPECIFIED%%"
+        elif self.bodyType == self.BODY_ERROR_WRONG_UNIT:
+            text = self.unit.mail_error_wrong_unit
+        elif self.bodyType == self.BODY_ERROR_WRONG_FORM:
+            text = self.unit.mail_error_wrong_form
+        elif self.bodyType == self.BODY_ERROR_WRONG_DOCUMENT:
+            text = self.unit.mail_error_wrong_document
+        elif self.bodyType == self.BODY_ERROR_REDUNDANT_DOCUMENT:
+            text = self.unit.mail_error_redundant_document
+        elif self.bodyType == self.BODY_ERROR_UNFOUND_FORM:
+            text = self.unit.mail_error_unfound_form
+        elif self.bodyType == self.BODY_ERROR_UNFOUND_DOCUMENT:
+            text = self.unit.mail_error_unfound_document
+        elif self.bodyType == self.BODY_ERROR_EXISTING_FORM:
+            text = self.unit.mail_error_existing_form
+        elif self.bodyType == self.BODY_ERROR_EXISTING_DOCUMENT:
+            text = self.unit.mail_error_existing_document
+        elif self.bodyType == self.BODY_ASSIGNING_FORM:
+            text = self.unit.mail_error_assigning_form
+        elif self.bodyType == self.BODY_ASSIGNING_DOCUMENT:
+            text = self.unit.mail_assigning_document
+        elif self.bodyType == self.BODY_REPORT_FAIL:
+            text = self.unit.mail_report_fail
+        elif self.bodyType == self.BODY_REPORT_SUCCESS:
+            text = self.unit.mail_report_success
+
+        t = Template(text)
+        c = Context({"data": data})
+        return t.render(c)
+    
     def __unicode__(self):
         if self.subject == None:
             subject = "no subject"
         else:
             subject = self.get_subject_display()
-        return "%s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, str(self.processed))
+        return "%s - %s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, self.trust, str(self.processed))
 
 class Badge(models.Model):
     BADGE_0 = 0

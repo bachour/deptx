@@ -122,9 +122,9 @@ def performance(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def pool(request):
+def documents_pool(request):
 
-    randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
+    randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.clearance)
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
         
@@ -136,7 +136,7 @@ def pool(request):
         
  
     log_mop(request.user.mop, 'view pool')   
-    return render(request, 'mop/pool.html', {"randomizedDocument_list": randomizedDocument_list})
+    return render(request, 'mop/documents_pool.html', {"randomizedDocument_list": randomizedDocument_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -145,6 +145,14 @@ def documents(request):
     
     log_mop(request.user.mop, 'view documents')
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def documents_archive(request):
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=True).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
+    
+    log_mop(request.user.mop, 'view documents archive')
+    return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
 
 @login_required(login_url='mop_login')
@@ -443,10 +451,18 @@ def form_fill(request, reqBlank_id):
 @user_passes_test(isMop, login_url='mop_login')
 def forms_signed(request):
     requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-modifiedAt")
-    requisitionInstance_used_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
     
     log_mop(request.user.mop, 'view filled forms')
-    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
+    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
+
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def forms_archive(request):
+    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
+    
+    log_mop(request.user.mop, 'view archived forms')
+    return render(request, 'mop/forms_archive.html', {"requisitionInstance_list": requisitionInstance_list})
 
 
 @staff_member_required
