@@ -3,14 +3,17 @@
 {% block content %}
 
 <h1>Performance Report</h1>
-<p>Performance (total): {{user.mop.totalTrust}}</p>
-<p>Performance (current week): {{user.mop.trust}}</p>
-<p>Allowance (current week): {{user.mop.credit}}</p>
-<p>Clearance Level: {{user.mop.get_clearance_display}}</p>
 <table>
-<tr><th>Badge</th><th>Date</th></tr>
-{% for badge in badge_list %}
-<tr><td>{{badge.get_badge_display}}</td><td>{{badge.modifiedAt|date:"SHORT_DATE_FORMAT"}}</td></tr>
+<tr><th>Performance Score (total)</th><td>{{user.mop.trustTracker.totalTrust}}</td></tr>
+<tr><th>Performance Score (current period)</th><td>{{user.mop.trustTracker.trust}}</td></tr>
+<tr><th>Allowance (from last period)</th><td>{{user.mop.trustTracker.allowance}}</td></tr>
+<tr><th>Clearance Level</th><td><img class="minibadge" src="{{user.mop.trustTracker.getBadgeUrl}}" /></td></tr>
+</table>
+<br/>
+<table>
+<tr><th>Date</th><th>Performance</th><th>Level</th><th>Allowance</th></tr>
+{% for trustInstance in trustInstance_list %}
+<tr><td>{{trustInstance.createdAt|date:"SHORT_DATE_FORMAT"}}</td><td>{{trustInstance.trust}}</td><td><img class="minibadge" src="{{trustInstance.getBadgeUrl}}" /></td><td>{{trustInstance.allowance}}</td></tr>
 {% endfor %}
 </table>
 {% endblock %}

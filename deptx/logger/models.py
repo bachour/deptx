@@ -13,4 +13,4 @@ class Log(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return self.cron.user.username + ": " + self.action + " (" + str(self.date) + ")"
+        return "%s %s %s" % (self.cron.user.username, self.action, self.modifiedAt)

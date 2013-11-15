@@ -1,8 +1,12 @@
 from mop.models import Mail, MopDocumentInstance, RequisitionBlank, RandomizedDocument
-from assets.models import Requisition, CronDocument
-from django.template import Context, loader, Template
+from assets.models import Requisition, CronDocument, Unit
 import logging
 from mop.clearance import Clearance
+
+def sendReport(trustInstance):
+    unit = Unit.objects.filter(type=Unit.TYPE_ADMINISTRATIVE)[0]
+    Mail.objects.create(mop=trustInstance.mop, trustInstance=trustInstance, unit=unit, subject=Mail.SUBJECT_INFORMATION, type=Mail.TYPE_RECEIVED, bodyType=Mail.BODY_PERFORMANCE_REPORT)
+
 
 def analyze_mail():
     output = []
@@ -64,6 +68,9 @@ def analyze_mail():
                 #TODO what if document is used?
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_EXISTING_DOCUMENT
+            elif not hasEnoughTrust(mail.mop, cronDocument, randomizedDocument):
+                newMail.subject = Mail.SUBJECT_ERROR
+                newMail.bodyType = Mail.BODY_ERROR_LACKING_TRUST
             else:
                 mopDocumentInstance = assignDocument(mail.mop, cronDocument, randomizedDocument)
                 newMail.mopDocumentInstance = mopDocumentInstance
@@ -99,7 +106,7 @@ def analyze_mail():
         newMail.save()
         
         if newMail.trust is not None:
-            mail.mop.addTrust(newMail.trust)
+            mail.mop.trustTracker.addTrust(newMail.trust)
 
    
     return output
@@ -130,7 +137,20 @@ def mopDocumentInstanceExists(mop, cronDocument, randomizedDocument):
             return True
         except MopDocumentInstance.DoesNotExist:
             return False
-           
+
+def hasEnoughTrust(mop, cronDocument, randomizedDocument):
+    if cronDocument is not None:
+        document = cronDocument
+    else:
+        document = randomizedDocument.mopDocument
+    trustCost = Clearance(document.clearance).getTrustRequested()
+    if trustCost == 0:
+        return True
+    elif trustCost <= (mop.trustTracker.trust + mop.trustTracker.allowance):
+        return True
+    else:
+        return False
+    
 
 def getRequisition(mail):
     try:
@@ -155,6 +175,14 @@ def getRandomizedDocument(mail):
     except RandomizedDocument.DoesNotExist:
         randomizedDocument = None
     return randomizedDocument
+
+def getRequiredTrust(cronDocument, randomizedDocument):
+    if cronDocument is not None:
+        document = cronDocument
+    else:
+        document = randomizedDocument.mopDocument
+    return Clearance(document.clearance).getTrustRequested() * (-1)
+
 
 def subjectMatchesRequisition(mail):
     if int(mail.subject) == int(Mail.SUBJECT_REQUEST_FORM):

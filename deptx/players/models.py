@@ -117,20 +117,3 @@ class Mop(models.Model):
     hair = models.IntegerField(choices=HAIR_CHOICES)
     eyes = models.IntegerField(choices=EYES_CHOICES)
     serial = models.CharField(max_length=36, default=generateUUID)
-    
-    totalTrust = models.IntegerField(default=0)
-    trust = models.IntegerField(default=0)
-    credit = models.IntegerField(default=0)
-    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW)
-    
-    def getCssUrl(self):
-        return Clearance(self.clearance).getCssUrl()
-    
-    def addTrust(self, trust):
-        self.totalTrust += trust
-        self.trust += trust
-        self.save()
-    
-    def __unicode__(self):
-        return "%s - cron: %s - active: %s" % (self.user.username, self.player.cron.user.username, self.active)
-

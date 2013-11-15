@@ -8,10 +8,21 @@ from mop.clearance import Clearance
 
 
 class Unit(models.Model):
+    
+    TYPE_NORMAL = 0
+    TYPE_ADMINISTRATIVE = 1
+    
+    CHOICES_TYPE = (
+        (TYPE_NORMAL, "normal"),
+        (TYPE_ADMINISTRATIVE, "administrative"),
+    )
+    
     name = models.CharField(max_length=256)
     serial = models.CharField(max_length=8, unique=True)
     description = models.TextField(default="Working on Provenance")
     tagline = models.CharField(max_length=256, default="Prov is all around you", help_text="one sentence descripion; their motto")
+
+    type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_NORMAL)
 
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
@@ -27,6 +38,7 @@ class Unit(models.Model):
     mail_error_unfound_document = models.TextField(default="Document {{data}} which you requested does not exist.", help_text="when the requested document does not correspond to a document by this unit (or any document)")
     mail_error_existing_form = models.TextField(default="You already have access to form {{data}}.", help_text="when the player already has the blank form")
     mail_error_existing_document = models.TextField(default="You already have access to document {{data}}.", help_text="when the player has already gotten the document")
+    mail_error_lacking_trust = models.TextField(default="You do not have the required amount of performance credits to request document {{data}}.", help_text="when the player does not have enough credits to 'pay' for a document")
     mail_assigning_form = models.TextField(default="We have assigned form {{data}} to you.", help_text="when the user gets a new form")
     mail_assigning_document = models.TextField(default="We have assigned document {{data}} to you", help_text="when the user gets a new document")
     mail_report_fail = models.TextField(default="Your report {{data}} was incorrect.", help_text="when the provenance investigation was incorrect")

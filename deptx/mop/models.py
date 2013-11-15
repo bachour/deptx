@@ -4,10 +4,67 @@ from players.models import Mop
 from assets.models import Unit, Requisition, CronDocument, MopDocument
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
-from mop.clearance import Clearance
+from mop.clearance import Clearance, convertTrustIntoClearance
 import deptx.friendly_id as friendly_id
 import re
 from django.template import Context, loader, Template
+
+class TrustTracker(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    mop = models.OneToOneField(Mop, related_name="trustTracker")
+    trust = models.IntegerField(default=0)
+    totalTrust = models.IntegerField(default=0)
+    allowance = models.IntegerField(default=0)
+    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW)
+    
+    def getCssUrl(self):
+        return Clearance(self.clearance).getCssUrl()
+    
+    def getMailUrl(self):
+        return Clearance(self.clearance).getMailUrl()
+    
+    def getBadgeUrl(self):
+        return Clearance(self.clearance).getBadgeUrl()
+    
+    def addTrust(self, trust):
+        self.totalTrust += trust
+        self.trust += trust
+        self.save()
+    
+    def __unicode__(self):
+        return "%s %s %s" % (self.mop.user.username, self.trust, self.get_clearance_display())
+
+class TrustInstance(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+
+    mop = models.ForeignKey(Mop)
+    trust = models.IntegerField(default=0)
+    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW, help_text="will be overridden when saved")
+    
+    def allowance(self):
+        allowance = int(self.trust * 0.1)
+        if allowance <0:
+            allowance = 0
+        return allowance
+    
+    def convertTrustIntoClearance(self):
+        return convertTrustIntoClearance(self.trust)
+    
+    def getBadgeUrl(self):
+        return Clearance(self.clearance).getBadgeUrl()
+    
+    def save(self, *args, **kwargs):
+        self.clearance = self.convertTrustIntoClearance()
+        super(TrustInstance, self).save(*args, **kwargs)    
+    
+    def __unicode__(self):
+        return "%s - %s - %s" % (self.createdAt, self.mop.user.username, self.trust)
+    
+
+
 
 class RandomizedDocument(models.Model):
     mopDocument = models.ForeignKey(MopDocument)
@@ -84,7 +141,7 @@ class MopDocumentInstance(models.Model):
             else:
                 return clearance.getTrustReportedIncorrect()
         elif self.status == self.STATUS_REVOKED:
-            return clearance.getTrustRevoked(clearance)
+            return clearance.getTrustRevoked()
         else:
             return 0
     
@@ -201,11 +258,15 @@ class Mail(models.Model):
     BODY_ERROR_EXISTING_FORM = 50
     BODY_ERROR_EXISTING_DOCUMENT = 51
     
+    BODY_ERROR_LACKING_TRUST = 60
+    
     BODY_ASSIGNING_FORM = 100
     BODY_ASSIGNING_DOCUMENT = 101
     
     BODY_REPORT_FAIL = 110
     BODY_REPORT_SUCCESS = 111
+    
+    BODY_PERFORMANCE_REPORT = 120
     
     CHOICES_BODY_TYPE = (
         (BODY_UNCAUGHT_CASE, 'BODY_UNCAUGHT_CASE'),
@@ -221,10 +282,12 @@ class Mail(models.Model):
         (BODY_ERROR_UNFOUND_DOCUMENT, 'BODY_ERROR_UNFOUND_DOCUMENT'),
         (BODY_ERROR_EXISTING_FORM, 'BODY_ERROR_EXISTING_FORM'),
         (BODY_ERROR_EXISTING_DOCUMENT, 'BODY_ERROR_EXISTING_DOCUMENT'),
+        (BODY_ERROR_LACKING_TRUST, 'BODY_ERROR_LACKING_TRUST'),
         (BODY_ASSIGNING_FORM, 'BODY_ASSIGNING_FORM'),
         (BODY_ASSIGNING_DOCUMENT, 'BODY_ASSIGNING_DOCUMENT'), 
         (BODY_REPORT_FAIL, 'BODY_REPORT_FAIL'),
         (BODY_REPORT_SUCCESS, 'BODY_REPORT_SUCCESS'),
+        (BODY_PERFORMANCE_REPORT, 'BODY_PERFORMANCE_REPORT'),
     )
     
     
@@ -240,6 +303,7 @@ class Mail(models.Model):
     trust = models.IntegerField(blank=True, null=True)
     bodyType = models.IntegerField(choices=CHOICES_BODY_TYPE, blank=True, null=True)
     replyTo = models.ForeignKey('self', blank=True, null=True)
+    trustInstance = models.ForeignKey(TrustInstance, blank=True, null=True)
     
     requisitionBlank = models.ForeignKey(RequisitionBlank, null=True, blank=True)
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
@@ -280,6 +344,8 @@ class Mail(models.Model):
             text = self.unit.mail_error_existing_form
         elif self.bodyType == self.BODY_ERROR_EXISTING_DOCUMENT:
             text = self.unit.mail_error_existing_document
+        elif self.bodyType == self.BODY_ERROR_LACKING_TRUST:
+            text = self.unit.mail_error_lacking_trust
         elif self.bodyType == self.BODY_ASSIGNING_FORM:
             text = self.unit.mail_error_assigning_form
         elif self.bodyType == self.BODY_ASSIGNING_DOCUMENT:
@@ -288,7 +354,10 @@ class Mail(models.Model):
             text = self.unit.mail_report_fail
         elif self.bodyType == self.BODY_REPORT_SUCCESS:
             text = self.unit.mail_report_success
-
+        elif self.bodyType == self.BODY_PERFORMANCE_REPORT:
+            text = "Your performance report:<br/><br/>In the last period you gained {{data.trust}} performance points.<br/><br/>For the current period your clearance level has therefore been set to {{data.get_clearance_display}} (effective immediately).<br/><br/>For more detail please visit the perfomance page of the intranet."
+            data = self.trustInstance
+            
         t = Template(text)
         c = Context({"data": data})
         return t.render(c)
@@ -300,42 +369,4 @@ class Mail(models.Model):
             subject = self.get_subject_display()
         return "%s - %s - %s - %s - processed: %s" % (self.get_type_display(), self.mop.user.username, subject, self.trust, str(self.processed))
 
-class Badge(models.Model):
-    BADGE_0 = 0
-    BADGE_1 = 1
-    BADGE_2 = 2
-    BADGE_3 = 3
-    BADGE_4 = 4
-    BADGE_5 = 5
-    BADGE_6 = 6
-    BADGE_7 = 7
-    BADGE_8 = 8
-    BADGE_9 = 9
-    BADGE_10 = 10
-    BADGE_11 = 11
-    
-    CHOICES_BADGE = (
-        (BADGE_0, 'Black ORCHID'),
-        (BADGE_1, 'Green ORCHID'),
-        (BADGE_2, 'Blue ORCHID'),
-        (BADGE_3, 'Orange ORCHID'),
-        (BADGE_4, 'Yellow ORCHID'),
-        (BADGE_5, 'Beige ORCHID'),
-        (BADGE_6, 'Purple ORCHID'),
-        (BADGE_7, 'Turquois ORCHID'),
-        (BADGE_8, 'Mint ORCHID'),
-        (BADGE_9, 'Brown ORCHID'),
-        (BADGE_10, 'White ORCHID'),
-        (BADGE_10, 'Ultraviolet ORCHID'),                 
-    )
-    
-    
-    mop = models.ForeignKey(Mop)
-    badge = models.IntegerField(choices=CHOICES_BADGE)
-    createdAt = CreationDateTimeField()
-    modifiedAt = ModificationDateTimeField()
-    
-    def __unicode__(self):
-        return "%s - %s" % (self.mop.user.username, self.get_badge_display())
-    
-    
+

@@ -16,7 +16,7 @@ from players.models import Player, Mop
 from django.contrib.auth.models import User
 
 from assets.models import Requisition, Unit, CronDocument
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, Badge
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
@@ -48,6 +48,8 @@ def index(request):
         draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
         
         request.session['inbox_unread'] = inbox_unread
+        
+        trustTracker, created = TrustTracker.objects.get_or_create(mop=request.user.mop)
         
         
         log_mop(request.user.mop, 'index')
@@ -102,7 +104,7 @@ def rules(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def performance(request):
-    badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
+#     badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
     
 #     taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE).order_by('modifiedAt')
 #     print taskInstance_list
@@ -117,14 +119,16 @@ def performance(request):
 #     print nextMonday
 #     print lastMonday
 #     weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
+
+    trustInstance_list = TrustInstance.objects.filter(mop=request.user.mop).order_by('-createdAt')
     log_mop(request.user.mop, 'read performance')
-    return render(request, 'mop/performance.html', {'badge_list':badge_list})
+    return render(request, 'mop/performance.html', {'trustInstance_list':trustInstance_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents_pool(request):
 
-    randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.clearance)
+    randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.trustTracker.clearance)
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
         
@@ -171,7 +175,7 @@ def provenance(request, serial):
         except CronDocument.DoesNotExist:
             document = None
 
-    if clearance <= request.user.mop.clearance:
+    if clearance <= request.user.mop.trustTracker.clearance:
         return render(request, 'mop/provenance.html', {'document': document})
     else:
         return render(request, 'mop/provenance_noclearance.html', {'document': document})

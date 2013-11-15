@@ -70,18 +70,18 @@ class Clearance():
         elif self.clearance == self.CLEARANCE_MAX:
             return -200
     
-    def getTrustRevoked(self, clearance):
-        if clearance == self.CLEARANCE_LOW:
+    def getTrustRevoked(self):
+        if self.clearance == self.CLEARANCE_LOW:
             return -5
-        elif clearance == self.CLEARANCE_GUARDED:
+        elif self.clearance == self.CLEARANCE_GUARDED:
             return -15
-        elif clearance == self.CLEARANCE_ELEVATED:
+        elif self.clearance == self.CLEARANCE_ELEVATED:
             return -25
-        elif clearance == self.CLEARANCE_HIGH:
+        elif self.clearance == self.CLEARANCE_HIGH:
             return -50
-        elif clearance == self.CLEARANCE_SEVERE:
+        elif self.clearance == self.CLEARANCE_SEVERE:
             return -75
-        elif clearance == self.CLEARANCE_MAX:
+        elif self.clearance == self.CLEARANCE_MAX:
             return -100
     
     def generateSerial(self, document):
@@ -108,6 +108,7 @@ class Clearance():
     
     def getBadgeUrl(self):
         path = MEDIA_URL + 'orchid-badge/'
+        img = ""
         if self.clearance == Clearance.CLEARANCE_LOW:
             img = "orchid-blue.png"
         elif self.clearance == Clearance.CLEARANCE_GUARDED:
@@ -124,6 +125,7 @@ class Clearance():
  
     def getCssUrl(self):
         path = STATIC_URL + 'mop/'
+        css = ""
         if self.clearance == self.CLEARANCE_LOW:
             css = "mop_color_blue.css"
         elif self.clearance == self.CLEARANCE_GUARDED:
@@ -138,4 +140,35 @@ class Clearance():
             css = "mop_color_ultraviolet.css"
         return path + css
 
+    def getMailUrl(self):
+        path = STATIC_URL + 'mop/'
+        img = ""
+        if self.clearance == self.CLEARANCE_LOW:
+            img = "mail_blue.png"
+        elif self.clearance == self.CLEARANCE_GUARDED:
+            img = "mail_green.png"
+        elif self.clearance == self.CLEARANCE_ELEVATED:
+            img = "mail_yellow.png"
+        elif self.clearance == self.CLEARANCE_HIGH:
+            img = "mail_orange.png"
+        elif self.clearance == self.CLEARANCE_SEVERE:
+            img = "mail_red.png"
+        elif self.clearance == self.CLEARANCE_MAX:
+            img = "mail_ultraviolet.png"
+        return path + img
+    
+def convertTrustIntoClearance(trust):
+    if trust <= 50:
+        return Clearance.CLEARANCE_LOW
+    elif trust <=125:
+        return Clearance.CLEARANCE_GUARDED
+    elif trust <=400:
+        return Clearance.CLEARANCE_ELEVATED
+    elif trust <=1000:
+        return Clearance.CLEARANCE_HIGH
+    elif trust <=10000:
+        return Clearance.CLEARANCE_SEVERE
+    else:
+        return Clearance.CLEARANCE_MAX
+    
     
