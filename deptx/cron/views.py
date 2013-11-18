@@ -20,7 +20,7 @@ from assets.models import Case, Mission, CronDocument
 from cron.models import CaseInstance, CronDocumentInstance, MissionInstance
 from mop.models import Mail
 
-from deptx.settings import MEDIA_URL
+from deptx.settings import MEDIA_URL, STATIC_URL
 
 from logger.logging import log_cron, log_mop
 from provmanager.provlogging import provlog_add_cron_login, provlog_add_cron_logout, provlog_add_mop_register
@@ -413,6 +413,14 @@ def profile(request):
     return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, 'missionInstance_list': missionInstance_list, "mop_list":mop_list },
                                          context_instance=RequestContext(request)
                                  )
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def bunker_image(request, image_name):
+    image_url = STATIC_URL + 'cron/images/bunker/' + image_name
+    return render_to_response('cron/pages/bunker_image.html', {'image_url': image_url})
+
+
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.crondocument_set.all()

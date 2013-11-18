@@ -1,9 +1,81 @@
 {% extends 'cron/base.html' %}
+{% load staticfiles %}
 
 {% block content %}
+<br/>
+<div class="grid_8">
+<h4 class="clr-10 p2">Most Secret - Agents Eyes ONLY            </h4>
+            <p><!-- Cr0nogram Player Data 1 Content Start--><!-- Cr0nogram Player Data 1 Content End--></p>
+      <p align="center" class="text-3 p3"><img src="{% static 'cron/images/wardrobe.jpg' %}" alt="Through the wardrobe..." width="460" height="276" class="box-border"><br>
+            <strong class="text-1">TOGETHER WE CAN STOP THE MINISTRY OF PROVENANCE</strong>      </p>
+      <h4>WE ARE CR0N</h4>
+      <p>Across the globe, hundreds of  people are joining us, working together to uncover the truth, expose the <a href="http://mofp.net/" title="Ministry of Provenance" target="_blank">Ministry of Provenance</a>, protect our rights and strengthen the power of the people of this planet.</p>
+<br>
+<p>This is a perilous time for us all and there are many dangers ahead.</p>
+<br>
+<p>Your cutting edge work  in field of digital provenance may be the only thing that can save us all.      </p>
+<p align="center" class="tweet"></p>
 
+<br>
+<br>
 <h1>{% if missionInstance %}<a href="{{mission_url}}">Mission: {{missionInstance.mission.name}}</a>{% else %} Currently no mission assigned{% endif %}</h1>
+
+
+<br>
+<br>
+<h4>Remember, be vigilant, they are watching</h4>
+<br>
+<br>
+
+
+
 <h1><a href="{% url 'cron_profile' %}">Profile</a></li></h1>
 <h1><a href="{% url 'cron_archive' %}">Archive</a></h1>
+
+
+<p align="left"><br>
+</p>
+      <p class="text-3 top-1 p3"></p>
+    </div>  
+          <div class="grid_4 mainsidebar">
+            <h4 align="center"><img style="margin-top:-25px;" src="{% static 'cron/images/top-secret-cr0n.png' %}" alt="The Cr0n Report"><br>
+            Cr0n Intelligence </h4>
+            <br>
+            <div align="center"></div>
+            <div class="block-4">
+              <figure class="box-border"><img src="{% static 'cron/images/cr-001.jpg' %}" alt="The Cr0n Report"></figure>
+              <h5><a href="{% url 'cr0n-report-gc8' %}">The Cr0n Report</a></h5>
+              <p>Maria Merchant reports from our secret underground bunker as the Agents prepare for action.</p>
+              <br>
+            </div>
+            <div class="block-4 last">
+              <h5>
+                <figure class="box-border"><img src="{% static 'cron/images/bk-001.jpg' %}" alt="Inside the Bunker"></figure>
+              <a href="{% url 'inside-the-bunker' %}">Inside the Bunker</a> </h5>
+              <p>A record of the important evidence collected by our Agents so far.</p>
+              <br>
+            </div>
+            <div class="block-4 last">
+              <h5>
+                <figure class="box-border"><img src="{% static 'cron/images/mop-int.jpg' %}" alt="Message Intercepted"></figure>
+                <a href="{% url 'mop-message' %}">Message Intercepted</a></h5>
+              <p>A secret  comunication from MoP Agent M was  intercepted by our Agents.</p>
+             <br>
+            </div>
+            <div class="block-4 last">
+              <h5>
+                <figure class="box-border"><img src="{% static 'cron/images/dm-001.jpg' %}" alt="Dr Moreau Recording"></figure>
+                <a href="{% url 'dr-moreau' %}">Dr Moreau Recording</a></h5>
+              <p>A video of Dr Moreau talking about MoP's Sword and Shield project was recently discovered by our Agents.</p>
+              <br>
+            </div>
+            <div align="center"><br>
+              <br>
+            </div>
+            <p class="p1"></p>
+    </div>
+          <div class="clear"></div>
+    </div>
+
 
 {% endblock %}
