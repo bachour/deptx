@@ -146,7 +146,7 @@ def hasEnoughTrust(mop, cronDocument, randomizedDocument):
     trustCost = Clearance(document.clearance).getTrustRequested()
     if trustCost == 0:
         return True
-    elif trustCost <= (mop.trustTracker.trust + mop.trustTracker.allowance):
+    elif mop.trustTracker.trust + mop.trustTracker.allowance + trustCost >=0:
         return True
     else:
         return False
