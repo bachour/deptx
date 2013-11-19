@@ -52,14 +52,14 @@ class Unit(models.Model):
                 unit = Unit.objects.get(type=Unit.TYPE_ADMINISTRATIVE)
                 if not self == unit:
                     raise ValidationError('You can only have one unit set as administrative! Change unit %s first!' % unit.serial)
-            except Requisition.DoesNotExist:
+            except Unit.DoesNotExist:
                 pass
         if self.type == self.TYPE_COMMUNICATIVE:
             try:
                 unit = Unit.objects.get(type=Unit.TYPE_COMMUNICATIVE)
                 if not self == unit:
                     raise ValidationError('You can only have one unit set as communicative! Change unit %s first!' % unit.serial)
-            except Requisition.DoesNotExist:
+            except Unit.DoesNotExist:
                 pass
         super(Unit, self).clean(*args, **kwargs)
 
