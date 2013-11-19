@@ -1,0 +1,27 @@
+We look forward to have you as a productive member of our team!
+
+This email orientation will help you navigate the MoP intranet in order to fulfill your role here at the ministry.
+
+First you must learn about forms. There are several departments in the ministry, each with its own role. Communication with MoP departments is done via forms. You must always use the correct form for communication.
+
+Blank forms can be obtained from the {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}". Once they process your request, you will have access to the new blank form, which you can then see in the Blank Forms page.
+
+Now, try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access your task. To get this form follow these simple steps:
+
+1.	Go to the blank forms page.
+2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}).
+3.	Enter the form ID: {{tutorialData.document_requisition.serial}} in the data field.
+4.	Attach your digital signature by clicking the "Sign Form."
+5.	Go to the Compose page.
+6.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
+7.	Select "Requesting form" as the subject.
+8.	Select the form you just signed as the form to send.
+9.	Click send.
+10.	Wait for word from {{tutorialData.form_requisition.unit.serial}}.
+
+If you followed these steps correctly, you should receive an email from the {{tutorialData.form_requisition.unit.name}} informing you that you have access to the new form.
+
+You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps. 
+
+Best of luck,
+Sandy, {{tutorialData.mopco.serial}}

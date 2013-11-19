@@ -1,0 +1,21 @@
+You got it! You pointed out the inconsistency and now {{tutorialData.document.mopDocument.unit.serial}} clerks will be able to fix the error and make sure our archive contains only correct information.
+
+But first you must submit this document back to {{tutorialData.document.mopDocument.unit.serial}}, otherwise your task is not considered complete. 
+
+To send the document you must follow these steps:
+1.	Acquire a blank {{tutorialData.document.mopDocument.unit.serial}}'s document submission form (all form IDs can be found in the Guidebook) by following the steps for acquiring new forms.
+2.	Fill in the form with the document ID in the data field.
+3.	Go to the Compose page.
+4.	Select {{tutorialData.document.mopDocument.unit.serial}} as the recipient.
+5.	Select "Submit document" as the subject.
+6.	Select the form you just signed as the form to send.
+7.	Select the document you just modified as the document to send.
+8.	Click send.
+9.	Wait for a response from {{tutorialData.document.mopDocument.unit.serial}}.
+
+If you followed these steps correctly, you should receive an email from {{tutorialData.document.mopDocument.unit.serial}} informing you that you have successfully completed the task.
+
+You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
+
+Best of Luck,
+Sandy, {{tutorialData.mopco.serial}}

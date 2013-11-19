@@ -1,0 +1,12 @@
+You chose the wrong attributes again. Perhaps you're looking at the wrong place. The attributes you are selecting must be in different nodes and must be different even though they should be identical.
+
+Have you tried asking these questions?
+- Is the name of the person in the agent node is the same as the name of the person on the speeding ticket?
+- Is the license plate number on the agent node the same as the license plate number on the speeding ticket?
+- Is the speed recorded in the speeding activity the same as the speed recorded on the speeding ticket?
+- Was the ticket issued after the recorded incident?
+
+Find out if there's an inconsistency in these and save the document again.
+
+Best of luck,
+Sandy, {{tutorialData.mopco.serial}}

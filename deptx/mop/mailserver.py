@@ -2,6 +2,7 @@ from mop.models import Mail, MopDocumentInstance, RequisitionBlank, RandomizedDo
 from assets.models import Requisition, CronDocument, Unit
 import logging
 from mop.clearance import Clearance
+import tutorial
 
 def sendReport(trustInstance):
     unit = Unit.objects.filter(type=Unit.TYPE_ADMINISTRATIVE)[0]
@@ -86,6 +87,7 @@ def analyze_mail():
             if mail.mopDocumentInstance.correct:
                 newMail.bodyType = Mail.BODY_REPORT_SUCCESS
                 newMail.trust = clearance.getTrustReportedCorrect()
+                tutorial.submitDocument(mail.mop.trustTracker)
             else:
                 newMail.bodyType = Mail.BODY_REPORT_FAIL
                 newMail.trust = clearance.getTrustReportedIncorrect()
@@ -236,6 +238,7 @@ def wrongDocument(mail):
 #TODO display attachments when viewing mails
 def assignRequisition(mop, requisition):
     requisitionBlank, created = RequisitionBlank.objects.get_or_create(mop=mop, requisition=requisition)
+    tutorial.assignForm(mop.trustTracker)
     return requisitionBlank
        
     
@@ -244,6 +247,7 @@ def assignDocument(mop, cronDocument, randomizedDocument):
         mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, cronDocument=cronDocument, type=MopDocumentInstance.TYPE_CRON)
     else:
         mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, randomizedDocument=randomizedDocument, type=MopDocumentInstance.TYPE_MOP)
+        tutorial.assignDocument(mop.trustTracker)
     return mopDocumentInstance
 
 def prepareMail(mail):

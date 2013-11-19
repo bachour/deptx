@@ -29,6 +29,8 @@ from mop.performer import analyze_performance
 from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
 
+import tutorial
+
 def isMop(user):
     if user:
         for mop in Mop.objects.filter(user=user):
@@ -41,6 +43,11 @@ def isMop(user):
 def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
+
+        trustTracker, created = TrustTracker.objects.get_or_create(mop=request.user.mop)
+        
+        hide = tutorial.hide(trustTracker, created)
+  
         #MAIL MANAGING
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
         outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
@@ -49,11 +56,8 @@ def index(request):
         
         request.session['inbox_unread'] = inbox_unread
         
-        trustTracker, created = TrustTracker.objects.get_or_create(mop=request.user.mop)
-        
-        
         log_mop(request.user.mop, 'index')
-        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread, 'hide':hide}
 
         return render(request, 'mop/index.html', context)
     
@@ -128,7 +132,10 @@ def performance(request):
 @user_passes_test(isMop, login_url='mop_login')
 def documents_pool(request):
 
-    randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.trustTracker.clearance)
+    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.trustTracker)
+    if randomizedDocument_list == None:
+        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.trustTracker.clearance)
+
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
         
@@ -415,7 +422,7 @@ def mail_check(request):
 def forms_blank(request):
     
     # Create a blank form for all Forms that the mop user should have at start
-    initialRequisitions = Requisition.objects.filter(isInitial=True)
+    initialRequisitions = Requisition.objects.filter(type=Requisition.TYPE_INITIAL)
     for initial in initialRequisitions:
         RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
             
@@ -426,10 +433,10 @@ def forms_blank(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def form_fill(request, reqBlank_id):
+def form_fill(request, reqBlank_serial):
     #TODO check if user has rights to access the requisition in the first place
     try:
-        reqBlank = RequisitionBlank.objects.get(id=reqBlank_id)
+        reqBlank = RequisitionBlank.objects.get(mop=request.user.mop, requisition__serial=reqBlank_serial)
     except RequisitionBlank.DoesNotExist:
         reqBlank=None
         

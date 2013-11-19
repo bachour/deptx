@@ -18,7 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from deptx.helpers import now, generateUUID
 from provmanager.utility_scripts import get_random_graph, get_inconsistencies
 
-
+from mop import tutorial
 
 import json
 
@@ -250,6 +250,7 @@ def prov_check(request):
                 mopDocumentInstance.modified = True
                 mopDocumentInstance.correct = correct
                 mopDocumentInstance.save()
+                tutorial.checkProvenance(mopDocumentInstance.mop.trustTracker, mopDocumentInstance.correct)
                 close_prov = True
 
         

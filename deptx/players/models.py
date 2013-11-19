@@ -117,3 +117,6 @@ class Mop(models.Model):
     hair = models.IntegerField(choices=HAIR_CHOICES)
     eyes = models.IntegerField(choices=EYES_CHOICES)
     serial = models.CharField(max_length=36, default=generateUUID)
+    
+    def __unicode__(self):
+        return "%s (cron: %s)" % (self.user.username, self.player.cron.user.username)

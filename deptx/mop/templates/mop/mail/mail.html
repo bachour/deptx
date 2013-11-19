@@ -1,11 +1,11 @@
 {% if mail.unit %}
-	Citizen Employee {{mail.mop.firstname}} {{mail.mop.lastname}},
-	<br/><br/>
-	{{ mail.generateBody|linebreaksbr }}
+	Citizen Helper {{mail.mop.firstname}} {{mail.mop.lastname}},
+	<br/>
+	{{ mail.generateBody|linebreaks }}
 	{% if mail.trust %}
 		<br/><br/>Your performance has been adjusted accordingly ({{mail.trust}}).
 	{% endif %}
-	<br/><br/>
+	<br/>
 	{{mail.unit.name}}<br/>
 	{{mail.unit.serial}} - {{mail.unit.tagline}}<br/>
 	<br/>
@@ -15,9 +15,5 @@
 	This message has been checked for viruses but the contents of an attachment may still contain software viruses which could damage your computer system, you are advised to perform your own checks. Email communications with the Ministry of Provenance is monitored as permitted by EU legislation.<br/>
 	<br/>
 {% else %}
-	Hi. This is the mop-mail-send program at mail3.mofp.net.<br/>
-	I'm afraid I wasn't able to deliver your message to the following addresses: [ ]. This is a permanent error; I've given up. Sorry it didn't work out.<br/>
-	<br/>
-	ERR341: %%NO ADRESS SPECIFIED%%<br/>
-	<br/>
+	{{ mail.generateBody|linebreaks }}
 {% endif %}

@@ -5,12 +5,13 @@
 <h1>Document Archive</h1>
 {% if mopDocumentInstance_list %}
 	<table>
-	<tr><th class="nobox"></th><th>Status</th><th>Unit</th><th>Identification Code</th><th>Level</th><th>Assigned</th></tr>
+	<tr><th class="nobox"></th><th>Status</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Assigned</th></tr>
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
 		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
 		<td>{{mopDocumentInstance.modified|yesno:'please submit, needs processing'}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
+		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
 		<td>{{mopDocumentInstance.createdAt}}</td>
