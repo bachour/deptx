@@ -22,7 +22,7 @@ def analyze_performance():
     for mop in mop_list:
         trustInstance = TrustInstance.objects.create(mop=mop, trust=mop.trustTracker.trust)
         #TODO add more statistics
-        
+        mop.trustTracker.totalTrust += mop.trustTracker.trust 
         mop.trustTracker.trust = 0
         mop.trustTracker.allowance = trustInstance.allowance()
         mop.trustTracker.clearance = trustInstance.clearance

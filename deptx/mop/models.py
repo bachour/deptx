@@ -58,7 +58,6 @@ class TrustTracker(models.Model):
         return Clearance(self.clearance).getBadgeUrl()
     
     def addTrust(self, trust):
-        self.totalTrust += trust
         self.trust += trust
         self.save()
     
