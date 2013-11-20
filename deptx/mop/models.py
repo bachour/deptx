@@ -62,6 +62,12 @@ class TrustTracker(models.Model):
         self.trust += trust
         self.save()
     
+    def isTutorial(self):
+        if self.tutorial == self.TUTORIAL_6_DONE:
+            return False
+        else:
+            return True
+    
     def __unicode__(self):
         return "%s %s %s" % (self.mop.user.username, self.trust, self.get_clearance_display())
 

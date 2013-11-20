@@ -194,6 +194,7 @@ def mail_inbox(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
     request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
     request.session['has_checked_inbox'] = True
+
     log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
 
