@@ -20,7 +20,7 @@ As part of our research we would like to collect data regarding how you take par
 
 We ask for your consent to collect and analyse three different kinds of data during the game:
 
-- Our computer systems will create logs and databases as part of your interaction with the game, in order for the game to function. This data will consist of records of your visits to the game�s websites, any information you enter into these websites, and digital records of your interactions with the game's interfaces.
+- Our computer systems will create logs and databases as part of your interaction with the game, in order for the game to function. This data will consist of records of your visits to the game's websites, any information you enter into these websites, and digital records of your interactions with the game's interfaces.
 
 - We will keep a record of your real name, your data of birth and your email address when you sign-up for the game. This will be stored separately from other game records, and is used to record that you have given consent to take part in our research.
 
@@ -43,8 +43,10 @@ University of Nottingham,
 Jubilee Campus,
 Nottingham,
 NG8 1BB
+United Kingdom
 
 martin.flintham@nottingham.ac.uk
+
 
 This project has been subject to ethical review, according to the procedures specified by the University of Nottingham Research Ethics Committee, and has been allowed to proceed. 
 
@@ -61,7 +63,7 @@ You will be given the choice of two different links to follow. One of them regis
 
 If you want to participate in the study, you need to agree to the following:
 
-- I have read and understand the information sheet, which includes information about the research project, and the data that may be recorded and published. I understand that I can withdraw consent for my participation at any time, and my personal data will be erased from the game�s records and systems.
+- I have read and understand the information sheet, which includes information about the research project, and the data that may be recorded and published. I understand that I can withdraw consent for my participation at any time, and my personal data will be erased from the game's records and systems.
 
 - I give permission for digital records generated during the course of my interaction with the 'Apocalypse of MoP', including information I submit to the game's websites, to be used as part of the study in an anonymised form.
 
@@ -72,10 +74,10 @@ Activate your account
 
 Please choose one of the following links to activate your account:
 
-1) Participate in the study (see above):
+1) I want to participate in the study (and agree to the above):
 {{url_study}}
 
-2) Not participate in the study:
+2) I do not want to participate in the study:
 {{url_nostudy}}
 
 

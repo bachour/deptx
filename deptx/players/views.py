@@ -64,49 +64,46 @@ def register(request):
         
         
 def activate_study(request, code):
-    if request.method == 'POST':
-        form = PlayerForm(request.POST, prefix="player")
-         
-        if form.is_valid():
-            try:
-                cron = Cron.objects.get(activationCode=code, activated=False)
-            except Cron.DoesNotExist:
-                cron = None
-
-            if not cron == None:
+    
+    try:
+        cron = Cron.objects.get(activationCode=code)
+    except Cron.DoesNotExist:
+        cron = None
+    
+    if cron == None:
+        return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
+    elif cron.activated:
+        return render_to_response('players/registration.html', {"alreadyActivated": True}, context_instance=RequestContext(request))
+    else:
+        if request.method == 'POST':
+            form = PlayerForm(request.POST, prefix="player")
+             
+            if form.is_valid():
                 player = form.save()
                 cron.player = player
                 cron.activated = True
                 cron.save()
-                return render_to_response('players/registration.html', {"cron": player.cron}, context_instance=RequestContext(request))
+                return render_to_response('players/registration.html', {"cron": player.cron, "study":True}, context_instance=RequestContext(request))
             else:
-                return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
+                return render_to_response('players/study.html', {"form": form, "code":code}, context_instance=RequestContext(request))
+         
         else:
-            return render_to_response('players/study.html', {"form": form, "code":code}, context_instance=RequestContext(request))
-     
-    else:
-        try:
-            cron = Cron.objects.get(activationCode=code, activated=False)
-        except Cron.DoesNotExist:
-            cron = None
-
-        if not cron == None:
             form = PlayerForm(prefix='player')
             return render_to_response(  'players/study.html', {"form": form, "code":code},context_instance=RequestContext(request))
-        else:
-            return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
 
 
 def activate_nostudy(request, code):
     try:
-        cron = Cron.objects.get(activationCode=code, activated=False)
+        cron = Cron.objects.get(activationCode=code)
     except Cron.DoesNotExist:
         cron = None
     
-    if not cron == None:
+    if cron == None:
+        return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
+    elif cron.activated:
+        return render_to_response('players/registration.html', {"alreadyActivated": True}, context_instance=RequestContext(request))
+    else:
         cron.activated = True
         cron.save()
-        return render_to_response('players/registration.html', {"cron": cron}, context_instance=RequestContext(request))
-    else:
-        return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
+        return render_to_response('players/registration.html', {"cron": cron}, context_instance=RequestContext(request)) 
 

@@ -5,10 +5,18 @@
 {% if cron.activated %}
 	<h1>Activation succesful</h1>
 	<p>Agent {{cron.user.username}}, you can <a href="{% url 'cron_index' %}">login</a> now and help us change the world.</p>
+	{% if study %}
+		<br/>
+		<p>(And thank you for agreeing to help us in our research!)</p>
+	{% endif %}
 
 {% elif wrongCode %}
 	<h1>Error</h1>
 	<p>This activation code does not exist.</p>
+
+{% elif alreadyActivated %}
+	<h1>Error</h1>
+	<p>The account associated with this activation code is already active. Please <a href="{% url 'cron_index' %}">login</a>.</p>
 
 {% elif registered %}
 	<h1>Activation Required</h1>
