@@ -18,9 +18,12 @@
 		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
 	{% endif %}
  	</div>
-	<div id="overlay" text-align="center" style="display:none;width:100%;height: 100%;position: absolute;top: 0;left: 0;z-index: 10;margin: 0 auto 0 auto;";> </div>
-    <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
+	<div id="dialog1" title="Media Inspector">
+	</div>
+	<div id="dialog2" title="Media Inspector">
+	</div>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
     
     <script>
     	var PROV_SERIAL = "{% if provenance %}{{provenance.serial}}{% else %}0{% endif %}";
@@ -49,7 +52,9 @@
 {% elif isMop %}
 	<script src="{{MEDIA_URL}}improve/mopKss.js"%}"></script>
 {% endif %}
+	<script src="{% static "provmanager/kinetic-v4.5.4.min.js"%}"></script>
     <script src="{% static "provmanager/imPROVe.js"%}"></script>
+    <script src="{% static "provmanager/jquery-ui-git.js"%}"></script>
     
     <script>
     
@@ -62,14 +67,6 @@
 	  	loadJSONProv({{json_str|safe}});
 	  	loadImages(initStage);
 	  {% endif %}
-      
-	    function hideOverlay()
-	    {
-	    	document.getElementById("overlay").innerHTML ="";
-	    	document.getElementById("overlay").style.display ="none";
-	    	mediaLayer.removeChildren();
-	    	mediaLayer.draw();
-	    }
     </script>
   </div>
 </body>

@@ -1138,6 +1138,8 @@ function toggleNodeSelection(shape)
 		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
 	    logClick(clickedNode.id, "none", false);
+	    document.getElementById("dialog1").innerHTML = "";
+	    $("#dialog1").dialog("close");
 		return;
 	}
 	else if (selectedNodes['2'] == clickedNode)
@@ -1148,6 +1150,8 @@ function toggleNodeSelection(shape)
 	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
 	    logClick(clickedNode.id, "none", false);
+	    document.getElementById("dialog2").innerHTML = "";
+	    $("#dialog2").dialog("close");
 		return;
 	}
 
@@ -1249,7 +1253,7 @@ function toggleAttributeSelection(shape)
 				{
 					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
 						{
-							showMedia(selectedNodes[i].attributes["mop:url"])
+							showMedia(selectedNodes[i].attributes["mop:url"],i)
 							logClick(selectedNodes[i].id, j, true);
 							return;
 						}
@@ -1445,7 +1449,6 @@ function setupAttribPanes()
 		layer.add(rect);
 		clearAttributePane(i);
 	}
-	
 }
 
 
@@ -1665,8 +1668,8 @@ function showTutorial()
 }
 
 // setup and display the fade-out and background of the media display
-function showMedia(url)
-{
+function showMedia(url, id)
+{/*
 	var background = new Kinetic.Rect({
         x: 0,
         y: 0,
@@ -1699,13 +1702,14 @@ function showMedia(url)
 		if (2.0*frame.time/1000 >= 1.2)
 		{
 			//mediaLayer.add(box);
-			media = createAndAddMedia(url);
+			
 			this.stop();
 		}
 		
 		}, mediaLayer);
 	
-	anim.start();
+	anim.start();*/
+	media = createAndAddMediaJQueryDialog(url, id);
 }
 
 // setup and display the media represented in the the string url
@@ -1728,6 +1732,64 @@ function createAndAddMedia(url)
 				
 }
 
+function createAndAddMediaNW(url)
+{
+	var innerHTML = "";
+	var newWindow = null;
+	// if video
+	if (url.indexOf("youtu")!= -1)
+		{
+			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
+			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.6 + '" height="' +SCREEN_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';			
+		}
+	else // if image
+	{
+		url = URL_MEDIA + url;
+		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
+	}
+	newWindow = window.open("media_viewer.html","newWindow", "width="+SCREEN_WIDTH*0.6+",height="+SCREEN_HEIGHT*0.6 + ",menubar=0,status=0,resizable=0,title=0,toolbar=0,left=20,top=20");
+	newWindow.document.write(innerHTML);
+}
+
+function createAndAddMediaJQueryDialog(url, id)
+{
+	var innerHTML = "";
+	var dialogID = "dialog" + id;
+	
+	// if video
+	if (url.indexOf("youtu")!= -1)
+		{
+			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
+			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.5 + '" height="' +SCREEN_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
+		}
+	else // if image
+	{
+		//url = URL_MEDIA + url;
+		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image">';
+	}
+	var dialog = document.getElementById(dialogID);
+	dialog.innerHTML = innerHTML;
+
+	$(function() {
+        $( "#"+dialogID ).dialog({
+        		  width: SCREEN_WIDTH*0.5,
+        		  height: SCREEN_HEIGHT*0.8,
+        		  show: "fade",
+        		  containment: "parent",
+        		  buttons: [
+        		            {
+        		              text: "Close",
+        		              click: function() {
+        		            		document.getElementById(dialogID).innerHTML = "";
+        		                $( this ).dialog( "close" );
+        		              }
+        		            }
+        		          ]
+        		        });
+      
+      });
+	
+}
 // Send an ajax request to log the movement of a node on the graph
 function logDrag(shape)
 {
@@ -1756,7 +1818,7 @@ function logClick(node, attribute, newState)
 	if (IS_TEST==false)
 	{
 		var message = "action=click" +
-					  "&serial=" + PROV_serial + 
+					  "&serial=" + PROV_SERIAL + 
 					  "&node=" + node + 
 					  "&attribute=" + attribute + 
 					  "&state=" + newState;
