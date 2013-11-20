@@ -111,9 +111,8 @@ def mopmaker(request, missionInstance):
         if mop_form.is_valid() and user_form.is_valid():
             #TODO check if all saves work and catch the error if they don't
             new_user = user_form.save()
-            player = request.user.cron.player
             mop = mop_form.save(commit=False)
-            mop.player = player
+            mop.cron = request.user.cron
             mop.user = new_user
             mop.save()
 
@@ -307,7 +306,7 @@ def unsolveDocuments(cron, mission):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def hack_document(request, serial):
-    mop_list = Mop.objects.filter(player=request.user.cron.player).filter(active=True)
+    mop_list = Mop.objects.filter(cron=request.user.cron).filter(active=True)
     try:
         cronDocument = CronDocument.objects.get(serial=serial)    
     except CronDocument.DoesNotExist:
@@ -407,10 +406,9 @@ def profile(request):
     else:
         missionInstance_list = None
     
-    mop_list = Mop.objects.filter(player=request.user.cron.player)
-  
+    mop_list = Mop.objects.filter(cron=request.user.cron)
 
-    return render_to_response('cron/profile.html', {"cron": request.user.cron, "player": request.user.cron.player, 'missionInstance_list': missionInstance_list, "mop_list":mop_list },
+    return render_to_response('cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list },
                                          context_instance=RequestContext(request)
                                  )
 

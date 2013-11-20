@@ -10,21 +10,35 @@ from mop.clearance import Clearance
 #TODO move Player into CRON
 #TODO move Cron and Mop into appropriate apps
 class Player(models.Model):
-    firstName = models.CharField(max_length=50)
-    lastName = models.CharField(max_length=50)
-    email = models.EmailField()
+    GENDER_MALE = 0
+    GENDER_FEMALE = 1
+    GENDER_OTHER = 2
+        
+    GENDER_CHOICES = ( 
+        (GENDER_FEMALE, 'female'),
+        (GENDER_MALE, 'male'), 
+        (GENDER_OTHER, 'other'), 
+    ) 
+    
+    name = models.CharField(max_length=128)
+    gender = models.IntegerField(choices=GENDER_CHOICES)
+    age = models.IntegerField()
+    town = models.CharField(max_length=128)
+    country = models.CharField(max_length=128)
     
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return self.firstName + " " + self.lastName
+        return self.name
 
   
 class Cron(models.Model):
-    player = models.OneToOneField(Player)
+    email = models.EmailField()
+    overSixteen = models.BooleanField()
     user = models.OneToOneField(User)
     
+    player = models.OneToOneField(Player, blank=True, null=True)
     activated = models.BooleanField(default=False)
     activationCode = models.CharField(max_length=36, default=generateUUID)
     
@@ -32,7 +46,7 @@ class Cron(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return self.user.username + " (" + self.player.firstName + " " + self.player.lastName + ")"
+        return self.user.username
 
 
 
@@ -101,7 +115,7 @@ class Mop(models.Model):
         (EYE_VIOLET, 'violet'),
     )
     
-    player = models.ForeignKey(Player)
+    cron = models.ForeignKey(Cron)
     user = models.OneToOneField(User)
     active = models.BooleanField(default=True)
     createdAt = CreationDateTimeField()
@@ -119,4 +133,4 @@ class Mop(models.Model):
     serial = models.CharField(max_length=36, default=generateUUID)
     
     def __unicode__(self):
-        return "%s (cron: %s)" % (self.user.username, self.player.cron.user.username)
+        return "%s (cron: %s)" % (self.user.username, self.cron.user.username)

@@ -1,16 +1,10 @@
 {% extends 'cron/base.html' %}
 
 {% block content %}
-<h1>Personal Data</h1>
-<table>
-<tr><td>Name:</td><td>{{player.firstName}} {{player.lastName}}</td></tr>
-<tr><td>Email:</td><td>{{player.email}}</td></tr>
-</table>
-<hr/>
 <h1>Cron Data</h1>
 <table>
 <tr><td>User name:</td><td>{{cron.user.username}}</td></tr>
-
+<tr><td>Email:</td><td>{{cron.email}}</td></tr>
 {% for missionInstance in missionInstance_list %}
 <tr><td>{{missionInstance.mission.name}}</td><td><a href="{% url 'cron_mission_reset' missionInstance.mission.serial %}">reset</a></td><td><a href="{% url 'cron_mission_delete' missionInstance.mission.serial %}">delete</a></td></tr>
 {% endfor %}
