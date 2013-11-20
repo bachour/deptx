@@ -5,23 +5,45 @@
 <h1>Where do you want to go today?</h1>
 
 <p class="nav">
-	<a class="button" href="{% url 'mop_rules' %}"><input class="button" type="submit" value="guidebook" /></a>
-	<a class="button" href="{% url 'mop_performance' %}"><input class="button" type="submit" value="performance" /></a>
+	{% if not hide.guidebook %}
+		<a class="button" href="{% url 'mop_rules' %}"><input class="button" type="submit" value="guidebook" /></a>
+	{% endif %}
+	{% if not hide.performance %}
+		<a class="button" href="{% url 'mop_performance' %}"><input class="button" type="submit" value="performance" /></a>
+	{% endif %}
 </p>
 <p class="nav">
-	<a class="button" href="{% url 'mop_mail_compose' %}"><input class="button" type="submit" value="compose" /></a>
+	{% if not hide.compose %}
+		<a class="button" href="{% url 'mop_mail_compose' %}"><input class="button" type="submit" value="compose" /></a>
+	{% endif %}
 	<a class="button" href="{% url 'mop_mail_inbox' %}"><input id="inbox" class="button" type="submit" value="inbox ({{ inbox_unread }})" /></a>
-	<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox ({{ outbox_unread }})" /></a>
-	<a class="button" href="{% url 'mop_mail_draft' %}"><input class="button" type="submit" value="drafts ({{ draft_unread }})" /></a>
-	<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash ({{ trash_unread }})" /></a>
+	{% if not hide.mail %}
+		<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox ({{ outbox_unread }})" /></a>
+		<a class="button" href="{% url 'mop_mail_draft' %}"><input class="button" type="submit" value="drafts ({{ draft_unread }})" /></a>
+		<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash ({{ trash_unread }})" /></a>
+	{% endif %}
 </p>
 <p class="nav">
-	<a class="button" href="{% url 'mop_forms_blank' %}"><input class="button" type="submit" value="blank forms" /></a>
-	<a class="button" href="{% url 'mop_forms_signed' %}"><input class="button" type="submit" value="signed forms" /></a>
+	{% if not hide.formsBlank %}
+		<a class="button" href="{% url 'mop_forms_blank' %}"><input class="button" type="submit" value="blank forms" /></a>
+	{% endif %}
+	{% if not hide.formsSigned %}
+		<a class="button" href="{% url 'mop_forms_signed' %}"><input class="button" type="submit" value="signed forms" /></a>
+	{% endif %}
+	{% if not hide.formsArchive %}
+		<a class="button" href="{% url 'mop_forms_archive' %}"><input class="button" type="submit" value="form archive" /></a>
+	{% endif %}
 </p>
 <p class="nav">
-	<a class="button" href="{% url 'mop_pool' %}"><input class="button" type="submit" value="document pool" /></a>
-	<a class="button" href="{% url 'mop_documents' %}"><input class="button" type="submit" value="document drawer" /></a>
+	{% if not hide.documentsPool %}
+		<a class="button" href="{% url 'mop_documents_pool' %}"><input class="button" type="submit" value="document pool" /></a>
+	{% endif %}
+	{% if not hide.documentsDrawer %}
+		<a class="button" href="{% url 'mop_documents' %}"><input class="button" type="submit" value="document drawer" /></a>
+	{% endif %}
+	{% if not hide.documentsArchive %}
+		<a class="button" href="{% url 'mop_documents_archive' %}"><input class="button" type="submit" value="document archive" /></a>
+	{% endif %}
 </p>
 
 
@@ -34,6 +56,5 @@ This is the control centre of the Ministry of Provenance intranet. Please select
 </p>
 <p>
 You can send and receive messages, fill in forms, request and complete tasks, and work with documents.
-You can also (and should!) read the <a href="{% url 'mop_rules' %}">Guidebook</a>.
 </p>
 {% endblock %}

@@ -6,14 +6,15 @@
 
 {% if randomizedDocument_list %}
 	<table>
-	<tr><th>Unit</th><th>Identification Code</th><th>Clearance Level</th><th>Published</th></tr>
+	<tr><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Published</th></tr>
 	{% for randomizedDocument in randomizedDocument_list %}
 		{% if randomizedDocument.exists %}
 		{% else %}
 			<tr>
 			<td>{{randomizedDocument.mopDocument.unit.serial}}</td>
+			<td>{{randomizedDocument.mopDocument.name}}</td>
 			<td>{{randomizedDocument.serial}}</td>
-			<td>{{randomizedDocument.mopDocument.get_clearance_display}}</td>
+			<td><img class="minibadge" src="{{randomizedDocument.getBadgeUrl}}"/></td>
 			<td>{{randomizedDocument.createdAt}}</td>
 			</tr>
 		{% endif %}

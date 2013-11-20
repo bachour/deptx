@@ -12,10 +12,10 @@
    </audio>
  <p id="loading">Loading...</p>
  
-	{% if provenance.get_type_display == 'CRON' %} 
-	<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
-	{% else %}
-	<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
+	{% if isCron %} 
+		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
+	{% elif isMop %}
+		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
 	{% endif %}
  	</div>
 	<div id="dialog1" title="Media Inspector">
@@ -26,7 +26,7 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     
     <script>
-    	var PROV_ID = {% if provenance %}{{provenance.id}}{% else %}0{% endif %};
+    	var PROV_SERIAL = "{% if provenance %}{{provenance.serial}}{% else %}0{% endif %}";
     	var URL_CHECK = "{% url 'provmanager_prov_check' %}";
     	var URL_LOG = "{% url 'provmanager_prov_log_action' %}";
     	
@@ -35,21 +35,21 @@
     		var URL_GET_STATE = "";
     	{% else %}
     		var IS_TEST = false;
-    		var URL_GET_STATE = "{% url 'provmanager_improve_saved_state' provenance.id %}";
+    		var URL_GET_STATE = "{% url 'provmanager_improve_saved_state' provenance.serial %}";
     	{% endif %}
     	{% if case %}
-    	var URL_CONTINUE = "{% url 'cron_case_intro' mission.serial case.serial %}";
-    	{% elif mopDocumentInstance %}
-    	var URL_CONTINUE = "{% url 'mop_documents' %}";
+    		var URL_CONTINUE = "{% url 'cron_case_intro' mission.serial case.serial %}";
+    	{% elif isMop %}
+    		var URL_CONTINUE = "{% url 'mop_documents' %}";
     	{% endif %}
 		var DEBUG = false;
 		var URL_MEDIA = "{{MEDIA_URL}}";
 
 		var FIRST_TIME = true;
     </script>
-{% if provenance.get_type_display == 'CRON' %}
+{% if isCron %}
     <script src="{{MEDIA_URL}}improve/cronKss.js"%}"></script>
-{% else %}
+{% elif isMop %}
 	<script src="{{MEDIA_URL}}improve/mopKss.js"%}"></script>
 {% endif %}
 	<script src="{% static "provmanager/kinetic-v4.5.4.min.js"%}"></script>
@@ -59,7 +59,7 @@
     <script>
     
       {% if provenance %}
-	      $.getJSON("{% url 'provmanager_improve' provenance.id %}", function(json) {
+	      $.getJSON("{% url 'provmanager_improve' provenance.serial %}", function(json) {
 	    	   loadJSONProv(json);
 	    	   loadImages(initStage);
 	    	 });

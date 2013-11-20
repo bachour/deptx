@@ -6,7 +6,6 @@ from django.template import RequestContext, Context, loader
 from django.core.mail import EmailMessage
 from forms import PlayerForm
 from django.contrib.auth.forms import UserCreationForm
-from models import Cron
 
 from deptx.secrets import registration_passcode
 from provmanager.provlogging import provlog_add_cron_register

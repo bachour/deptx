@@ -1396,7 +1396,7 @@ function validateSubmit()
 	"&node2=" + selectedNodes['2'].id + 
 	"&attribute1=" + selectedAttributes['1'] +
 	"&attribute2=" +selectedAttributes['2'] +
-	"&id=" + PROV_ID +
+	"&serial=" + PROV_SERIAL +
 	"&is_test=" + IS_TEST;
 	
 	ajaxCall(URL_CHECK, message, handleValidateResponse);
@@ -1798,7 +1798,7 @@ function logDrag(shape)
 	// find node belonging to this shape
 		var node = getNodeFromShape(shape);
 	
-		var message = "action=move&id=" + PROV_ID + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+		var message = "action=move&serial=" + PROV_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
 		
 		ajaxCall(URL_LOG, message, logResponse);
 	
@@ -1818,7 +1818,7 @@ function logClick(node, attribute, newState)
 	if (IS_TEST==false)
 	{
 		var message = "action=click" +
-					  "&id=" + PROV_ID + 
+					  "&serial=" + PROV_SERIAL + 
 					  "&node=" + node + 
 					  "&attribute=" + attribute + 
 					  "&state=" + newState;

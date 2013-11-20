@@ -1,0 +1,24 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
+<h1>Archived Forms</h1>
+{% if requisitionInstance_list %}
+<table>
+<tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
+{% for reqInstance in requisitionInstance_list %}
+	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}-{{reqInstance.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+No archived forms.
+{% endif %}
+
+{% endblock %}
+
+{% block help %}
+<p>
+This is where a copy of all your archived forms is stored.
+</p>
+<p>If you want to fill in a new form, you must go to the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</p>
+{% endblock %}

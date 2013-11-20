@@ -14,24 +14,11 @@
 No signed forms.
 {% endif %}
 
-<h1>Used Forms</h1>
-{% if requisitionInstance_used_list %}
-<table>
-<tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
-{% for reqInstance in requisitionInstance_used_list %}
-	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.blank.requisition.serial}}-{{reqInstance.serial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
-{% endfor %}
-</table>
-{% else %}
-No used forms.
-{% endif %}
-
-
 {% endblock %}
 
 {% block help %}
 <p>
-This is where all your signed forms are. In addition you can view the previously sent forms.
+This is where all your signed forms are stored. Attach these forms to your outgoing mail.
 </p>
 <p>If you want to fill in a new form, you must go to the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</p>
 {% endblock %}

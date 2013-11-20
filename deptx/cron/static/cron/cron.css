@@ -1,3 +1,4 @@
+
 input.button, a.button {
 	color:#03c1e2;
 	background-color:#000;
@@ -91,3 +92,6 @@ p.footer {
 	line-height:200%;
 }
 
+div.mainsidebar {
+	margin-left:80px;
+}

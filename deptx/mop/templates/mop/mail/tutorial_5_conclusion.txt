@@ -1,0 +1,16 @@
+Congratulations on successfully completing your first MoP task! You are already on your way to become a contributing member of our citizen helper scheme.
+
+Once you start working on real tasks you will notice some differences:
+1.	Every time you correctly complete a task your performance score will increase.
+2.	When you save a document you're working on, you will not be notified whether or not it is correct until you send it to the department. The department will then process it and inform you of the outcome.
+3.	Correct reports will increase your performance score, but incorrect reports are costly to process and your performance will be penalized for them.
+4.	In addition, when you request a document you are committing to working on it. If you fail to submit a report on that document in a timely manner you will also lose performance points as this causes delays in our task processing line.
+
+This is the end of your orientation. If you return to tasks you will see all the tasks MoP departments currently have to offer. You can now go ahead and start working on those tasks, finding what's wrong!
+
+And remember: Not all tasks have an error in them! If you find a provenance record that seems correct, simply save it with no attributes selected and send it in your report.
+
+If you have any questions or problems, just drop us a message using the feedback form and someone from {{tutorialData.mopco.serial}} will be in touch with you as soon as possible.
+
+Best of luck!
+Sandy, {{tutorialData.mopco.serial}}

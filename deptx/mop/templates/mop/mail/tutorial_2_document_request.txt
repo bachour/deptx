@@ -1,0 +1,26 @@
+Looks like you've successfully acquired your first blank form! How exciting. Now let's use it. The form you now have allows you to request documents from {{tutorialData.requisition.unit.serial}} - the {{tutorialData.requisition.unit.name}}. {{tutorialData.requisition.unit.serial}} is the unit of MoP that is responsible for documents relating to transportation. This includes anything from driver's licenses to air travel documents.
+
+As a citizen helper you will be given tasks to perform. The more tasks you complete, the better your performance record. Your clearance level and the types of tasks you can access are determined by your performance record so make sure not to do anything to reduce that.
+
+The Tasks page shows all tasks that are currently available for you to perform. You will see that {{tutorialData.requisition.unit.serial}} is currently offering a task: checking the provenance related to a {{tutorialData.document.mopDocument.name}}.
+
+To complete this task you must request the document related to it. You can request the document by submitting the {{tutorialData.requisition.name}} you acquired in the first step. Here's how to do it:
+
+1.	Go to the Task page and copy the document ID that you will need.
+2.	Go to the Blank Forms page.
+3.	Select the {{tutorialData.requisition.name}} {{tutorialData.requisition.serial}}.
+4.	Enter the document ID in the data field.
+5.	Sign the form.
+6.	Go to Compose.
+7.	Select {{tutorialData.requisition.unit.serial}} as the recipient.
+8.	Select "Requesting document" as the subject.
+9.	Select the form you just signed as the form to send.
+10.	Click Send.
+11.	Wait for a response from {{tutorialData.requisition.unit.serial}}.
+
+If you followed these steps correctly, you should receive an email from {{tutorialData.requisition.unit.serial}} informing you that you have access to the new document.
+
+You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
+
+Best of luck,
+Sandy, {{tutorialData.mopco.serial}}

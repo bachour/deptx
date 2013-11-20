@@ -2,6 +2,7 @@ from django.conf.urls import patterns, url
 
 from cron import views
 from players import views as players_views
+from django.views.generic import TemplateView
 
 urlpatterns = patterns('',
     url(r'registration/$', players_views.register, name='players_registration'),
@@ -22,6 +23,14 @@ urlpatterns = patterns('',
     url(r'mission/([-\w]+)/reset', views.missionInstance_reset, name='cron_mission_reset'),
     url(r'mission/([-\w]+)/delete', views.missionInstance_delete, name='cron_mission_delete'),
     url(r'archive/$', views.archive, name='cron_archive'),
+    
+    url(r'cr0n-report-gc8', TemplateView.as_view(template_name='cron/pages/cr0n-report-gc8.html'), name='cr0n-report-gc8'),
+    url(r'inside-the-bunker/$', TemplateView.as_view(template_name='cron/pages/Inside-the-bunker.html'), name='inside-the-bunker'),
+    url(r'inside-the-bunker/([-\w].+)/', views.bunker_image, name='cron_bunker_image'),
+    url(r'dr-moreau', TemplateView.as_view(template_name='cron/pages/dr-moreau.html'), name='dr-moreau'),
+    url(r'mop-message', TemplateView.as_view(template_name='cron/pages/mop-message.html'), name='mop-message'),
+    
+    
      
     url(r'profile/', views.profile, name='cron_profile'),
     url(r'hack/([-\w]+)', views.hack_document, name='cron_hack_document'),

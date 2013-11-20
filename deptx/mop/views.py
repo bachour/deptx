@@ -15,8 +15,8 @@ from django.views.decorators.csrf import csrf_protect
 from players.models import Player, Mop
 from django.contrib.auth.models import User
 
-from assets.models import Requisition, Unit
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, Badge
+from assets.models import Requisition, Unit, CronDocument
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
@@ -28,6 +28,8 @@ from mop.mailserver import analyze_mail
 from mop.performer import analyze_performance
 from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
+
+import tutorial
 
 def isMop(user):
     if user:
@@ -41,6 +43,11 @@ def isMop(user):
 def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
+
+        trustTracker, created = TrustTracker.objects.get_or_create(mop=request.user.mop)
+        
+        hide = tutorial.hide(trustTracker, created)
+  
         #MAIL MANAGING
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
         outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
@@ -49,9 +56,8 @@ def index(request):
         
         request.session['inbox_unread'] = inbox_unread
         
-        
         log_mop(request.user.mop, 'index')
-        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread}
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread, 'hide':hide}
 
         return render(request, 'mop/index.html', context)
     
@@ -102,7 +108,7 @@ def rules(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def performance(request):
-    badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
+#     badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
     
 #     taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE).order_by('modifiedAt')
 #     print taskInstance_list
@@ -117,14 +123,19 @@ def performance(request):
 #     print nextMonday
 #     print lastMonday
 #     weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
+
+    trustInstance_list = TrustInstance.objects.filter(mop=request.user.mop).order_by('-createdAt')
     log_mop(request.user.mop, 'read performance')
-    return render(request, 'mop/performance.html', {'badge_list':badge_list})
+    return render(request, 'mop/performance.html', {'trustInstance_list':trustInstance_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def pool(request):
+def documents_pool(request):
 
-    randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
+    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.trustTracker)
+    if randomizedDocument_list == None:
+        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.trustTracker.clearance)
+
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
         
@@ -136,7 +147,7 @@ def pool(request):
         
  
     log_mop(request.user.mop, 'view pool')   
-    return render(request, 'mop/pool.html', {"randomizedDocument_list": randomizedDocument_list})
+    return render(request, 'mop/documents_pool.html', {"randomizedDocument_list": randomizedDocument_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -146,22 +157,35 @@ def documents(request):
     log_mop(request.user.mop, 'view documents')
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def documents_archive(request):
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=True).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
+    
+    log_mop(request.user.mop, 'view documents archive')
+    return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
+
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def provenance(request, serial):
     try:
-        randomizedDocument = RandomizedDocument.objects.get(serial=serial)
-        mopDocumentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, randomizedDocument=randomizedDocument)
-    except randomizedDocument.DoesNotExist:
-        randomizedDocument == None
-    except MopDocumentInstance.DoesNotExist:
-        mopDocumentInstance == None
+        document = RandomizedDocument.objects.get(serial=serial)
+        clearance = document.mopDocument.clearance
+    except RandomizedDocument.DoesNotExist:
+        document = None
     
-    #TODO check access rights
-    #TODO could also be a cron document
-    
-    return render(request, 'mop/provenance.html', {'mopDocumentInstance': mopDocumentInstance})
+    if document is None:
+        try:
+            document = CronDocument.objects.get(serial=serial)
+            clearance = document.clearance
+        except CronDocument.DoesNotExist:
+            document = None
+
+    if clearance <= request.user.mop.trustTracker.clearance:
+        return render(request, 'mop/provenance.html', {'document': document})
+    else:
+        return render(request, 'mop/provenance_noclearance.html', {'document': document})
 
 
 @login_required(login_url='mop_login')
@@ -398,7 +422,7 @@ def mail_check(request):
 def forms_blank(request):
     
     # Create a blank form for all Forms that the mop user should have at start
-    initialRequisitions = Requisition.objects.filter(isInitial=True)
+    initialRequisitions = Requisition.objects.filter(type=Requisition.TYPE_INITIAL)
     for initial in initialRequisitions:
         RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
             
@@ -409,10 +433,10 @@ def forms_blank(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def form_fill(request, reqBlank_id):
+def form_fill(request, reqBlank_serial):
     #TODO check if user has rights to access the requisition in the first place
     try:
-        reqBlank = RequisitionBlank.objects.get(id=reqBlank_id)
+        reqBlank = RequisitionBlank.objects.get(mop=request.user.mop, requisition__serial=reqBlank_serial)
     except RequisitionBlank.DoesNotExist:
         reqBlank=None
         
@@ -438,10 +462,18 @@ def form_fill(request, reqBlank_id):
 @user_passes_test(isMop, login_url='mop_login')
 def forms_signed(request):
     requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-modifiedAt")
-    requisitionInstance_used_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
     
     log_mop(request.user.mop, 'view filled forms')
-    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list, "requisitionInstance_used_list": requisitionInstance_used_list})
+    return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
+
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def forms_archive(request):
+    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
+    
+    log_mop(request.user.mop, 'view archived forms')
+    return render(request, 'mop/forms_archive.html', {"requisitionInstance_list": requisitionInstance_list})
 
 
 @staff_member_required

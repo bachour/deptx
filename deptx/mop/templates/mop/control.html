@@ -1,22 +1,18 @@
-{% extends 'mop/base.html' %}
+{% load staticfiles %}
+{% include 'mop/header.html' %}
 
-{% block content %}
+<div class="main">
+	<div class="content">
+		<h1>Control Centre</h1>
+			{% for out in output %}
+				{{out}}<br/>
+			{% endfor %}
+			
+			<form action="{% url 'mop_control' %}" method="post">{% csrf_token %}
+			<input class="button" type="submit" value="process mail" name="mail" /><br/>
+			<input class="button" type="submit" value="process performance" name="performance" /><br/>
+			<input class="button" type="submit" value="process randomizer" name="randomizer" />
+			</form>
+	</div>
+</div>
 
-<h1>Control Centre</h1>
-{% for out in output %}
-	{{out}}<br/>
-{% endfor %}
-
-<form action="{% url 'mop_control' %}" method="post">{% csrf_token %}
-<input class="button" type="submit" value="process mail" name="mail" /><br/>
-<input class="button" type="submit" value="process performance" name="performance" /><br/>
-<input class="button" type="submit" value="process randomizer" name="randomizer" />
-</form>
-
-{% endblock %}
-
-
-{% block help %}
-<p>
-</p>
-{% endblock %}
