@@ -1,0 +1,7 @@
+Best of luck!
+
+Kind Regards,
+
+Sandy Spencer, {{tutorialData.mopco.serial}}
+Logisticians Director
+Ministry of Provenance

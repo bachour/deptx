@@ -12,5 +12,4 @@ And remember: Not all tasks have an error in them! If you find a provenance reco
 
 If you have any questions or problems, just drop us a message using the feedback form and someone from {{tutorialData.mopco.serial}} will be in touch with you as soon as possible.
 
-Best of luck!
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}

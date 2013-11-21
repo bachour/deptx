@@ -1,3 +1,5 @@
+Welcome to the Ministry of Provenance!
+
 We look forward to have you as a productive member of our team!
 
 This email orientation will help you navigate the MoP intranet in order to fulfill your role here at the ministry.
@@ -6,7 +8,7 @@ First you must learn about forms. There are several departments in the ministry,
 
 Blank forms can be obtained from the {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}". Once they process your request, you will have access to the new blank form, which you can then see in the Blank Forms page.
 
-Now, try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access your task. To get this form follow these simple steps:
+Try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access your task. To get this form follow these simple steps:
 
 1.	Go to the blank forms page.
 2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}).
@@ -23,5 +25,4 @@ If you followed these steps correctly, you should receive an email from the {{tu
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps. 
 
-Best of luck,
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}
