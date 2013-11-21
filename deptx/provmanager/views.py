@@ -218,8 +218,6 @@ def prov_check(request):
         if is_empty:
             if provenance.attribute1 is None and provenance.attribute2 is None:
                 correct = True
-            else:
-                correct = False
         
         else:
             for a_json in attribute1_json:
@@ -248,10 +246,17 @@ def prov_check(request):
                     cronDocumentInstance.save()
                     close_prov = True
                     stars = cronDocumentInstance.getStars()
-                    message = "You found the suspicious data! Great job, proceed to your debrief.\nYou gained %d weird hats!" % stars
+                    if is_empty:
+                        message = "Yes, it seems like the provenance of this document actually checks out."
+                    else:
+                        message = "You found the suspicious data! Great job, proceed to your debrief."
+                    message = message + "nYou gained %d weird hats!" % stars
                     
                 else:
-                    message = "The data you submitted does not seem suspicious. Please keep investigating."
+                    if is_empty:
+                        message = "No, we are pretty sure that something is wrong with this data. Please keep investigating."
+                    else:
+                        message = "The data you submitted does not seem suspicious. Please keep investigating."
                     cronDocumentInstance.increaseFailedAttempts()
                     close_prov = False
                   
@@ -266,7 +271,7 @@ def prov_check(request):
                 close_prov = True
 
         
-        json_data = json.dumps({"close_prov":close_prov, "message":message})
+        json_data = json.dumps({"close_prov":close_prov, "message":message, "stars":stars})
 
         return HttpResponse(json_data, mimetype="application/json")
 
