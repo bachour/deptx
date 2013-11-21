@@ -134,19 +134,52 @@ function loadImages(callback) { // and sounds
 
 function initStage()
 {
+	var scale;
+	var containerWidth;
+	var containerHeight;
+	var marginx, marginy;
+	/*alert("Screen Width: " + SCREEN_WIDTH + "\n" + 
+			"Screen Height: " + SCREEN_HEIGHT + "\n" + 
+			"Stage Width: " + STAGE_WIDTH + "\n" + 
+			"Stage Height: " + STAGE_HEIGHT);*/ 
+	//setup stage size
+	if (STAGE_WIDTH == 2161)
+	{
+		scale = SCREEN_WIDTH*1.0/STAGE_WIDTH;
+		containerWidth = SCREEN_WIDTH;
+		containerHeight = SCREEN_WIDTH/2;
+		marginx = 0;
+		marginy = (SCREEN_HEIGHT - containerHeight)/2;
+	}
+	else
+	{
+		scale = SCREEN_HEIGHT*1.0/STAGE_HEIGHT;
+		containerHeight = SCREEN_HEIGHT;
+		containerWidth = SCREEN_HEIGHT*2;
+		marginx = (SCREEN_WIDTH - containerWidth)/2;
+		marginy = 0;
+	}
+			
 	// create stage
 	stage = new Kinetic.Stage({
         container: 'container',
-        width: STAGE_WIDTH, 
-        height: STAGE_HEIGHT,
-        scale:CONTAINER.offsetWidth/STAGE_WIDTH // scale to the size of the container
+        width: containerWidth, 
+        height: containerHeight,
+        scale:scale // scale to the size of the container
+        //scaleY:SCREEN_HEIGHT*1.0/STAGE_HEIGHT // scale to the size of the container
       });
 
-	SCREEN_WIDTH = CONTAINER.offsetWidth;
-	SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
+	//SCREEN_WIDTH = CONTAINER.offsetWidth;
+	//SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
 	
-	CONTAINER.offsetHeight = SCREEN_HEIGHT;
 
+		CONTAINER.style = "width:"+containerWidth+"px;height:"+containerHeight+"px;position:absolute;background-color:white;margin:"+ marginy + "px " + marginx +"px"
+
+	/*alert("Screen Width: " + SCREEN_WIDTH + "\n" + 
+			"Screen Height: " + SCREEN_HEIGHT + "\n" + 
+			"Stage Width: " + STAGE_WIDTH + "\n" + 
+			"Stage Height: " + STAGE_HEIGHT); 
+*/
 	// create Kinetic Images for all objects and put them in nodes
 	for (var name in sources)
 		{
@@ -976,7 +1009,7 @@ function showAttributes(node, position)
 	        strokeWidth: THUMB_OUTLINE_WIDTH
 	      });
 		 
-		  var scale = Math.sqrt(1.0 * THUMB_DEFAULT_SIZE / (node.attribImage.getWidth()*node.attribImage.getHeight()));
+		  var scale = (1.0 * (THUMB_DEFAULT_SIZE/node.attribImage.getWidth()));
 		  node.attribImage.setWidth(node.attribImage.getWidth()*scale);
 		  node.attribImage.setHeight(node.attribImage.getHeight()*scale);
 		  
@@ -1098,7 +1131,7 @@ function wordWrap(string, maxChars)
 			if (currentLength + words[w].length + 1 > maxChars)
 			{
 				newString += "\n" + words[w];
-				currentLength = 0;
+				currentLength = words[w].length;
 			}
 			else
 			{
@@ -1355,12 +1388,12 @@ function submitPushed()
 	}
 	else
 	{
-		if (selectedAttributes['1'] && selectedAttributes['2'])
+		if ((selectedAttributes['1'] && selectedAttributes['2'])||(!((selectedAttributes['1'] || selectedAttributes['2']))))
 		{
 			validateSubmit();
 		}
 		else
-			showMessage("You need to select two attributes before submitting.");
+			showMessage("You need to either select TWO attributes if you think there's an inconsistency OR select NO attributes if there isn't one.");
 	}
 }
 
@@ -1392,12 +1425,20 @@ function ajaxCall(URL, message, callback)
 
 function validateSubmit()
 {
-	var message = "node1=" + selectedNodes['1'].id + 
-	"&node2=" + selectedNodes['2'].id + 
-	"&attribute1=" + selectedAttributes['1'] +
-	"&attribute2=" +selectedAttributes['2'] +
-	"&serial=" + PROV_SERIAL +
-	"&is_test=" + IS_TEST;
+	var message;
+	
+	if (selectedAttributes['1'] && selectedAttributes['2'])
+		message = "node1=" + selectedNodes['1'].id + 
+			"&node2=" + selectedNodes['2'].id + 
+			"&attribute1=" + selectedAttributes['1'] +
+			"&attribute2=" + selectedAttributes['2'] +
+			"&serial=" + PROV_SERIAL +
+			"&is_test=" + IS_TEST +
+			"&is_empty=false";
+	else
+		message = "serial=" + PROV_SERIAL +
+			"&is_test=" + IS_TEST +
+			"&is_empty=true";
 	
 	ajaxCall(URL_CHECK, message, handleValidateResponse);
 }
