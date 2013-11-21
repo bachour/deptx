@@ -193,13 +193,13 @@ def provenance(request, serial):
     if documentInstance is None:
         return None
     elif clearance <= request.user.mop.mopTracker.clearance:
-        return render(request, 'mop/provenance.html', {'document': document})
-    else:
         if documentInstance.used and not documentInstance.status == MopDocumentInstance.STATUS_ACTIVE and not documentInstance.status == MopDocumentInstance.STATUS_HACKED:
             inactive = True
         else:
             inactive = False
-        return render(request, 'mop/provenance_noclearance.html', {'document': document, "inactive":inactive})
+        return render(request, 'mop/provenance.html', {'document': document, "inactive":inactive})
+    else:
+        return render(request, 'mop/provenance_noclearance.html', {'document': document})
 
 
 @login_required(login_url='mop_login')
