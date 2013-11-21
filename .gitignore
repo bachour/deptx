@@ -11,3 +11,4 @@ deptx/static
 api.py
 org.eclipse.core.resources.prefs
 secrets.py
+.picasa.ini

@@ -1,5 +1,85 @@
 Thank you for signing up to a good cause, {{cron.user.username}}.
-Please follow this link to activate your account: {{url}}
+
+Before we can start we would like you to read the following:
+
+===============================================
+The 'Apocalypse of MoP' Study Information Sheet
+===============================================
+
+We are a team of researchers from the Mixed Reality Lab at the University of Nottingham. We are working on the 'Apocalypse of MoP', which is funded by the EPSRC via the ORCHID project (http://www.orchid.ac.uk/), and is the result of a collaboration with Urban Angel. 
+
+We are conducting research into the use of a new technological standard for articulating, storing and displaying document provenance where an item has come from, who owned it, and how it has been modified. However, we need to understand some of the issues of using this standard - how easily can people understand provenance, what are the best ways of displaying it, and how easy is it to create or manipulate digitally? Specific aspects of the 'Apocalypse of MoP' have been designed to help us to try and answer these questions, and by playing it you will have the opportunity to contribute to our research.
+
+The project ultimately aims to publish its findings in appropriate academic publications, and subsequently through the ACM digital library (http://www.acm.org). In this case, any data that you may have generated as part of playing the game will be appropriately anonymised to prevent anyone identifying you.
+
+===============================================
+Data Collection and Consent
+===============================================
+
+As part of our research we would like to collect data regarding how you take part in the 'Apocalypse of MoP', which we will subsequently analyse and study. This data may include what we class as 'personal data', or data that may potentially be used to identify an individual.
+
+We ask for your consent to collect and analyse three different kinds of data during the game:
+
+- Our computer systems will create logs and databases as part of your interaction with the game, in order for the game to function. This data will consist of records of your visits to the game's websites, any information you enter into these websites, and digital records of your interactions with the game's interfaces.
+
+- We will keep a record of your real name, your data of birth and your email address when you sign-up for the game. This will be stored separately from other game records, and is used to record that you have given consent to take part in our research.
+
+- We would potentially also like to ask you a series of questions about your experience of the game in an interview, and record your answers using video and audio recordings. 
+
+All of this data will be held in a secure and safe manner in accordance with the Data Protection Act 1998. Access to this data will be restricted to researchers involved in the project, and will be processed confidentially. It is within your rights to refuse the collection of any of the specific types of data identified above. 
+
+The results from the study will be used for publication in academic conferences and journals. The expected total length of the study is equal to the duration of the game. You are free to withdraw at any point during, or after, the study and any unpublished data collected will be erased from our records. 
+
+All data will be anonymised before it is used in any publication. Records of your interactions with the game will have anything that identifies you removed, audio recordings will be transcribed and your name removed, and stills taken from video recordings will have faces blurred to prevent identification. You will be asked to check the use of your anonymised data before publication. It may be impossible to completely delete anonymised data that has been published, for example in a research journal, as it may have subsequently copied by 3rd parties.
+
+You are free to play the game without consenting to participate in our research, in which case only that information that is required for the game to function will be recorded, and subsequently discarded when the game has finished. 
+
+To withdraw, please use the following details to contact us, or with any queries that you might have:
+
+Dr Martin Flintham
+Mixed Reality Lab (MRL),
+School of Computer Science,
+University of Nottingham,
+Jubilee Campus,
+Nottingham,
+NG8 1BB
+United Kingdom
+
+martin.flintham@nottingham.ac.uk
+
+
+This project has been subject to ethical review, according to the procedures specified by the University of Nottingham Research Ethics Committee, and has been allowed to proceed. 
+
+
+===============================================
+The Apocalypse of MOP Study Consent Form
+===============================================
+
+The research team requires your consent to allow the collection and analysis of data regarding your participation in the 'Apocalypse of MoP'. 
+
+Please note that you may withhold consent from participating in the study, and this will not affect or detrimentally change your experience of the 'Apocalypse of MoP'.
+
+You will be given the choice of two different links to follow. One of them registers you as a consenting participant in the study, the other one will let you play the game without participating in the study.
+
+If you want to participate in the study, you need to agree to the following:
+
+- I have read and understand the information sheet, which includes information about the research project, and the data that may be recorded and published. I understand that I can withdraw consent for my participation at any time, and my personal data will be erased from the game's records and systems.
+
+- I give permission for digital records generated during the course of my interaction with the 'Apocalypse of MoP', including information I submit to the game's websites, to be used as part of the study in an anonymised form.
+
+
+===============================================
+Activate your account
+===============================================
+
+Please choose one of the following links to activate your account:
+
+1) I want to participate in the study (and agree to the above):
+{{url_study}}
+
+2) I do not want to participate in the study:
+{{url_nostudy}}
+
 
 -- 
 cr0nogram v1.45b

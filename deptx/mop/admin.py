@@ -1,5 +1,5 @@
 from django.contrib import admin
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustInstance, TrustTracker
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustInstance, MopTracker
 from provmanager.models import Provenance
 
 class RandomizedDocumentAdmin(admin.ModelAdmin):
@@ -14,6 +14,6 @@ admin.site.register(RequisitionBlank)
 admin.site.register(RandomizedDocument, RandomizedDocumentAdmin)
 admin.site.register(MopDocumentInstance)
 admin.site.register(TrustInstance)
-admin.site.register(TrustTracker)
+admin.site.register(MopTracker)
 
 

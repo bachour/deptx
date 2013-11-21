@@ -5,9 +5,9 @@
 <h1>Blank Forms</h1>
 {% if blank_list %}
 <table>
-<tr><th class="nobox"></th><th>Responsible Unit</th><th>Form</th><th>Usage</th></tr>
+<tr><th class="nobox"></th><th>Form</th><th>Unit</th><th>Serial</th><th>Usage</th></tr>
 {% for blank in blank_list %}
-	<tr><td class="nobox"><a href="{% url 'mop_forms_fill' blank.requisition.serial %}">fill in</a></td><td>{{blank.requisition.unit.serial}}</td><td>{{blank.requisition.serial}}</td><td>{{blank.requisition.get_category_display}}</td></tr>
+	<tr><td class="nobox"><a href="{% url 'mop_forms_fill' blank.requisition.serial %}">fill in</a></td><td>{{blank.requisition.name}}</td><td>{{blank.requisition.unit.serial}}</td><td>{{blank.requisition.serial}}</td><td>{{blank.requisition.get_category_display}}</td></tr>
 {% endfor %}
 </table>
 {% else %}

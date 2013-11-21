@@ -191,6 +191,7 @@ def prov_check(request):
         post_node2 = request.POST.get('node2', "")
         post_attribute1 = request.POST.get('attribute1', "")
         post_attribute2 = request.POST.get('attribute2', "")
+        is_empty = request.POST.get('is_empty', False)
         is_test = json.loads(request.POST.get('is_test', False))
         
         player_attribute1 = makeAttributeString(post_node1, post_attribute1)
@@ -214,16 +215,22 @@ def prov_check(request):
         stored_attribute1_list = []
         stored_attribute2_list = []
         
-        for a_json in attribute1_json:
-            stored_attribute1_list.append(makeAttributeString(a_json['node'], a_json['attribute']))
-        for a_json in attribute2_json:
-            stored_attribute2_list.append(makeAttributeString(a_json['node'], a_json['attribute']))
+        if is_empty:
+            if provenance.attribute1 is None and provenance.attribute2 is None:
+                correct = True
         
-        if player_attribute1 in stored_attribute1_list and player_attribute2 in stored_attribute2_list:
-            correct = True
-        elif player_attribute1 in stored_attribute2_list and player_attribute2 in stored_attribute1_list:
-            correct = True
+        else:
+            for a_json in attribute1_json:
+                stored_attribute1_list.append(makeAttributeString(a_json['node'], a_json['attribute']))
+            for a_json in attribute2_json:
+                stored_attribute2_list.append(makeAttributeString(a_json['node'], a_json['attribute']))
+            
+            if player_attribute1 in stored_attribute1_list and player_attribute2 in stored_attribute2_list:
+                correct = True
+            elif player_attribute1 in stored_attribute2_list and player_attribute2 in stored_attribute1_list:
+                correct = True
        
+        stars = None
         if is_test and request.user.is_staff:
             if correct:
                 message = "Test feedback: Yes, this is where the inconsistency is!"
@@ -232,15 +239,25 @@ def prov_check(request):
             close_prov = False
         else:
             if provenance.type == Provenance.TYPE_CRON:
+                #TODO check properly for cron-user and if Instance exists
+                cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
                 if correct:
-                    message = "You found the suspicious data! Great job, proceed to your debrief."
-                    #TODO check properly for cron-user and if Instance exists
-                    cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
                     cronDocumentInstance.solved = True
                     cronDocumentInstance.save()
                     close_prov = True
+                    stars = cronDocumentInstance.getStars()
+                    if is_empty:
+                        message = "Yes, it seems like the provenance of this document actually checks out."
+                    else:
+                        message = "You found the suspicious data! Great job, proceed to your debrief."
+                    message = message + "nYou gained %d weird hats!" % stars
+                    
                 else:
-                    message = "The data you submitted does not seem suspicious. Please keep investigating."
+                    if is_empty:
+                        message = "No, we are pretty sure that something is wrong with this data. Please keep investigating."
+                    else:
+                        message = "The data you submitted does not seem suspicious. Please keep investigating."
+                    cronDocumentInstance.increaseFailedAttempts()
                     close_prov = False
                   
             elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
@@ -250,11 +267,11 @@ def prov_check(request):
                 mopDocumentInstance.modified = True
                 mopDocumentInstance.correct = correct
                 mopDocumentInstance.save()
-                tutorial.checkProvenance(mopDocumentInstance.mop.trustTracker, mopDocumentInstance.correct)
+                tutorial.checkProvenance(mopDocumentInstance.mop.mopTracker, mopDocumentInstance.correct)
                 close_prov = True
 
         
-        json_data = json.dumps({"close_prov":close_prov, "message":message})
+        json_data = json.dumps({"close_prov":close_prov, "message":message, "stars":stars})
 
         return HttpResponse(json_data, mimetype="application/json")
 

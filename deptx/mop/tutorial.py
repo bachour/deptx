@@ -1,5 +1,5 @@
 from assets.models import Unit
-from mop.models import Mail, TrustTracker, RandomizedDocument
+from mop.models import Mail, MopTracker, RandomizedDocument
 
 def getUnitComm():
     return Unit.objects.get(type=Unit.TYPE_COMMUNICATIVE)
@@ -8,11 +8,11 @@ def createMail(bodyType, mop):
     mopco = getUnitComm()
     Mail.objects.create(bodyType=bodyType, mop=mop, unit=mopco, subject=Mail.SUBJECT_HELP, type=Mail.TYPE_RECEIVED, processed=True)
 
-def hide(trustTracker, created):
+def hide(mopTracker, created):
     hide = {}
     
-    if not trustTracker.tutorial == TrustTracker.TUTORIAL_6_DONE:
-        mopco_mails = Mail.objects.filter(mop=trustTracker.mop).filter(unit=getUnitComm()).filter(type=Mail.TYPE_RECEIVED)
+    if not mopTracker.tutorial == MopTracker.TUTORIAL_6_DONE:
+        mopco_mails = Mail.objects.filter(mop=mopTracker.mop).filter(unit=getUnitComm()).filter(type=Mail.TYPE_RECEIVED)
         
         hide['performance'] = True
         hide['guidebook'] = True
@@ -21,13 +21,13 @@ def hide(trustTracker, created):
         hide['mail'] = True
 
         if (created):
-            createMail(Mail.BODY_TUTORIAL_1_INTRO, trustTracker.mop)
-            trustTracker.tutorial = TrustTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM
-            trustTracker.save()
+            createMail(Mail.BODY_TUTORIAL_1_INTRO, mopTracker.mop)
+            mopTracker.tutorial = MopTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM
+            mopTracker.save()
             
         if mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_5_CONCLUSION).filter(read=True):
-            trustTracker.tutorial = TrustTracker.TUTORIAL_6_DONE
-            trustTracker.save()
+            mopTracker.tutorial = MopTracker.TUTORIAL_6_DONE
+            mopTracker.save()
             hide = []
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION).filter(read=True):
             hide['guidebook'] = False
@@ -61,40 +61,40 @@ def hide(trustTracker, created):
     
     return hide
 
-def assignForm(trustTracker):
-    if trustTracker.tutorial == TrustTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM:
-        createMail(Mail.BODY_TUTORIAL_2_DOCUMENT_REQUEST, trustTracker.mop)
-        trustTracker.tutorial = TrustTracker.TUTORIAL_2_SENT_HOW_TO_REQUEST_DOCUMENT
-        trustTracker.save()
+def assignForm(mopTracker):
+    if mopTracker.tutorial == MopTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM:
+        createMail(Mail.BODY_TUTORIAL_2_DOCUMENT_REQUEST, mopTracker.mop)
+        mopTracker.tutorial = MopTracker.TUTORIAL_2_SENT_HOW_TO_REQUEST_DOCUMENT
+        mopTracker.save()
         
-def assignDocument(trustTracker):
-    if trustTracker.tutorial == TrustTracker.TUTORIAL_2_SENT_HOW_TO_REQUEST_DOCUMENT:
-        createMail(Mail.BODY_TUTORIAL_3_TASK_COMPLETION, trustTracker.mop)
-        trustTracker.tutorial = TrustTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE
-        trustTracker.save()
+def assignDocument(mopTracker):
+    if mopTracker.tutorial == MopTracker.TUTORIAL_2_SENT_HOW_TO_REQUEST_DOCUMENT:
+        createMail(Mail.BODY_TUTORIAL_3_TASK_COMPLETION, mopTracker.mop)
+        mopTracker.tutorial = MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE
+        mopTracker.save()
         
-def checkProvenance(trustTracker, correct):
-    if trustTracker.tutorial == TrustTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE:
+def checkProvenance(mopTracker, correct):
+    if mopTracker.tutorial == MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE:
         if correct:
-            createMail(Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION, trustTracker.mop)
-            trustTracker.tutorial = TrustTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT
-            trustTracker.save()
+            createMail(Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION, mopTracker.mop)
+            mopTracker.tutorial = MopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT
+            mopTracker.save()
         else:
-            trustTracker.tutorialProvErrors += 1
-            trustTracker.save()
-            if trustTracker.tutorialProvErrors > 1:
-                createMail(Mail.BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2, trustTracker.mop)
+            mopTracker.tutorialProvErrors += 1
+            mopTracker.save()
+            if mopTracker.tutorialProvErrors > 1:
+                createMail(Mail.BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2, mopTracker.mop)
             else:
-                createMail(Mail.BODY_TUTORIAL_4a_INCORRECT_MODIFICATION, trustTracker.mop)
+                createMail(Mail.BODY_TUTORIAL_4a_INCORRECT_MODIFICATION, mopTracker.mop)
                 
-def submitDocument(trustTracker):
-    if trustTracker.tutorial == TrustTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT:
-        createMail(Mail.BODY_TUTORIAL_5_CONCLUSION, trustTracker.mop)
-        trustTracker.tutorial = TrustTracker.TUTORIAL_5_SENT_CONCLUSION
-        trustTracker.save()
+def submitDocument(mopTracker):
+    if mopTracker.tutorial == MopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT:
+        createMail(Mail.BODY_TUTORIAL_5_CONCLUSION, mopTracker.mop)
+        mopTracker.tutorial = MopTracker.TUTORIAL_5_SENT_CONCLUSION
+        mopTracker.save()
 
-def getTutorialDocument(trustTracker):
-    if not trustTracker.tutorial == TrustTracker.TUTORIAL_6_DONE:
+def getTutorialDocument(mopTracker):
+    if not mopTracker.tutorial == MopTracker.TUTORIAL_6_DONE:
         return RandomizedDocument.objects.filter(isTutorial=True)
     else:
         return None 

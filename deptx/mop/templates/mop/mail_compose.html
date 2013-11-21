@@ -15,7 +15,8 @@
 <tr><th>Attach signed Form</th><td class="nobox nopadding"><div class="styled-select">{{form.requisitionInstance}}</div></td><td>A signed form is always required.</td></tr>
 <tr id="attach_document"><th>Attach Document</th><td class="nobox nopadding"><div class="styled-select">{{form.mopDocumentInstance}}</div></td><td>Only attach a document when submitting a report.</td></tr>
 </table>
-<input class="button" type="submit" value="send message" name="send" />&nbsp;&nbsp;&nbsp;&nbsp;<input class="button" type="submit" value="save as draft" name="draft" />
+<input class="button" type="submit" value="send message" name="send" />&nbsp;&nbsp;&nbsp;&nbsp;
+{% if not request.user.mop.mopTracker.isTutorial %}<input class="button" type="submit" value="save as draft" name="draft" />{% endif %}
 </form>
 
 {% endblock %}

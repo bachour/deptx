@@ -68,32 +68,32 @@ def provlog_add_mop_register(cron, mop, session_key):
 
 def provlog_add_mop_login(mop, session_key):
     bundle_id, bundle = create_bundle_mop_login(mop.id, session_key)
-    addBundle(mop.player.cron, bundle, bundle_id)
+    addBundle(mop.cron, bundle, bundle_id)
 
 
 def provlog_add_mop_logout(mop, session_key):
     bundle_id, bundle = create_bundle_mop_logout(mop.id, session_key)
-    addBundle(mop.player.cron, bundle, bundle_id)
+    addBundle(mop.cron, bundle, bundle_id)
 
 
 def provlog_add_mop_sign_form(mop, requisitionInstance, session_key):
     bundle_id, bundle = create_bundle_mop_sign_form(mop.id, session_key, requisitionInstance.blank.requisition.serial, requisitionInstance.id, requisitionInstance.data)
-    addBundle(mop.player.cron, bundle, bundle_id)
+    addBundle(mop.cron, bundle, bundle_id)
 
 
 def provlog_add_mop_send_form(mop, mail, session_key):
     bundle_id, bundle = create_bundle_mop_send_form(mop.id, session_key, mail.requisitionInstance.id, mail.requisitionInstance.blank.requisition.serial, mail.id, mail.unit.serial)
-    addBundle(mop.player.cron, bundle, bundle_id)
+    addBundle(mop.cron, bundle, bundle_id)
 
 
 def provlog_add_mop_issue_form(mop, mail, new_requisition, session_key):
     bundle_id, bundle = create_bundle_mop_issue_form(mop.id, session_key, mail.requisitionInstance.id, mail.requisitionInstance.blank.requisition.serial, mail.id, new_requisition.serial, mail.unit.serial)
-    addBundle(mop.player.cron, bundle, bundle_id)
+    addBundle(mop.cron, bundle, bundle_id)
 
 
 def provlog_add_mop_issue_document(mop, mail, mopDocumentInstance, session_key):
     bundle_id, bundle = create_bundle_mop_issue_document(mop.id, session_key, mail.id, mail.requisitionInstance.blank.requisition.serial, mail.requisitionInstance.id, mopDocumentInstance.getDocumentSerial(), mopDocumentInstance.id, mail.unit.serial)
-    addBundle(mop.player.cron, bundle, bundle_id)
+    addBundle(mop.cron, bundle, bundle_id)
 
 
 def create_bundle_cron_register(cron):

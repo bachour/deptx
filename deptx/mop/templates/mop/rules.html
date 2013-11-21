@@ -49,7 +49,7 @@ Once you acquire a blank form of a certain type, you may use it as many times as
 The following is a comprehensive list of forms that are currently available from the Unit of Administration:
 </p>
 <table>
-<tr><th>Responsible Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
+<tr><th>Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
 {% for req in requisition_list %}
 	<tr><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
 {% endfor %}

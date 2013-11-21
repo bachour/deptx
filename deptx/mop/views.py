@@ -16,7 +16,7 @@ from players.models import Player, Mop
 from django.contrib.auth.models import User
 
 from assets.models import Requisition, Unit, CronDocument
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustTracker, TrustInstance
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
@@ -44,9 +44,9 @@ def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
 
-        trustTracker, created = TrustTracker.objects.get_or_create(mop=request.user.mop)
+        mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
         
-        hide = tutorial.hide(trustTracker, created)
+        hide = tutorial.hide(mopTracker, created)
   
         #MAIL MANAGING
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
@@ -132,9 +132,9 @@ def performance(request):
 @user_passes_test(isMop, login_url='mop_login')
 def documents_pool(request):
 
-    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.trustTracker)
+    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.mopTracker)
     if randomizedDocument_list == None:
-        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.trustTracker.clearance)
+        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.mopTracker.clearance)
 
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
@@ -172,20 +172,34 @@ def provenance(request, serial):
     try:
         document = RandomizedDocument.objects.get(serial=serial)
         clearance = document.mopDocument.clearance
+        documentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, randomizedDocument=document)
     except RandomizedDocument.DoesNotExist:
         document = None
+        documentInstance = None
+    except MopDocumentInstance.DoesNotExist:
+        documentInstance = None
     
     if document is None:
         try:
             document = CronDocument.objects.get(serial=serial)
             clearance = document.clearance
+            documentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, cronDocument=document)
         except CronDocument.DoesNotExist:
             document = None
-
-    if clearance <= request.user.mop.trustTracker.clearance:
+            documentInstance = None
+        except MopDocumentInstance.DoesNotExist:
+            documentInstance = None
+    
+    if documentInstance is None:
+        return None
+    elif clearance <= request.user.mop.mopTracker.clearance:
         return render(request, 'mop/provenance.html', {'document': document})
     else:
-        return render(request, 'mop/provenance_noclearance.html', {'document': document})
+        if documentInstance.used and not documentInstance.status == MopDocumentInstance.STATUS_ACTIVE and not documentInstance.status == MopDocumentInstance.STATUS_HACKED:
+            inactive = True
+        else:
+            inactive = False
+        return render(request, 'mop/provenance_noclearance.html', {'document': document, "inactive":inactive})
 
 
 @login_required(login_url='mop_login')
@@ -194,6 +208,7 @@ def mail_inbox(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
     request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
     request.session['has_checked_inbox'] = True
+
     log_mop(request.user.mop, 'view inbox')
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
 
@@ -303,9 +318,15 @@ def mail_deleting(request, mail_id):
     
     return redirect('mop_mail_trash')
 
+
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_compose(request):
+def mail_compose_with_form(request, fullSerial):
+    return mail_compose(request, fullSerial)
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def mail_compose(request, fullSerial=None):
     #TODO Mail needs a sentAt / savedAt value so that trashing email does not change its date
     if request.method == 'POST':
         mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
@@ -340,9 +361,16 @@ def mail_compose(request):
             return render(request, 'mop/mail_compose.html', {'form' : form,})
         
     else:
-        form =  MailForm()
-        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        form = MailForm()
+        requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        if fullSerial is not None:
+            for requisitionInstance in requisitionInstance_list:
+                if requisitionInstance.fullSerial() == fullSerial:
+                    form = MailForm(initial={'requisitionInstance': requisitionInstance})
+                    break
+
+        form.fields["requisitionInstance"].queryset = requisitionInstance_list
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form,})
 
@@ -383,7 +411,7 @@ def mail_edit(request, mail_id):
             return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop)
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
         
@@ -391,7 +419,7 @@ def mail_edit(request, mail_id):
         form = MailForm(instance=mail)
         #TODO same with documents at all occurences
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop)
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 
