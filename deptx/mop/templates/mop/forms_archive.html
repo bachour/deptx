@@ -5,9 +5,9 @@
 <h1>Archived Forms</h1>
 {% if requisitionInstance_list %}
 <table>
-<tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
+<tr><th>Form</th><th>Unit</th><th>Serial</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}
-	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.fullSerial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
+	<tr><td>{{reqInstance.blank.requisition.name}}</td><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.fullSerial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
 {% endfor %}
 </table>
 {% else %}
