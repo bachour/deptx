@@ -12,7 +12,7 @@
 		<td>{{ mail.get_subject_display }}</td>
 		<td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DAEMON{% endif %}</td>
 		<td>{{ mail.createdAt }}</td>
-		{% if not request.user.mop.trustTracker.isTutorial %}<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_trashing' mail.id %}">trash</a></td>{% endif %}
+		{% if not request.user.mop.mopTracker.isTutorial %}<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_trashing' mail.id %}">trash</a></td>{% endif %}
 	</tr>
 {% endfor %}
 </table>

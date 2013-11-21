@@ -87,7 +87,7 @@ def analyze_mail():
             if mail.mopDocumentInstance.correct:
                 newMail.bodyType = Mail.BODY_REPORT_SUCCESS
                 newMail.trust = clearance.getTrustReportedCorrect()
-                tutorial.submitDocument(mail.mop.trustTracker)
+                tutorial.submitDocument(mail.mop.mopTracker)
             else:
                 newMail.bodyType = Mail.BODY_REPORT_FAIL
                 newMail.trust = clearance.getTrustReportedIncorrect()
@@ -108,7 +108,7 @@ def analyze_mail():
         newMail.save()
         
         if newMail.trust is not None:
-            mail.mop.trustTracker.addTrust(newMail.trust)
+            mail.mop.mopTracker.addTrust(newMail.trust)
 
    
     return output
@@ -148,7 +148,7 @@ def hasEnoughTrust(mop, cronDocument, randomizedDocument):
     trustCost = Clearance(document.clearance).getTrustRequested()
     if trustCost == 0:
         return True
-    elif mop.trustTracker.trust + mop.trustTracker.allowance + trustCost >=0:
+    elif mop.mopTracker.trust + mop.mopTracker.allowance + trustCost >=0:
         return True
     else:
         return False
@@ -238,7 +238,7 @@ def wrongDocument(mail):
 #TODO display attachments when viewing mails
 def assignRequisition(mop, requisition):
     requisitionBlank, created = RequisitionBlank.objects.get_or_create(mop=mop, requisition=requisition)
-    tutorial.assignForm(mop.trustTracker)
+    tutorial.assignForm(mop.mopTracker)
     return requisitionBlank
        
     
@@ -247,7 +247,7 @@ def assignDocument(mop, cronDocument, randomizedDocument):
         mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, cronDocument=cronDocument, type=MopDocumentInstance.TYPE_CRON)
     else:
         mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=mop, randomizedDocument=randomizedDocument, type=MopDocumentInstance.TYPE_MOP)
-        tutorial.assignDocument(mop.trustTracker)
+        tutorial.assignDocument(mop.mopTracker)
     return mopDocumentInstance
 
 def prepareMail(mail):

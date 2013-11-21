@@ -406,11 +406,10 @@ def profile(request):
     else:
         missionInstance_list = None
     
+    cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=request.user.cron).order_by('-modifiedAt')
     mop_list = Mop.objects.filter(cron=request.user.cron)
 
-    return render_to_response('cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list },
-                                         context_instance=RequestContext(request)
-                                 )
+    return render_to_response('cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list, "cronDocumentInstance_list":cronDocumentInstance_list })
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -429,6 +428,9 @@ def getAllDocumentStates(cron, case):
         for available in availableDocumentInstances:
             if (required==available.cronDocument):
                 required.available = True
+                required.solved = available.solved
+                required.getStars = available.getStars()
+                required.getStarsForTemplate = available.getStarsForTemplate()
 
     return requiredDocuments
 

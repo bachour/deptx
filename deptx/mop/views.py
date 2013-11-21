@@ -16,7 +16,7 @@ from players.models import Player, Mop
 from django.contrib.auth.models import User
 
 from assets.models import Requisition, Unit, CronDocument
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustTracker, TrustInstance
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
 from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
@@ -44,9 +44,9 @@ def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
 
-        trustTracker, created = TrustTracker.objects.get_or_create(mop=request.user.mop)
+        mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
         
-        hide = tutorial.hide(trustTracker, created)
+        hide = tutorial.hide(mopTracker, created)
   
         #MAIL MANAGING
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
@@ -132,9 +132,9 @@ def performance(request):
 @user_passes_test(isMop, login_url='mop_login')
 def documents_pool(request):
 
-    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.trustTracker)
+    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.mopTracker)
     if randomizedDocument_list == None:
-        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.trustTracker.clearance)
+        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.mopTracker.clearance)
 
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
@@ -172,20 +172,34 @@ def provenance(request, serial):
     try:
         document = RandomizedDocument.objects.get(serial=serial)
         clearance = document.mopDocument.clearance
+        documentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, randomizedDocument=document)
     except RandomizedDocument.DoesNotExist:
         document = None
+        documentInstance = None
+    except MopDocumentInstance.DoesNotExist:
+        documentInstance = None
     
     if document is None:
         try:
             document = CronDocument.objects.get(serial=serial)
             clearance = document.clearance
+            documentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, cronDocument=document)
         except CronDocument.DoesNotExist:
             document = None
-
-    if clearance <= request.user.mop.trustTracker.clearance:
+            documentInstance = None
+        except MopDocumentInstance.DoesNotExist:
+            documentInstance = None
+    
+    if documentInstance is None:
+        return None
+    elif clearance <= request.user.mop.mopTracker.clearance:
         return render(request, 'mop/provenance.html', {'document': document})
     else:
-        return render(request, 'mop/provenance_noclearance.html', {'document': document})
+        if documentInstance.used and not documentInstance.status == MopDocumentInstance.STATUS_ACTIVE and not documentInstance.status == MopDocumentInstance.STATUS_HACKED:
+            inactive = True
+        else:
+            inactive = False
+        return render(request, 'mop/provenance_noclearance.html', {'document': document, "inactive":inactive})
 
 
 @login_required(login_url='mop_login')

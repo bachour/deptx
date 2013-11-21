@@ -83,8 +83,30 @@ class CronDocumentInstance(models.Model):
     cron = models.ForeignKey(Cron)
     provenanceState = models.TextField(blank=True, null=True)
     solved = models.BooleanField(default=False)
+    failedAttempts = models.IntegerField(default=0)
+    
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    
+    def increaseFailedAttempts(self):
+        self.failedAttempts += 1
+        self.save()
+        
+    def getStars(self):
+        if self.failedAttempts <= 1:
+            return 3
+        elif self.failedAttempts <= 5:
+            return 2
+        else:
+            return 1
+    
+    def getStarsForTemplate(self):
+        stars = self.getStars()
+        output = ""
+        for i in range(stars):
+            output = output + "i"
+        return output
+
     
     def __unicode__(self):
         if (self.solved):
@@ -92,3 +114,4 @@ class CronDocumentInstance(models.Model):
         else:
             status = "IN PROGRESS"
         return self.cronDocument.serial + " / " + self.cron.user.username + " (" + status + ")"
+    

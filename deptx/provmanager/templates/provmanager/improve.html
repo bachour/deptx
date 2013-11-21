@@ -30,6 +30,12 @@
     	var URL_CHECK = "{% url 'provmanager_prov_check' %}";
     	var URL_LOG = "{% url 'provmanager_prov_log_action' %}";
     	
+    	{% if inactive %}
+    		var INACTIVE = true;
+    	{% else %}
+    		var INACTIVE = false;
+    	{% endif %}
+    	
     	{% if is_test %}
     		var IS_TEST = true;
     		var URL_GET_STATE = "";

@@ -14,19 +14,19 @@ def analyze_performance():
         mopDocumentInstance.status = mopDocumentInstance.STATUS_REVOKED
         mopDocumentInstance.save()
         trust = mopDocumentInstance.getTrustFinal()
-        mopDocumentInstance.mop.trustTracker.addTrust(trust)
-        mopDocumentInstance.mop.trustTracker.save()
+        mopDocumentInstance.mop.mopTracker.addTrust(trust)
+        mopDocumentInstance.mop.mopTracker.save()
         
     mop_list = Mop.objects.filter()
     output.append('MoPs under performance review: %d' % mop_list.count())
     for mop in mop_list:
-        trustInstance = TrustInstance.objects.create(mop=mop, trust=mop.trustTracker.trust)
+        trustInstance = TrustInstance.objects.create(mop=mop, trust=mop.mopTracker.trust)
         #TODO add more statistics
-        mop.trustTracker.totalTrust += mop.trustTracker.trust 
-        mop.trustTracker.trust = 0
-        mop.trustTracker.allowance = trustInstance.allowance()
-        mop.trustTracker.clearance = trustInstance.clearance
-        mop.trustTracker.save()
+        mop.mopTracker.totalTrust += mop.mopTracker.trust 
+        mop.mopTracker.trust = 0
+        mop.mopTracker.allowance = trustInstance.allowance()
+        mop.mopTracker.clearance = trustInstance.clearance
+        mop.mopTracker.save()
         sendReport(trustInstance)
         
     

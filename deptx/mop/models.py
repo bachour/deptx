@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 
 
-class TrustTracker(models.Model):
+class MopTracker(models.Model):
     
     TUTORIAL_0_START = 0
     TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM = 10
@@ -38,7 +38,7 @@ class TrustTracker(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
-    mop = models.OneToOneField(Mop, related_name="trustTracker")
+    mop = models.OneToOneField(Mop, related_name="mopTracker")
     trust = models.IntegerField(default=0)
     totalTrust = models.IntegerField(default=0)
     allowance = models.IntegerField(default=0)
