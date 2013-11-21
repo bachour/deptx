@@ -5,9 +5,9 @@
 <h1>Signed Forms</h1>
 {% if requisitionInstance_list %}
 <table>
-<tr><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
+<tr><th class="nobox"></th><th>Responsible Unit</th><th>Form</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}
-	<tr><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.fullSerial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
+	<tr><td class="nobox"><a href="{% url 'mop_mail_compose' reqInstance.fullSerial %}">mail</a></td><td>{{reqInstance.blank.requisition.unit.serial}}</td><td>{{reqInstance.fullSerial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
 {% endfor %}
 </table>
 {% else %}

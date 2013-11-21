@@ -304,9 +304,15 @@ def mail_deleting(request, mail_id):
     
     return redirect('mop_mail_trash')
 
+
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_compose(request):
+def mail_compose_with_form(request, fullSerial):
+    return mail_compose(request, fullSerial)
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def mail_compose(request, fullSerial=None):
     #TODO Mail needs a sentAt / savedAt value so that trashing email does not change its date
     if request.method == 'POST':
         mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
@@ -341,9 +347,16 @@ def mail_compose(request):
             return render(request, 'mop/mail_compose.html', {'form' : form,})
         
     else:
-        form =  MailForm()
-        form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        form = MailForm()
+        requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        if fullSerial is not None:
+            for requisitionInstance in requisitionInstance_list:
+                if requisitionInstance.fullSerial() == fullSerial:
+                    form = MailForm(initial={'requisitionInstance': requisitionInstance})
+                    break
+
+        form.fields["requisitionInstance"].queryset = requisitionInstance_list
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form,})
 
@@ -384,7 +397,7 @@ def mail_edit(request, mail_id):
             return redirect('mop_index')
         else:
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop)
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
         
@@ -392,7 +405,7 @@ def mail_edit(request, mail_id):
         form = MailForm(instance=mail)
         #TODO same with documents at all occurences
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop)
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 
