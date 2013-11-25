@@ -1,6 +1,6 @@
 The system logged a modification to the document! Looks like you've been busy. Unfortunately, it appears you didn't select the correct attributes. But don't worry; you still have a chance to fix it.
 
-Go back to the Task page and click the Work button try again. Look for two attributes whose values should be the same, but are different. Once you find them, mark them both in red and hit save.
+Go back to the document drawer and click the Work button try again. Look for two attributes whose values should be the same, but are different. Once you find them, mark them both in red and hit save.
 
 When you do that, you will receive a new email with further information.
 

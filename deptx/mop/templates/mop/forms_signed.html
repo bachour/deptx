@@ -7,7 +7,13 @@
 <table>
 <tr><th class="nobox"></th><th>Form</th><th>Unit</th><th>Serial</th><th>Data</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}
-	<tr><td class="nobox"><a href="{% url 'mop_mail_compose' reqInstance.fullSerial %}">mail</a></td><td>{{reqInstance.blank.requisition.name}}</td><td>{{reqInstance.blank.requisition.unit.serial}}</dt><td>{{reqInstance.fullSerial}}</td><td>{{reqInstance.data}}</td><td>{{reqInstance.modifiedAt}}</td></tr>
+	<tr>
+	<td class="nobox"><a href="{% url 'mop_mail_compose' reqInstance.fullSerial %}">mail</a></td>
+	<td>{{reqInstance.blank.requisition.name}}</td>
+	<td>{{reqInstance.blank.requisition.unit.serial}}</dt>
+	<td>{{reqInstance.fullSerial}}</td>
+	<td>{{reqInstance.data}}</td>
+	<td>{{reqInstance.modifiedAt|date:"Y-m-d H:i"}}</td></tr>
 {% endfor %}
 </table>
 {% else %}

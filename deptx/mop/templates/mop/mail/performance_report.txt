@@ -1,6 +1,6 @@
 Your performance report:
 
-In the last period you gained {{data.trust}} performance points.
+In the last period you gained {{data.trust}} Trust.
 
 For the current period your clearance level has therefore been set to {{data.get_clearance_display}} (effective immediately).
 

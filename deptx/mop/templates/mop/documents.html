@@ -14,7 +14,7 @@
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-		<td>{{mopDocumentInstance.createdAt}}</td>
+		<td>{{mopDocumentInstance.createdAt|date:"Y-m-d H:i"}}</td>
 		</tr>
 	{% endfor %}
 	</table>
@@ -26,7 +26,7 @@ No documents available.
 
 {% block help %}
 <p>
-These are the documents currently available for you to view.
+These are the documents that have been assigned to you to work on. Be aware that the Ministry rewards correct work above all, so please only submit a document when you are certain of the accuracy of your inspection. Also remember that at the end of a performance period all unsubmitted documents will generate negative Trust for you!
 </p>
 {% endblock %}
 

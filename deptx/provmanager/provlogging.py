@@ -40,7 +40,7 @@ def addBundle(cron, bundle, bundle_id):
     store_id = getStoreId(cron)
     #TODO bundle_id is problematic when logging in without having logged out on the mop-page as it does not support auto-logon
     bundle_id = bundle_id + "/" + str(time.time())  # Is this really needed?
-    API.add_bundle(store_id, bundle, bundle_id)
+    #API.add_bundle(store_id, bundle, bundle_id)
 
 
 def provlog_add_cron_register(cron):

@@ -4,22 +4,28 @@
 
 <h1>Performance Report</h1>
 <table>
-<tr><th>Performance Score (total)</th><td>{{user.mop.mopTracker.totalTrust}}</td></tr>
-<tr><th>Performance Score (current period)</th><td>{{user.mop.mopTracker.trust}}</td></tr>
-<tr><th>Allowance (from last period)</th><td>{{user.mop.mopTracker.allowance}}</td></tr>
+<tr><th>Trust (total)</th><td style="text-align:center">{{user.mop.mopTracker.totalTrust}}</td></tr>
+<tr><th>Trust (current period)</th><td style="text-align:center">{{user.mop.mopTracker.trust}}</td></tr>
+<tr><th>Credit (based on last period)</th><td style="text-align:center">{{user.mop.mopTracker.credit}}</td></tr>
 <tr><th>Clearance Level</th><td><img class="minibadge" src="{{user.mop.mopTracker.getBadgeUrl}}" /></td></tr>
 </table>
 <br/>
 <table>
-<tr><th>Date</th><th>Performance</th><th>Level</th><th>Allowance</th></tr>
+<tr><th>Date</th><th>Trust</th><th>Level</th><th>Credit</th></tr>
 {% for trustInstance in trustInstance_list %}
-<tr><td>{{trustInstance.createdAt|date:"SHORT_DATE_FORMAT"}}</td><td>{{trustInstance.trust}}</td><td><img class="minibadge" src="{{trustInstance.getBadgeUrl}}" /></td><td>{{trustInstance.allowance}}</td></tr>
+<tr>
+<td>{{trustInstance.createdAt|date:"SHORT_DATE_FORMAT"}}</td>
+<td style="text-align:center">{{trustInstance.trust}}</td>
+<td><img class="minibadge" src="{{trustInstance.getBadgeUrl}}" /></td>
+<td style="text-align:center">{{trustInstance.credit}}</td>
+</tr>
 {% endfor %}
 </table>
 {% endblock %}
 
 {% block help %}
 <p>
+This should give you a good overview of the Trust you have gained while working for the Ministry of Provenance. Your Trust is reset every week to encourage a constant level of occupation. The more Trust you earn the more access to documents you will get. Remember: After an unsatisfactory week you can also lose clearance again.
 </p>
 {% endblock %}
 

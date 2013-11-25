@@ -1,6 +1,6 @@
 Welcome to the Ministry of Provenance!
 
-We look forward to have you as a productive member of our team!
+We look forward to having you as a productive member of our team as part of the ORCHID scheme!
 
 This email orientation will help you navigate the MoP intranet in order to fulfill your role here at the ministry.
 
@@ -8,7 +8,7 @@ First you must learn about forms. There are several departments in the ministry,
 
 Blank forms can be obtained from the {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}". Once they process your request, you will have access to the new blank form, which you can then see in the Blank Forms page.
 
-Try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access your task. To get this form follow these simple steps:
+Try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents. To get this form follow these simple steps:
 
 1.	Go to the blank forms page.
 2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}).
