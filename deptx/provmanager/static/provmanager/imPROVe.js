@@ -159,6 +159,13 @@ function initStage()
 		marginx = (SCREEN_WIDTH - containerWidth)/2;
 		marginy = 0;
 	}
+	
+	CONTAINER.style.width = containerWidth +"px";
+	CONTAINER.style.height = containerHeight+"px";
+	CONTAINER.style.position = "absolute";
+	CONTAINER.style.backgroundColor = "white";
+	CONTAINER.style.padding = "0";
+	CONTAINER.style.margin = marginy + "px " + marginx +"px";
 			
 	// create stage
 	stage = new Kinetic.Stage({
@@ -166,14 +173,15 @@ function initStage()
         width: containerWidth, 
         height: containerHeight,
         scale:scale // scale to the size of the container
-        //scaleY:SCREEN_HEIGHT*1.0/STAGE_HEIGHT // scale to the size of the container
       });
 
 	//SCREEN_WIDTH = CONTAINER.offsetWidth;
 	//SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
 	
-
-		CONTAINER.style = "width:"+containerWidth+"px;height:"+containerHeight+"px;position:absolute;background-color:white;margin:"+ marginy + "px " + marginx +"px"
+		//var newStyle = "width:"+containerWidth+"px;height:"+containerHeight+"px;position:absolute;background-color:white;padding:0;margin: "+ marginy + "px " + marginx +"px";
+		//CONTAINER.style = newStyle
+		
+		//alert(newStyle);
 
 	/*alert("Screen Width: " + SCREEN_WIDTH + "\n" + 
 			"Screen Height: " + SCREEN_HEIGHT + "\n" + 
@@ -316,7 +324,7 @@ function initStage()
      //showAttributes(nodes['french_transcript'], '2');
      layer.add(tooltipText);
      //document.getElementById("container").addEventListener("mousewheel", zoom, false);
-     document.getElementById("loading").innerHTML = "";
+     //document.getElementById("loading").innerHTML = "";
      stage.add(layer);
      stage.add(attribLayer['1']);
      stage.add(attribLayer['2']);
