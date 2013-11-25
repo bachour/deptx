@@ -6,6 +6,14 @@
 <body style="overflow:hidden">
 {% endif %}
 
+<style>
+* {
+	border: none;
+	margin: 0;
+	padding: 0
+}
+</style>
+
 <div id="preload">
    <audio id="click" preload="auto">
     <source src="https://dl.dropboxusercontent.com/u/17451725/63532__florian-reinke__click2.wav" />  
@@ -13,9 +21,9 @@
  <p id="loading">Loading...</p>
  
 	{% if isCron %} 
-		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
+		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/cron_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;">
 	{% elif isMop %}
-		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;z-index: 1;">
+		<div  id="container"  style="background-image:url({{MEDIA_URL}}improve/mop_background.jpg);padding : 0px;width: 100%;height: 100%;background-color: white;visibility: visible;border: 1px solid black;">
 	{% endif %}
  	</div>
 	<div id="dialog1" title="Media Inspector">
