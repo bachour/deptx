@@ -41,7 +41,8 @@
 	</td>
 </tr>
 </table>
-<input type="submit" value="Convert" name="convert" />
+<input type="submit" value="Convert to Cr0n" name="convertCron" /><br/>
+<input type="submit" value="Convert to MoP" name="convertMop" />
 {% if valid == None %}
 {% else %}
 	{% if valid %}
@@ -52,7 +53,8 @@
 {% if valid == None %}
 {% else %}
 	{% if valid %}
-	<input type="submit" value="Save" name="save" /> 
+	<input type="submit" value="Save as Cr0n" name="saveCron" /><br/>
+	<input type="submit" value="Save as MoP" name="saveMop" /> 
 	{% endif %}
 	<br/><br/>
 	<strong>Ingame preview:</strong><br/>

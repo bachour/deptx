@@ -61,28 +61,45 @@ def view_randomize(request, id):
 @staff_member_required
 def create(request):
     if request.method == 'POST':
-        if 'convert' in request.POST or 'randomize' in request.POST:
+        if 'convertMop' in request.POST or 'convertCron' in request.POST or 'randomize' in request.POST:
+            if 'convertCron' in request.POST:
+                isCron = True
+                isMop = False
+            else:
+                isCron = False
+                isMop = True
             graphml_str = request.POST["graphml"]
             filename = request.POST["filename"]
             provn_str, output = convert_graphml_string(graphml_str)
             output_list = output.splitlines()
             output_list.sort()
- 
-            valid, validation_url = validate(provn_str)
+
+            valid = True
+            validation_url = "bla"
+            #valid, validation_url = validate(provn_str)
             if valid:
                 json_str = provn_str.get_provjson()
             else:
                 json_str={}
+            
+            print json_str
                 
             if 'randomize' in request.POST:
                 json_str = json.dumps(get_random_graph(json.loads(json_str)))
             
-            return render_to_response('provmanager/create.html', {"output_list":output_list, "filename":filename, "graphml_str": graphml_str, "json_str": json_str, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
+            return render_to_response('provmanager/create.html', {"output_list":output_list, "filename":filename, "graphml_str": graphml_str, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
 
-        elif 'save' in request.POST:
+        elif 'saveMop' in request.POST or 'saveCron' in request.POST:
+            if 'saveCron' in request.POST:
+                type = Provenance.TYPE_CRON
+            else:
+                type = Provenance.TYPE_MOP_TEMPLATE
             graphml_str = request.POST["graphml"]
             provn_str, output = convert_graphml_string(graphml_str)
-            valid, validation_url = validate(provn_str)
+            
+            valid = True
+            validation_url = "bla"
+            #valid, validation_url = validate(provn_str)
             if valid:
                 name = request.POST["filename"]
                 if name=="":
@@ -93,13 +110,9 @@ def create(request):
                 if inconsistencies_list:
                     attribute1 = json.dumps(inconsistencies_list[0])
                     attribute2 = json.dumps(inconsistencies_list[1])
-                    type = Provenance.TYPE_CRON
                 else:
                     attribute1 = None
                     attribute2 = None
-                    #TODO: is there a better way to check the type?
-                    #if there are no inconsistencies, then we assume it is a MOP_TEMPLATE provenance document
-                    type = Provenance.TYPE_MOP_TEMPLATE
   
                 bundle = ProvBundle.from_provjson(json.dumps(clean_graph))
                 
@@ -191,7 +204,7 @@ def prov_check(request):
         post_node2 = request.POST.get('node2', "")
         post_attribute1 = request.POST.get('attribute1', "")
         post_attribute2 = request.POST.get('attribute2', "")
-        is_empty = request.POST.get('is_empty', False)
+        is_empty = json.loads(request.POST.get('is_empty', False))
         is_test = json.loads(request.POST.get('is_test', False))
         
         player_attribute1 = makeAttributeString(post_node1, post_attribute1)
