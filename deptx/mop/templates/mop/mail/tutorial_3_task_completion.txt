@@ -18,5 +18,4 @@ Here's what you need to do:
 
 If you followed these steps correctly, you will receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
 
-Best of luck,
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}

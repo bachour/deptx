@@ -1,4 +1,4 @@
-You got it! You pointed out the inconsistency and now {{tutorialData.document.mopDocument.unit.serial}} clerks will be able to fix the error and make sure our archive contains only correct information.
+Well done! You pointed out the inconsistency and now {{tutorialData.document.mopDocument.unit.serial}} clerks will be able to fix the error and make sure our archive contains only correct information.
 
 But first you must submit this document back to {{tutorialData.document.mopDocument.unit.serial}}, otherwise your task is not considered complete. 
 
@@ -17,5 +17,4 @@ If you followed these steps correctly, you should receive an email from {{tutori
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
 
-Best of Luck,
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}

@@ -4,5 +4,4 @@ Go back to the Task page and click the Work button try again. Look for two attri
 
 When you do that, you will receive a new email with further information.
 
-Best of luck,
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}

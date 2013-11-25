@@ -1,6 +1,6 @@
 Looks like you've successfully acquired your first blank form! How exciting. Now let's use it. The form you now have allows you to request documents from {{tutorialData.requisition.unit.serial}} - the {{tutorialData.requisition.unit.name}}. {{tutorialData.requisition.unit.serial}} is the unit of MoP that is responsible for documents relating to transportation. This includes anything from driver's licenses to air travel documents.
 
-As a citizen helper you will be given tasks to perform. The more tasks you complete, the better your performance record. Your clearance level and the types of tasks you can access are determined by your performance record so make sure not to do anything to reduce that.
+As a Ministry of Provenance operative you will be given tasks to perform. The more tasks you complete, the better your performance record. Your clearance level and the types of tasks you can access are determined by your performance record so make sure not to do anything to reduce that.
 
 The Tasks page shows all tasks that are currently available for you to perform. You will see that {{tutorialData.requisition.unit.serial}} is currently offering a task: checking the provenance related to a {{tutorialData.document.mopDocument.name}}.
 
@@ -22,5 +22,4 @@ If you followed these steps correctly, you should receive an email from {{tutori
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
 
-Best of luck,
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}

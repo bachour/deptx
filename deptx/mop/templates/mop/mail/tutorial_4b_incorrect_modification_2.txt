@@ -8,5 +8,4 @@ Have you tried asking these questions?
 
 Find out if there's an inconsistency in these and save the document again.
 
-Best of luck,
-Sandy, {{tutorialData.mopco.serial}}
+{% include 'mop/mail/sandy_sig.txt' %}
