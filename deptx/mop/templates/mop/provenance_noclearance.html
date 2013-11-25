@@ -4,8 +4,8 @@
 	<h1>Clearance Error</h1>
 	<p>You do not have sufficient clearance to access document {{document.serial}}{{document.mopDocument.serial}}.</p>
 	<table>
-	<tr><th>Required Clearance</th><td>{{document.get_clearance_display}}{{document.mopDocument.get_clearance_display}}</td></tr>
-	<tr><th>Your Clearance</th><td>{{user.mop.get_clearance_display}}</td></tr>
+	<tr><th>Required Clearance</th><td><img class="minibadge" src="{{document.getBadgeUrl}}{{document.mopDocument.getBadgeUrl}}" /></td></tr>
+	<tr><th>Your Clearance</th><td><img class="minibadge" src="{{user.mop.mopTracker.getBadgeUrl}}" /></td></tr>
 	</table>
 {% endblock %}
 {% block help %}

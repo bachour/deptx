@@ -1,3 +1,7 @@
 {% load staticfiles %}
-{% include 'cron/header.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% include 'cron/analytics.html' %}
+</head>
 {% include 'provmanager/improve.html' with provenance=cronDocumentInstance.cronDocument.provenance case=cronDocumentInstance.cronDocument.case isCron=True inactive=cronDocumentInstance.solved %}
