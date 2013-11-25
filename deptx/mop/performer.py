@@ -24,7 +24,7 @@ def analyze_performance():
         #TODO add more statistics
         mop.mopTracker.totalTrust += mop.mopTracker.trust 
         mop.mopTracker.trust = 0
-        mop.mopTracker.allowance = trustInstance.allowance()
+        mop.mopTracker.credit = trustInstance.credit()
         mop.mopTracker.clearance = trustInstance.clearance
         mop.mopTracker.save()
         sendReport(trustInstance)

@@ -68,6 +68,10 @@ input.button {
 	cursor: pointer;
 }
 
+ul.table_of_contents li {
+	margin-bottom:10px;
+}
+
 a {
 	color:#000;	
 	text-decoration:none;
@@ -88,6 +92,12 @@ a:hover, input.button:hover {
 	border-color:#000;
 	background-color:#000;
 	color:#3ea255;
+}
+
+a.internal, a.internal:hover {
+	color:inherit;
+	background-color:inherit;
+	border:none;
 }
 
 div.logo {

@@ -5,14 +5,15 @@
 <table>
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
 <tr><th>Unit</th><td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DEMON{% endif %}</td></tr>
-<tr><th>Timestamp</th><td>{{ mail.createdAt }}</td></tr>
+<tr><th>Timestamp</th><td>{{ mail.createdAt|date:"Y-m-d H:i" }}</td></tr>
 {% if mail.bodyType %}<tr><th>Message</th><td>{% include 'mop/mail/mail.html' %}</td></tr>{% endif %}
-<tr><th>Performance Modifier</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>
+<tr><th>Trust</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>
 <tr><th>Form</th><td>{% if mail.requisitionInstance.blank %}{{ mail.requisitionInstance.blank.requisition.serial}}{% elif mail.requisitionBlank %}{{mail.requisitionBlank.requisition.serial}}{% else %} no form attached{% endif %}</td></tr>
 <tr><th>Document</th><td>{% if mail.mopDocumentInstance %}{{ mail.mopDocumentInstance.getDocumentSerial}}{% else %}no document attached{% endif %}</td></tr>
 </table>
 {% endblock %}
 {% block help %}
 <p>
+Here you can view the content of each mail. In case your Trust has been modified as a result of this mail, it is also shown here.
 </p>
 {% endblock %}

@@ -21,9 +21,9 @@
 		<table>
 		<tr>
 			<td class="nobox"><a class="button" href="{% url 'mop_index' %}"><input class="button" type="submit" value="control centre" /></a></td>
-			<td class="nobox">Citizen Employee: {{user.username}}<br/>Total Performance: {{user.mop.trustTracker.totalTrust}}<br/>Current Performance: {{user.mop.trustTracker.trust}}<br/>Allowance: {{user.mop.trustTracker.allowance}}<br/>Clearance: {{user.mop.trustTracker.get_clearance_display}}</td>
+			<td class="nobox">Citizen Helper: {{user.username}}<br/>Trust: {{user.mop.mopTracker.trust}}<br/>Credit: {{user.mop.mopTracker.credit}}</td>
 			<td class="nobox"><a class="button" href="{% url 'mop_logout' %}"><input class="button" type="submit" value="logout" /></a></td> 
-			<td class="nobox"><img id='mailimage' width='30px' src="{{user.mop.trustTracker.getMailUrl}}" style="visibility:{% if request.session.inbox_unread == 0 or request.session.has_checked_inbox %}hidden{% else %}visible{% endif %};vertical-align:middle"> <span id="checkmail" />{{ request.session.inbox_unread }} unread message(s)</span></td>
+			<td class="nobox"><img id='mailimage' width='30px' src="{{user.mop.mopTracker.getMailUrl}}" style="visibility:{% if request.session.inbox_unread == 0 or request.session.has_checked_inbox %}hidden{% else %}visible{% endif %};vertical-align:middle"> <span id="checkmail" />{{ request.session.inbox_unread }} unread message(s)</span></td>
 			<td class="nobox"><div id="spinner" style="-webkit-transform:scale(.35);"></div></td>
 		</tr>
 		</table>

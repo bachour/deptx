@@ -41,7 +41,7 @@ class MopTracker(models.Model):
     mop = models.OneToOneField(Mop, related_name="mopTracker")
     trust = models.IntegerField(default=0)
     totalTrust = models.IntegerField(default=0)
-    allowance = models.IntegerField(default=0)
+    credit = models.IntegerField(default=0)
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW)
     
     tutorial = models.IntegerField(choices=CHOICES_TUTORIAL, default=TUTORIAL_0_START)
@@ -78,11 +78,11 @@ class TrustInstance(models.Model):
     trust = models.IntegerField(default=0)
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW, help_text="will be overridden when saved")
     
-    def allowance(self):
-        allowance = int(self.trust * 0.1)
-        if allowance <0:
-            allowance = 0
-        return allowance
+    def credit(self):
+        credit = int(self.trust * 0.1)
+        if credit <0:
+            credit = 0
+        return credit
     
     def convertTrustIntoClearance(self):
         return convertTrustIntoClearance(self.trust)
