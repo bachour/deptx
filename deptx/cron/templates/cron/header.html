@@ -13,5 +13,5 @@
     <link rel="icon" href="{% static "cron/images/favicon.ico" %}" type="image/x-icon">
 	<link rel="shortcut icon" href="{% static "cron/images/favicon.ico" %}" type="image/x-icon" />
 
-	<script src="{{MEDIA_URL}}ANALYTICS/cr0n.js"></script>
+	{% include 'cron/analytics.html' %}
 </head>
