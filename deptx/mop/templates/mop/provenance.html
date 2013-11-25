@@ -1,3 +1,10 @@
 {% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
 {% include 'mop/analytics.html' %}
+</head>
+<body>
 {% include 'provmanager/improve.html' with provenance=document.provenance isMop=True %}
+</body>
+</html>
