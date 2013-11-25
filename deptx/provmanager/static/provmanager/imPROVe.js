@@ -324,7 +324,7 @@ function initStage()
      //showAttributes(nodes['french_transcript'], '2');
      layer.add(tooltipText);
      //document.getElementById("container").addEventListener("mousewheel", zoom, false);
-     //document.getElementById("loading").innerHTML = "";
+     document.getElementById("loading").innerHTML = "";
      stage.add(layer);
      stage.add(attribLayer['1']);
      stage.add(attribLayer['2']);
