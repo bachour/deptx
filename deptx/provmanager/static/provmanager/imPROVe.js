@@ -280,7 +280,7 @@ function initStage()
         width: STAGE_WIDTH/2,
         height: 30
 	});
-	var tooltipBox = new Kinetic.Rect({
+	tooltipBox = new Kinetic.Rect({
 	    x: 0.15*STAGE_WIDTH,
 	    y: 10,
 	    stroke: ATTRIBBOX_BORDER_COLOUR,
@@ -1346,10 +1346,16 @@ function createButtons()
 	        shadowOpacity: BUTTON_SHADOW_OPACITY,
 	        cornerRadius: BUTTON_CORNER_RADIUS
 	      });
+	
+	var buttonText;
+	if (INACTIVE)
+		buttonText = "Exit";
+	else
+		buttonText = "Submit!";
 	submitText = new Kinetic.Text({
 		    x: submitButton.getX(),
 	        y: submitButton.getY(),
-	        text: 'Submit!',
+	        text: buttonText,
 	        fontSize: BUTTON_FONT_SIZE,
 	        fontFamily: BUTTON_FONT_FAMILY,
 	        fontStyle: BUTTON_FONT_STYLE,
@@ -1370,7 +1376,7 @@ function createButtons()
 
 function submitPushed()
 {
-	if (taskCompleted)
+	if (taskCompleted || INACTIVE)
 	{
 		window.location.href = URL_CONTINUE;
 	}
