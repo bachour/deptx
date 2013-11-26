@@ -64,7 +64,6 @@ function ProvNode (type, id, ressource, attributes, showLabel, name)
 	
 	sources[id] = ressource;
 	nodes[id] = this;
-	
 }
 
 // graph edge
@@ -138,10 +137,7 @@ function initStage()
 	var containerWidth;
 	var containerHeight;
 	var marginx, marginy;
-	/*alert("Screen Width: " + SCREEN_WIDTH + "\n" + 
-			"Screen Height: " + SCREEN_HEIGHT + "\n" + 
-			"Stage Width: " + STAGE_WIDTH + "\n" + 
-			"Stage Height: " + STAGE_HEIGHT);*/ 
+
 	//setup stage size
 	if (STAGE_WIDTH == 2161)
 	{
@@ -175,19 +171,6 @@ function initStage()
         scale:scale // scale to the size of the container
       });
 
-	//SCREEN_WIDTH = CONTAINER.offsetWidth;
-	//SCREEN_HEIGHT = 9*SCREEN_WIDTH / 18;
-	
-		//var newStyle = "width:"+containerWidth+"px;height:"+containerHeight+"px;position:absolute;background-color:white;padding:0;margin: "+ marginy + "px " + marginx +"px";
-		//CONTAINER.style = newStyle
-		
-		//alert(newStyle);
-
-	/*alert("Screen Width: " + SCREEN_WIDTH + "\n" + 
-			"Screen Height: " + SCREEN_HEIGHT + "\n" + 
-			"Stage Width: " + STAGE_WIDTH + "\n" + 
-			"Stage Height: " + STAGE_HEIGHT); 
-*/
 	// create Kinetic Images for all objects and put them in nodes
 	for (var name in sources)
 		{
@@ -240,11 +223,6 @@ function initStage()
 		   var connector = new Kinetic.Line(
             {
             	//set starting point for connector to by center points of linked images
-  /*          	points: [edge.from.image.getX() + edge.from.image.getWidth()/2,
-                         edge.from.image.getY() + edge.from.image.getHeight()/2,
-                         edge.to.image.getX() + edge.to.image.getWidth()/2,
-                         edge.to.image.getY() + edge.to.image.getHeight()/2],
-                         */
             	points: points,
             	stroke: colour,
             	strokeWidth: EDGE_WIDTH,
@@ -302,28 +280,30 @@ function initStage()
         width: STAGE_WIDTH/2,
         height: 30
 	});
+	var tooltipBox = new Kinetic.Rect({
+	    x: 0.15*STAGE_WIDTH,
+	    y: 10,
+	    stroke: ATTRIBBOX_BORDER_COLOUR,
+	    strokeWidth: BUTTON_BORDER_WIDTH,
+	    fill: ATTRIBBOX_FILL,
+	    width: STAGE_WIDTH/2,
+	    height: 33,
+	    shadowEnabled: BUTTON_SHADOW,
+	    shadowColor: BUTTON_SHADOW_COLOUR,
+	    shadowBlur: BUTTON_SHADOW_BLUR,
+	    shadowOffset: BUTTON_SHADOW_OFFSET/2,
+	    shadowOpacity: BUTTON_SHADOW_OPACITY,
+	    cornerRadius: BUTTON_CORNER_RADIUS
+	});
 		
 	setupMouseInteractions();
       
-        var zoom = function(e) {
-      	   zoomAmount = e.wheelDeltaY*0.0001;
-      	  if (currentZoom + zoomAmount > MAX_ZOOM || currentZoom + zoomAmount < MIN_ZOOM)
-      		  return;
-      	  if ((currentZoom < MAX_ZOOM && zoomAmount > 0) || ((currentZoom > MIN_ZOOM && zoomAmount < 0)))
-      		  {
-		      	  currentZoom += zoomAmount;
-		      	  layer.setScale(layer.getScale().x+zoomAmount)
-		      	  layer.draw();
-      		  }
-      	}
-
      getSaveState();
      setupAttribPanes();
-       
-     //showAttributes(nodes['helen_blank'], '1');
-     //showAttributes(nodes['french_transcript'], '2');
+   
+     layer.add(tooltipBox);
      layer.add(tooltipText);
-     //document.getElementById("container").addEventListener("mousewheel", zoom, false);
+   
      document.getElementById("loading").innerHTML = "";
      stage.add(layer);
      stage.add(attribLayer['1']);
@@ -357,7 +337,7 @@ function setupMouseInteractions()
 	        else if (shape.getClassName() == 'Line')
 	        {
 		    	tooltipText.setText(getName(shape));
-	        	toggleHighlightLine(shape, true);//alert("Line!");
+	        	toggleHighlightLine(shape, true);//
 	        }
 	        
 	        layer.draw();
@@ -371,7 +351,6 @@ function setupMouseInteractions()
 	          document.body.style.cursor = 'default';
 	          
 	          toggleHighlightShape(shape,false);
-	          //shape.setShadowColor('black');
         }
         else if (shape && (shape == submitButton || shape == submitText))
     	{
@@ -416,6 +395,7 @@ function setupMouseInteractions()
           if (shape && shape.isDraggable())
           {
 	          moveNodeToTop(node);
+	          tooltipBox.moveToTop();
 	          tooltipText.moveToTop();
           	  layer.draw();
           
