@@ -316,13 +316,14 @@ class GraphMLProvConverter(object):
 
 
 def validate(prov_document):
-    provjson = prov_document.get_provjson()
+    provn = prov_document.get_provn()
 
-    headers = {'Content-Type': 'application/json',
+    headers = {'Content-Type': 'text/provenance-notation',
+               'Content-Length': len(provn),
                'Accept': 'application/json'}
 
     try:
-        req = urllib2.Request(URL_VALIDATOR_SERVICE, provjson, headers)
+        req = urllib2.Request(URL_VALIDATOR_SERVICE, provn, headers)
         response = urllib2.urlopen(req)
 
         graph_url = response.geturl()
