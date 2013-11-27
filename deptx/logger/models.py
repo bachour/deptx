@@ -41,11 +41,13 @@ class ProvLog(models.Model):
     ACTION_MOVE = 0
     ACTION_CLICK = 1
     ACTION_SUBMIT = 2
+    ACTION_MEDIA = 3
     
     CHOICES_ACTION = (
         (ACTION_MOVE, "moved node"),
         (ACTION_CLICK, "clicked node/attribute"),
         (ACTION_SUBMIT, "pressed submit"),
+        (ACTION_MEDIA, "opened media"),
     )
     
     createdAt = CreationDateTimeField()

@@ -312,6 +312,7 @@ def prov_log_action(request):
         x = request.POST.get('x', None)
         y = request.POST.get('y', None)
         attribute = request.POST.get('attribute', None)
+        position = request.POST.get('position', None)
         if attribute == "none":
             attribute = None
         try:
@@ -334,19 +335,22 @@ def prov_log_action(request):
             error = True
         
         if documentInstance is not None:
-        
+            try:
+                stored_data = json.loads(documentInstance.provenanceState)
+            except:
+                stored_data = []
+            
+            updated = False
             if action == 'move':
-                try:
-                    stored_data = json.loads(documentInstance.provenanceState)
-                except:
-                    stored_data = []
-                updated = False
                 for data in stored_data:
-                    if data['node'] == node:
-                        data['x'] = x
-                        data['y'] = y
-                        updated = True
-                        break
+                    try:
+                        if data['node'] == node:
+                            data['x'] = x
+                            data['y'] = y
+                            updated = True
+                            break
+                    except:
+                        pass
                 if not updated:
                     stored_data.append({"node":node, "x":x, "y":y})
                 documentInstance.provenanceState = json.dumps(stored_data)
@@ -357,10 +361,43 @@ def prov_log_action(request):
                 
             
             elif action == 'click':
-                #TODO log clicking
-                message = 'click registered but not yet stored'
-                error = False
-                logAction = ProvLog.ACTION_CLICK
+                if attribute == 'mop:URL':
+                    message = 'media opened registered'
+                    error = False
+                    logAction = ProvLog.ACTION_MEDIA
+                else:    
+                    for data in stored_data:
+                        try:
+                            if data['position'] == position:
+                                if state and attribute is not None:
+                                    data['selected_node'] = node
+                                    data['selected_attribute'] = attribute
+                                    updated = True
+                                    break
+                                elif state and attribute is None:
+                                    data['selected_node'] = node
+                                    data['selected_attribute'] = None
+                                    updated = True
+                                    break
+                                elif not state and attribute is not None:
+                                    data['selected_node'] = node
+                                    data['selected_attribute'] = None
+                                    updated = True
+                                    break
+                                elif not state and attribute is None:
+                                    data['selected_node'] = None
+                                    data['selected_attribute'] = None
+                                    updated = True
+                                    break
+                        except:
+                            pass
+                    if not updated:
+                        stored_data.append({"position":position, "selected_node":node, "selected_attribute":attribute})
+                    documentInstance.provenanceState = json.dumps(stored_data)
+                    documentInstance.save()
+                    message = 'click registered'
+                    error = False
+                    logAction = ProvLog.ACTION_CLICK
             logging.log_prov(action=logAction, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=node, attribute1=attribute, x=x, y=y, selected=state)
 
         json_data = json.dumps({"message":message, "error":error})            
