@@ -55,10 +55,11 @@ def get_random_graph(graph):
                         identifier_super_main_att[id] = identifiers[id][-1]
                         
     #make duplicate_count a random number between 0 and duplicate_count
-    duplicate_count = duplicate_count - len(identifier_super_main_att)
-    duplicate_count = duplicate_count - random.randint(1,duplicate_count)
+    duplicate_count = duplicate_count - len(identifier_super_main_att) #ignore supermain attributes. they can't be inconsistencies
+    duplicate_count = duplicate_count - random.randint(0,duplicate_count) # we want a random number between 1 and duplicate_count + 1 for no inconsistency case  
                      
-    #choose duplicate_countTH duplicated identifier, and add ?'s to it's value           
+    #choose duplicate_countTH duplicated identifier, and add ?'s to it's value 
+    #since duplicate count can go 1 above the last possible value, then           
     for i in identifiers:
         #first deal with super main attributes
         if identifier_super_main_att.has_key(i):

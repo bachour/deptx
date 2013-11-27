@@ -1900,15 +1900,15 @@ function updateState(state)
 	{
 		if (state[n].position) // this is a selection state 
 		{
-			if (state[n].node != "none")
+			if (state[n].selected_node)
 			{
-				selectedNodes[state[n].position] = nodes[state[n].node];
-				showAttributes(nodes[state[n].node],nodes[state[n].position);
-				setImageHighlight(nodes[state[n].node].image, true, false);
+				selectedNodes[state[n].position] = nodes[state[n].selected_node];
+				showAttributes(nodes[state[n].selected_node],nodes[state[n].position);
+				setImageHighlight(nodes[state[n].selected_node].image, true, false);
 				
-				if (state[n].attribute != "none")
+				if (state[n].selected_attribute)
 				{
-					toggleAttributeSelection(nodes[state[n].node].attribValues[state[n].attribute]);
+					toggleAttributeSelection(nodes[state[n].selected_node].attribValues[state[n].selected_attribute]);
 				}
 			}
 		}
