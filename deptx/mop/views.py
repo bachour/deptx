@@ -152,7 +152,7 @@ def documents_pool(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(status=MopDocumentInstance.STATUS_ACTIVE)
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE)
     
     log_mop(request.user.mop, 'view documents')
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
@@ -160,7 +160,7 @@ def documents(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents_archive(request):
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=True).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
     
     log_mop(request.user.mop, 'view documents archive')
     return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
@@ -193,10 +193,10 @@ def provenance(request, serial):
     if documentInstance is None:
         return None
     elif clearance <= request.user.mop.mopTracker.clearance:
-        if documentInstance.used and not documentInstance.status == MopDocumentInstance.STATUS_ACTIVE and not documentInstance.status == MopDocumentInstance.STATUS_HACKED:
-            inactive = True
-        else:
+        if documentInstance.status == MopDocumentInstance.STATUS_ACTIVE:
             inactive = False
+        else:
+            inactive = True
         return render(request, 'mop/provenance.html', {'document': document, "inactive":inactive})
     else:
         return render(request, 'mop/provenance_noclearance.html', {'document': document})
@@ -346,7 +346,7 @@ def mail_compose(request, fullSerial=None):
                     mail.requisitionInstance.used = True
                     mail.requisitionInstance.save()
                 if not mail.mopDocumentInstance == None:
-                    mail.mopDocumentInstance.used = True
+                    mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
             
             
@@ -357,7 +357,7 @@ def mail_compose(request, fullSerial=None):
             #TODO code duplication between here and the else below
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render(request, 'mop/mail_compose.html', {'form' : form,})
         
@@ -371,7 +371,7 @@ def mail_compose(request, fullSerial=None):
                     break
         form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = requisitionInstance_list
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form,})
 
@@ -404,7 +404,7 @@ def mail_edit(request, mail_id):
                     mail.requisitionInstance.used = True
                     mail.requisitionInstance.save()
                 if not mail.mopDocumentInstance == None:
-                    mail.mopDocumentInstance.used = True
+                    mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
             
             #TODO remove for real game
@@ -413,7 +413,7 @@ def mail_edit(request, mail_id):
         else:
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
         
@@ -422,7 +422,7 @@ def mail_edit(request, mail_id):
         #TODO same with documents at all occurences
         form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 

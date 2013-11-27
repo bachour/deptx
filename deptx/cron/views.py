@@ -18,7 +18,7 @@ from players.forms import MopForm
 
 from assets.models import Case, Mission, CronDocument
 from cron.models import CaseInstance, CronDocumentInstance, MissionInstance
-from mop.models import Mail
+from mop.models import Mail, MopDocumentInstance
 
 from deptx.settings import MEDIA_URL, STATIC_URL
 
@@ -340,7 +340,7 @@ def accessMopServer(cron, cronDocument, mop_list):
                     if mail.mopDocumentInstance.cronDocument == cronDocument:
                         cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
                         #Document gets removed
-                        mail.mopDocumentInstance.used = True
+                        mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_HACKED
                         mail.mopDocumentInstance.save()
                         #Mail gets deleted
                         mail.state = Mail.STATE_DELETED
