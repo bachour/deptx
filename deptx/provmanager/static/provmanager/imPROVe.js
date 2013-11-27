@@ -1799,7 +1799,7 @@ function createAndAddMediaJQueryDialog(url, id)
 		}
 	else // if image
 	{
-		//url = URL_MEDIA + url;
+		url = URL_MEDIA + url;
 		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image">';
 	}
 	var dialog = document.getElementById(dialogID);
