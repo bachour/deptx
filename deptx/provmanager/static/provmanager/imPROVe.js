@@ -848,7 +848,7 @@ function loadJSONProv (json)
 		{
 			role = json[i][j]["prov:role"];
 			if (role)
-				label = label + " (role)";
+				label = role;
 			attribs = {"name":label};
 			for (var k in json[i][j])
 				if (k != "prov:role" && k != from && k != to)
