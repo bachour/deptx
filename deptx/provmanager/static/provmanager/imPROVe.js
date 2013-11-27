@@ -846,12 +846,12 @@ function loadJSONProv (json)
 		}
 		for (var j in json[i])
 		{
-			role = json[i][j]["prov:role"];
+			role = json[i][j]["mop:role"];
 			if (role)
 				label = role;
 			attribs = {"name":label};
 			for (var k in json[i][j])
-				if (k != "prov:role" && k != from && k != to)
+				if (k != "mop:role" && k != from && k != to)
 					attribs[k]=json[i][j][k];
 			link = new ProvLink(j, nodes[json[i][j][from]], nodes[json[i][j][to]], i, role, attribs);
 		}
