@@ -361,7 +361,7 @@ def prov_log_action(request):
                 
             
             elif action == 'click':
-                if attribute == 'mop:URL':
+                if attribute == 'mop:url':
                     message = 'media opened registered'
                     error = False
                     logAction = ProvLog.ACTION_MEDIA
