@@ -1158,7 +1158,7 @@ function toggleNodeSelection(shape)
 		selectedAttributes['1'] = null;
 		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
-	    logClick(clickedNode.id, "none", false);
+	    logClick(clickedNode.id, "none", false, '1');
 	    document.getElementById("dialog1").innerHTML = "";
 	    $("#dialog1").dialog("close");
 		return;
@@ -1170,7 +1170,7 @@ function toggleNodeSelection(shape)
 		selectedAttributes['2'] = null;
 	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
-	    logClick(clickedNode.id, "none", false);
+	    logClick(clickedNode.id, "none", false, '2');
 	    document.getElementById("dialog2").innerHTML = "";
 	    $("#dialog2").dialog("close");
 		return;
@@ -1188,14 +1188,14 @@ function toggleNodeSelection(shape)
 		selectedNodes['1'] = clickedNode;
 		showAttributes(clickedNode,'1');
 		setImageHighlight(clickedNode.image, true, false);
-		logClick(clickedNode.id, "none", true);
+		logClick(clickedNode.id, "none", true,'1');
 	}
 	else
 	{
 		selectedNodes['2'] = clickedNode;
 		showAttributes(clickedNode,'2');
 		setImageHighlight(clickedNode.image, true, false);
-		logClick(clickedNode.id, "none", true);
+		logClick(clickedNode.id, "none", true,'2');
 	}
 	clickSound.play();
 }
@@ -1261,7 +1261,7 @@ function toggleAttributeSelection(shape)
 				setTextHighlight(shape, false, false);
 			}
 			clickSound.play();
-			logClick(selectedNodes[i].id, selectedAttributes[i], false);
+			logClick(selectedNodes[i].id, selectedAttributes[i], false, i);
 			selectedAttributes[i] = null;
 			return;
 		}
@@ -1275,7 +1275,7 @@ function toggleAttributeSelection(shape)
 					if (selectedNodes[i].attribURL && selectedNodes[i].attribURL == shape)
 						{
 							showMedia(selectedNodes[i].attributes["mop:url"],i)
-							logClick(selectedNodes[i].id, j, true);
+							logClick(selectedNodes[i].id, j, true, i);
 							return;
 						}
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
@@ -1296,7 +1296,7 @@ function toggleAttributeSelection(shape)
 					{
 						setTextHighlight(shape, true, false);
 					}
-					logClick(selectedNodes[i].id, j, true);
+					logClick(selectedNodes[i].id, j, true,i);
 					clickSound.play();
 					return;
 				}
@@ -1848,7 +1848,7 @@ function logResponse(response)
 }
 
 // Send an ajax request to log the click of a user on a node/attribute in the graph
-function logClick(node, attribute, newState)
+function logClick(node, attribute, newState, position)
 {
 	if (IS_TEST==false)
 	{
@@ -1856,7 +1856,8 @@ function logClick(node, attribute, newState)
 					  "&serial=" + PROV_SERIAL + 
 					  "&node=" + node + 
 					  "&attribute=" + attribute + 
-					  "&state=" + newState;
+					  "&state=" + newState + 
+					  "&position=" + position;
 		
 		ajaxCall(URL_LOG, message, logResponse);
 	}
@@ -1894,23 +1895,42 @@ function getSaveState()
 // load node positions from state json
 function updateState(state)
 {
+	var selected = {};
 	for (var n in state)
 	{
-		nodes[state[n].node].image.setX(parseInt(state[n].x));
-		nodes[state[n].node].image.setY(parseInt(state[n].y));
-		if (nodes[state[n].node].showLabel)
-			{
-				nodes[state[n].node].label.setX(nodes[state[n].node].image.getX());
-				nodes[state[n].node].label.setY(nodes[state[n].node].image.getY() + (nodes[state[n].node].image.getHeight()-nodes[state[n].node].label.getHeight())/2);
-			}
-		
-    	for (var l in nodes[state[n].node].edges)
+		if (state[n].position) // this is a selection state 
 		{
-			var edge = nodes[state[n].node].edges[l];
-			var points = getLinePoints(edge.from.image, edge.to.image);
-        	edge.line.setPoints(points);
+			if (state[n].node != "none")
+			{
+				selectedNodes[state[n].position] = nodes[state[n].node];
+				showAttributes(nodes[state[n].node],nodes[state[n].position);
+				setImageHighlight(nodes[state[n].node].image, true, false);
+				
+				if (state[n].attribute != "none")
+				{
+					toggleAttributeSelection(nodes[state[n].node].attribValues[state[n].attribute]);
+				}
+			}
+		}
+		else // this is a position state
+		{
+			nodes[state[n].node].image.setX(parseInt(state[n].x));
+			nodes[state[n].node].image.setY(parseInt(state[n].y));
+			if (nodes[state[n].node].showLabel)
+				{
+					nodes[state[n].node].label.setX(nodes[state[n].node].image.getX());
+					nodes[state[n].node].label.setY(nodes[state[n].node].image.getY() + (nodes[state[n].node].image.getHeight()-nodes[state[n].node].label.getHeight())/2);
+				}
+			
+	    	for (var l in nodes[state[n].node].edges)
+			{
+				var edge = nodes[state[n].node].edges[l];
+				var points = getLinePoints(edge.from.image, edge.to.image);
+	        	edge.line.setPoints(points);
+			}
 		}
 	}
+	
 	redraw();
 }
 
