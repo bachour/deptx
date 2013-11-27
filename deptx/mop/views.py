@@ -100,7 +100,7 @@ def logout_view(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
-    unit_list = Unit.objects.all().order_by('-type')
+    unit_list = Unit.objects.all().order_by('serial')
     requisition_list = Requisition.objects.all().order_by('category')
     log_mop(request.user.mop, 'read rules')
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
