@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 
 from provmanager.wrapper import Api
-from provmanager.models import Provenance, ProvenanceLog
+from provmanager.models import Provenance
 from prov.model import ProvBundle, Namespace
 
 from deptx.secrets import api_username, api_key
@@ -24,6 +24,9 @@ import json
 
 from graphml2prov import convert_graphml_string, validate
 import prov.model
+from logger.models import ProvLog
+from logger import logging
+
 
 api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
 
@@ -251,6 +254,8 @@ def prov_check(request):
                 message = "Test feedback: No, this is not correct."
             close_prov = False
         else:
+            cronDocumentInstance = None
+            mopDocumentInstance = None
             if provenance.type == Provenance.TYPE_CRON:
                 #TODO check properly for cron-user and if Instance exists
                 cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
@@ -282,6 +287,7 @@ def prov_check(request):
                 mopDocumentInstance.save()
                 tutorial.checkProvenance(mopDocumentInstance.mop.mopTracker, mopDocumentInstance.correct)
                 close_prov = True
+            logging.log_prov(action=ProvLog.ACTION_SUBMIT, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=post_node1, node2=post_node2, attribute1=post_attribute1, attribute2=post_attribute2, empty=is_empty, correct=correct)
 
         
         json_data = json.dumps({"close_prov":close_prov, "message":message, "stars":stars})
@@ -306,14 +312,23 @@ def prov_log_action(request):
         x = request.POST.get('x', None)
         y = request.POST.get('y', None)
         attribute = request.POST.get('attribute', None)
-        state = request.POST.get('state', None)
+        if attribute == "none":
+            attribute = None
+        try:
+            state = json.loads(request.POST.get('state', None))
+        except:
+            state = None
         
         #TODO log everything, including clicking
+        cronDocumentInstance = None
+        mopDocumentInstance = None
         provenance = Provenance.objects.get(serial=serial)
         if provenance.type == Provenance.TYPE_CRON:
             documentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
+            cronDocumentInstance = documentInstance
         elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
             documentInstance = MopDocumentInstance.objects.get(randomizedDocument=provenance.randomizedDocument, mop=request.user.mop)
+            mopDocumentInstance = documentInstance
         else:
             message = "no document instance found"
             error = True
@@ -328,7 +343,6 @@ def prov_log_action(request):
                 updated = False
                 for data in stored_data:
                     if data['node'] == node:
-                        print 'equal'
                         data['x'] = x
                         data['y'] = y
                         updated = True
@@ -339,11 +353,15 @@ def prov_log_action(request):
                 documentInstance.save()
                 message = 'position updated'
                 error = False
+                logAction = ProvLog.ACTION_MOVE
+                
             
             elif action == 'click':
                 #TODO log clicking
                 message = 'click registered but not yet stored'
                 error = False
+                logAction = ProvLog.ACTION_CLICK
+            logging.log_prov(action=logAction, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=node, attribute1=attribute, x=x, y=y, selected=state)
 
         json_data = json.dumps({"message":message, "error":error})            
         return HttpResponse("json_data", mimetype="application/json") 

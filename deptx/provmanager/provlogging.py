@@ -1,5 +1,5 @@
 from prov.model import ProvBundle, Namespace, Identifier
-from .models import ProvenanceLog
+#from .models import ProvenanceLog
 from .views import API
 from deptx.helpers import generateUUID
 
@@ -28,12 +28,13 @@ URI = Identifier
 
 
 def getStoreId(cron):
-    try:
-        provLog = ProvenanceLog.objects.get(cron=cron)
-    except ProvenanceLog.DoesNotExist:
-        provLog = None
-
-    return provLog.store_id
+    return 0
+#     try:
+#         provLog = ProvenanceLog.objects.get(cron=cron)
+#     except ProvenanceLog.DoesNotExist:
+#         provLog = None
+# 
+#     return provLog.store_id
 
 
 def addBundle(cron, bundle, bundle_id):

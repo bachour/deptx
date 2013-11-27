@@ -1,7 +1,6 @@
 from django.contrib import admin
-from provmanager.models import Provenance, ProvenanceLog
+from provmanager.models import Provenance
 
 admin.site.register(Provenance)
-admin.site.register(ProvenanceLog)
 
 

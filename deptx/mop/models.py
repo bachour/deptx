@@ -296,6 +296,7 @@ class Mail(models.Model):
     CHOICES_SUBJECT = CHOICES_SUBJECT_SENDING + CHOICES_SUBJECT_RECEIVING
     
     BODY_UNCAUGHT_CASE = -1
+    #do not set a value to zero!!! bad for checking if value is set (e.g. in templates)
     BODY_ERROR_NO_SUBJECT = 1
     
     BODY_ERROR_MISSING_FORM = 10
