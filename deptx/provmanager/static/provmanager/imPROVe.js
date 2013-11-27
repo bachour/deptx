@@ -1807,21 +1807,24 @@ function createAndAddMediaJQueryDialog(url, id)
 
 	$(function() {
         $( "#"+dialogID ).dialog({
-        		  width: SCREEN_WIDTH*0.5,
+        		  width: SCREEN_WIDTH*0.6,
         		  height: SCREEN_HEIGHT*0.8,
         		  show: "fade",
         		  containment: "parent",
+        		  close: function( event, ui ) {
+        			  logClick(selectedNodes[id].id,"mop:URL",false,id);
+        		  },
         		  buttons: [
         		            {
         		              text: "Close",
         		              click: function() {
         		            		document.getElementById(dialogID).innerHTML = "";
         		                $( this ).dialog( "close" );
+        		                
         		              }
         		            }
         		          ]
         		        });
-      
       });
 	
 }
