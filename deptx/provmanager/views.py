@@ -53,12 +53,17 @@ def view_randomize(request, id):
     
     random_graph = get_random_graph(json.loads(json_str))
     inconsistencies_list, clean_graph = get_inconsistencies(random_graph)
-
-    request.session['attribute1'] = json.dumps(inconsistencies_list[0])
-    request.session['attribute2'] = json.dumps(inconsistencies_list[1])
+    
+    if inconsistencies_list:
+        request.session['attribute1'] = json.dumps(inconsistencies_list[0])
+        request.session['attribute2'] = json.dumps(inconsistencies_list[1])
+    else:
+        request.session['attribute1'] = None
+        request.session['attribute2'] = None
     request.session['prov_id'] = provenance.id
     
-            
+    print request.session['attribute1']
+    
     return render(request, 'provmanager/view_randomize.html', {'provenance_name':provenance.name, 'provenance_store_id':provenance.store_id, 'json_str':json.dumps(clean_graph) })
 
 @staff_member_required
@@ -135,8 +140,12 @@ def randomize_document(mopDocument):
     random_graph = get_random_graph(json_graph)
     inconsistencies_list, clean_graph = get_inconsistencies(random_graph)
 
-    attribute1 = json.dumps(inconsistencies_list[0])
-    attribute2 = json.dumps(inconsistencies_list[1])
+    try:
+        attribute1 = json.dumps(inconsistencies_list[0])
+        attribute2 = json.dumps(inconsistencies_list[1])
+    except:
+        attribute1 = None
+        attribute2 = None
 
     bundle = ProvBundle.from_provjson(json.dumps(clean_graph))
     name = "%s (randomized)" % (mopDocument.provenance.name)
@@ -224,15 +233,20 @@ def prov_check(request):
         #if we have no proper serial in the post, then we are probably looking at a randomized MOP_TEMPLATE
         except Provenance.DoesNotExist:
             provenance = Provenance.objects.get(id=request.session['prov_id'])
-            attribute1_json = json.loads(request.session['attribute1'])
-            attribute2_json = json.loads(request.session['attribute2'])
+            try:
+                attribute1_json = json.loads(request.session['attribute1'])
+                attribute2_json = json.loads(request.session['attribute2'])
+            except:
+                attribute1_json = None
+                attribute2_json = None
+                
             print 'got stuff from the session cookie'
         
         stored_attribute1_list = []
         stored_attribute2_list = []
         
-        if is_empty:
-            if provenance.attribute1 is None and provenance.attribute2 is None:
+        if provenance.attribute1 is None and provenance.attribute2 is None:
+            if is_empty:
                 correct = True
         
         else:
