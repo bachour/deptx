@@ -1020,7 +1020,7 @@ function showAttributes(node, position)
 				  y: node.attribImage.getY() + node.attribImage.getHeight() - 2,
 				  width: 50,
 				  height: 50,
-				  image: staticImages[getType(node.attributes['mop:URL'])],
+				  image: staticImages[getType(node.attributes['mop:url'])],
 				  shadowEnabled: false,
 				  strokeEnabled: false  
 			  });
@@ -1062,7 +1062,7 @@ function showAttributes(node, position)
 		  node.attribValues['prov:label'] = node.attribName;
 		  node.attribValues['mop:image'] = node.attribImage;
 		  if (node.attribURL)
-			  node.attribValues['mop:URL'] = node.attribURL;
+			  node.attribValues['mop:url'] = node.attribURL;
 	 }
 	 else
 	 {
@@ -1812,7 +1812,7 @@ function createAndAddMediaJQueryDialog(url, id)
         		  show: "fade",
         		  containment: "parent",
         		  close: function( event, ui ) {
-        			  logClick(selectedNodes[id].id,"mop:URL",false,id);
+        			  logClick(selectedNodes[id].id,"mop:url",false,id);
         		  },
         		  buttons: [
         		            {
