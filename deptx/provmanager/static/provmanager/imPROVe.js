@@ -1020,7 +1020,7 @@ function showAttributes(node, position)
 				  y: node.attribImage.getY() + node.attribImage.getHeight() - 2,
 				  width: 50,
 				  height: 50,
-				  image: staticImages[getType(node.attributes['mop:URL'])],
+				  image: staticImages[getType(node.attributes['mop:url'])],
 				  shadowEnabled: false,
 				  strokeEnabled: false  
 			  });
@@ -1062,7 +1062,7 @@ function showAttributes(node, position)
 		  node.attribValues['prov:label'] = node.attribName;
 		  node.attribValues['mop:image'] = node.attribImage;
 		  if (node.attribURL)
-			  node.attribValues['mop:URL'] = node.attribURL;
+			  node.attribValues['mop:url'] = node.attribURL;
 	 }
 	 else
 	 {
@@ -1807,21 +1807,24 @@ function createAndAddMediaJQueryDialog(url, id)
 
 	$(function() {
         $( "#"+dialogID ).dialog({
-        		  width: SCREEN_WIDTH*0.5,
+        		  width: SCREEN_WIDTH*0.6,
         		  height: SCREEN_HEIGHT*0.8,
         		  show: "fade",
         		  containment: "parent",
+        		  close: function( event, ui ) {
+        			  logClick(selectedNodes[id].id,"mop:url",false,id);
+        		  },
         		  buttons: [
         		            {
         		              text: "Close",
         		              click: function() {
         		            		document.getElementById(dialogID).innerHTML = "";
         		                $( this ).dialog( "close" );
+        		                
         		              }
         		            }
         		          ]
         		        });
-      
       });
 	
 }
