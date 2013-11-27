@@ -166,9 +166,31 @@ def convertTrustIntoClearance(trust):
         return Clearance.CLEARANCE_ELEVATED
     elif trust <=1000:
         return Clearance.CLEARANCE_HIGH
-    elif trust <=10000:
+    elif trust <=100000:
         return Clearance.CLEARANCE_SEVERE
     else:
         return Clearance.CLEARANCE_MAX
     
+def getAdjustedClearance(clearance, gainedTrust):
+    proposedClearance = convertTrustIntoClearance(gainedTrust)
+    if proposedClearance >= clearance:
+        return proposedClearance
+    else:
+        if clearance >= Clearance.CLEARANCE_MAX:
+            return Clearance.CLEARANCE_SEVERE
+        elif clearance == Clearance.CLEARANCE_SEVERE:
+            return Clearance.CLEARANCE_HIGH
+        elif clearance == Clearance.CLEARANCE_HIGH:
+            return Clearance.CLEARANCE_ELEVATED
+        elif clearance == Clearance.CLEARANCE_ELEVATED:
+            return Clearance.CLEARANCE_GUARDED
+        elif clearance == Clearance.CLEARANCE_GUARDED:
+            return Clearance.CLEARANCE_LOW
+        else:
+            return Clearance.CLEARANCE_LOW
     
+    
+    
+    
+    
+        

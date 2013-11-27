@@ -1,6 +1,6 @@
 
 from players.models import Mop
-from mop.clearance import Clearance
+from mop.clearance import Clearance, getAdjustedClearance
 from mop.models import MopDocumentInstance, TrustInstance, Mail
 from mop.mailserver import sendReport
 
@@ -23,9 +23,9 @@ def analyze_performance():
         trustInstance = TrustInstance.objects.create(mop=mop, trust=mop.mopTracker.trust)
         #TODO add more statistics
         mop.mopTracker.totalTrust += mop.mopTracker.trust 
+        mop.mopTracker.clearance = getAdjustedClearance(mop.mopTracker.clearance, mop.mopTracker.trust)
         mop.mopTracker.trust = 0
         mop.mopTracker.credit = trustInstance.credit()
-        mop.mopTracker.clearance = trustInstance.clearance
         mop.mopTracker.save()
         sendReport(trustInstance)
         

@@ -1,7 +1,5 @@
-Your performance report:
+In the last performance period you gained {{data.trust}} Trust.
 
-In the last period you gained {{data.trust}} Trust.
+Your clearance level for the new period has been adjusted accordingly (effective immediately).
 
-For the current period your clearance level has therefore been set to {{data.get_clearance_display}} (effective immediately).
-
-For more detail please visit the perfomance page of the intranet.
+For more detail please visit the performance page of the intranet and the Guidebook.
