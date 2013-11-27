@@ -1,4 +1,5 @@
 from django.contrib import admin
-from logger.models import Log
+from logger.models import ProvLog, ActionLog
 
-admin.site.register(Log)
+admin.site.register(ProvLog)
+admin.site.register(ActionLog)

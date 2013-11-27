@@ -1,5 +1,6 @@
 from assets.models import Unit
-from mop.models import Mail, MopTracker, RandomizedDocument
+from mop.models import Mail, MopTracker, RandomizedDocument, Mop
+from cron import mailer
 
 def getUnitComm():
     return Unit.objects.get(type=Unit.TYPE_COMMUNICATIVE)
@@ -29,6 +30,21 @@ def hide(mopTracker, created):
             mopTracker.tutorial = MopTracker.TUTORIAL_6_DONE
             mopTracker.save()
             hide = []
+            
+            #check if cron hq needs to be notified
+            mop_list = Mop.objects.filter(cron=mopTracker.mop.cron)
+            oneMopHasPassedTutorial = False
+            for mop in mop_list:
+                try:
+                    if not mop.mopTracker.isTutorial():
+                        oneMopHasPassedTutorial = True
+                        break
+                except:
+                    pass
+            if oneMopHasPassedTutorial:
+                mailer.mopTutorialDone(mopTracker.mop.cron)
+                
+                
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION).filter(read=True):
             hide['guidebook'] = False
             hide['documentsPool'] = True

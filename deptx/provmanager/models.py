@@ -40,15 +40,4 @@ class Provenance(models.Model):
     
     def __unicode__(self):
         return "%s - %s - store: %d" % (self.get_type_display(), self.name, self.store_id)
-
-class ProvenanceLog(models.Model):
-    cron = models.ForeignKey(Cron)
-    store_id = models.IntegerField(blank=True, null=True)
-    counter = models.IntegerField(default=0)
-    
-    createdAt = CreationDateTimeField()
-    modifiedAt = ModificationDateTimeField()
-         
-    def __unicode__(self):
-        return self.cron.user.username   
-    
+   
