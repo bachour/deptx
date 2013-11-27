@@ -100,7 +100,7 @@ def logout_view(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
-    unit_list = Unit.objects.all()
+    unit_list = Unit.objects.all().order_by('-type')
     requisition_list = Requisition.objects.all().order_by('category')
     log_mop(request.user.mop, 'read rules')
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
@@ -355,6 +355,7 @@ def mail_compose(request, fullSerial=None):
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
+            form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
@@ -368,7 +369,7 @@ def mail_compose(request, fullSerial=None):
                 if requisitionInstance.fullSerial() == fullSerial:
                     form = MailForm(initial={'requisitionInstance': requisitionInstance})
                     break
-
+        form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = requisitionInstance_list
         form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
@@ -410,6 +411,7 @@ def mail_edit(request, mail_id):
             analyze_mail()    
             return redirect('mop_index')
         else:
+            form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
@@ -418,6 +420,7 @@ def mail_edit(request, mail_id):
     else:
         form = MailForm(instance=mail)
         #TODO same with documents at all occurences
+        form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
         form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(used=False).filter(modified=True).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
