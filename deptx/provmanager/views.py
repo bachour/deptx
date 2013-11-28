@@ -327,6 +327,7 @@ def prov_log_action(request):
         y = request.POST.get('y', None)
         attribute = request.POST.get('attribute', None)
         position = request.POST.get('position', None)
+        inactive = json.loads(request.POST.get('inactive', None))
         if attribute == "none":
             attribute = None
         try:
@@ -356,20 +357,23 @@ def prov_log_action(request):
             
             updated = False
             if action == 'move':
-                for data in stored_data:
-                    try:
-                        if data['node'] == node:
-                            data['x'] = x
-                            data['y'] = y
-                            updated = True
-                            break
-                    except:
-                        pass
-                if not updated:
-                    stored_data.append({"node":node, "x":x, "y":y})
-                documentInstance.provenanceState = json.dumps(stored_data)
-                documentInstance.save()
-                message = 'position updated'
+                if not inactive:
+                    for data in stored_data:
+                        try:
+                            if data['node'] == node:
+                                data['x'] = x
+                                data['y'] = y
+                                updated = True
+                                break
+                        except:
+                            pass
+                    if not updated:
+                        stored_data.append({"node":node, "x":x, "y":y})
+                    documentInstance.provenanceState = json.dumps(stored_data)
+                    documentInstance.save()
+                    message = 'position updated'
+                else:
+                    message = 'position ignored as is inactive'
                 error = False
                 logAction = ProvLog.ACTION_MOVE
                 
@@ -380,39 +384,42 @@ def prov_log_action(request):
                     error = False
                     logAction = ProvLog.ACTION_MEDIA
                 else:    
-                    for data in stored_data:
-                        try:
-                            if data['position'] == position:
-                                if state and attribute is not None:
-                                    data['selected_node'] = node
-                                    data['selected_attribute'] = attribute
-                                    updated = True
-                                    break
-                                elif state and attribute is None:
-                                    data['selected_node'] = node
-                                    data['selected_attribute'] = None
-                                    updated = True
-                                    break
-                                elif not state and attribute is not None:
-                                    data['selected_node'] = node
-                                    data['selected_attribute'] = None
-                                    updated = True
-                                    break
-                                elif not state and attribute is None:
-                                    data['selected_node'] = None
-                                    data['selected_attribute'] = None
-                                    updated = True
-                                    break
-                        except:
-                            pass
-                    if not updated:
-                        stored_data.append({"position":position, "selected_node":node, "selected_attribute":attribute})
-                    documentInstance.provenanceState = json.dumps(stored_data)
-                    documentInstance.save()
-                    message = 'click registered'
+                    if not inactive:
+                        for data in stored_data:
+                            try:
+                                if data['position'] == position:
+                                    if state and attribute is not None:
+                                        data['selected_node'] = node
+                                        data['selected_attribute'] = attribute
+                                        updated = True
+                                        break
+                                    elif state and attribute is None:
+                                        data['selected_node'] = node
+                                        data['selected_attribute'] = None
+                                        updated = True
+                                        break
+                                    elif not state and attribute is not None:
+                                        data['selected_node'] = node
+                                        data['selected_attribute'] = None
+                                        updated = True
+                                        break
+                                    elif not state and attribute is None:
+                                        data['selected_node'] = None
+                                        data['selected_attribute'] = None
+                                        updated = True
+                                        break
+                            except:
+                                pass
+                        if not updated:
+                            stored_data.append({"position":position, "selected_node":node, "selected_attribute":attribute})
+                        documentInstance.provenanceState = json.dumps(stored_data)
+                        documentInstance.save()
+                        message = 'click registered'
+                    else:
+                        message = 'click ignored as is inactive'
                     error = False
                     logAction = ProvLog.ACTION_CLICK
-            logging.log_prov(action=logAction, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=node, attribute1=attribute, x=x, y=y, selected=state)
+            logging.log_prov(action=logAction, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=node, attribute1=attribute, x=x, y=y, selected=state, inactive=inactive)
 
         json_data = json.dumps({"message":message, "error":error})            
         return HttpResponse("json_data", mimetype="application/json") 

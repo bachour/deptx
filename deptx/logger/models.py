@@ -66,6 +66,7 @@ class ProvLog(models.Model):
     selected = models.NullBooleanField(blank=True, null=True)
     empty = models.NullBooleanField(blank=True, null=True)
     correct = models.NullBooleanField(blank=True, null=True)
+    inactive = models.NullBooleanField(blank=True, null=True)
     
     def __unicode__(self):
         if self.cronDocumentInstance is not None:

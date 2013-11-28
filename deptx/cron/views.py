@@ -89,11 +89,10 @@ def index(request):
                     break
             except:
                 pass
+
+        missionInstance = getCurrentMissionInstance(request.user.cron)
         
-        missionInstance = None
-        mission_url = None
-        if oneMopHasPassedTutorial:
-            missionInstance = getCurrentMissionInstance(request.user.cron)
+        if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
             mission_url = None
             if not missionInstance == None:
                 if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
@@ -106,7 +105,10 @@ def index(request):
                     mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
                 elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
                     mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
-         
+        else:
+            missionInstance = None
+            mission_url = None
+                 
         context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
         return render(request, 'cron/index.html', context)
     else:

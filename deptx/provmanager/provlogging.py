@@ -45,11 +45,12 @@ def addBundle(cron, bundle, bundle_id):
 
 
 def provlog_add_cron_register(cron):
-    bundle_id, bundle = create_bundle_cron_register(cron)
-    store_id = API.submit_document(bundle, bundle_id, public=False)
-    provLog = ProvenanceLog(cron=cron)
-    provLog.store_id = store_id
-    provLog.save()
+    pass
+    #bundle_id, bundle = create_bundle_cron_register(cron)
+    #store_id = API.submit_document(bundle, bundle_id, public=False)
+    #provLog = ProvenanceLog(cron=cron)
+    #provLog.store_id = store_id
+    #provLog.save()
 
 
 def provlog_add_cron_login(cron, session_key):
