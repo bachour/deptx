@@ -42,6 +42,8 @@ def isMop(user):
 #@user_passes_test(isMop, login_url='mop_login')
 def index(request):
 
+    SERVERBREAK!!!!
+
     if not request.user == None and request.user.is_active and isMop(request.user):
 
         mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
