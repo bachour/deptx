@@ -91,23 +91,25 @@ def index(request):
                 pass
 
         missionInstance = getCurrentMissionInstance(request.user.cron)
+        mission_url = None
         
-        if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
-            mission_url = None
-            if not missionInstance == None:
-                if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
-                    mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
-                elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
-                    mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
-                elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
-                    mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
-                elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
-                    mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
-                elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
-                    mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
-        else:
-            missionInstance = None
-            mission_url = None
+        if missionInstance is not None:
+            if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
+                mission_url = None
+                if not missionInstance == None:
+                    if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
+                        mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
+                    elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
+                        mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
+                    elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
+                        mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
+                    elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
+                        mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
+                    elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
+                        mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
+            else:
+                missionInstance = None
+                
                  
         context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
         return render(request, 'cron/index.html', context)
