@@ -1906,7 +1906,7 @@ function updateState(state)
 			if (state[n].selected_node)
 			{
 				selectedNodes[state[n].position] = nodes[state[n].selected_node];
-				showAttributes(nodes[state[n].selected_node],nodes[state[n].position]);
+				showAttributes(nodes[state[n].selected_node], state[n].position);
 				setImageHighlight(nodes[state[n].selected_node].image, true, false);
 				
 				if (state[n].selected_attribute)
