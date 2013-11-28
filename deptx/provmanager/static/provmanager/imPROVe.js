@@ -456,7 +456,6 @@ function updateDrag(evt) {
 	if (shape.getX() < 10 + offset)
 		shape.setX(10 + offset);
 	
-	
 	// Set vertical move boundaries
 	if (shape.getRotation() < 0)
 		offset = shape.getWidth()*Math.abs(Math.sin(shape.getRotation()));
@@ -967,7 +966,7 @@ function getOffset(width, height, shapeAngle, x1,y1,x2,y2)
 	return offset + 5;
 }
 
-//display attributes of node, at location x,y
+//display attributes of node, at one of the two preset positions
 function showAttributes(node, position)
 {
 	var X = 0.83 * STAGE_WIDTH;
@@ -981,6 +980,7 @@ function showAttributes(node, position)
 
 	 if (node.attribImage == null) // first time creating attributes
 	 {
+		 // create the thumbnail image
 		 node.attribImage = new Kinetic.Image({
 	        image: images[node.id],
 	        x: X+10,
@@ -996,11 +996,13 @@ function showAttributes(node, position)
 	        stroke: THUMB_OUTLINE_COLOUR,
 	        strokeWidth: THUMB_OUTLINE_WIDTH
 	      });
-		 
+
+		 // resize the thumbnail image so its width doesn't exceed THUMB_DEFAULT_SIZE
 		  var scale = (1.0 * (THUMB_DEFAULT_SIZE/node.attribImage.getWidth()));
 		  node.attribImage.setWidth(node.attribImage.getWidth()*scale);
 		  node.attribImage.setHeight(node.attribImage.getHeight()*scale);
 		  
+		  // create the attribute label
 		  node.attribName = new Kinetic.Text({
 		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
 		        y: Y + 20,
@@ -1013,6 +1015,7 @@ function showAttributes(node, position)
 		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 		  });
 		  
+		  // if node has a URL link, create the image for that
 		  if (node.attributes['mop:url'])
 		  {
 			  node.attribURL = new Kinetic.Image({
@@ -1021,19 +1024,27 @@ function showAttributes(node, position)
 				  width: 50,
 				  height: 50,
 				  image: staticImages[getType(node.attributes['mop:url'])],
-				  shadowEnabled: false,
-				  strokeEnabled: false  
+				  shadowEnabled: THUMB_SHADOWS,
+				  strokeEnabled: false,
+			        shadowColor: THUMB_SHADOW_COLOUR,
+			        shadowBlur: THUMB_SHADOW_BLUR,
+			        shadowOffset: THUMB_SHADOW_OFFSET,
+			        shadowOpacity: THUMB_SHADOW_OPACITY
 			  });
 			  node.attribURL.setX(node.attribURL.getX() - node.attribURL.getWidth());
 			  node.attribURL.setY(node.attribURL.getY() - node.attribURL.getHeight());
 		  }
 		  
+		  // current cumulative height of all components created so far
 		  var totalY = node.attribImage.getHeight() + Y + 20;
 		  
+		  //for each attribute this node has
 		  for (var i in node.attributes)
 			  {
+			    // other than label and URL which were handled separately above
 			  	if (i != 'prov:label' && i != 'mop:url')
 			  	{
+			  		// create the text for the attribute name
 			  		node.attribNames[i] = new Kinetic.Text({
 			  			x: node.attribImage.getX(),
 				        y: totalY,
@@ -1045,6 +1056,7 @@ function showAttributes(node, position)
 				        strokeEnabled: ATTRIBBOX_ATTNAME_FONT_OUTLINE,
 				        stroke: ATTRIBBOX_ATTNAME_FONT_OUTLINE_COLOUR
 			  		});		  		
+			  		// create the text for the attribute value
 			  		node.attribValues[i] = new Kinetic.Text({
 				        x: node.attribNames[i].getX() + node.attribNames[i].getWidth(),
 				        y: totalY,
@@ -1056,18 +1068,21 @@ function showAttributes(node, position)
 				        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
 				        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
 				  });
+			  	  // update total cumulative height
 				  totalY += node.attribValues[i].getHeight() + 5;
 			  	}
 			  }
+		  // assign special attributes (image, url, label).
 		  node.attribValues['prov:label'] = node.attribName;
 		  node.attribValues['mop:image'] = node.attribImage;
 		  if (node.attribURL)
 			  node.attribValues['mop:url'] = node.attribURL;
 	 }
-	 else
+	 else // if this node has already been displayed before, all it's shapes/texts already exists, 
+		 // so simply update their positions
 	 {
 		 node.attribImage.setY(Y+10);
-		 setImageHighlight(node.attribImage, false, false, true);
+		 setImageHighlight(node.attribImage, false, false, true); //deselect image if it had been selected
 
 		 for (i in node.attribValues)
 		 {
@@ -1088,27 +1103,26 @@ function showAttributes(node, position)
 			 
 		 }
 	 }
-	  
-	  //attribLayer[position].add(rect);
-	  //layer.add(textName);
+
 	  for (var i in node.attribNames)
 		  {
 			  attribLayer[position].add(node.attribNames[i]);
 			  attribLayer[position].add(node.attribValues[i]);
 		  }
 	  attribLayer[position].add(node.attribImage);
-	  //if (node.type != 'activity')
       attribLayer[position].add(node.attribName);
 	  if (node.attribURL)
 		  attribLayer[position].add(node.attribURL);
 	  attribLayer[position].draw();
 }
 
+// returns the image identifier based on URL type. Currently all media types are displayed as a magnifying glass
 function getType(str)
 {
 	return "__magnify"; // "sound"; "video";
 }
 
+// wrap a string to fit in maxChars columns
 function wordWrap(string, maxChars)
 {
 	var words = string.split(" ");
@@ -1222,25 +1236,28 @@ function toggleHighlightAttribute(shape,on)
 				{
 					if (on)
 					{
-						document.body.style.cursor = 'pointer';
-						if (shape == selectedNodes[i].attribImage || (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL))
+						
+						if (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL)
 						{
+							document.body.style.cursor = 'pointer';
 							setImageHighlight(shape, false, true, true);
 						}
-						else
+						else if (shape != selectedNodes[i].attribImage)
 						{
+							document.body.style.cursor = 'pointer';
 							setTextHighlight(shape, false, true);
 						}
 					}
 					else
 					{
-		     	        document.body.style.cursor = 'default';
-						if (shape == selectedNodes[i].attribImage || (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL))
+		     	        if (selectedNodes[i].attribURL && shape == selectedNodes[i].attribURL)
 						{
+		     	        	document.body.style.cursor = 'default';
 							setImageHighlight(shape, false, false, true);
 						}
-						else
+						else if (shape != selectedNodes[i].attribImage)
 						{
+							document.body.style.cursor = 'default';
 							setTextHighlight(shape, false, false);
 						}
 					}
@@ -1278,10 +1295,14 @@ function toggleAttributeSelection(shape)
 							logClick(selectedNodes[i].id, j, true, i);
 							return;
 						}
+					if (shape == selectedNodes[i].attribImage) // this is the image, so ignore
+						return;
 					if (selectedAttributes[i] != null) // deselect attribute if i already has a selected attribute
 					{
 						if (selectedNodes[i].attribValues[selectedAttributes[i]] == selectedNodes[i].attribImage)
+						{
 							setImageHighlight(selectedNodes[i].attribValues[selectedAttributes[i]],false,false,true);
+						}
 						else
 						{
 							setTextHighlight(selectedNodes[i].attribValues[selectedAttributes[i]],false,false);
