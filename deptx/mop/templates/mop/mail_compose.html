@@ -6,7 +6,6 @@
 
 
 {% block content %}
-
 <h2>Compose Message:</h2>
 <form action="{% if not mail %}{% url 'mop_mail_compose' %}{% else %}{% url 'mop_mail_edit' mail.id %}{% endif %}" method="post">{% csrf_token %}
 <table>
@@ -15,6 +14,7 @@
 <tr><th>Attach signed Form</th><td class="nobox nopadding"><div class="styled-select">{{form.requisitionInstance}}</div></td><td>A signed form is always required.</td></tr>
 <tr id="attach_document"><th>Attach Document</th><td class="nobox nopadding"><div class="styled-select">{{form.mopDocumentInstance}}</div></td><td>Only attach a document when submitting a report.</td></tr>
 </table>
+{% if form.non_field_errors %}<p style="font-weight:bold;color:red;">Error: {{ form.non_field_errors|striptags }}</p>{% endif %}
 <input class="button" type="submit" value="send message" name="send" />&nbsp;&nbsp;&nbsp;&nbsp;
 {% if not request.user.mop.mopTracker.isTutorial %}<input class="button" type="submit" value="save as draft" name="draft" />{% endif %}
 </form>

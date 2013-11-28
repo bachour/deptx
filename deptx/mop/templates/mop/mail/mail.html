@@ -1,13 +1,11 @@
-sdsds
-{{ mail.generateBody|linebreaks }}
 {% if mail.unit %}
 	Citizen Helper {{mail.mop.firstname}} {{mail.mop.lastname}},
 	<br/>
 	{{ mail.generateBody|linebreaks }}
 	{% if mail.trust %}
-		<br/><br/>Your Trust has been adjusted accordingly ({{mail.trust}}).
+		Your Trust has been adjusted accordingly ({{mail.trust}}).
 	{% endif %}
-	<br/>
+	<br/><br/>
 	{{mail.unit.name}}<br/>
 	{{mail.unit.serial}} - {{mail.unit.tagline}}<br/>
 	<br/>

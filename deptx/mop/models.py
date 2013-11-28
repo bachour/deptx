@@ -142,12 +142,14 @@ class RandomizedDocument(models.Model):
     
 class MopDocumentInstance(models.Model):
     STATUS_ACTIVE = 0
-    STATUS_REPORTED = 1
+    STATUS_LIMBO = 1
+    STATUS_REPORTED = 2
     STATUS_REVOKED = 3
     STATUS_HACKED = 4
      
     CHOICES_STATUS = (
         (STATUS_ACTIVE, "active"),
+        (STATUS_LIMBO, "limbo"),
         (STATUS_REPORTED, "reported"),
         (STATUS_REVOKED, "revoked"),
         (STATUS_HACKED, "hacked"),
@@ -167,7 +169,6 @@ class MopDocumentInstance(models.Model):
     mop = models.ForeignKey(Mop)
     status = models.IntegerField(choices=CHOICES_STATUS, default=STATUS_ACTIVE)
     modified = models.BooleanField(default=False)
-    used = models.BooleanField(default=False)
     correct = models.BooleanField(default=False)
     provenanceState = models.TextField(blank=True, null=True)
 
@@ -464,6 +465,35 @@ class Mail(models.Model):
             output = t.render(c)
         
         return output
+
+    def clean(self, *args, **kwargs):
+        if self.type == self.TYPE_SENT:
+            if not self.mopDocumentInstance is None:
+                if not self.mopDocumentInstance.modified:
+                    raise ValidationError('You can only send a document if you have processed it.')
+#         if self.type == self.TYPE_ADMINISTRATIVE:
+#             try:
+#                 unit = Unit.objects.get(type=Unit.TYPE_ADMINISTRATIVE)
+#                 if not self == unit:
+#                     raise ValidationError('You can only have one unit set as administrative! Change unit %s first!' % unit.serial)
+#             except Unit.DoesNotExist:
+#                 pass
+#         if self.type == self.TYPE_COMMUNICATIVE:
+#             try:
+#                 unit = Unit.objects.get(type=Unit.TYPE_COMMUNICATIVE)
+#                 if not self == unit:
+#                     raise ValidationError('You can only have one unit set as communicative! Change unit %s first!' % unit.serial)
+#             except Unit.DoesNotExist:
+#                 pass
+        super(Mail, self).clean(*args, **kwargs)
+
+    def full_clean(self, *args, **kwargs):
+        return self.clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super(Mail, self).save(*args, **kwargs)
+
     
     def __unicode__(self):
         if self.subject == None:

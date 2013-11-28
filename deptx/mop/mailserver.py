@@ -84,6 +84,7 @@ def analyze_mail():
             mail.mopDocumentInstance.save()
             clearance = Clearance(mail.mopDocumentInstance.getClearance())
             newMail.subject = Mail.SUBJECT_REPORT_EVALUATION
+            newMail.mopDocumentInstance = mail.mopDocumentInstance
             if mail.mopDocumentInstance.correct:
                 newMail.bodyType = Mail.BODY_REPORT_SUCCESS
                 newMail.trust = clearance.getTrustReportedCorrect()
@@ -99,12 +100,12 @@ def analyze_mail():
         if newMail.subject == Mail.SUBJECT_ERROR:
             newMail.trust = -1
             if not mail.mopDocumentInstance == None:
-                mail.mopDocumentInstance.used = False
+                mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_ACTIVE
                 mail.mopDocumentInstance.save()
+                newMail.mopDocumentInstance = mail.mopDocumentInstance
 
         mail.processed = True
         mail.save()
-        newMail.replyTo = mail
         newMail.save()
         
         if newMail.trust is not None:
@@ -256,5 +257,6 @@ def prepareMail(mail):
     newMail.unit = mail.unit
     newMail.type = Mail.TYPE_RECEIVED
     newMail.processed = True
+    newMail.replyTo = mail
     return newMail
     
