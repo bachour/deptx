@@ -1835,11 +1835,16 @@ function logDrag(shape)
 	{
 	// find node belonging to this shape
 		var node = getNodeFromShape(shape);
-	
-		var message = "action=move&serial=" + PROV_SERIAL + "&node=" + node.id + "&x=" + node.image.getX() + "&y=" + node.image.getY();
+		var nodeX = node.image.getX() * DEFAULT_STAGE_WIDTH / STAGE_WIDTH;
+		var nodeY = node.image.getY() * DEFAULT_STAGE_WIDTH / STAGE_WIDTH;
+		
+		var message = "action=move&serial=" + PROV_SERIAL + 
+						"&node=" + node.id + 
+						"&x=" + nodeX + 
+						"&y=" + nodeY + 
+						"&inactive=" + INACTIVE;
 		
 		ajaxCall(URL_LOG, message, logResponse);
-	
 	}
 }
 
@@ -1860,7 +1865,8 @@ function logClick(node, attribute, newState, position)
 					  "&node=" + node + 
 					  "&attribute=" + attribute + 
 					  "&state=" + newState + 
-					  "&position=" + position;
+					  "&position=" + position +
+					  "&inactive=" + INACTIVE;
 		
 		ajaxCall(URL_LOG, message, logResponse);
 	}
@@ -1917,8 +1923,11 @@ function updateState(state)
 		}
 		else // this is a position state
 		{
-			nodes[state[n].node].image.setX(parseInt(state[n].x));
-			nodes[state[n].node].image.setY(parseInt(state[n].y));
+			var stateX = parseInt(state[n].x) * STAGE_WIDTH / DEFAULT_STAGE_WIDTH; // denormalize from default stage width
+			var stateY = parseInt(state[n].y) * STAGE_WIDTH / DEFAULT_STAGE_WIDTH;
+			
+			nodes[state[n].node].image.setX(stateX);
+			nodes[state[n].node].image.setY(stateY);
 			if (nodes[state[n].node].showLabel)
 				{
 					nodes[state[n].node].label.setX(nodes[state[n].node].image.getX());
