@@ -96,17 +96,16 @@ def index(request):
         if missionInstance is not None:
             if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
                 mission_url = None
-                if not missionInstance == None:
-                    if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
-                        mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
-                        mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
-                        mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
-                        mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
-                        mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
+                if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
+                    mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
+                    mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
+                    mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
+                    mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
+                    mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
             else:
                 missionInstance = None
                 
@@ -223,6 +222,7 @@ def mission_outro(request, serial):
 def getMissionOutput(cron, serial, needed_progress):
     text = None
     next_url = None
+    label = "Continue"
     mission = None
     missionInstance = None
     
@@ -237,17 +237,21 @@ def getMissionOutput(cron, serial, needed_progress):
             if needed_progress == MissionInstance.PROGRESS_0_INTRO:
                 content = mission.intro
                 next_url = reverse('cron_mission_briefing', args=(serial,))
+                label = "Proceed to Briefing"
             elif needed_progress == MissionInstance.PROGRESS_1_BRIEFING:
                 content = mission.briefing
                 next_url = reverse('cron_mission_cases', args=(serial,))
+                label = "Start Mission"
             elif needed_progress == MissionInstance.PROGRESS_2_CASES:
                 pass
             elif needed_progress == MissionInstance.PROGRESS_3_DEBRIEFING:
                 content = mission.debriefing
                 next_url = reverse('cron_mission_outro', args=(serial,))
+                label = "Proceed to Aftermath"
             elif needed_progress == MissionInstance.PROGRESS_4_OUTRO:
                 content = mission.outro
                 next_url = reverse('cron_index')
+                label = "Back to HQ"
 
         text = renderContent(content, cron)
         
@@ -258,7 +262,7 @@ def getMissionOutput(cron, serial, needed_progress):
         text = None
     
      
-    context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url}        
+    context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url, 'label':label}        
     return context
     
 @login_required(login_url='cron_login')

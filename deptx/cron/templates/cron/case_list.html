@@ -17,7 +17,7 @@
 	{% if unpublished %}
 		<p>More cases coming soon...</p>
 	{% else %}
-		<a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Continue</a>
+		<a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Proceed to Mission Debriefing</a>
 	{% endif %}
 {% endif %}
 

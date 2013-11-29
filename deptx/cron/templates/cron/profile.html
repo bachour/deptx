@@ -9,6 +9,7 @@
 </table>
 <hr/>
 <h1>Progress and Performance</h1>
+{% if cronDocumentInstance_list %}
 <table>
 <tr><th>Mission</th><th>Case</th><th>Document</th><th>Rating</th></tr>
 {% for cronDocumentInstance in cronDocumentInstance_list %}
@@ -16,6 +17,9 @@
 	<td>{% for i in cronDocumentInstance.getStarsForTemplate %}<img width=64px src="{% static 'cron/images/hat.png' %}" />{% endfor %}</td></tr>
 {% endfor %}
 </table>
+{% else %}
+<p>You have not completed any missions yet</p>
+{% endif %}
 {% if missionInstance_list %}
 	<hr/>
 	<h1>Admin</h1>

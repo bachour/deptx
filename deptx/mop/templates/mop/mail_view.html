@@ -1,19 +1,25 @@
 {% extends 'mop/base.html' %}
 
 {% block content %}
-
+{% if mail.type == mail.TYPE_RECEIVED and mail.state == mail.STATE_NORMAL %}
+<a class="button" href="{% url 'mop_mail_inbox' %}"><input id="inbox" class="button" type="submit" value="inbox" /></a>
+{% elif mail.type == mail.TYPE_SENT and mail.state == mail.STATE_NORMAL %}
+<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox" /></a>
+{% elif mail.state == mail.STATE_TRASHED %}
+<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash" /></a>
+{% endif %}
 <table>
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
 <tr><th>Unit</th><td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DEMON{% endif %}</td></tr>
 <tr><th>Timestamp</th><td>{{ mail.createdAt|date:"Y-m-d H:i" }}</td></tr>
 {% if mail.bodyType %}<tr><th>Message</th><td>{% include 'mop/mail/mail.html' %}</td></tr>{% endif %}
-<tr><th>Trust</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>
+<tr><th>TRUST</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>
 <tr><th>Form</th><td>{% if mail.requisitionInstance.blank %}{{ mail.requisitionInstance.blank.requisition.serial}}{% elif mail.requisitionBlank %}{{mail.requisitionBlank.requisition.serial}}{% else %} no form attached{% endif %}</td></tr>
 <tr><th>Document</th><td>{% if mail.mopDocumentInstance %}{{ mail.mopDocumentInstance.getDocumentSerial}}{% else %}no document attached{% endif %}</td></tr>
 </table>
 {% endblock %}
 {% block help %}
 <p>
-Here you can view the content of each mail. In case your Trust has been modified as a result of this mail, it is also shown here.
+Here you can view the content of each mail. In case your TRUST has been modified as a result of this mail, it is also shown here.
 </p>
 {% endblock %}

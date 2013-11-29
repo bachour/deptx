@@ -5,7 +5,7 @@
 <h1>Document Archive</h1>
 {% if mopDocumentInstance_list %}
 	<table>
-	<tr><th class="nobox"></th><th>Trust</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Closed</th></tr>
+	<tr><th class="nobox"></th><th>TRUST</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Closed</th></tr>
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
 		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>

@@ -1,4 +1,4 @@
-In the last performance period you gained {{data.trust}} Trust.
+In the last performance period you gained {{data.trust}} TRUST.
 
 Your clearance level for the new period has been adjusted accordingly (effective immediately).
 

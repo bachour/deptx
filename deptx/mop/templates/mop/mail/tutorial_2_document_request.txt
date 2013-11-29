@@ -1,17 +1,17 @@
 Looks like you've successfully acquired your first blank form! How exciting. Now let's use it. The form you now have allows you to request documents from {{tutorialData.requisition.unit.serial}} - the {{tutorialData.requisition.unit.name}}. {{tutorialData.requisition.unit.serial}} is the unit of MoP that is responsible for documents relating to transportation. This includes anything from driver's licenses to air travel documents.
 
-As a Ministry of Provenance operative you will be given documents to check. The more documents you check, the better your performance record. Your clearance level and the types of documents you can access are determined by your performance record so make sure not to do anything to reduce that. To make things simpler, your performance is measured in Trust (Track Record of Undertaken System Tasks).
+As a Ministry of Provenance operative you will be given documents to check. The more documents you check, the better your performance record. Your clearance level and the types of documents you can access are determined by your performance record so make sure not to do anything to reduce that. To make things simpler, your performance is measured in TRUST (Track Record of Undertaken System Tasks).
 
 The document pool page shows all documents that are currently available to check (for Citizen Helpers of your clearance level). You will see that {{tutorialData.requisition.unit.serial}} is currently offering a document: checking the provenance related to a {{tutorialData.document.mopDocument.name}}.
 
-In order to work on the document, you first need to request access to it.. You can do this by submitting the {{tutorialData.requisition.name}} you acquired in the first step. Here's how to do it:
+In order to work on the document, you first need to request access to it.. You can do this by submitting the {{tutorialData.requisition.name}} form you acquired in the first step. Here's how to do it:
 
 1.	Go to the document pool page and copy the document ID that you will need.
 2.	Go to the Blank Forms page.
-3.	Select the {{tutorialData.requisition.name}} {{tutorialData.requisition.serial}}.
+3.	Select the {{tutorialData.requisition.name}} form {{tutorialData.requisition.serial}}.
 4.	Enter the document ID in the data field.
 5.	Sign the form.
-6.	Go to Compose.
+6.	Click "mail".
 7.	Select {{tutorialData.requisition.unit.serial}} as the recipient.
 8.	Select "Requesting document" as the subject.
 9.	Select the form you just signed as the form to send.

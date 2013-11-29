@@ -39,6 +39,16 @@ a:after {
 	content: ']';
 }
 
+div.ui-datepicker a:before {
+	content: '';
+	
+}
+div.ui-datepicker a:after {
+	content: '';
+	
+}
+
+
 a.button:before, a.button:after, a.image:before, a.image:after {
 	content:'';
 }
@@ -95,3 +105,4 @@ p.footer {
 div.mainsidebar {
 	margin-left:80px;
 }
+

@@ -1,14 +1,14 @@
-Congratulations on successfully corrected the provenance of your MoP document! You are already on your way to become a contributing member of the ORCHID scheme.
+Congratulations on successfully checking the provenance of your MoP document! You are already on your way to become a contributing member of the ORCHID scheme.
 
 Once you start working on more documents you will notice some things:
-1.	Every time you submit a correct report on a document your Trust will increase.
+1.	Every time you submit a correct report on a document your TRUST will increase.
 2.	When you save a document you're working on, you will not be notified whether or not it is correct until you send it to the department. The department will then process it and inform you of the outcome.
-3.	Wile correct reports will increase your Trust, but incorrect reports are costly to process and your Trust will be reduced for them.
-4.	In addition, when you request a document you are committing to working on it. If you fail to submit a report on that document in a timely manner you will also lose Trust points as this causes delays in our document processing line.
+3.	While correct reports will increase your TRUST, incorrect reports are costly to process and your TRUST will be reduced as a result.
+4.	In addition, when you request a document you are committing to working on it. If you fail to submit a report on that document in a timely manner you will also lose TRUST points as this causes delays in our document processing line.
 
-This is the end of your orientation. If you return to teh document pool you will see all the tasks MoP departments currently have to offer. You can now go ahead and start working on those documents, finding what's wrong!
+This is the end of your orientation. If you return to the document pool you will see all the documens MoP departments currently have to offer. You can now go ahead and start working on those documents, finding what's wrong!
 
-And remember: Not all tasks have an error in them! If you find a provenance record that seems correct, simply save it with no attributes selected and send it in your report.
+And remember: Not all documents have an error in them! If you find a provenance record that seems correct, simply save it with no attributes selected and send it in your report.
 
 If you have any questions or problems, just drop us a message using the feedback form and someone from {{tutorialData.mopco.serial}} will be in touch with you as soon as possible.
 

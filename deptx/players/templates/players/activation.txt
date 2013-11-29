@@ -1,4 +1,4 @@
-Thank you for signing up to a good cause, {{cron.user.username}}.
+Thank you for signing up to a good cause, agent {{cron.user.username}}.
 
 Before we can start we would like you to read the following:
 
