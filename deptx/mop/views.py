@@ -446,6 +446,8 @@ def mail_check(request):
         json_data = json.dumps({'total_unread':total_unread, 'has_new_mail':has_new_mail})
     
         return HttpResponse(json_data, mimetype="application/json")
+    else:
+        return HttpResponse("[]", mimetype="application/json")
 
 
 @login_required(login_url='mop_login')
