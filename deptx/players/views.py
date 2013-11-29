@@ -1,7 +1,6 @@
-from django.shortcuts import render, render_to_response, redirect
-from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.core.urlresolvers import reverse
-from django.template import RequestContext, Context, loader
+from django.template import Context, loader
 
 from django.core.mail import EmailMessage
 from forms import PlayerForm, CronForm
@@ -47,20 +46,14 @@ def register(request):
 
             
              
-            return render_to_response('players/registration.html', {"registered": True, "cron":cron})
+            return render(request, 'players/registration.html', {"registered": True, "cron":cron})
         else:
-            return render_to_response(   'players/registration.html',
-                                        {"cron_form": cron_form, "user_form": user_form},
-                                        context_instance=RequestContext(request)
-                                        )
+            return render(request, 'players/registration.html', {"cron_form": cron_form, "user_form": user_form})
      
     else:
         cron_form = CronForm(prefix='cron')
         user_form = UserCreationForm(prefix='user')
-        return render_to_response(  'players/registration.html',
-                                    {"cron_form": cron_form, "user_form": user_form},
-                                    context_instance=RequestContext(request)
-                                )
+        return render(request, 'players/registration.html', {"cron_form": cron_form, "user_form": user_form})
         
         
 def activate_study(request, code):
@@ -71,9 +64,9 @@ def activate_study(request, code):
         cron = None
     
     if cron == None:
-        return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
+        return render(request, 'players/registration.html', {"wrongCode": True})
     elif cron.activated:
-        return render_to_response('players/registration.html', {"alreadyActivated": True}, context_instance=RequestContext(request))
+        return render(request, 'players/registration.html', {"alreadyActivated": True})
     else:
         if request.method == 'POST':
             form = PlayerForm(request.POST, prefix="player")
@@ -83,13 +76,13 @@ def activate_study(request, code):
                 cron.player = player
                 cron.activated = True
                 cron.save()
-                return render_to_response('players/registration.html', {"cron": player.cron, "study":True}, context_instance=RequestContext(request))
+                return render(request, 'players/registration.html', {"cron": player.cron, "study":True})
             else:
-                return render_to_response('players/study.html', {"form": form, "code":code}, context_instance=RequestContext(request))
+                return render(request, 'players/study.html', {"form": form, "code":code})
          
         else:
             form = PlayerForm(prefix='player')
-            return render_to_response(  'players/study.html', {"form": form, "code":code},context_instance=RequestContext(request))
+            return render(request, 'players/study.html', {"form": form, "code":code})
 
 
 def activate_nostudy(request, code):
@@ -99,11 +92,11 @@ def activate_nostudy(request, code):
         cron = None
     
     if cron == None:
-        return render_to_response('players/registration.html', {"wrongCode": True}, context_instance=RequestContext(request))
+        return render(request, 'players/registration.html', {"wrongCode": True})
     elif cron.activated:
-        return render_to_response('players/registration.html', {"alreadyActivated": True}, context_instance=RequestContext(request))
+        return render(request, 'players/registration.html', {"alreadyActivated": True})
     else:
         cron.activated = True
         cron.save()
-        return render_to_response('players/registration.html', {"cron": cron}, context_instance=RequestContext(request)) 
+        return render(request, 'players/registration.html', {"cron": cron}) 
 

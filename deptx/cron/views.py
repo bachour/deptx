@@ -1,10 +1,9 @@
-from django.shortcuts import render, render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.http import Http404
 
-from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
@@ -54,11 +53,11 @@ def login(request):
             return HttpResponseRedirect(reverse('cron_index'))
             
         else:
-            return render_to_response('cron/login.html', {'form' : form,}, context_instance=RequestContext(request))
+            return render(request, 'cron/login.html', {'form' : form,})
         
     else:
         form =  AuthenticationForm()
-        return render_to_response('cron/login.html', {'form' : form,}, context_instance=RequestContext(request))
+        return render(request, 'cron/login.html', {'form' : form,})
 
 def logout_view(request):
     #log_cron(request.user.cron, 'logout')
@@ -136,32 +135,26 @@ def mopmaker(request, missionInstance):
             provlog_add_mop_register(request.user.cron, mop, request.session.session_key)
             return redirect('cron_mission_debriefing', missionInstance.mission.serial)
         else:
-            return render_to_response(   'cron/mopmaker.html',
-                                        {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance},
-                                        context_instance=RequestContext(request)
-                                        )
+            return render(request, 'cron/mopmaker.html', {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance})
     
     else:
         mop_form = MopForm(prefix="mop")
         user_form = UserCreationForm(prefix="user")
-        return render_to_response(  'cron/mopmaker.html',
-                                    {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance},
-                                    context_instance=RequestContext(request)
-                                )
+        return render(request, 'cron/mopmaker.html',{"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission_intro(request, serial):
     needed_progress = MissionInstance.PROGRESS_0_INTRO
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
-    return render_to_response('cron/mission.html', context)
+    return render(request, 'cron/mission.html', context)
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission_briefing(request, serial):
     needed_progress = MissionInstance.PROGRESS_1_BRIEFING
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
-    return render_to_response('cron/mission.html', context)
+    return render(request, 'cron/mission.html', context)
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -203,21 +196,21 @@ def mission_cases(request, serial):
         if (finished and not unpublished):
             missionInstance.makeProgress()
         text = renderContent(mission.activity, request.user)
-    return render_to_response('cron/case_list.html', {'user':request.user, 'cron':request.user.cron, 'text':text, 'missionInstance':missionInstance, 'caseInstance_list':caseInstance_list, 'unpublished':unpublished, 'finished':finished, 'MEDIA_URL': MEDIA_URL})
+    return render(request, 'cron/case_list.html', {'user':request.user, 'cron':request.user.cron, 'text':text, 'missionInstance':missionInstance, 'caseInstance_list':caseInstance_list, 'unpublished':unpublished, 'finished':finished, 'MEDIA_URL': MEDIA_URL})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission_debriefing(request, serial):
     needed_progress = MissionInstance.PROGRESS_3_DEBRIEFING
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
-    return render_to_response('cron/mission.html', context)
+    return render(request, 'cron/mission.html', context)
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission_outro(request, serial):
     needed_progress = MissionInstance.PROGRESS_4_OUTRO
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
-    return render_to_response('cron/mission.html', context)
+    return render(request, 'cron/mission.html', context)
 
 def getMissionOutput(cron, serial, needed_progress):
     text = None
@@ -270,7 +263,7 @@ def getMissionOutput(cron, serial, needed_progress):
 def archive(request):
     #TODO: Sort by mission.rank
     missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
-    return render_to_response('cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
+    return render(request, 'cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
 
 def renderContent(content, user):
     try:
@@ -336,7 +329,7 @@ def hack_document(request, serial):
     output_tpl = loader.get_template('cron/hack_document_output.txt')
     c = Context({"cronDocument":cronDocument, "good_mop":good_mop, "mop_list":mop_list})
     output = output_tpl.render(c).replace("\n", "\\n")
-    return render_to_response('cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
+    return render(request, 'cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
 
 def accessMopServer(cron, cronDocument, mop_list):
         checked_mop_list = []
@@ -373,8 +366,7 @@ def case_intro(request, mission_serial, case_serial):
     
     requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-    return render_to_response('cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "cronDocument_list": requiredDocuments, "text":text },
-                                    context_instance=RequestContext(request))
+    return render(request, 'cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "cronDocument_list": requiredDocuments, "text":text })
     
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')    
@@ -392,8 +384,7 @@ def case_outro(request, mission_serial, case_serial):
     
     requiredDocuments = getAllDocumentStates(request.user.cron, case)
 
-    return render_to_response('cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text },
-                                    context_instance=RequestContext(request))
+    return render(request, 'cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text })
     
 
 @login_required(login_url='cron_login')
@@ -412,9 +403,7 @@ def provenance(request, mission_serial, case_serial, document_serial):
     doc['store_id'] = cronDocument.provenance.store_id    
     log_cron(request.user.cron, 'view provenance', json.dumps(doc))
     
-    return render_to_response('cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance },
-                                         context_instance=RequestContext(request)
-                                 )
+    return render(request, 'cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance })
     
 
 @login_required(login_url='cron_login')
@@ -428,13 +417,13 @@ def profile(request):
     cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=request.user.cron).order_by('-modifiedAt')
     mop_list = Mop.objects.filter(cron=request.user.cron)
 
-    return render_to_response('cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list, "cronDocumentInstance_list":cronDocumentInstance_list })
+    return render(request, 'cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list, "cronDocumentInstance_list":cronDocumentInstance_list })
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def bunker_image(request, image_name):
     image_url = STATIC_URL + 'cron/images/bunker/' + image_name
-    return render_to_response('cron/pages/bunker_image.html', {'image_url': image_url})
+    return render(request, 'cron/pages/bunker_image.html', {'image_url': image_url})
 
 
 
@@ -459,43 +448,42 @@ def hq(request):
     mission_list = Mission.objects.all().order_by('rank')
     case_list = Case.objects.all().order_by('rank')
     
-    return render_to_response('cron/hq.html', {'mission_list':mission_list, 'case_list':case_list})
+    return render(request, 'cron/hq.html', {'mission_list':mission_list, 'case_list':case_list})
 
 @staff_member_required
 def hq_mission_intro(request, id):
     mission = Mission.objects.get(id=id)
     content = mission.intro
     text = renderContent(content, request.user)
-    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+    return render(request, 'cron/mission.html', {'text':text, 'mission':mission})
 
 @staff_member_required
 def hq_mission_briefing(request, id):
     mission = Mission.objects.get(id=id)
     content = mission.briefing
     text = renderContent(content, request.user)
-    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+    return render(request, 'cron/mission.html', {'text':text, 'mission':mission})
 
 @staff_member_required
 def hq_mission_debriefing(request, id):
     mission = Mission.objects.get(id=id)
     content = mission.debriefing
     text = renderContent(content, request.user)
-    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+    return render(request, 'cron/mission.html', {'text':text, 'mission':mission})
 
 @staff_member_required
 def hq_mission_outro(request, id):
     mission = Mission.objects.get(id=id)
     content = mission.outro
     text = renderContent(content, request.user)
-    return render_to_response('cron/mission.html', {'text':text, 'mission':mission})
+    return render(request, 'cron/mission.html', {'text':text, 'mission':mission})
 
 @staff_member_required
 def hq_cases(request, id):
     mission = Mission.objects.get(id=id)
     content = mission.activity
     text = renderContent(content, request.user)
-    return render_to_response('cron/case_list.html', {'text':text, 'mission':mission})
-
+    return render(request, 'cron/case_list.html', {'text':text, 'mission':mission})
 
 @staff_member_required
 def hq_case_intro(request, id):
@@ -503,11 +491,11 @@ def hq_case_intro(request, id):
     content = case.intro
     text = renderContent(content, request.user)
     requiredDocuments = case.crondocument_set.all()
-    return render_to_response('cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
+    return render(request, 'cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
 def hq_case_outro(request, id):
     case = Case.objects.get(id=id)
     content = case.outro
     text = renderContent(content, request.user)
-    return render_to_response('cron/case_outro.html', {'text':text, 'mission':case.mission, 'case':case })
+    return render(request, 'cron/case_outro.html', {'text':text, 'mission':case.mission, 'case':case })
