@@ -61,8 +61,8 @@ def login(request):
         return render_to_response('cron/login.html', {'form' : form,}, context_instance=RequestContext(request))
 
 def logout_view(request):
-    log_cron(request.user.cron, 'logout')
-    provlog_add_cron_logout(request.user.cron, request.session.session_key)
+    #log_cron(request.user.cron, 'logout')
+    #provlog_add_cron_logout(request.user.cron, request.session.session_key)
     logout(request)    
     return redirect('cron_index')
 
@@ -78,43 +78,40 @@ def getCurrentMissionInstance(cron):
 
 
 def index(request):
-    if not request.user == None and request.user.is_active:
-        if isCron(request.user):
+    if not request.user == None and request.user.is_active and isCron(request.user):
         
-            mop_list = Mop.objects.filter(cron=request.user.cron)
-            oneMopHasPassedTutorial = False
-            for mop in mop_list:
-                try:
-                    if not mop.mopTracker.isTutorial():
-                        oneMopHasPassedTutorial = True
-                        break
-                except:
-                    pass
-    
-            missionInstance = getCurrentMissionInstance(request.user.cron)
-            mission_url = None
-            
-            if missionInstance is not None:
-                if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
-                    mission_url = None
-                    if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
-                        mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
-                        mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
-                        mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
-                        mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
-                    elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
-                        mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
-                else:
-                    missionInstance = None
-                    
-                     
-            context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
-            return render(request, 'cron/index.html', context)
-        else:
-            return login(request)
+        mop_list = Mop.objects.filter(cron=request.user.cron)
+        oneMopHasPassedTutorial = False
+        for mop in mop_list:
+            try:
+                if not mop.mopTracker.isTutorial():
+                    oneMopHasPassedTutorial = True
+                    break
+            except:
+                pass
+
+        missionInstance = getCurrentMissionInstance(request.user.cron)
+        mission_url = None
+        
+        if missionInstance is not None:
+            if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
+                mission_url = None
+                if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
+                    mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
+                    mission_url = reverse('cron_mission_briefing', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_2_CASES:
+                    mission_url = reverse('cron_mission_cases', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_3_DEBRIEFING:
+                    mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
+                elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
+                    mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
+            else:
+                missionInstance = None
+                
+                 
+        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
+        return render(request, 'cron/index.html', context)
     else:
         return login(request)
 
