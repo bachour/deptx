@@ -11,10 +11,10 @@ Blank forms can be obtained from the {{tutorialData.form_requisition.unit.name}}
 Try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents. To get this form follow these simple steps:
 
 1.	Go to the blank forms page.
-2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}).
+2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}) by clicking the "fill in" button.
 3.	Enter the form ID: {{tutorialData.document_requisition.serial}} in the data field.
 4.	Attach your digital signature by clicking the "Sign Form."
-5.	Go to the Compose page.
+5.	Click the "mail" button next to the newly signed form - this will take you to the "Compose" page and automatically attach the form.
 6.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
 7.	Select "Requesting form" as the subject.
 8.	Select the form you just signed as the form to send.

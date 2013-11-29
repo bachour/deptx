@@ -281,8 +281,14 @@ def prov_check(request):
                     if is_empty:
                         message = "Yes, it seems like the provenance of this document actually checks out."
                     else:
-                        message = "You found the suspicious data! Great job, proceed to your debrief."
-                    message = message + "nYou gained %d weird hats!" % stars
+                        message = "You found the suspicious data!"
+                    if stars == 3:
+                        message = message + "\nThis was an excellent job, and will be reflected in your agent profile."
+                    elif stars == 2:
+                        message = message + "\nGood job. Next time try to be a bit more thorough in your investigation though. Your agent profile has been updated."
+                    elif stars == 1:
+                        message = message + "\nFinally. We were unsure if you would be able to figure it. But you did, after all, and that's all that counts. Your success has been logged in your agent profile."
+                    
                     
                 else:
                     if is_empty:

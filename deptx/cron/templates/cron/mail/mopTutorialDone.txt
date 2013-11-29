@@ -1,6 +1,6 @@
 Agent {{cron.user.username}},
 
-report back to HQ immediately.
+Report back to HQ immediately.
 There is work for you.
 
 -- 

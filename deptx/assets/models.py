@@ -212,7 +212,10 @@ class CronDocument(AbstractDocument):
 
     def __unicode__(self):
         return "%s" % (self.serial)
-
+    
+    def getTrustRequested(self):
+        return Clearance(self.clearance).getTrustRequested()
+    
     def getBadgeUrl(self):
         return Clearance(self.clearance).getBadgeUrl()
     

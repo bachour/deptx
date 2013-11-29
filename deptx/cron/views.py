@@ -91,10 +91,11 @@ def index(request):
                 pass
 
         missionInstance = getCurrentMissionInstance(request.user.cron)
+        mission_url = None
         
-        if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
-            mission_url = None
-            if not missionInstance == None:
+        if missionInstance is not None:
+            if missionInstance.mission.category == Mission.CATEGORY_MOPMAKER or oneMopHasPassedTutorial:
+                mission_url = None
                 if missionInstance.progress == MissionInstance.PROGRESS_0_INTRO:
                     mission_url = reverse('cron_mission_intro', args=(missionInstance.mission.serial,))
                 elif missionInstance.progress == MissionInstance.PROGRESS_1_BRIEFING:
@@ -105,9 +106,9 @@ def index(request):
                     mission_url = reverse('cron_mission_debriefing', args=(missionInstance.mission.serial,))
                 elif missionInstance.progress == MissionInstance.PROGRESS_4_OUTRO:
                     mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
-        else:
-            missionInstance = None
-            mission_url = None
+            else:
+                missionInstance = None
+                
                  
         context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
         return render(request, 'cron/index.html', context)
@@ -201,7 +202,7 @@ def mission_cases(request, serial):
                 unpublished = True
         if (finished and not unpublished):
             missionInstance.makeProgress()
-        text = renderContent(mission.activity, request.user.cron)
+        text = renderContent(mission.activity, request.user)
     return render_to_response('cron/case_list.html', {'user':request.user, 'cron':request.user.cron, 'text':text, 'missionInstance':missionInstance, 'caseInstance_list':caseInstance_list, 'unpublished':unpublished, 'finished':finished, 'MEDIA_URL': MEDIA_URL})
 
 @login_required(login_url='cron_login')
@@ -221,6 +222,7 @@ def mission_outro(request, serial):
 def getMissionOutput(cron, serial, needed_progress):
     text = None
     next_url = None
+    label = "Continue"
     mission = None
     missionInstance = None
     
@@ -235,19 +237,23 @@ def getMissionOutput(cron, serial, needed_progress):
             if needed_progress == MissionInstance.PROGRESS_0_INTRO:
                 content = mission.intro
                 next_url = reverse('cron_mission_briefing', args=(serial,))
+                label = "Proceed to Briefing"
             elif needed_progress == MissionInstance.PROGRESS_1_BRIEFING:
                 content = mission.briefing
                 next_url = reverse('cron_mission_cases', args=(serial,))
+                label = "Start Mission"
             elif needed_progress == MissionInstance.PROGRESS_2_CASES:
                 pass
             elif needed_progress == MissionInstance.PROGRESS_3_DEBRIEFING:
                 content = mission.debriefing
                 next_url = reverse('cron_mission_outro', args=(serial,))
+                label = "Proceed to Aftermath"
             elif needed_progress == MissionInstance.PROGRESS_4_OUTRO:
                 content = mission.outro
                 next_url = reverse('cron_index')
+                label = "Back to HQ"
 
-        text = renderContent(content, cron)
+        text = renderContent(content, cron.user)
         
         if needed_progress == missionInstance.progress:
             missionInstance.makeProgress()
@@ -256,7 +262,7 @@ def getMissionOutput(cron, serial, needed_progress):
         text = None
     
      
-    context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url}        
+    context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url, 'label':label}        
     return context
     
 @login_required(login_url='cron_login')
@@ -266,11 +272,11 @@ def archive(request):
     missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
     return render_to_response('cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
 
-def renderContent(content, cron):
+def renderContent(content, user):
     try:
-        name = cron.user.username
+        name = user.username
     except:
-        name = 'ANONYMOUS_AGENT'
+        name = None
     
     t = Template(content)
     c = Context({"name":name, "MEDIA_URL":MEDIA_URL})
