@@ -1,11 +1,12 @@
-You chose the wrong attributes again. Perhaps you're looking at the wrong places. The attributes you are selecting must be in different nodes and must be different even though they should be identical.
+You chose the wrong attributes again! I'd say you're not very good at this, but then I remember when I had to do this orientation. It took me ages! Which maybe why I ended up in this job... Hmmm...
+
+Anyway! Perhaps you're looking at the wrong places. The attributes you are selecting must be in different nodes and must be different even though they should be identical.
 
 Have you tried asking these questions?
 - Is the name of the person in the agent node is the same as the name of the person on the speeding ticket?
 - Is the license plate number on the agent node the same as the license plate number on the speeding ticket?
 - Is the speed recorded in the speeding activity the same as the speed recorded on the speeding ticket?
-- Was the ticket issued after the recorded incident?
 
-Find out if there's an inconsistency in these and save the document again.
+Find an inconsistency in one of these and save the document again.
 
 {% include 'mop/mail/sandy_sig.txt' %}

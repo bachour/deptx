@@ -1,18 +1,19 @@
-Great! You have successfully acquired your first provenance record. You can view it by going to the document drawer and clicking on the Work button.
+Fantastic! You have successfully acquired your first provenance record! I can feel you becoming a different person already!
 
-This is a simple graph that shows the record of someone receiving a speeding ticket. It shows the main person involved, and the main activity that led to the speeding ticket. Each node in the graph also has attributes such as name, date of birth, and other information about the node.
+This particular record that you have now is a very simple one: it shows the provenance of a speeding ticket. Who got it, when and why.
 
-For a whole bunch of reasons that we won't get into now, there are often errors in the records and we need people like you to help spot them. The document you have received has been flagged for a possible error. Have a look at the record and see if you can figure out what's wrong.
+Now here comes the fun part! Someone did something wrong when this speeding ticket was issued and its provenance record is all messed up. The Ministry doesn't tolerate inconsistencies in our databases. So your job is to help us remove them! You will do so by examining the graph and highlighting the information you think is wrong.
 
 Here's what you need to do:
 1.	Go to the document drawer page.
 2.	Click the Work button on the document you have.
 3.	This will launch the Provenance Viewer.
 4.	Move nodes around by dragging them with your mouse pointer.
-5.	Clicking nodes will allow you to examine them by giving you more information about the node attributes in one of the two attribute panes on the right. 
+5.	Clicking a node will allow you to examine it by giving you more information about the node attributes in one of the two attribute panes on the right. 
 6.	Examine the three nodes.
 7.	You can only view two nodes at a time, so to look at the third, you must first remove one of the other two by clicking on the node again.
-8.	Find the two attributes that you think are inconsistent (they will be in two separate nodes).
+8.	There are two attributes each belonging to on node that logically should be the same, but aren't.
+9.  Find those two attributes that you think are inconsistent.
 9.	Click those two attributes so they are both highlighted in red.
 10.	Click the Save button at the bottom right.
 

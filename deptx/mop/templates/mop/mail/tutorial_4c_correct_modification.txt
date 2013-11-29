@@ -1,10 +1,12 @@
-Well done! You pointed out the inconsistency and now {{tutorialData.document.mopDocument.unit.serial}} clerks will be able to fix the error and make sure our archive contains only correct information.
+Hurray! Well done! I'm so impressed! You did it in way fewer tries than me! You pointed out the inconsistency and now {{tutorialData.document.mopDocument.unit.serial}} clerks will be able to fix it and make sure our archive is error-free!
 
-But first you must submit this document back to {{tutorialData.document.mopDocument.unit.serial}}, otherwise your work on this document cannot be logged. 
+But first you must submit this document back to {{tutorialData.document.mopDocument.unit.serial}}, otherwise your work on this document cannot be logged.
 
-To send the document you must follow these steps:
-1.	Acquire a blank {{tutorialData.document.mopDocument.unit.serial}}'s document submission form (all form IDs can be found in the Guidebook) by following the steps for acquiring new forms.
-2.	Fill in the form with the document ID in the data field.
+Which is great because we get to play with forms again!! I'm tingling with excitement at the idea. You need to do two things: first you need to acquire the correct form to submit the document. Then you need to actually submit the document. 
+
+Here's what you need to do:
+1.	Acquire a blank {{tutorialData.document.mopDocument.unit.serial}}'s document submission form (all form IDs can be found in the Guidebook). If you forgot how to do that just go back to the first email I sent you.
+2.	Fill in the form with the document ID in the data field, and sign it.
 3.	Go to the Compose page.
 4.	Select {{tutorialData.document.mopDocument.unit.serial}} as the recipient.
 5.	Select "Submit document" as the subject.
