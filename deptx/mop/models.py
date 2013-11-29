@@ -219,7 +219,7 @@ class RequisitionBlank(models.Model):
 
 class RequisitionInstance(models.Model):
     blank = models.ForeignKey(RequisitionBlank)
-    data = models.CharField(max_length=256, blank=True, null=True)
+    data = models.TextField(blank=True, null=True)
     used = models.BooleanField(default=False)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
