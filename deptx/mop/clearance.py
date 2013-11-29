@@ -50,7 +50,7 @@ class Clearance():
         elif self.clearance == self.CLEARANCE_ELEVATED:
             return 50
         elif self.clearance == self.CLEARANCE_HIGH:
-            return 100
+            return 80
         elif self.clearance == self.CLEARANCE_SEVERE:
             return 150
         elif self.clearance == self.CLEARANCE_MAX:
@@ -58,17 +58,17 @@ class Clearance():
     
     def getTrustReportedIncorrect(self):
         if self.clearance == self.CLEARANCE_LOW:
-            return -10
+            return -5
         elif self.clearance == self.CLEARANCE_GUARDED:
-            return -30
+            return -15
         elif self.clearance == self.CLEARANCE_ELEVATED:
-            return -50
+            return -25
         elif self.clearance == self.CLEARANCE_HIGH:
-            return -100
+            return -40
         elif self.clearance == self.CLEARANCE_SEVERE:
-            return -150
+            return -75
         elif self.clearance == self.CLEARANCE_MAX:
-            return -200
+            return -100
     
     def getTrustRevoked(self):
         if self.clearance == self.CLEARANCE_LOW:
@@ -78,7 +78,7 @@ class Clearance():
         elif self.clearance == self.CLEARANCE_ELEVATED:
             return -25
         elif self.clearance == self.CLEARANCE_HIGH:
-            return -50
+            return -40
         elif self.clearance == self.CLEARANCE_SEVERE:
             return -75
         elif self.clearance == self.CLEARANCE_MAX:
@@ -158,15 +158,15 @@ class Clearance():
         return path + img
     
 def convertTrustIntoClearance(trust):
-    if trust <= 50:
+    if trust <= 99:
         return Clearance.CLEARANCE_LOW
-    elif trust <=125:
+    elif trust <=199:
         return Clearance.CLEARANCE_GUARDED
-    elif trust <=400:
+    elif trust <=299:
         return Clearance.CLEARANCE_ELEVATED
-    elif trust <=1000:
+    elif trust <=499:
         return Clearance.CLEARANCE_HIGH
-    elif trust <=100000:
+    elif trust <=10000000:
         return Clearance.CLEARANCE_SEVERE
     else:
         return Clearance.CLEARANCE_MAX
