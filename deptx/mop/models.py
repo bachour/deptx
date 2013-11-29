@@ -265,6 +265,7 @@ class Mail(models.Model):
     SUBJECT_REQUEST_FORM = 101
     SUBJECT_REQUEST_DOCUMENT = 103
     SUBJECT_SUBMIT_DOCUMENT = 104
+    SUBJECT_REQUEST_HELP = 105
         
     SUBJECT_RECEIVE_FORM = 201
     SUBJECT_RECEIVE_DOCUMENT = 203
@@ -281,6 +282,7 @@ class Mail(models.Model):
         (SUBJECT_REQUEST_FORM, "Requesting Form"),
         (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
         (SUBJECT_SUBMIT_DOCUMENT, "Submitting Document"),
+        (SUBJECT_REQUEST_HELP, "Asking for Help"),
     )
     
     
@@ -334,6 +336,8 @@ class Mail(models.Model):
     BODY_TUTORIAL_4c_CORRECT_MODIFICATION = 243
     BODY_TUTORIAL_5_CONCLUSION = 250
     
+    BODY_HELP = 300
+    
     CHOICES_BODY_TYPE = (
         (BODY_UNCAUGHT_CASE, 'BODY_UNCAUGHT_CASE'),
         (BODY_ERROR_NO_SUBJECT, 'BODY_ERROR_NO_SUBJECT'),
@@ -361,6 +365,7 @@ class Mail(models.Model):
         (BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2, 'BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2'),
         (BODY_TUTORIAL_4c_CORRECT_MODIFICATION, 'BODY_TUTORIAL_4c_CORRECT_MODIFICATION'),
         (BODY_TUTORIAL_5_CONCLUSION, 'BODY_TUTORIAL_5_CONCLUSION'),
+        (BODY_HELP, 'BODY_HELP'),
     )
     
     mop = models.ForeignKey(Mop)
@@ -454,6 +459,9 @@ class Mail(models.Model):
             tutorialData['document'] = RandomizedDocument.objects.get(isTutorial=True)
         elif self.bodyType == self.BODY_TUTORIAL_5_CONCLUSION:
             template = loader.get_template('mop/mail/tutorial_5_conclusion.txt')
+        elif self.bodyType == self.BODY_HELP:
+            template = loader.get_template('mop/mail/message_to_player.txt')
+            data = self.body
         else:
             text = self.get_bodyType_display()
         

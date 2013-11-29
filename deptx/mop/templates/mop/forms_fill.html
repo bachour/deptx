@@ -3,12 +3,17 @@
 {% block content %}
 <h1>{{reqBlank.requisition.name}}</h1>
 <p>Shortcuts: <a href="{% url 'mop_documents_pool' %}">document pool</a> <a href="{% url 'mop_documents' %}">document drawer</a></p>
-Please enter the identification code of the 
-{% if reqBlank.requisition.category == 0 %}<b>form</b> you want to request
-{% elif reqBlank.requisition.category == 2 %}<b>document</b> you want to request
-{% elif reqBlank.requisition.category == 3 %}<b>document</b> you are submitting
+{% if reqBlank.requisition.category == reqBlank.requisition.CATEGORY_HELP %}
+	You can use this form to ask the {{reqBlank.requisition.unit.name}} for help if you have any problems at all. Don't hesitate, it does not cost any TRUST!<br/>
+	Just write what is worrying you, and send it to the {{reqBlank.requisition.unit.name}} ({{reqBlank.requisition.unit.serial}}) and they will get back to you as soon as possible!
+{% else %}
+	Please enter the identification code of the 
+	{% if reqBlank.requisition.category == reqBlank.requisition.CATEGORY_FORM %}<b>form</b> you want to request
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_DOCUMENT %}<b>document</b> you want to request
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SUBMISION %}<b>document</b> you are submitting
+	{% endif %}
+	 and then send the form to the {{reqBlank.requisition.unit.name}} ({{reqBlank.requisition.unit.serial}})<br>
 {% endif %}
- and then send the form to the {{reqBlank.requisition.unit.name}}.<br>
 <form method="post" action="">
 	{% csrf_token %}
 	{{ form.as_p}}

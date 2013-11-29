@@ -79,12 +79,14 @@ class Requisition(models.Model):
 #   CATEGORY_TASK = 1
     CATEGORY_DOCUMENT = 2
     CATEGORY_SUBMISSION = 3
+    CATEGORY_HELP = 4
     
     CHOICES_CATEGORY = (
         (CATEGORY_FORM, "request form"),
 #         (CATEGORY_TASK, "request task"),
         (CATEGORY_DOCUMENT, "request document"),
         (CATEGORY_SUBMISSION, "submit document"),
+        (CATEGORY_HELP, "ask for help"),
     )
     
     TYPE_NORMAL = 0
