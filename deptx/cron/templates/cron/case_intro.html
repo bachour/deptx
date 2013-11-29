@@ -28,8 +28,32 @@
 	</tr>
 {% endfor %}
 </table>
-<p>In order to acquire missing documents, login to the Ministry of Provenance  <a href="http://www.mofp.net">Intranet</a> and request the document following their standard procedures (make sure you have gained enough TRUST). Afterwards, compose a message and attach the document to it, but don't send it. Instead save it as a draft. Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>
+
+{% if not cronDocument_list.allAvailable %}
+<p>In order to acquire missing documents: 
+<ol> 
+<li> Login to the Ministry of Provenance  <a href="http://www.mofp.net">Intranet</a>.</li>
+<li> Request the document following their standard procedures (make sure you have gained enough TRUST!).</li>
+<li> Then, compose a message and attach the document to it, but do NOT send it. </li>
+<li> Instead save it as a draft. </li>
+<li> When you have done so, return here and click the "Hack MoP Account" above.</li>
+</ol>
+Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>
 <br/>
+{% endif %}
+{% if not cronDocument_list.allMissing %}
+<p>You can now use our own Provenance Viewing tool to inspect the document. Your mission is to examine the document and highlight any inconsistencies in the attributes of the node:</p>
+
+<ol>
+<li>Click the "inspect" link above.</li>
+<li>Start by spreading out the nodes.</li>
+<li>Try to arrange them in a way that helps you understand the sequence of events portrayed in the graph.</li>
+<li>Find out if any attributes are inconsistent. Highlight them and then click "Submit report".</li>
+<li>If you think there are no inconsistencies, make sure no attributes are selected and then click "Submit report".</li>
+</ol>
+{% endif %}
+<br/>
+
 <p><a href="{% url 'cron_mission_cases' mission.serial %}">Back to Mission Overview</a></p>
 {% if caseInstance.isSolved %}
 	<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">View Consequences</a></p>

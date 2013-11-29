@@ -14,7 +14,7 @@ Our {{tutorialData.form_requisition.unit.name}} is the department that is respon
 
 We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents from a specific department. To get this form follow these simple steps:
 
-1.	Go to the Blank Forms page.
+1.	Go to the Blank Forms page from the Control Centre.
 2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}) by clicking the "fill in" button next to it.
 3.	Enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field. You can get form IDs in the employee guidebook!
 4.	Attach your digital signature by clicking the "Sign Form" button.

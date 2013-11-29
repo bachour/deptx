@@ -8,7 +8,7 @@ The document pool page shows all documents that are currently available for you 
 
 In order to work on the document, you first need to request access to it. You can do this by submitting the {{tutorialData.requisition.name}} form you acquired in the first step. Here's how to do it:
 
-1.	Go to the document pool page.
+1.	Go to the Document Pool page from the Control Centre.
 2.  You will see that {{tutorialData.requisition.unit.serial}} is currently offering a document: checking the provenance related to a {{tutorialData.document.mopDocument.name}}.
 3.  Copy the Document ID of that document.
 4.	Go to the Blank Forms page.

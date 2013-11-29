@@ -5,8 +5,11 @@ Congratulations! You successfully checked the provenance of your first MoP docum
 That's the end of your orientation. You now know all there is to know about working for MoP. Forms, documents, provenance graphs! All the works!
 
 You can now go back to the control centre and start working on more documents to improve your TRUST! But keep in mind:
+
 1.	When you save a document you're working on, you will NOT be notified whether or not it is correct until you send it to the department. The department will then process it and inform you of the outcome.
+
 2.	While correct reports will increase your TRUST, incorrect reports are costly to process and cause delays, so your TRUST will be reduced as a result. So don't go sending out random reports. We at the Ministry delays almost as much as we love forms.
+
 3.	In addition, when you request a document you are committing to working on it. If you fail to submit a report on that document in a timely manner you will also lose TRUST points as this causes delays in our document processing line. Did I mention how much we hate delays? 
 
 And remember: Not all documents have an error in them! If you find a provenance record that seems correct, simply save it with no attributes selected and send it in your report.

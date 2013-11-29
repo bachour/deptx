@@ -9,7 +9,7 @@ Here's what you need to do:
 2.	Fill in the form with the document ID in the data field, and sign it.
 3.	Go to the Compose page.
 4.	Select {{tutorialData.document.mopDocument.unit.serial}} as the recipient.
-5.	Select "Submit document" as the subject.
+5.	Select "Submitting document" as the subject.
 6.	Select the form you just signed as the form to send.
 7.	Select the document you just modified as the document to send.
 8.	Click send.
