@@ -444,7 +444,7 @@ class Mail(models.Model):
         elif self.bodyType == self.BODY_TUTORIAL_1_INTRO:
             template = loader.get_template('mop/mail/tutorial_1_intro.txt')
             tutorialData['document_requisition'] = Requisition.objects.get(type=Requisition.TYPE_TUTORIAL)
-            tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL)
+            tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL, category=Requisition.CATEGORY_FORM)
         elif self.bodyType == self.BODY_TUTORIAL_2_DOCUMENT_REQUEST:
             template = loader.get_template('mop/mail/tutorial_2_document_request.txt')
             tutorialData['document'] = RandomizedDocument.objects.get(isTutorial=True)
