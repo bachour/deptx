@@ -153,7 +153,6 @@ class HelpMail(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.pk:
-        
             if self.type == self.TYPE_FROM_PLAYER:
                 subject = "[cr0n] %s: %s" % (self.cron.user.username, self.get_subject_display())
                 email_tpl = loader.get_template('cron/mail/message_from_player.txt')
@@ -169,5 +168,9 @@ class HelpMail(models.Model):
     
     
     def __unicode__(self):
-        return "%s: %s" % (self.cron.user.username, self.get_subject_display())
+        if self.type == self.TYPE_FROM_PLAYER:
+            fromto = "From"
+        else:
+            fromto = "To"
+        return "%s: %s - %s" % (fromto, self.cron.user.username, self.get_subject_display())
     

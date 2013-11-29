@@ -3,8 +3,10 @@
 
 {% block content %}
 <h1>Message</h1>
+
 <p>Agent {{user.username}}, we have received your message and will be in touch shortly.</p>
 <br/>
 <h4>Remember, be vigilant, they are watching</h4>
 <br/>
+<p><a href="{% url 'cron_messages' %}">Back to messages</a></p><br/>
 {% endblock %}
