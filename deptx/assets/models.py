@@ -107,7 +107,7 @@ class Requisition(models.Model):
     
     def get_category_acr(self):
         if self.category == self.CATEGORY_FORM:
-            return "FO"
+            return "AD"
         if self.category == self.CATEGORY_DOCUMENT:
             return "DC"
         if self.category == self.CATEGORY_SUBMISSION:

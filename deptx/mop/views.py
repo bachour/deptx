@@ -3,17 +3,14 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 
-from django.template import RequestContext
 from django.contrib import auth
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.context_processors import csrf
-from django.views.decorators.csrf import csrf_protect
 
-from players.models import Player, Mop
-from django.contrib.auth.models import User
+
+from players.models import Mop
 
 from assets.models import Requisition, Unit, CronDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
@@ -101,7 +98,7 @@ def logout_view(request):
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
     unit_list = Unit.objects.all().order_by('serial')
-    requisition_list = Requisition.objects.all().order_by('category')
+    requisition_list = Requisition.objects.all().order_by('serial')
     log_mop(request.user.mop, 'read rules')
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
@@ -460,9 +457,9 @@ def forms_blank(request):
     for initial in initialRequisitions:
         RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
             
-    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__category')            
+    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__serial')            
     
-    requisition_list = Requisition.objects.all().order_by('category')
+    requisition_list = Requisition.objects.all().order_by('serial')
     requisition_list.allAcquired = True
     for requisition in requisition_list:
         requisition.acquired = False
@@ -501,7 +498,7 @@ def form_fill(request, reqBlank_serial):
             return redirect('mop_forms_signed')
     else:
         form = RequisitionInstanceForm()
-        return render(request, 'mop/forms_fill.html', {"reqBlank": reqBlank, "form": form}, context_instance=RequestContext(request))
+        return render(request, 'mop/forms_fill.html', {"reqBlank": reqBlank, "form": form})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
