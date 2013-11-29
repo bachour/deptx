@@ -16,8 +16,10 @@ from django.template import Context, Template, loader
 from players.forms import MopForm
 
 from assets.models import Case, Mission, CronDocument
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail
 from mop.models import Mail, MopDocumentInstance
+from cron.forms import HelpMailForm
+
 
 from deptx.settings import MEDIA_URL, STATIC_URL
 
@@ -418,6 +420,29 @@ def profile(request):
     mop_list = Mop.objects.filter(cron=request.user.cron)
 
     return render(request, 'cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list, "cronDocumentInstance_list":cronDocumentInstance_list })
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def message_compose(request):
+
+    if request.method == 'POST':
+        helpMail = HelpMail(cron=request.user.cron, type=HelpMail.TYPE_FROM_PLAYER)
+        form = HelpMailForm(data=request.POST, instance=helpMail)
+        if form.is_valid():
+            form.save()
+            return render(request, 'cron/message_sent.html', {})
+        else:
+            return render(request, 'cron/message_compose.html', {"form": form})
+            
+    else:
+        form = HelpMailForm()
+        return render(request, 'cron/message_compose.html', {"form": form})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def messages(request):
+    message_list = HelpMail.objects.filter(cron=request.user.cron).order_by('-createdAt')
+    return render(request, 'cron/messages.html', {"message_list": message_list})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')

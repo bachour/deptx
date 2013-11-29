@@ -1,0 +1,9 @@
+Agent {{cron.user.username}},
+
+Report back to HQ immediately.
+There is a message waiting for you.
+
+-- 
+cr0nogram v1.45b
+
+This is an automated message. Please do not reply to this email.

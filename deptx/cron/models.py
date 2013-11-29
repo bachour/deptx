@@ -2,7 +2,14 @@ from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron
 from assets.models import Mission, Case, CronDocument
+from django.template import Context, loader
+from django.core.mail import EmailMessage, mail_admins
 
+try:
+    from deptx.settings_production import TO_ALL
+except:
+    TO_ALL = ["1@localhost.com", "2@localhost.com"]
+  
   
 class MissionInstance(models.Model):
     
@@ -114,4 +121,53 @@ class CronDocumentInstance(models.Model):
         else:
             status = "IN PROGRESS"
         return self.cronDocument.serial + " / " + self.cron.user.username + " (" + status + ")"
+    
+
+class HelpMail(models.Model):
+    SUBJECT_TECH = 1
+    SUBJECT_STORY = 2
+    SUBJECT_OTHER = 3
+    
+    CHOICES_SUBJECT = (
+        (SUBJECT_OTHER, "I have an idea"),
+        (SUBJECT_STORY, "I need help"),
+        (SUBJECT_TECH, "I have a technical problem"),
+    )
+    
+    TYPE_FROM_PLAYER = 1
+    TYPE_TO_PLAYER = 2
+    
+    CHOICES_TYPE = (
+        (TYPE_FROM_PLAYER, "message sent by player"),
+        (TYPE_TO_PLAYER, "message sent by us"),
+    )
+    
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    
+    cron = models.ForeignKey(Cron)
+    subject = models.IntegerField(choices=CHOICES_SUBJECT)
+    type = models.IntegerField(choices=CHOICES_TYPE)
+    body = models.TextField()
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+        
+            if self.type == self.TYPE_FROM_PLAYER:
+                subject = "[cr0n] %s: %s" % (self.cron.user.username, self.get_subject_display())
+                email_tpl = loader.get_template('cron/mail/message_from_player.txt')
+                c = Context({'body':self.body})
+                email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+            else:
+                to = self.cron.email
+                email_tpl = loader.get_template('cron/mail/message_to_player.txt')
+                c = Context({'cron': self.cron})
+                email = EmailMessage(subject='[cr0n] New Message', body = email_tpl.render(c), to=[to,])
+        email.send(fail_silently=False)
+        super(HelpMail, self).save(*args, **kwargs)
+    
+    
+    def __unicode__(self):
+        return "%s: %s" % (self.cron.user.username, self.get_subject_display())
     

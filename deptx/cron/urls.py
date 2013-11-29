@@ -25,6 +25,9 @@ urlpatterns = patterns('',
     url(r'mission/([-\w]+)/reset', views.missionInstance_reset, name='cron_mission_reset'),
     url(r'mission/([-\w]+)/delete', views.missionInstance_delete, name='cron_mission_delete'),
     url(r'archive/$', views.archive, name='cron_archive'),
+    url(r'messages/$', views.messages, name='cron_messages'),
+    url(r'messages/compose/', views.message_compose, name='cron_message_compose'),
+    
     
     url(r'cr0n-report-gc8', TemplateView.as_view(template_name='cron/pages/cr0n-report-gc8.html'), name='cr0n-report-gc8'),
     url(r'inside-the-bunker/$', TemplateView.as_view(template_name='cron/pages/Inside-the-bunker.html'), name='inside-the-bunker'),
