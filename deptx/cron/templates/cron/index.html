@@ -10,7 +10,7 @@
       
 <br>
 <br>
-<h1>{% if missionInstance %}<a href="{{mission_url}}">Mission: {{missionInstance.mission.name}}</a>{% else %} Currently no mission assigned{% endif %}</h1>
+<h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}"> {{missionInstance.mission.name}}</a>{% else %}There are no active missions currently.{% endif %}</h1>
 
 
 <br>
@@ -19,18 +19,19 @@
 <br>
 <br>
 
+<h1>View your <a href="{% url 'cron_profile' %}">Profile</a></li></h1>
+<h1>View your <a href="{% url 'cron_archive' %}">Archive</a></h1>
 
-
-<h1><a href="{% url 'cron_profile' %}">Profile</a></li></h1>
-<h1><a href="{% url 'cron_archive' %}">Archive</a></h1>
-
-
+<br/>
+<br/>
         <h4>WE ARE CR0N</h4>
       <p>Across the globe, hundreds of  people are joining us, working together to uncover the truth, expose the <a href="http://mofp.net/" title="Ministry of Provenance" target="_blank">Ministry of Provenance</a>, protect our rights and strengthen the power of the people of this planet.</p>
 <br>
 <p>This is a perilous time for us all and there are many dangers ahead.</p>
 <br>
 <p>Your cutting edge work  in field of digital provenance may be the only thing that can save us all.      </p>
+<br/>
+<br/>
 <p align="center" class="tweet"></p>
             
 <p align="center" class="text-3 p3"><img src="{% static 'cron/images/wardrobe.jpg' %}" alt="Through the wardrobe..." width="460" height="276" class="box-border"><br>
