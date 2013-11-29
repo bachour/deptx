@@ -430,7 +430,8 @@ def bunker_image(request, image_name):
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.crondocument_set.all()
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
-            
+
+                
     for required in requiredDocuments:
         required.available = False
         for available in availableDocumentInstances:
@@ -439,7 +440,17 @@ def getAllDocumentStates(cron, case):
                 required.solved = available.solved
                 required.getStars = available.getStars()
                 required.getStarsForTemplate = available.getStarsForTemplate()
-
+    
+    requiredDocuments.allAvailable = True
+    requiredDocuments.allMissing = True
+    
+    for required in requiredDocuments:
+        if required.available:
+            requiredDocuments.allMissing = False
+        else:
+            requiredDocuments.allAvailable = False
+    
+    
     return requiredDocuments
 
 
