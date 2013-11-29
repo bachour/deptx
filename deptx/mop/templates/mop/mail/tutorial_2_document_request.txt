@@ -1,8 +1,8 @@
-Yay!! Looks like you've successfully acquired your first blank form! How exciting! Now let's use it! 
+Yay!! Looks like you've successfully acquired your first blank form! I think I just got goosebumps! I don't even remember the last time I got a new blank form! Now let's use it! 
 
-The form you now have allows you to request documents from {{tutorialData.requisition.unit.serial}} - the {{tutorialData.requisition.unit.name}}. {{tutorialData.requisition.unit.serial}} is the unit of MoP that is responsible for documents relating to transportation. They keep track of speeding tickets, drivers' licenses, train travel documents. Anything you can think of related to transportation!
+The form you now have allows you to request documents from {{tutorialData.requisition.unit.serial}} - the {{tutorialData.requisition.unit.name}}. {{tutorialData.requisition.unit.serial}} is the unit of MoP that is responsible for any document that is related to transport: speeding tickets, drivers' licenses, train travel documents. Anything you can think of related to transport!
 
-As a Ministry of Provenance Citizen Helper, your main task will be to check our documents and make sure they're all in order. The more documents you check, the better your performance record which we call (TRUST - Total Rating of Successful Tasks). Your clearance level and the types of documents you can access are determined by your TRUST so make sure not to do anything stupid that will reduce it.
+As a Ministry of Provenance Citizen Helper, your main task will be to check our documents and make sure they're all in order. The more documents you check, the better your performance record! We call your performance record TRUST (Total Rating of Successful Tasks). Your clearance level and the types of documents you can access are determined by your TRUST.
 
 The document pool page shows all documents that are currently available for you to check based on your clearance level. Your starting clearance level is Blue. 
 

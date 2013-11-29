@@ -5,9 +5,9 @@ This particular record that you have now is a very simple one: it shows the prov
 Now here comes the fun part! Someone did something wrong when this speeding ticket was issued and its provenance record is all messed up. The Ministry doesn't tolerate inconsistencies in our databases. So your job is to help us remove them! You will do so by examining the graph and highlighting the information you think is wrong.
 
 Here's what you need to do:
-1.	Go to the document drawer page.
-2.	Click the Work button on the document you have.
-3.	This will launch the Provenance Viewer.
+1.	Go to the Document Drawer page.
+2.	Click the Work button next to the document you have.
+3.	This will launch the PROMPT, the Provenance Viewer.
 4.	Move nodes around by dragging them with your mouse pointer.
 5.	Clicking a node will allow you to examine it by giving you more information about the node attributes in one of the two attribute panes on the right. 
 6.	Examine the three nodes.

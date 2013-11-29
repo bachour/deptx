@@ -8,15 +8,15 @@ There's tons of departments in the Ministry. All are run differently, but they a
 
 There are forms for requesting documents and forms for submitting reports. There's even a form for requesting forms!
 
-Let's start there! We'll request a new blank form from {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}". Once they process your request, you will have access to the new blank form, which you can then see in the Blank Forms page.
+Let's start there! We'll request a new blank form from {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}".
 
 Our {{tutorialData.form_requisition.unit.name}} is the department that is responsible for handing out all forms. I'm hoping to one day be transfered there! Then I'll be truly working with forms all day!
 
 We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents from a specific department. To get this form follow these simple steps:
 
-1.	Go to the blank forms page.
-2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}) by clicking the "fill in" button.
-3.	Enter the form ID: {{tutorialData.document_requisition.serial}} in the data field. You can get form IDs in the employee guidebook!
+1.	Go to the Blank Forms page.
+2.	Select {{tutorialData.form_requisition.name}} ({{tutorialData.form_requisition.serial}}) by clicking the "fill in" button next to it.
+3.	Enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field. You can get form IDs in the employee guidebook!
 4.	Attach your digital signature by clicking the "Sign Form" button.
 5.	Now that you've filled in and signed your form, click the "mail" button next to the newly signed form - this will take you to the "Compose" page and automatically attach the form.
 6.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
@@ -24,7 +24,7 @@ We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". Thi
 8.	Click "Send".
 9.	Go back to your inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}.
 
-If you followed these steps correctly, you should receive an email from the {{tutorialData.form_requisition.unit.name}} informing you that you have access to the new form. It's very exciting!
+If you followed these steps correctly, you should receive an email from the {{tutorialData.form_requisition.unit.name}} informing you that you have access to the new form. How exciting!
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps. 
 
