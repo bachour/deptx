@@ -305,10 +305,10 @@ class GraphMLProvConverter(object):
     def convert_activity(self, identifier, attributes):
         start_time = None
         end_time = None
-        if MOP_start_date in attributes and MOP_start_time in attributes:
-            start_time = convert_time(attributes[MOP_start_date], attributes[MOP_start_time])
-        if MOP_end_date in attributes and MOP_end_time in attributes:
-            end_time = convert_time(attributes[MOP_end_date], attributes[MOP_end_time])
+        #if MOP_start_date in attributes and MOP_start_time in attributes:
+        #    start_time = convert_time(attributes[MOP_start_date], attributes[MOP_start_time])
+        #if MOP_end_date in attributes and MOP_end_time in attributes:
+        #    end_time = convert_time(attributes[MOP_end_date], attributes[MOP_end_time])
         return self.prov.activity(identifier, start_time, end_time, other_attributes=attributes)
 
     def convert_agent(self, identifier, attributes):
