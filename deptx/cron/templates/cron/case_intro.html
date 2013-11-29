@@ -55,10 +55,8 @@ Our hackers will access your MoP Draft folder to retrieve the document and bypas
 <br/>
 {% if caseInstance.isSolved %}
 <p>This case is now resolved! Great job!</p>
-{% endif %}
-
+<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">Continue to Outcome</a></p>
+{% else %}
 <p><a href="{% url 'cron_mission_cases' mission.serial %}">Back to Mission Overview</a></p>
-{% if caseInstance.isSolved %}
-	<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">View Consequences</a></p>
 {% endif %}
 {% endblock %}
