@@ -202,7 +202,7 @@ def mission_cases(request, serial):
                 unpublished = True
         if (finished and not unpublished):
             missionInstance.makeProgress()
-        text = renderContent(mission.activity, request.user.cron)
+        text = renderContent(mission.activity, request.user)
     return render_to_response('cron/case_list.html', {'user':request.user, 'cron':request.user.cron, 'text':text, 'missionInstance':missionInstance, 'caseInstance_list':caseInstance_list, 'unpublished':unpublished, 'finished':finished, 'MEDIA_URL': MEDIA_URL})
 
 @login_required(login_url='cron_login')
@@ -253,7 +253,7 @@ def getMissionOutput(cron, serial, needed_progress):
                 next_url = reverse('cron_index')
                 label = "Back to HQ"
 
-        text = renderContent(content, cron)
+        text = renderContent(content, cron.user)
         
         if needed_progress == missionInstance.progress:
             missionInstance.makeProgress()
@@ -272,11 +272,11 @@ def archive(request):
     missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
     return render_to_response('cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
 
-def renderContent(content, cron):
+def renderContent(content, user):
     try:
-        name = cron.user.username
+        name = user.username
     except:
-        name = 'ANONYMOUS_AGENT'
+        name = None
     
     t = Template(content)
     c = Context({"name":name, "MEDIA_URL":MEDIA_URL})
