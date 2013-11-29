@@ -436,12 +436,15 @@ def mail_check(request):
             total_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
         except:
             total_unread = None
-        has_new_mail=False
+        has_new_mail = False
         if total_unread > request.session['inbox_unread']:
             has_new_mail = True
             request.session['has_checked_inbox'] = False
         
-        request.session['inbox_unread'] = total_unread
+        try:
+            request.session['inbox_unread'] = total_unread
+        except:
+            pass
         
         json_data = json.dumps({'total_unread':total_unread, 'has_new_mail':has_new_mail})
     
