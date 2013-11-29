@@ -233,7 +233,8 @@ class RequisitionInstance(models.Model):
         return "%s-%s" % (self.blank.requisition.serial, self.serial)
     
     def save(self, *args, **kwargs):
-        self.data = re.sub("[^0-9A-Za-z-]", "", self.data)
+        if not self.blank.requisition.category == Requisition.CATEGORY_HELP:
+            self.data = re.sub("[^0-9A-Za-z-]", "", self.data)
         super(RequisitionInstance, self).save(*args, **kwargs)
         if self.id and not self.serial:
             self.serial = "%s" % (friendly_id.encode(self.id))
