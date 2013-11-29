@@ -199,7 +199,7 @@ function initStage()
 			  nodes[name].label = new Kinetic.Text({
 				x: nodes[name].image.getX(),
 				y: nodes[name].image.getX(),
-				width: nodes[name].image.getWidth(),
+				width: nodes[name].image.getWidth() -10,
 				text: nodes[name].name, //wordWrap(nodes[name].name, 10),
 		        fontSize: NODE_FONT_SIZE,
 		        fontFamily: NODE_FONT_FAMILY,
@@ -1370,9 +1370,10 @@ function createButtons()
 	
 	var buttonText;
 	if (INACTIVE)
-		buttonText = "Exit";
+		buttonText = SUBMIT_INACTIVE_TEXT;
 	else
-		buttonText = "Submit!";
+		buttonText = SUBMIT_ACTIVE_TEXT;
+	
 	submitText = new Kinetic.Text({
 		    x: submitButton.getX(),
 	        y: submitButton.getY(),
