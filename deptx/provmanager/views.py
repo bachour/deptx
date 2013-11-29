@@ -1,8 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
-from django.template import RequestContext
 
 from provmanager.wrapper import Api
 from provmanager.models import Provenance
@@ -95,7 +94,7 @@ def create(request):
             if 'randomize' in request.POST:
                 json_str = json.dumps(get_random_graph(json.loads(json_str)))
             
-            return render_to_response('provmanager/create.html', {"output_list":output_list, "filename":filename, "graphml_str": graphml_str, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url}, context_instance=RequestContext(request))
+            return render(request, 'provmanager/create.html', {"output_list":output_list, "filename":filename, "graphml_str": graphml_str, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url})
 
         elif 'saveMop' in request.POST or 'saveCron' in request.POST:
             if 'saveCron' in request.POST:
@@ -131,7 +130,7 @@ def create(request):
                 return HttpResponseRedirect(reverse('provmanager_index'))
             
             
-    return render_to_response('provmanager/create.html', context_instance=RequestContext(request))
+    return render(request, 'provmanager/create.html')
 
 def randomize_document(mopDocument):
     #bundle = API.get_document(task.provenance.store_id)

@@ -1,8 +1,8 @@
 {% extends 'mop/base.html' %}
 
 {% block content %}
-
 <h1>{{reqBlank.requisition.name}}</h1>
+<p>Shortcuts: <a href="{% url 'mop_documents_pool' %}">document pool</a> <a href="{% url 'mop_documents' %}">document drawer</a></p>
 Please enter the identification code of the 
 {% if reqBlank.requisition.category == 0 %}<b>form</b> you want to request
 {% elif reqBlank.requisition.category == 2 %}<b>document</b> you want to request
