@@ -1,12 +1,13 @@
 {% extends 'mop/base.html' %}
 
 {% block content %}
+<p>Shortcut:
 {% if mail.type == mail.TYPE_RECEIVED and mail.state == mail.STATE_NORMAL %}
-<a class="button" href="{% url 'mop_mail_inbox' %}"><input id="inbox" class="button" type="submit" value="inbox" /></a>
+<a href="{% url 'mop_mail_inbox' %}">inbox</a>
 {% elif mail.type == mail.TYPE_SENT and mail.state == mail.STATE_NORMAL %}
-<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox" /></a>
+<a href="{% url 'mop_mail_outbox' %}">outbox</a>
 {% elif mail.state == mail.STATE_TRASHED %}
-<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash" /></a>
+<a href="{% url 'mop_mail_trash' %}">trash</a>
 {% endif %}
 <table>
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>

@@ -3,21 +3,36 @@
 {% block content %}
 
 <h1>Blank Forms</h1>
+<h2>Forms you can use</h2>
 {% if blank_list %}
 <table>
-<tr><th class="nobox"></th><th>Form</th><th>Unit</th><th>Serial</th><th>Usage</th></tr>
+<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
 {% for blank in blank_list %}
 	<tr>
 	<td class="nobox"><a href="{% url 'mop_forms_fill' blank.requisition.serial %}">fill in</a></td>
-	<td>{{blank.requisition.name}}</td>
 	<td>{{blank.requisition.unit.serial}}</td>
-	<td>{{blank.requisition.serial}}</td>
+	<td>{{blank.requisition.name}}</td>
 	<td>{{blank.requisition.get_category_display}}</td>
+	<td>{{blank.requisition.serial}}</td>
 	</tr>
 {% endfor %}
 </table>
 {% else %}
 No blank forms available.
+{% endif %}
+<h2>Forms you still need to acquire</h2>
+{% if requisition_list.allAcquired %}
+You have aquired all forms from the Unit of Administration.
+{% else %}
+<table>
+<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
+{% for req in requisition_list %}
+	{% if not req.acquired %}
+		<tr><td class="nobox"><a style="visibility:hidden;">fill in</a></td><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
+	{% endif %}
+{% endfor %}
+</table>
+<p><strong>Remember: Only the Unit of Administration hands out new forms! Send all your requests for new forms to the Unit of Adminstration!</strong></p>
 {% endif %}
 
 {% endblock %}
@@ -26,6 +41,6 @@ No blank forms available.
 <p>
 There's no inFORMation without a form!
 </p>
-<p>If you can't find the blank form you need, perhaps you need to request it first via the apropriate form to request new forms. Check the <a href="{% url 'mop_rules' %}">Guidebook</a> for more information.
+<p>If you can't find the blank form you need, perhaps you need to request it first via the apropriate form to request new forms. Check the <a href="{% url 'mop_rules' %}">Guidebook</a> for more information about forms or use the quick reference here to find out about forms you are still missing.
 </p>
 {% endblock %}

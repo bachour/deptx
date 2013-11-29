@@ -462,8 +462,19 @@ def forms_blank(request):
             
     blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__category')            
     
+    requisition_list = Requisition.objects.all().order_by('category')
+    requisition_list.allAcquired = True
+    for requisition in requisition_list:
+        requisition.acquired = False
+        for blank in blank_list:
+            if requisition == blank.requisition:
+                requisition.acquired = True
+                break
+        if not requisition.acquired:
+            requisition_list.allAcquired = False
+    
     log_mop(request.user.mop, 'blank forms')
-    return render(request, 'mop/forms_blank.html', {"blank_list": blank_list})
+    return render(request, 'mop/forms_blank.html', {"blank_list": blank_list, "requisition_list":requisition_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
