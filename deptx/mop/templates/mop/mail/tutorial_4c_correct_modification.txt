@@ -15,6 +15,8 @@ Here's what you need to do:
 8.	Click send.
 9.	Wait for a response from {{tutorialData.document.mopDocument.unit.serial}}.
 
+I don't know about you but I'm very excited about what happens next! 
+
 If you followed these steps correctly, you should receive an email from {{tutorialData.document.mopDocument.unit.serial}} informing you that you have successfully submitted the report.
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.

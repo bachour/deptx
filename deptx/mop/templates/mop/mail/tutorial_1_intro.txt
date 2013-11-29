@@ -16,15 +16,17 @@ We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". Thi
 
 1.	Go to the Blank Forms page from the Control Centre.
 2.	Select {{tutorialData.form_requisition.name}} by clicking the "fill in" button next to it.
-3.	You can lookup the necessary form idea in the table below. 
-4.  Enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field!
-5.	Attach your digital signature by clicking the "Sign Form" button.
-6.  This takes you to the "Signed Forms" page where you can see all the forms you signed. Currently there's only one.
-5.	Now that you've filled in and signed your form, click the "mail" button next to the newly signed form - this will take you to the "Compose" page and automatically attach the form to the message.
-6.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
-7.	Select "Requesting form" as the subject.
-8.	Click "Send".
-9.	Go back to your Inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}.
+3.	You can lookup the necessary form ID in the table below. 
+4.  For now, enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field!
+6.	Attach your digital signature by clicking the "Sign Form" button.
+7.  This takes you to the "Signed Forms" page where you can see all the forms you signed. Currently there's only one.
+8.	Now that you've filled in and signed your form, click the "mail" button next to the newly signed form - this will take you to the "Compose" page and automatically attach the form to the message.
+9.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
+10.	Select "Requesting form" as the subject.
+11.	Click "Send".
+12.	Go back to your Inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}.
+
+Phew! Now wasn't that fun! :)
 
 If you followed these steps correctly, you should receive an email from the {{tutorialData.form_requisition.unit.name}} informing you that you have access to the new form. How exciting!
 

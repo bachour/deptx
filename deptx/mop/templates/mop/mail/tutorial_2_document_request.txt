@@ -21,6 +21,8 @@ In order to work on the document, you first need to request access to it. You ca
 11.	Click Send.
 12.	Wait for a response from {{tutorialData.requisition.unit.serial}}.
 
+Are we having the best time or what?
+
 If you followed these steps correctly, you should receive an email from {{tutorialData.requisition.unit.serial}} informing you that you have access to the new document.
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
