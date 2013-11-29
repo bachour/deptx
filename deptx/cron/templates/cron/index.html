@@ -12,9 +12,6 @@
 <br>
 <h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}"> {{missionInstance.mission.name}}</a>{% else %}There are no active missions currently.{% endif %}</h1>
 
-<br>
-<h4>Remember, be vigilant, they are watching</h4>
-<br>
 
 <h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
 <h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
@@ -24,6 +21,12 @@
 {% endif %}
 <br/>
 <br/>
+
+
+<br>
+<h4>Remember, be vigilant, they are watching</h4>
+<br>
+
         <h4>WE ARE CR0N</h4>
       <p>Across the globe, hundreds of  people are joining us, working together to uncover the truth, expose the Ministry of Provenance, protect our rights and strengthen the power of the people of this planet.</p>
 <br>
