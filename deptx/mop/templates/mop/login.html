@@ -9,6 +9,10 @@
     <meta name="keywords" content="MoP, provenance, ministry, privacy, documents, data center, domestic spying, W3C PROV">
     <meta name="description" content="Ministry of Provenance: Proudly watching you since 1872">
     <meta name="author" content="MofP.net">
+    <link rel="icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon">
+<link rel="shortcut icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon" />
+
+
     <!-- MoP styles -->
     <link href="{% static 'mop/assets/css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'mop/assets/css/mofp-join.css' %}" rel="stylesheet">
@@ -16,7 +20,7 @@
     <!-- MoP scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script> 
     <script src="{% static 'mop/assets/js/bootstrap.min.js' %}"></script>
-    <script src="{{MEDIA_URL}}ANALYTICS/mofp.js"></script>	   
+{% include 'mop/analytics.html' %}	   
   </head>
   <body>
 <div id="signup">

@@ -1,8 +1,15 @@
 {% load staticfiles %}
 <head>
-<title>MoP Intranet</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>Ministry of Provenance - The Ubiquitous Network</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="keywords" content="MoP, provenance, ministry, privacy, documents, data center, domestic spying, W3C PROV">
+<meta name="description" content="Ministry of Provenance: Proudly watching you since 1872">
+<meta name="author" content="MofP.net">
 <link rel="stylesheet" type="text/css" href="{% static "mop/mop.css" %}">
 <link rel="stylesheet" type="text/css" href="{{user.mop.mopTracker.getCssUrl}}">
+<link rel="icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon">
+<link rel="shortcut icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon" />
 
 {% include 'mop/analytics.html' %}
 
