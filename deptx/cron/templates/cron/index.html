@@ -4,7 +4,7 @@
 {% block content %}
 <br/>
 <div class="grid_8">
-<h4 class="clr-10 p2">Most Secret - Agents Eyes ONLY            </h4>
+<h4 class="clr-10 p2">Most Secret - Agents Eyes ONLY </h4>
             <p><!-- Cr0nogram Player Data 1 Content Start--><!-- Cr0nogram Player Data 1 Content End--></p>
             <strong class="text-1">TOGETHER WE CAN STOP THE MINISTRY OF PROVENANCE</strong>      </p>
       
@@ -12,20 +12,19 @@
 <br>
 <h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}"> {{missionInstance.mission.name}}</a>{% else %}There are no active missions currently.{% endif %}</h1>
 
-
-<br>
 <br>
 <h4>Remember, be vigilant, they are watching</h4>
 <br>
-<br>
 
-<h3>View your <a href="{% url 'cron_profile' %}">Profile</a></h3>
-<h3>View your <a href="{% url 'cron_archive' %}">Archive</a></h3>
-
+<h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
+<h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
+{% if (missionInstance and not missionInstance.mission.category == missionInstance.mission.CATEGORY_MOPMAKER) or not missionInstance %}
+<h3>Go to the Ministry of Provenance <a href="http://mofp.net/" title="Ministry of Provenance" target="_blank">Intranet</a>.</h3>
+{% endif %}
 <br/>
 <br/>
         <h4>WE ARE CR0N</h4>
-      <p>Across the globe, hundreds of  people are joining us, working together to uncover the truth, expose the <a href="http://mofp.net/" title="Ministry of Provenance" target="_blank">Ministry of Provenance</a>, protect our rights and strengthen the power of the people of this planet.</p>
+      <p>Across the globe, hundreds of  people are joining us, working together to uncover the truth, expose the Ministry of Provenance, protect our rights and strengthen the power of the people of this planet.</p>
 <br>
 <p>This is a perilous time for us all and there are many dangers ahead.</p>
 <br>
