@@ -2,7 +2,7 @@ from django.shortcuts import render, render_to_response, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
-
+from django.http import Http404
 
 from django.template import RequestContext
 from django.contrib import auth
@@ -329,7 +329,7 @@ def hack_document(request, serial):
     try:
         cronDocument = CronDocument.objects.get(serial=serial)    
     except CronDocument.DoesNotExist:
-        return
+        raise Http404
     
     good_mop, mop_list = accessMopServer(request.user.cron, cronDocument, mop_list)
 
