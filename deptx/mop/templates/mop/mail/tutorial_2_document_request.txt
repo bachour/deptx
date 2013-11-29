@@ -15,7 +15,7 @@ In order to work on the document, you first need to request access to it. You ca
 5.	Select the {{tutorialData.requisition.name}} form {{tutorialData.requisition.serial}}.
 6.	Enter the Document ID in the Data field.
 7.	Sign the form.
-8.	Click "mail".
+8.	Click "mail" from the "Signed forms" page.
 9.	Select {{tutorialData.requisition.unit.serial}} as the recipient.
 10.	Select "Requesting document" as the subject.
 11.	Click Send.
