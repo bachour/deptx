@@ -6,6 +6,7 @@ Have you tried asking these questions?
 - Is the name of the person in the agent node is the same as the name of the person on the speeding ticket?
 - Is the license plate number on the agent node the same as the license plate number on the speeding ticket?
 - Is the speed recorded in the speeding activity the same as the speed recorded on the speeding ticket?
+- Do the dates on the nodes make sense? Is the ticket issued on the same day or after the incident?
 
 Find an inconsistency in one of these and save the document again.
 
