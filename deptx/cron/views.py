@@ -38,6 +38,12 @@ def isCron(user):
             pass
     return False
 
+def custom_404_view(request):
+    return render(request, 'cron/404.html')
+
+def custom_500_view(request):
+    return render(request, 'cron/500.html')
+
 def login(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)

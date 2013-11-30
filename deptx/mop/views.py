@@ -38,6 +38,8 @@ def isMop(user):
 def custom_404_view(request):
     return render(request, 'mop/404.html')
 
+def custom_500_view(request):
+    return render(request, 'mop/500.html')
 
 def index(request):
 
