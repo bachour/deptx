@@ -225,7 +225,7 @@ def getMissionOutput(cron, serial, needed_progress):
         mission = Mission.objects.get(serial=serial)
         missionInstance = MissionInstance.objects.get(cron=cron, mission=mission)
     except:
-        pass
+        return None
     
     if not mission == None and not missionInstance == None:
         if needed_progress <= missionInstance.progress:
@@ -247,6 +247,8 @@ def getMissionOutput(cron, serial, needed_progress):
                 content = mission.outro
                 next_url = reverse('cron_index')
                 label = "Back to HQ"
+        else:
+            return None
 
         text = renderContent(content, cron.user)
         
@@ -254,7 +256,7 @@ def getMissionOutput(cron, serial, needed_progress):
             missionInstance.makeProgress()
 
     else:
-        text = None
+        return None
     
      
     context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url, 'label':label}        
