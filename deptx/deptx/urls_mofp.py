@@ -1,6 +1,8 @@
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 
+handler404 = 'mop.views.custom_404_view'
+
 urlpatterns = patterns('',
     url(r'^', include('mop.urls')),
     url(r'^provmanager/', include('provmanager.urls')),

@@ -35,8 +35,10 @@ def isMop(user):
                 return True
     return False
 
-#@login_required(login_url='mop_login')
-#@user_passes_test(isMop, login_url='mop_login')
+def custom_404_view(request):
+    return render(request, 'mop/404.html')
+
+
 def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
