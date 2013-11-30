@@ -1,7 +1,7 @@
 {% extends 'mop/base.html' %}
 
 {% block content %}
-<h1>Signing a Form</h1>
+<h1>Filling in Form</h1>
 <p>Shortcuts: <a href="{% url 'mop_documents_pool' %}">document pool</a> <a href="{% url 'mop_documents' %}">document drawer</a></p>
 <form method="post" action="">
 {% csrf_token %}
