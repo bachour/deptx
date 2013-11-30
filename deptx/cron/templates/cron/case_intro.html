@@ -9,6 +9,7 @@
 <table class="banner-1">
 	<tr>
 		<th></th>
+		<th></th>
 		<th>name</th>
 		<th>identification number</th>
 		<th>unit</th>
@@ -18,7 +19,23 @@
 {% for cronDocument in cronDocument_list %}
 	<tr style='vertical-align:middle' {% if not cronDocument.available %}class='missing'{% endif %}>
 		<td>
-		{% if cronDocument.available or cheat %}<a class='button' href="{% url "cron_provenance" mission.serial case.serial cronDocument.serial %}">{% if cronDocument.solved %}view{% else %}inspect{% endif %}</a>{% else %}<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>{% endif %}
+			{% if cronDocument.solved %}
+				<div style="position:relative; width:80px;">
+					<div style="position:absolute;top:50%;margin-top:-25px">
+						<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>
+					</div>
+					<div>
+						{% for i in cronDocument.getStarsForTemplate %}<img width="32px" src="{% static 'cron/images/hat.png' %}" />{% endfor %}
+					</div>
+				</div>
+			{% endif %}
+		</td>
+		<td>
+		{% if cronDocument.available or cheat %}
+			<a class='button' href="{% url "cron_provenance" mission.serial case.serial cronDocument.serial %}">{% if cronDocument.solved %}view{% else %}inspect{% endif %}</a>
+		{% else %}
+			<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>
+		{% endif %}
 		</td>
 		<td>{{cronDocument.name}}</td>
 		<td>{{cronDocument.serial}}</td>

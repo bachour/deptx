@@ -52,9 +52,17 @@
     		var URL_GET_STATE = "{% url 'provmanager_improve_saved_state' provenance.serial %}";
     	{% endif %}
     	{% if case %}
-    		var URL_CONTINUE = "{% url 'cron_case_intro' mission.serial case.serial %}";
+    		{% if inactive %}
+    			var URL_CONTINUE = "{% url 'cron_case_intro' mission.serial case.serial %}";
+    		{% else %}
+    			var URL_CONTINUE = "{% url 'cron_case_outro' mission.serial case.serial %}";
+    		{% endif %}
     	{% elif isMop %}
-    		var URL_CONTINUE = "{% url 'mop_documents' %}";
+    		{% if inactive %}
+    			var URL_CONTINUE = "{% url 'mop_documents_archive' %}";
+    		{% else %}
+    			var URL_CONTINUE = "{% url 'mop_documents' %}";
+    		{% endif %}
     	{% else %}
     		var URL_CONTINUE = "";
     	{% endif %}

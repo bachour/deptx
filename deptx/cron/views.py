@@ -380,13 +380,16 @@ def case_outro(request, mission_serial, case_serial):
         caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
     except:
         return
-
-    content = case.outro
-    text = renderContent(content, request.user)
     
-    requiredDocuments = getAllDocumentStates(request.user.cron, case)
-
-    return render(request, 'cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text })
+    if caseInstance.isSolved():
+        content = case.outro
+        text = renderContent(content, request.user)
+        
+        requiredDocuments = getAllDocumentStates(request.user.cron, case)
+    
+        return render(request, 'cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text })
+    else: 
+        return HttpResponseRedirect(reverse('cron_case_intro', args=(mission_serial, case_serial,)))
     
 
 @login_required(login_url='cron_login')
