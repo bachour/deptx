@@ -76,7 +76,7 @@ The Ministry of Provenance is divided into several units which are working toget
 <p>Once you acquire a blank form of a certain type, you may use it as many times as you wish. Blank forms you have already acquired can be seen in the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</p>
 <p>The following is a comprehensive list of forms that are currently available from the Unit of Administration:</p>
 <table>
-<tr><th>Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
+<tr><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
 {% for req in requisition_list %}
 	<tr><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
 {% endfor %}
