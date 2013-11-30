@@ -21,7 +21,6 @@ from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logou
 from logger.logging import log_cron, log_mop
 import json
 
-from mop.mailserver import analyze_mail
 from mop.performer import analyze_performance
 from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
@@ -349,10 +348,7 @@ def mail_compose(request, fullSerial=None):
                 if not mail.mopDocumentInstance == None:
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
-            
-            
-            #TODO remove for real game
-            analyze_mail()    
+                
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
@@ -408,8 +404,6 @@ def mail_edit(request, mail_id):
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
             
-            #TODO remove for real game
-            analyze_mail()    
             return redirect('mop_index')
         else:
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')

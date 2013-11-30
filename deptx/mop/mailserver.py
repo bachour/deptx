@@ -20,7 +20,10 @@ def analyze_mail():
     mail_list = Mail.objects.filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
     #TODO add more output
     output.append("Unprocessed mails: %d" % mail_list.count())
-    
+
+    return check_mail(mail_list)
+
+def check_mail(mail_list):
     for mail in mail_list:
         
         if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
