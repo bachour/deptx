@@ -27,7 +27,7 @@ def analyze_mail():
 def check_mail(mail_list):
     for mail in mail_list:
         
-        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
+        if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
             subject = "[MoP] %s: Help Request" % (mail.mop.user.username)
             email_tpl = loader.get_template('mop/mail/message_from_player.txt')
             c = Context({'body':mail.requisitionInstance.data})
