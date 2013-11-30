@@ -266,8 +266,8 @@ def getMissionOutput(cron, serial, needed_progress):
 @user_passes_test(isCron, login_url='cron_login')
 def archive(request):
     #TODO: Sort by mission.rank
-    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
-    return render(request, 'cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
+    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron).exclude(progress=MissionInstance.PROGRESS_0_INTRO)
+    return render(request, 'cron/archive.html', {"missionInstance_list": missionInstance_list})
 
 def renderContent(content, user):
     try:
