@@ -21,7 +21,8 @@ def analyze_mail():
     #TODO add more output
     output.append("Unprocessed mails: %d" % mail_list.count())
 
-    return check_mail(mail_list)
+    check_mail(mail_list)
+    return output
 
 def check_mail(mail_list):
     for mail in mail_list:
@@ -133,13 +134,6 @@ def check_mail(mail_list):
             if newMail.trust is not None:
                 mail.mop.mopTracker.addTrust(newMail.trust)
 
-   
-    return output
-
-# def generateBody(text, data=None):
-#     t = Template(text)
-#     c = Context({"data": data})
-#     return t.render(c)
 
 def requisitionBlankExists(mop, requisition):
     try:
