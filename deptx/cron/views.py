@@ -125,6 +125,10 @@ def index(request):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mopmaker(request, missionInstance):
+    mop_list = Mop.objects.filter(cron=request.user.cron)
+    if mop_list:
+        return render(request, 'cron/mopmaker_exists.html', {"mop_list":mop_list})
+    
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
