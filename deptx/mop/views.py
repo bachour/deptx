@@ -43,13 +43,6 @@ def custom_500_view(request):
 
 def index(request):
 
-    mail_list = Mail.objects.all()
-    for mail in mail_list:
-        try:
-            mail.save()
-        except:
-            print mail.id
-
     if not request.user == None and request.user.is_active and isMop(request.user):
 
         mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
