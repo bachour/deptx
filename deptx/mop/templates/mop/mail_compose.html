@@ -7,7 +7,7 @@
 
 {% block content %}
 <h2>Compose Message:</h2>
-<form action="{% if not mail %}{% url 'mop_mail_compose' %}{% else %}{% url 'mop_mail_edit' mail.id %}{% endif %}" method="post">{% csrf_token %}
+<form action="{% if not mail %}{% url 'mop_mail_compose' %}{% else %}{% url 'mop_mail_edit' mail.serial %}{% endif %}" method="post">{% csrf_token %}
 <table>
 <tr><th>Receiving Unit</th><td class="nobox nopadding"><div class="styled-select">{{form.unit}}</div></td></tr>
 <tr><th>Subject</th><td class="nobox nopadding"><div class="styled-select">{{form.subject}}</div></td></tr>

@@ -6,7 +6,7 @@
 <h2>Forms you can use</h2>
 {% if blank_list %}
 <table>
-<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
+<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Type</th><th>Identifiert</th></tr>
 {% for blank in blank_list %}
 	<tr>
 	<td class="nobox"><a href="{% url 'mop_forms_fill' blank.requisition.serial %}">fill in</a></td>
@@ -25,7 +25,7 @@ No blank forms available.
 You have aquired all forms from the Unit of Administration.
 {% else %}
 <table>
-<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Usage</th><th>Serial</th></tr>
+<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
 {% for req in requisition_list %}
 	{% if not req.acquired %}
 		<tr><td class="nobox"><a style="visibility:hidden;">fill in</a></td><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>

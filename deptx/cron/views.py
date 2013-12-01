@@ -16,8 +16,10 @@ from django.template import Context, Template, loader
 from players.forms import MopForm
 
 from assets.models import Case, Mission, CronDocument
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail
 from mop.models import Mail, MopDocumentInstance
+from cron.forms import HelpMailForm
+
 
 from deptx.settings import MEDIA_URL, STATIC_URL
 
@@ -35,6 +37,12 @@ def isCron(user):
         except Cron.DoesNotExist:
             pass
     return False
+
+def custom_404_view(request):
+    return render(request, 'cron/404.html')
+
+def custom_500_view(request):
+    return render(request, 'cron/500.html')
 
 def login(request):
     if request.method == 'POST':
@@ -117,6 +125,10 @@ def index(request):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mopmaker(request, missionInstance):
+    mop_list = Mop.objects.filter(cron=request.user.cron)
+    if mop_list:
+        return render(request, 'cron/mopmaker_exists.html', {"mop_list":mop_list})
+    
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
         user_form = UserCreationForm(request.POST, prefix="user")
@@ -223,7 +235,7 @@ def getMissionOutput(cron, serial, needed_progress):
         mission = Mission.objects.get(serial=serial)
         missionInstance = MissionInstance.objects.get(cron=cron, mission=mission)
     except:
-        pass
+        return None
     
     if not mission == None and not missionInstance == None:
         if needed_progress <= missionInstance.progress:
@@ -245,6 +257,8 @@ def getMissionOutput(cron, serial, needed_progress):
                 content = mission.outro
                 next_url = reverse('cron_index')
                 label = "Back to HQ"
+        else:
+            return None
 
         text = renderContent(content, cron.user)
         
@@ -252,7 +266,7 @@ def getMissionOutput(cron, serial, needed_progress):
             missionInstance.makeProgress()
 
     else:
-        text = None
+        return None
     
      
     context = {'user':cron.user, 'cron':cron, 'mission':mission, 'missionInstance':missionInstance, 'text':text, 'next_url':next_url, 'label':label}        
@@ -262,8 +276,8 @@ def getMissionOutput(cron, serial, needed_progress):
 @user_passes_test(isCron, login_url='cron_login')
 def archive(request):
     #TODO: Sort by mission.rank
-    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron)
-    return render(request, 'cron/archive.html', {'user':request.user, "cron": request.user.cron, "missionInstance_list": missionInstance_list})
+    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron).exclude(progress=MissionInstance.PROGRESS_0_INTRO)
+    return render(request, 'cron/archive.html', {"missionInstance_list": missionInstance_list})
 
 def renderContent(content, user):
     try:
@@ -378,13 +392,16 @@ def case_outro(request, mission_serial, case_serial):
         caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
     except:
         return
-
-    content = case.outro
-    text = renderContent(content, request.user)
     
-    requiredDocuments = getAllDocumentStates(request.user.cron, case)
-
-    return render(request, 'cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text })
+    if caseInstance.isSolved():
+        content = case.outro
+        text = renderContent(content, request.user)
+        
+        requiredDocuments = getAllDocumentStates(request.user.cron, case)
+    
+        return render(request, 'cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text })
+    else: 
+        return HttpResponseRedirect(reverse('cron_case_intro', args=(mission_serial, case_serial,)))
     
 
 @login_required(login_url='cron_login')
@@ -418,6 +435,29 @@ def profile(request):
     mop_list = Mop.objects.filter(cron=request.user.cron)
 
     return render(request, 'cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list, "cronDocumentInstance_list":cronDocumentInstance_list })
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def message_compose(request):
+
+    if request.method == 'POST':
+        helpMail = HelpMail(cron=request.user.cron, type=HelpMail.TYPE_FROM_PLAYER)
+        form = HelpMailForm(data=request.POST, instance=helpMail)
+        if form.is_valid():
+            form.save()
+            return render(request, 'cron/message_sent.html', {})
+        else:
+            return render(request, 'cron/message_compose.html', {"form": form})
+            
+    else:
+        form = HelpMailForm()
+        return render(request, 'cron/message_compose.html', {"form": form})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def messages(request):
+    message_list = HelpMail.objects.filter(cron=request.user.cron).order_by('-createdAt')
+    return render(request, 'cron/messages.html', {"message_list": message_list})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')

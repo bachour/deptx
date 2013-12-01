@@ -42,7 +42,7 @@ def register(request):
                 to=[cron.email,],
             )
             #in settings.py you can configure console backend for displaying emails instead of sending them - great for testing!
-            email.send(fail_silently=True)
+            email.send(fail_silently=False)
 
             
              

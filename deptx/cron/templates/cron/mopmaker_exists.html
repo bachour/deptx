@@ -1,0 +1,24 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+<br/>
+<p>You have succesfully created a fake identity. For now, this is all you need.</p>
+<br/>
+{% for mop in mop_list %}
+<table>
+	<tr><td>User name:</td><td>{{mop.user.username}}</td></tr>
+	<tr><td>ID:</td><td>{{mop.serial}}</td></tr>
+	<tr><td>Status:</td><td>{% if mop.active %}active{% else %}retired{% endif %}</td></tr>
+	<tr><td>Name: </td><td>{{mop.firstname}} {{mop.lastname}}</td></tr>
+	<tr><td>Date of Birth:</td><td>{{mop.dob}}</td></tr>
+	<tr><td>Gender</td><td>{{mop.get_gender_display}}</td></tr>
+	<tr><td>Weight:</td><td>{{mop.weight}}kg</td></tr>
+	<tr><td>Height:</td><td>{{mop.height}}cm</td></tr>
+	<tr><td>Marital Status:</td><td>{{mop.get_marital_display}}</td></tr>
+	<tr><td>Hair Colour:</td><td>{{mop.get_hair_display}}</td></tr>
+	<tr><td>Eye Colour:</td><td>{{mop.get_eyes_display}}</td></tr>
+</table>
+<br/>
+{% endfor %}
+
+{% endblock content %}

@@ -15,6 +15,7 @@
 
 <h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
 <h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
+<h3>View your <a href="{% url 'cron_messages' %}">Messages</a>.</h3>
 {% if not missionInstance or not missionInstance.mission.category == missionInstance.mission.CATEGORY_MOPMAKER %}
 <br/>
 <h3>Go to the Ministry of Provenance <a href="http://mofp.net/" title="Ministry of Provenance" target="_blank">Intranet</a>.</h3>

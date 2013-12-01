@@ -1,0 +1,18 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<h1>Messages</h1>
+<p><a href="{% url 'cron_message_compose' %}">Send a message</a></p><br/>
+{% if message_list %}
+	{% for message in message_list %}
+		<h4>{% if message.type == message.TYPE_TO_PLAYER %}Re: {% endif %}{{message.get_subject_display}}</h4>
+		<h5>{% if message.type == message.TYPE_FROM_PLAYER %}Sent:{% else %}Received:{% endif %} {{message.createdAt}}</h5>
+		<p>{{message.body|linebreaks}}</p>
+		<hr/>
+	{% endfor %}
+{% else %}
+No messages yet.
+{% endif %}
+<br/>
+{% endblock %}

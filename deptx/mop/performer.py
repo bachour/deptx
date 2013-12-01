@@ -2,7 +2,7 @@
 from players.models import Mop
 from mop.clearance import Clearance, getAdjustedClearance
 from mop.models import MopDocumentInstance, TrustInstance, Mail
-from mop.mailserver import sendReport
+from assets.models import Unit
 
 def analyze_performance():
     output = []
@@ -27,8 +27,8 @@ def analyze_performance():
         mop.mopTracker.trust = 0
         mop.mopTracker.credit = trustInstance.credit()
         mop.mopTracker.save()
-        sendReport(trustInstance)
-        
+        unit = Unit.objects.filter(type=Unit.TYPE_ADMINISTRATIVE)[0]
+        Mail.objects.create(mop=trustInstance.mop, trustInstance=trustInstance, unit=unit, subject=Mail.SUBJECT_INFORMATION, type=Mail.TYPE_RECEIVED, bodyType=Mail.BODY_PERFORMANCE_REPORT)
     
     return output
         

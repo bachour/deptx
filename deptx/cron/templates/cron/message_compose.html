@@ -1,0 +1,18 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<h1>Message</h1>
+<p>Agent {{user.username}}, if you should come across any suspicious activities, have questions concerning your duties as an agent, if cr0nogram is not working as expected or you have ideas on how to improve upon it - send us a quick message and we will see how we can help you.</p>
+<br/>
+<form method="post" action="">
+<table>
+	{% csrf_token %}
+	<tr><td>Subject</td><td>{{form.subject}}</td><td>{{form.subject.errors}}</td></tr>
+	<tr><td>Message</td><td>{{form.body}}</td><td>{{form.body.errors}}</td></tr>
+</table>
+<input class="button" type="submit" value="Send" />
+</form>
+<br/><br/>
+<p><a href="{% url 'cron_messages' %}">Back to messages</a></p><br/>
+{% endblock %}

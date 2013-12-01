@@ -2,6 +2,10 @@ Fantastic! You have successfully acquired your first provenance record! I can fe
 
 This particular record that you have now is a very simple one: it shows the provenance of a speeding ticket. Who got it, when and why.
 
+Let's do a quick recap how provenance works. You have already seen this video during your recruitment, but let's refresh our memories anyways!
+
+<iframe width="560" height="315" src="//www.youtube.com/embed/O13PK0YyH8A" frameborder="0" allowfullscreen></iframe>
+
 Now here comes the fun part! Someone did something wrong when this speeding ticket was issued and its provenance record is all messed up. The Ministry doesn't tolerate inconsistencies in our databases. So your job is to help us remove them! You will do so by examining the graph and highlighting the information you think is wrong.
 
 Here's what you need to do:

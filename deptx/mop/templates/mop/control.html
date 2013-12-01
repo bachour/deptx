@@ -2,16 +2,39 @@
 
 <div class="main">
 	<div class="content">
-		<h1>Control Centre</h1>
+		<h1>MoP Control Centre</h1>
 			{% for out in output %}
 				{{out}}<br/>
 			{% endfor %}
 			
 			<form action="{% url 'mop_control' %}" method="post">{% csrf_token %}
 			<input class="button" type="submit" value="process mail" name="mail" /><br/>
+			<!--
 			<input class="button" type="submit" value="process performance" name="performance" /><br/>
 			<input class="button" type="submit" value="process randomizer" name="randomizer" />
+			-->
 			</form>
+		<h1>Unprocessed Mails</h1>
+		<table>
+		<tr><th>Mop</th><th>Id</th><th>Subject</th><th>Sent</th></tr>
+		{% for mail in mail_list %}
+			<tr><td>{{mail.mop.user.username}}</td><td>{{mail.id}}</td><td>{{mail.get_subject_display}}</td><td>{{mail.sentAt}}</td></tr>
+		{% endfor %}
+		</table>
+		<h1>Available Document Templates</h1>
+		<table>
+		<tr><th>Amount</th><th>Document</th><th>Provenance</th><th>Unit</th><th>Clearance</th><th>Create Randomized</th></tr>
+		{% for mopDocument in mopDocument_list %}
+			<tr><td>{{mopDocument.amount}}</td><td>{{mopDocument.name}}</td><td>{{mopDocument.provenance.name}}</td><td>{{mopDocument.unit.serial}}</td><td>{{mopDocument.get_clearance_display}}</td><td><a href="{% url 'mop_control_randomize' mopDocument.id %}">randomize</a></td></tr>
+		{% endfor %}
+		</table>
+		<h1>MoPs</h1>
+		<table>
+		<tr><th>MoP</th><th>TRUST</th><th>Total TRUST</th><th>Document Pool</th><th>Documents</th></tr>
+		{% for mop in mop_list %}
+		<tr><td>{{mop.user.username}}{% if mop.user.is_staff %} (staff){% endif %}</td><td>{{mop.mopTracker.trust}}</td><td>{{mop.mopTracker.totalTrust}}</td><td>{{mop.availableDocs}}</td><td>{{mop.mopdocumentinstance_set.all.count }}</td></tr>
+		{% endfor %}
+		</table>
 	</div>
 </div>
 

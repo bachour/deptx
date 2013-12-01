@@ -1,6 +1,9 @@
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 
+handler404 = 'cron.views.custom_404_view'
+handler500 = 'cron.views.custom_500_view'
+
 urlpatterns = patterns('',
     url(r'^', include('cron.urls')),
     url(r'^provmanager/', include('provmanager.urls')),

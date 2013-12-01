@@ -5,5 +5,4 @@ from mop.mailserver import analyze_mail
 class Command(NoArgsCommand):
     help = "Automated Mailserver"
     def handle_noargs(self, **options):
-        pass
         analyze_mail()

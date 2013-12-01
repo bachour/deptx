@@ -9,10 +9,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-
+from mop import documentcreator
 from players.models import Mop
 
-from assets.models import Requisition, Unit, CronDocument
+from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
@@ -21,12 +21,12 @@ from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logou
 from logger.logging import log_cron, log_mop
 import json
 
-from mop.mailserver import analyze_mail
 from mop.performer import analyze_performance
 from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
-
+from mop.mailserver import analyze_mail
 import tutorial
+from deptx.helpers import now
 
 def isMop(user):
     if user:
@@ -35,8 +35,12 @@ def isMop(user):
                 return True
     return False
 
-#@login_required(login_url='mop_login')
-#@user_passes_test(isMop, login_url='mop_login')
+def custom_404_view(request):
+    return render(request, 'mop/404.html')
+
+def custom_500_view(request):
+    return render(request, 'mop/500.html')
+
 def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
@@ -46,15 +50,16 @@ def index(request):
         hide = tutorial.hide(mopTracker, created)
   
         #MAIL MANAGING
+        #inbox = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).count()
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
-        outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
-        trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
-        draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
+        #outbox = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).count()
+        #trash = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).count()
+        #draft = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).count()
         
         request.session['inbox_unread'] = inbox_unread
         
         log_mop(request.user.mop, 'index')
-        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread, 'hide':hide}
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'hide':hide}
 
         return render(request, 'mop/index.html', context)
     
@@ -233,9 +238,9 @@ def mail_trash(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_view(request, mail_id):
+def mail_view(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop)
         mail.read = True
         mail.save()
     except Mail.DoesNotExist:
@@ -243,19 +248,15 @@ def mail_view(request, mail_id):
     
     request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
     
-    if not mail == None:
-        m ={}
-        m['id'] = mail.id
-        m['subject'] = mail.subject
-        log_mop(request.user.mop, 'view mail', json.dumps(m))
+    tutorial.cronMail(request.user.mop.mopTracker, mail)
     
     return render(request, 'mop/mail_view.html', {'mail': mail})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_trashing(request, mail_id):
+def mail_trashing(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop, state=Mail.STATE_NORMAL)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop, state=Mail.STATE_NORMAL)
     except Mail.DoesNotExist:
         #TODO Error handling
         return redirect('mop_index')
@@ -278,9 +279,9 @@ def mail_trashing(request, mail_id):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_untrashing(request, mail_id):
+def mail_untrashing(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop, state=Mail.STATE_TRASHED)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop, state=Mail.STATE_TRASHED)
     except Mail.DoesNotExist:
         return redirect('mop_index')
     mail.read = True
@@ -297,9 +298,9 @@ def mail_untrashing(request, mail_id):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_deleting(request, mail_id):
+def mail_deleting(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop, state=Mail.STATE_TRASHED)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop, state=Mail.STATE_TRASHED)
     except Mail.DoesNotExist:
         #TODO Error handling
         return redirect('mop_index')
@@ -330,6 +331,7 @@ def mail_compose(request, fullSerial=None):
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
             mail.read = True
+            mail.sentAt = now()
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
             mail.read = False
@@ -345,10 +347,7 @@ def mail_compose(request, fullSerial=None):
                 if not mail.mopDocumentInstance == None:
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
-            
-            
-            #TODO remove for real game
-            analyze_mail()    
+                
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
@@ -375,9 +374,9 @@ def mail_compose(request, fullSerial=None):
 #TODO code duplication between mail_edit and mail_compose    
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_edit(request, mail_id):
+def mail_edit(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id)
+        mail = Mail.objects.get(serial=serial)
     except mail.DoesNotExist:
         #TODO error handling
         return redirect('mop_mail_index')
@@ -386,12 +385,13 @@ def mail_edit(request, mail_id):
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
             mail.read = True
+            mail.sentAt = now()
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
             mail.read = False
         
         form = MailForm(data=request.POST, instance=mail)
-        print mail.id
+
         if form.is_valid():
             mail.processed = False
             mail = form.save()
@@ -404,8 +404,6 @@ def mail_edit(request, mail_id):
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
             
-            #TODO remove for real game
-            analyze_mail()    
             return redirect('mop_index')
         else:
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
@@ -528,8 +526,23 @@ def control(request):
             output = analyze_performance()
         elif 'randomizer' in request.POST:
             output = create_documents()
-    return render(request, 'mop/control.html', {'output':output})       
+    mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False).filter(state=Mail.STATE_NORMAL)
+    mopDocument_list = MopDocument.objects.all()
+    for mopDocument in mopDocument_list:
+        mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).count()
+    
+    mop_list = Mop.objects.all()
 
+    for mop in mop_list:
+        mop.availableDocs = RandomizedDocument.objects.all().count() - MopDocumentInstance.objects.filter(mop=mop).count()
+    
+    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 
+@staff_member_required
+def control_randomize(request, mopDocument_id):
+    mopDocument = MopDocument.objects.get(id=mopDocument_id)
+    documentcreator.create_single_document(mopDocument)
+    return HttpResponseRedirect(reverse('mop_control'))
+    
     
     

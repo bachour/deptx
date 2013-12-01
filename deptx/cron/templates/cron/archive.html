@@ -7,19 +7,19 @@
 {% if missionInstance_list %}
 	{% for missionInstance in missionInstance_list %}
 		<h2>{{missionInstance.mission.name}}</h2>
-		{% if missionInstance.isIntroAllowed %}
+		{% if missionInstance.progress >= missionInstance.PROGRESS_1_BRIEFING %}
 			<h3><a href="{% url 'cron_mission_intro' missionInstance.mission.serial %}">Introduction</a></h3>
 		{% endif %}
-		{% if missionInstance.isBriefingAllowed %}
+		{% if missionInstance.progress >= missionInstance.PROGRESS_2_CASES %}
 			<h3><a href="{% url 'cron_mission_briefing' missionInstance.mission.serial %}">Briefing</a></h3>
 		{% endif %}
-		{% if missionInstance.isCasesAllowed %}
+		{% if missionInstance.progress >= missionInstance.PROGRESS_3_DEBRIEFING %}
 			<h3><a href="{% url 'cron_mission_cases' missionInstance.mission.serial %}">Overview</a></h3>
 		{% endif %}
-		{% if missionInstance.isDebriefingAllowed %}
+		{% if missionInstance.progress >= missionInstance.PROGRESS_4_OUTRO %}
 		<h3><a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Debriefing</a></h3>
 		{% endif %}
-		{% if missionInstance.isOutroAllowed %}
+		{% if missionInstance.progress >= missionInstance.PROGRESS_5_DONE %}
 		<h3><a href="{% url 'cron_mission_outro' missionInstance.mission.serial %}">Aftermath</a></h3>
 		{% endif %}
 	{% endfor %}
