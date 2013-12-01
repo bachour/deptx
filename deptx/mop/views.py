@@ -248,11 +248,7 @@ def mail_view(request, mail_id):
     
     request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
     
-    if not mail == None:
-        m ={}
-        m['id'] = mail.id
-        m['subject'] = mail.subject
-        log_mop(request.user.mop, 'view mail', json.dumps(m))
+    tutorial.cronMail(request.user.mop.mopTracker, mail)
     
     return render(request, 'mop/mail_view.html', {'mail': mail})
 

@@ -27,24 +27,7 @@ def hide(mopTracker, created):
             mopTracker.save()
             
         if mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_5_CONCLUSION).filter(read=True):
-            mopTracker.tutorial = MopTracker.TUTORIAL_6_DONE
-            mopTracker.save()
-            hide = []
-            
-            #check if cron hq needs to be notified
-            mop_list = Mop.objects.filter(cron=mopTracker.mop.cron)
-            oneMopHasPassedTutorial = False
-            for mop in mop_list:
-                try:
-                    if not mop.mopTracker.isTutorial():
-                        oneMopHasPassedTutorial = True
-                        break
-                except:
-                    pass
-            if oneMopHasPassedTutorial:
-                mailer.mopTutorialDone(mopTracker.mop.cron)
-                
-                
+            hide = []                
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION).filter(read=True):
             hide['guidebook'] = False
             hide['documentsPool'] = True
@@ -114,3 +97,20 @@ def getTutorialDocument(mopTracker):
         return RandomizedDocument.objects.filter(isTutorial=True)
     else:
         return None 
+
+def cronMail(mopTracker, mail):
+    if mopTracker.tutorial == MopTracker.TUTORIAL_5_SENT_CONCLUSION and mail.bodyType == Mail.BODY_TUTORIAL_5_CONCLUSION:
+        mopTracker.tutorial = MopTracker.TUTORIAL_6_DONE
+        mopTracker.save()
+        mailer.mopTutorialDone(mopTracker.mop.cron)
+#         mop_list = Mop.objects.filter(cron=mopTracker.mop.cron)
+#         oneMopHasPassedTutorial = False
+#         for mop in mop_list:
+#             try:
+#                 if not mop.mopTracker.isTutorial():
+#                     oneMopHasPassedTutorial = True
+#                     break
+#             except:
+#                 pass
+#         if oneMopHasPassedTutorial:
+#             mailer.mopTutorialDone(mopTracker.mop.cron)
