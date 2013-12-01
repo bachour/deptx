@@ -10,6 +10,9 @@ def create_documents():
         output.append(randomizedDocument.serial)
     return output
 
+def create_single_document(mopDocument):
+    randomize_document(mopDocument)
+
     
 
         

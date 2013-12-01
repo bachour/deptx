@@ -31,5 +31,6 @@ urlpatterns = patterns('',
     url(r'intranet/mail/check/', views.mail_check, name='mop_mail_check'),
     
     url(r'intranet/control/$', views.control, name='mop_control'),
+    url(r'intranet/control/randomize/(\d+)', views.control_randomize, name='mop_control_randomize'),
           
 )

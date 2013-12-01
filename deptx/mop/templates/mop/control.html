@@ -21,6 +21,20 @@
 			<tr><td>{{mail.mop.user.username}}</td><td>{{mail.id}}</td><td>{{mail.get_subject_display}}</td><td>{{mail.sentAt}}</td></tr>
 		{% endfor %}
 		</table>
+		<h1>Available Document Templates</h1>
+		<table>
+		<tr><th>Amount</th><th>Document</th><th>Provenance</th><th>Unit</th><th>Clearance</th><th>Create Randomized</th></tr>
+		{% for mopDocument in mopDocument_list %}
+			<tr><td>{{mopDocument.amount}}</td><td>{{mopDocument.name}}</td><td>{{mopDocument.provenance.name}}</td><td>{{mopDocument.unit.serial}}</td><td>{{mopDocument.get_clearance_display}}</td><td><a href="{% url 'mop_control_randomize' mopDocument.id %}">randomize</a></td></tr>
+		{% endfor %}
+		</table>
+		<h1>MoPs</h1>
+		<table>
+		<tr><th>MoP</th><th>TRUST</th><th>Total TRUST</th><th>Document Pool</th><th>Documents</th></tr>
+		{% for mop in mop_list %}
+		<tr><td>{{mop.user.username}}</td><td>{{mop.mopTracker.trust}}</td><td>{{mop.mopTracker.totalTrust}}</td><td>{{mop.availableDocs}}</td><td>{{mop.mopdocumentinstance_set.all.count }}</td></tr>
+		{% endfor %}
+		</table>
 	</div>
 </div>
 

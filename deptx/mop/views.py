@@ -9,10 +9,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-
+from mop import documentcreator
 from players.models import Mop
 
-from assets.models import Requisition, Unit, CronDocument
+from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
@@ -527,8 +527,22 @@ def control(request):
         elif 'randomizer' in request.POST:
             output = create_documents()
     mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False).filter(state=Mail.STATE_NORMAL)
-    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list})       
+    mopDocument_list = MopDocument.objects.all()
+    for mopDocument in mopDocument_list:
+        mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).count()
+    
+    mop_list = Mop.objects.all()
 
+    for mop in mop_list:
+        mop.availableDocs = RandomizedDocument.objects.all().count() - MopDocumentInstance.objects.filter(mop=mop).count()
+    
+    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 
+@staff_member_required
+def control_randomize(request, mopDocument_id):
+    mopDocument = MopDocument.objects.get(id=mopDocument_id)
+    documentcreator.create_single_document(mopDocument)
+    return HttpResponseRedirect(reverse('mop_control'))
+    
     
     
