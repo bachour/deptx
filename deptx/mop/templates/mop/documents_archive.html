@@ -14,7 +14,7 @@
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-		<td>{{mopDocumentInstance.modifiedAt|date:"Y-m-d H:i"}}</td>
+		<td>{{mopDocumentInstance.modifiedAt|date:"Y-m-d"}}</td>
 		</tr>
 	{% endfor %}
 	</table>

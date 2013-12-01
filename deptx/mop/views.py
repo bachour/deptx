@@ -22,7 +22,7 @@ from logger.logging import log_cron, log_mop
 import json
 
 from mop.performer import analyze_performance
-from mop.documentcreator import create_documents
+
 from django.views.decorators.csrf import csrf_exempt
 from mop.mailserver import analyze_mail
 import tutorial
@@ -532,8 +532,10 @@ def control(request):
             output = analyze_mail()
         elif 'performance' in request.POST:
             output = analyze_performance()
-        elif 'randomizer' in request.POST:
-            output = create_documents()
+        elif 'create daily documents' in request.POST:
+            output = documentcreator.create_daily_documents()
+        elif 'remove old documents' in request.POST:
+            output = documentcreator.remove_old_documents()
     mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False).filter(state=Mail.STATE_NORMAL)
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:

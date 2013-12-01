@@ -230,7 +230,8 @@ class CronDocument(AbstractDocument):
 class MopDocument(AbstractDocument):
 
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_MOPDOCUMENT, default=Clearance.CLEARANCE_LOW)
+    active = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return "%s - %s - %s" % (self.unit.serial, self.get_clearance_display(), self.provenance.name)
+        return "Active: %s - %s - %s - %s" % (self.active, self.unit.serial, self.get_clearance_display(), self.provenance.name)
 

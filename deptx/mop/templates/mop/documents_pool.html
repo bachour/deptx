@@ -15,7 +15,7 @@
 			<td>{{randomizedDocument.mopDocument.name}}</td>
 			<td>{{randomizedDocument.serial}}</td>
 			<td><img class="minibadge" src="{{randomizedDocument.getBadgeUrl}}"/></td>
-			<td>{{randomizedDocument.createdAt}}</td>
+			<td>{{randomizedDocument.createdAt|date:"Y-m-d"}}</td>
 			</tr>
 		{% endif %}
 	{% endfor %}

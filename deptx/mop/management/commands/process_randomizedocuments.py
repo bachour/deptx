@@ -1,8 +1,9 @@
 from django.core.management.base import NoArgsCommand
 
-from mop.documentcreator import create_documents
+from mop.documentcreator import create_daily_documents
+
 
 class Command(NoArgsCommand):
-    help = "Automated Document Creator"
+    help = "Automated Daily Document Creator"
     def handle_noargs(self, **options):
-        create_documents()
+        create_daily_documents()
