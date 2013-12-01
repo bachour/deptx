@@ -2,15 +2,17 @@
 
 <div class="main">
 	<div class="content">
-		<h1>Control Centre</h1>
+		<h1>MoP Control Centre</h1>
 			{% for out in output %}
 				{{out}}<br/>
 			{% endfor %}
 			
 			<form action="{% url 'mop_control' %}" method="post">{% csrf_token %}
 			<input class="button" type="submit" value="process mail" name="mail" /><br/>
+			<!--
 			<input class="button" type="submit" value="process performance" name="performance" /><br/>
 			<input class="button" type="submit" value="process randomizer" name="randomizer" />
+			-->
 			</form>
 		<h1>Unprocessed Mails</h1>
 		<table>
