@@ -12,7 +12,11 @@
 <table>
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
 <tr><th>Unit</th><td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DEMON{% endif %}</td></tr>
-<tr><th>Timestamp</th><td>{{ mail.createdAt|date:"Y-m-d H:i" }}</td></tr>
+<tr><th>Timestamp</th><td>{% if mail.type == mail.TYPE_DRAFT %}
+			{{ mail.modifiedAt|date:"Y-m-d H:i" }}
+		{% else %}
+			{{ mail.sentAt|date:"Y-m-d H:i" }}
+		{% endif %}</td></tr>
 {% if mail.bodyType %}<tr><th>Message</th><td>{% include 'mop/mail/mail.html' %}</td></tr>{% endif %}
 {% if mail.bodyType == mail.BODY_HELP%}<tr><th>Message</th><td>{{mail.body}}</td></tr>{% endif %}
 <tr><th>TRUST</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>

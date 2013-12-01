@@ -26,6 +26,7 @@ from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
 from mop.mailserver import analyze_mail
 import tutorial
+from deptx.helpers import now
 
 def isMop(user):
     if user:
@@ -334,6 +335,7 @@ def mail_compose(request, fullSerial=None):
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
             mail.read = True
+            mail.sentAt = now()
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
             mail.read = False
@@ -387,6 +389,7 @@ def mail_edit(request, mail_id):
         if 'send' in request.POST:
             mail.type = Mail.TYPE_SENT
             mail.read = True
+            mail.sentAt = now()
         elif 'draft' in request.POST:
             mail.type = Mail.TYPE_DRAFT
             mail.read = False
@@ -527,7 +530,7 @@ def control(request):
             output = analyze_performance()
         elif 'randomizer' in request.POST:
             output = create_documents()
-    mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False)
+    mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False).filter(state=Mail.STATE_NORMAL)
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list})       
 
 

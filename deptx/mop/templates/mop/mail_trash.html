@@ -11,9 +11,14 @@
 	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_view' mail.id %}">view</a></td>
 	<td>{{ mail.get_subject_display }}</td>
 	<td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DAEMON{% endif %}</td>
-	<td>{{ mail.createdAt|date:"Y-m-d H:i" }}</td>
-	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_deleting' mail.id %}">delete</a></td>
-	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_untrashing' mail.id %}">untrash</a></td></tr>
+	<td>{% if mail.type == mail.TYPE_DRAFT %}
+			{{ mail.modifiedAt|date:"Y-m-d H:i" }}
+		{% else %}
+			{{ mail.sentAt|date:"Y-m-d H:i" }}
+		{% endif %}
+	</td>
+	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_untrashing' mail.id %}">untrash</a></td>
+	</tr>
 {% endfor %}
 </table>
 {% else %}

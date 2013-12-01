@@ -10,7 +10,7 @@
 	<tr {% if not mail.read %} style="font-weight:bold" {% endif %}>
 	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_view' mail.id %}">view</a></td>
 	<td>{{ mail.get_subject_display }}</td><td>{{ mail.unit.name }}</td>
-	<td>{{ mail.createdAt|date:"Y-m-d H:i" }}</td>
+	<td>{{ mail.sentAt|date:"Y-m-d H:i" }}</td>
 	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_trashing' mail.id %}">trash</a></td></tr>
 {% endfor %}
 </table>

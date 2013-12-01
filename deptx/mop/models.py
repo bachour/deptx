@@ -10,7 +10,7 @@ import re
 from django.template import Context, loader, Template
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-
+from deptx.helpers import now
 
 class MopTracker(models.Model):
     
@@ -387,8 +387,10 @@ class Mail(models.Model):
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
     mopDocumentInstance = models.ForeignKey(MopDocumentInstance, null=True, blank=True)
     
+    sentAt = models.DateTimeField(default=now())
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    
     
     def generateBody(self):
         try:
@@ -480,20 +482,6 @@ class Mail(models.Model):
             if not self.mopDocumentInstance is None:
                 if not self.mopDocumentInstance.modified:
                     raise ValidationError('You can only send a document if you have processed it.')
-#         if self.type == self.TYPE_ADMINISTRATIVE:
-#             try:
-#                 unit = Unit.objects.get(type=Unit.TYPE_ADMINISTRATIVE)
-#                 if not self == unit:
-#                     raise ValidationError('You can only have one unit set as administrative! Change unit %s first!' % unit.serial)
-#             except Unit.DoesNotExist:
-#                 pass
-#         if self.type == self.TYPE_COMMUNICATIVE:
-#             try:
-#                 unit = Unit.objects.get(type=Unit.TYPE_COMMUNICATIVE)
-#                 if not self == unit:
-#                     raise ValidationError('You can only have one unit set as communicative! Change unit %s first!' % unit.serial)
-#             except Unit.DoesNotExist:
-#                 pass
         super(Mail, self).clean(*args, **kwargs)
 
     def full_clean(self, *args, **kwargs):

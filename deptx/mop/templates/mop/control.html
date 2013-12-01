@@ -18,7 +18,7 @@
 		<table>
 		<tr><th>Mop</th><th>Id</th><th>Subject</th><th>Sent</th></tr>
 		{% for mail in mail_list %}
-			<tr><td>{{mail.mop.user.username}}</td><td>{{mail.id}}</td><td>{{mail.get_subject_display}}</td><td>{{mail.createdAt}}</td></tr>
+			<tr><td>{{mail.mop.user.username}}</td><td>{{mail.id}}</td><td>{{mail.get_subject_display}}</td><td>{{mail.sentAt}}</td></tr>
 		{% endfor %}
 		</table>
 	</div>
