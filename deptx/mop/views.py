@@ -43,6 +43,13 @@ def custom_500_view(request):
 
 def index(request):
 
+    mail_list = Mail.objects.all()
+    for mail in mail_list:
+        try:
+            mail.save()
+        except:
+            print mail.id
+
     if not request.user == None and request.user.is_active and isMop(request.user):
 
         mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
@@ -238,9 +245,9 @@ def mail_trash(request):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_view(request, mail_id):
+def mail_view(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop)
         mail.read = True
         mail.save()
     except Mail.DoesNotExist:
@@ -254,9 +261,9 @@ def mail_view(request, mail_id):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_trashing(request, mail_id):
+def mail_trashing(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop, state=Mail.STATE_NORMAL)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop, state=Mail.STATE_NORMAL)
     except Mail.DoesNotExist:
         #TODO Error handling
         return redirect('mop_index')
@@ -279,9 +286,9 @@ def mail_trashing(request, mail_id):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_untrashing(request, mail_id):
+def mail_untrashing(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop, state=Mail.STATE_TRASHED)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop, state=Mail.STATE_TRASHED)
     except Mail.DoesNotExist:
         return redirect('mop_index')
     mail.read = True
@@ -298,9 +305,9 @@ def mail_untrashing(request, mail_id):
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_deleting(request, mail_id):
+def mail_deleting(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id, mop=request.user.mop, state=Mail.STATE_TRASHED)
+        mail = Mail.objects.get(serial=serial, mop=request.user.mop, state=Mail.STATE_TRASHED)
     except Mail.DoesNotExist:
         #TODO Error handling
         return redirect('mop_index')
@@ -374,9 +381,9 @@ def mail_compose(request, fullSerial=None):
 #TODO code duplication between mail_edit and mail_compose    
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_edit(request, mail_id):
+def mail_edit(request, serial):
     try:
-        mail = Mail.objects.get(id=mail_id)
+        mail = Mail.objects.get(serial=serial)
     except mail.DoesNotExist:
         #TODO error handling
         return redirect('mop_mail_index')
@@ -391,7 +398,7 @@ def mail_edit(request, mail_id):
             mail.read = False
         
         form = MailForm(data=request.POST, instance=mail)
-        print mail.id
+
         if form.is_valid():
             mail.processed = False
             mail = form.save()
