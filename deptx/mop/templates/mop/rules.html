@@ -10,21 +10,58 @@ This guidebok will hopefully answer all questions you might have about the ORCHI
 <h2>Table of Contents</h2>
 <ul class="table_of_contents">
 <li><a href="#q1">What is Provenance?</a></li>
-<li><a href="#q2">How is the Ministry of Provenance organized?</a></li>
-<li><a href="#q3">What is the ORCHID scheme?</a></li>
-<li><a href="#q4">What are my duties as a Citizen Helper?</a></li>
-<li><a href="#q5">How do I acquire documents?</a></li>
-<li><a href="#q6">How do I acquire forms?</a></li>
-<li><a href="#q7">How can I process a document?</a></li>
-<li><a href="#q8">What happens after I submit a report?</a></li>
-<li><a href="#q9">How can I reach a higher Clearance Level?</a></li>
-<li><a href="#q10">What happens if I do not have enough TRUST to request documents?</a></li>
+<li><a href="#q2">What is a Provenance Record?</a></li>
+<li><a href="#q3">How is the Ministry of Provenance organized?</a></li>
+<li><a href="#q4">What is the ORCHID scheme?</a></li>
+<li><a href="#q5">What are my duties as a Citizen Helper?</a></li>
+<li><a href="#q6">How do I acquire documents?</a></li>
+<li><a href="#q7">How do I acquire forms?</a></li>
+<li><a href="#q8">How can I process a document?</a></li>
+<li><a href="#q9">What happens after I submit a report?</a></li>
+<li><a href="#q10">How can I reach a higher Clearance Level?</a></li>
+<li><a href="#q11">What happens if I do not have enough TRUST to request documents?</a></li>
 </ul>
 <h2><a class="internal" id="q1">What is Provenance?</a></h2>
 <p>
+Provenance is a record that describes the people, institutions, entities, and activities, involved in producing, influencing, or delivering a piece of data or a thing.
+It is the sum of all we know about the history of an object. Any object. Whether it's an online document or a wooden chair.
+
+The Ministry of Provenance was setup by government to keep track of all these records. 
+In 2013, the Ministry launched the ORCHID scheme to allow citizens to help us maintain this large archive of records.
 
 </p>
-<h2><a class="internal" id="q2">How is the Ministry of Provenance organized?</a></h2>
+<h2><a class="internal" id="q2">What is a Provenance Record?</a></h2>
+<p>
+Here's a quick orientation video explaining the basics of Provenance Records.
+
+<iframe width="560" height="315" src="//www.youtube.com/embed/O13PK0YyH8A" frameborder="0" allowfullscreen></iframe>
+
+A Proveance Record is made of nodes and edges. Nodes represent:
+<ul>
+<li>Agent: Any person person, organization or program that creates, alters, or otherwise influences an object or thing.</li>
+<li>Entity: Any object or thing that we are intersted in the history of, or that is part of the history of another object.</li>
+<li>Activity: Any process by which agents interact with entities to create, later or otherwise influence them.</li>
+</ul>
+These nodes are connected by edges or arrows that represent the relationships between them. 
+<img src="{% static 'mop/basicprovexample.jpg' %}">
+<br/>
+In the example above we can see the provenance of the book Les Miserables.
+<ul>
+<li>The book itself is an entity (circular node).</li> 
+<li>It's author is Victor Hugo, an agent (house-shaped node).</li>
+<li>The activity by which it was created is called "Write" (rectangular node).</li>
+</ul>
+<br>
+The arrows between the nodes indicate their relationship:
+<ul>
+<li>The arrow from Activity: Write to Victor Hugo indicates the Hugo is the person who did the writing.</li> 
+<li>The arrow from the book itself to the activity write indicates that the book is the result of the writing.</li>
+<li>And finally the arrow from the book to Victor Hugo indicate that the book is attributed to Hugo.</li>
+</ul>
+This is a basic example of provenance. Things can get considerably more complicated as relationships between agents, activities and entities become significantly more complex.
+
+</p>
+<h2><a class="internal" id="q3">How is the Ministry of Provenance organized?</a></h2>
 <p>
 The Ministry of Provenance is divided into several units which are working together and with each other to improve the life of all citizens.
 </p>
@@ -34,12 +71,12 @@ The Ministry of Provenance is divided into several units which are working toget
 <tr><td>{{unit.name}}</td><td>{{unit.serial}}</td><td>{{unit.description}}</td></tr>
 {% endfor %}
 </table>
-<h2><a class="internal" id="q3">What is the ORCHID scheme?</a></h2>
+<h2><a class="internal" id="q4">What is the ORCHID scheme?</a></h2>
 <p>ORCHID stands for <strong>O</strong>pen <strong>R</strong>ecruitment of <strong>C</strong>itizen <strong>H</strong>elpers for <strong>I</strong>nternal <strong>D</strong>eployment.</p>
 <p>ORCHID strives to include qualified citizens in the complex (but rewarding!) tasks of helping the Ministry of Provenance. Governmental structures are increasingly turning to Citizen Helpers to jointly solve problems that defy conventional computational approaches. We are developing approaches that allow such problems to be solved at scale, making full use of the skills, preferences and capabilities of the Citizen Helpers.</p>
 <p>To make effective use of Citizen Helpers within these settings we are developing (i) algorithms to model and predict the accuracy and trustworthiness of Citizen Helper generated content, (ii) methodologies and data models that allow us to track and reason about the provenance of information collected in this way, (iii) and mechanisms that allow us to target which Citizen Helpers are asked which questions based on learned models of their capabilities.</p>
 <p><strong>Now everyone can help the Ministry protect and safeguard our most prized asset: the Truth!</strong></p>
-<h2><a class="internal" id="q4">What are my duties as a Citizen Helper?</a></h2>
+<h2><a class="internal" id="q5">What are my duties as a Citizen Helper?</a></h2>
 <p>As a Citizen Helper it is your task to check, inspect and report on the provenance of documents. As explained above, provenance is an important aspect of our lives, therefore it is crucial that the provenance records of the Ministry of Provenance are (i) up-to-date and (ii) correct.</p>
 <p>Sadly, due to the not ideal conditions previous governmental structures had to operate under, some of our records do not live up to these high standards.</p>
 <p>This is where you come in!</p>
@@ -51,8 +88,10 @@ The Ministry of Provenance is divided into several units which are working toget
 <li>be on the lookout for inconsistencies</li>
 <li>report the inconsistencies (or the lack thereof) back the responsible unit</li>
 </ul>
+
 </p>
-<h2><a class="internal" id="q5">How do I acquire documents?</a></h2>
+
+<h2><a class="internal" id="q6">How do I acquire documents?</a></h2>
 <p>Depending on your clearance level, you will have access to a pool of documents that are shared with other Citizen Helpers of the same (or a lower) clearance level as you.</p>
 <p>You can find an overview of these documents on the <a href="{% url 'mop_documents_pool' %}">Document Pool</a> page.</p>
 <p>You may choose which document you would like assigned to you by filling in the necessary forms and submitting a request to the relevant MoP unit.</p>
@@ -68,8 +107,9 @@ The Ministry of Provenance is divided into several units which are working toget
 <li>Barring errors in your request, the document will be assigned to you.</li>
 <li>Go to the <a href="{% url 'mop_documents' %}">Document Drawer</a> page and start working!</li>
 </ol>
+
 </p>
-<h2><a class="internal" id="q6">How do I acquire forms?</a></h2>
+<h2><a class="internal" id="q7">How do I acquire forms?</a></h2>
 <p>Every MoP Unit requires a different form for different requests. There are forms to request forms, to request documents and to submit a processed document.</p>
 <p>You may request forms in the same way as requesting documents: by filling in a blank Form Request Form which is available to you and sending it to the Unit of Administration.</p>
 <p>Once you acquire a blank form of a certain type, you may use it as many times as you wish. Blank forms you have already acquired can be seen in the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</p>
@@ -81,7 +121,7 @@ The Ministry of Provenance is divided into several units which are working toget
 {% endfor %}
 </table>
 <p><strong>Remember: Only the Unit of Administration hands out new forms! Send all your requests for new forms to the Unit of Adminstration!</strong></p>
-<h2><a class="internal" id="q7">How can I process a document?</a></h2>
+<h2><a class="internal" id="q8">How can I process a document?</a></h2>
 <p>In order to process an assigned document, you only need to open it in the Provenance Record Observation, Processing and Manipulation Tool (PROMPT).</p>
 <p>PROMPT allows you as a non-expert user to visually browse the provenance of a specific document, making it easy for you to view all relevant nodes and attributes - all at the touch of a button while enjoying the comfort of your home!</p>
 <p>With PROMPT you can:
@@ -101,7 +141,7 @@ The Ministry of Provenance is divided into several units which are working toget
 <li><strong>don't forget to attach the document itself!</strong></li>
 </ul>
 </p>
-<h2><a class="internal" id="q8">What happens after I submit a report?</a></h2>
+<h2><a class="internal" id="q9">What happens after I submit a report?</a></h2>
 <p>When you file a report, your marked data will be compared with the work of other Citizen Helpers as well as analyzed by clerks and software of the unit that issued the document.</p>
 <p>If your report is deemed correct, you will be rewarded, otherwise a penalty will be applied to your record.</p>
 <p>The incentive engineers of MoP have devised a point-based system to track your performance called TRUST (Track Record of Undertaken System Tasks). We are constanlty monitoring your activities as a Citizen Helper and are therefore able to provide almost instant feedback - which will hopefully enable you to perform better in the future.</p>
@@ -114,7 +154,7 @@ The Ministry of Provenance is divided into several units which are working toget
 <tr><td>Non-submitted Document</td><td style="text-align:center">-5 / -15 / -25 / -40 / -75</td></tr>
 <tr><td>Unnecessary Mail</td><td style="text-align:center">-1</td></tr>
 </table>
-<h2><a class="internal" id="q9">How can I reach a higher Clearance Level?</a></h2>
+<h2><a class="internal" id="q10">How can I reach a higher Clearance Level?</a></h2>
 <p>The Ministry of Provenance operates under 5 clearance levels: BLUE, GREEN, YELLOW, ORANGE and RED.</p>
 <p>Each Citizen Helper starts at the lowest clearance level: BLUE. At the end of every week there will be a performance review. Depending on the TRUST you earned in the past performance period, your clearance level will be adjusted. If you did especially well, you will reach a higher level of clearance. If your performance was sub-par, you will be assigned a lower clearance level.</p>
 <p>Additionally, at the start of a new performance period, your TRUST will be reset to 0 to incentivize you to work at a steady pace.</p>
@@ -127,7 +167,7 @@ The Ministry of Provenance is divided into several units which are working toget
 <tr><td style="text-align:center">300 - 499</td><td style="text-align:center">ORANGE</td></tr>
 <tr><td style="text-align:center">&#8805; 500</td><td style="text-align:center">RED</td></tr>
 </table>
-<h2><a class="internal" id="q10">What happens if I do not have enough TRUST to request documents?</a></h2>
+<h2><a class="internal" id="q11">What happens if I do not have enough TRUST to request documents?</a></h2>
 <p>At first sight it might seem that at the start of a performance period in a higher clearance level, you are unable to acquire a document of that clearance level due to your TRUST being reset to 0.</p>
 <p>However, at the end of a performance period you will also gain virtual TRUST credits over the amount of 15% of your last TRUST. This allows you to instantly start working on documents of your current clearance level.</p>
 <p>Note, however, that these virtual TRUST credits will not be taken into consideration for your evaluation at the end of the performance period.</p>
