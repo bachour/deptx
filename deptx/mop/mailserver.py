@@ -18,6 +18,9 @@ DELAY_MEDIUM = 3 * 60
 DELAY_LONG = 5 * 60 
 
 def delayedEnough(mail, delay):
+    if mail.mop.user.is_staff:
+        print "staff"
+        return True
     difference = (now() - mail.createdAt).total_seconds()
     if difference >= delay:
         if getrandbits(1):
