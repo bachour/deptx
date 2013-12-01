@@ -24,7 +24,7 @@ import json
 from mop.performer import analyze_performance
 from mop.documentcreator import create_documents
 from django.views.decorators.csrf import csrf_exempt
-
+from mop.mailserver import analyze_mail
 import tutorial
 
 def isMop(user):
@@ -49,15 +49,16 @@ def index(request):
         hide = tutorial.hide(mopTracker, created)
   
         #MAIL MANAGING
+        #inbox = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).count()
         inbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
-        outbox_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).filter(read=False).count()
-        trash_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).filter(read=False).count()
-        draft_unread = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).filter(read=False).count()
+        #outbox = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).count()
+        #trash = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).count()
+        #draft = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).count()
         
         request.session['inbox_unread'] = inbox_unread
         
         log_mop(request.user.mop, 'index')
-        context = {'user': request.user, 'inbox_unread': inbox_unread, 'outbox_unread': outbox_unread, 'trash_unread': trash_unread, 'draft_unread': draft_unread, 'hide':hide}
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'hide':hide}
 
         return render(request, 'mop/index.html', context)
     

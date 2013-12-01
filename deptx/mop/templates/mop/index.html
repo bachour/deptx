@@ -18,9 +18,9 @@
 	{% endif %}
 	<a class="button" href="{% url 'mop_mail_inbox' %}"><input id="inbox" class="button" type="submit" value="inbox ({{ inbox_unread }})" /></a>
 	{% if not hide.mail %}
-		<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox ({{ outbox_unread }})" /></a>
-		<a class="button" href="{% url 'mop_mail_draft' %}"><input class="button" type="submit" value="drafts ({{ draft_unread }})" /></a>
-		<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash ({{ trash_unread }})" /></a>
+		<a class="button" href="{% url 'mop_mail_outbox' %}"><input class="button" type="submit" value="outbox" /></a>
+		<a class="button" href="{% url 'mop_mail_draft' %}"><input class="button" type="submit" value="drafts" /></a>
+		<a class="button" href="{% url 'mop_mail_trash' %}"><input class="button" type="submit" value="trash" /></a>
 	{% endif %}
 </p>
 <p class="nav">

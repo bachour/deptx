@@ -5,14 +5,31 @@ from mop.clearance import Clearance
 import tutorial
 from django.template import Context, loader
 from django.core.mail import EmailMessage
+from deptx.helpers import now
+from random import getrandbits
+
 try:
     from deptx.settings_production import TO_ALL
 except:
     TO_ALL = ["1@localhost.com", "2@localhost.com"]
 
-def sendReport(trustInstance):
-    unit = Unit.objects.filter(type=Unit.TYPE_ADMINISTRATIVE)[0]
-    Mail.objects.create(mop=trustInstance.mop, trustInstance=trustInstance, unit=unit, subject=Mail.SUBJECT_INFORMATION, type=Mail.TYPE_RECEIVED, bodyType=Mail.BODY_PERFORMANCE_REPORT)
+DELAY_SHORT = 1 * 60
+DELAY_MEDIUM = 3 * 60
+DELAY_LONG = 5 * 60 
+
+def delayedEnough(mail, delay):
+    difference = (now() - mail.createdAt).total_seconds()
+    if difference >= delay:
+        if getrandbits(1):
+            print "coin win"
+            return True
+        else:
+            print "coin loss"
+            return False
+    else:
+        print "too fresh"
+        return False
+    
 
 
 def analyze_mail():
@@ -20,13 +37,11 @@ def analyze_mail():
     mail_list = Mail.objects.filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
     #TODO add more output
     output.append("Unprocessed mails: %d" % mail_list.count())
-
-    check_mail(mail_list)
+    for mail in mail_list:
+        check_mail(mail)
     return output
 
-def check_mail(mail_list):
-    for mail in mail_list:
-        
+def check_mail(mail):
         if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
             subject = "[MoP] %s: Help Request" % (mail.mop.user.username)
             email_tpl = loader.get_template('mop/mail/message_from_player.txt')
@@ -37,33 +52,48 @@ def check_mail(mail_list):
             mail.subject = Mail.SUBJECT_HELP
             mail.processed = True
             mail.save()
+            return
         
         else:    
             newMail = prepareMail(mail)    
             if mail.unit == None:
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_MISSING_UNIT
                 #if there is no unit an error is generated automatically - no need to set it manually
             elif mail.subject == Mail.SUBJECT_EMPTY:
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_NO_SUBJECT
             elif mail.requisitionInstance == None:
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_MISSING_FORM
             elif not mail.unit == mail.requisitionInstance.blank.requisition.unit:
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_WRONG_UNIT
             elif not (subjectMatchesRequisition(mail)):
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_WRONG_FORM
             elif redundantDocument(mail):
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_REDUNDANT_DOCUMENT
                 newMail.bodyData
             elif missingDocument(mail):
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_MISSING_DOCUMENT
             elif wrongDocument(mail):
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_WRONG_DOCUMENT
             #Now the mail should be formally correct
@@ -71,12 +101,18 @@ def check_mail(mail_list):
             elif mail.subject == Mail.SUBJECT_REQUEST_FORM:
                 requisition = getRequisition(mail)
                 if requisition == None:
+                    if not delayedEnough(mail, DELAY_SHORT):
+                        return
                     newMail.subject = Mail.SUBJECT_ERROR
                     newMail.bodyType = Mail.BODY_ERROR_UNFOUND_FORM
                 elif requisitionBlankExists(mail.mop, requisition):
+                    if not delayedEnough(mail, DELAY_SHORT):
+                        return
                     newMail.subject = Mail.SUBJECT_ERROR
                     newMail.bodyType = Mail.BODY_ERROR_EXISTING_FORM
                 else:
+                    if not delayedEnough(mail, DELAY_MEDIUM):
+                        return
                     requisitionBlank = assignRequisition(mail.mop, requisition)
                     newMail.requisitionBlank = requisitionBlank
                     newMail.subject = Mail.SUBJECT_RECEIVE_FORM
@@ -86,16 +122,24 @@ def check_mail(mail_list):
                 cronDocument = getCronDocument(mail)
                 randomizedDocument = getRandomizedDocument(mail)
                 if cronDocument == None and randomizedDocument == None:
+                    if not delayedEnough(mail, DELAY_SHORT):
+                        return
                     newMail.subject = Mail.SUBJECT_ERROR
                     newMail.bodyType = Mail.BODY_ERROR_UNFOUND_DOCUMENT
                 elif mopDocumentInstanceExists(mail.mop, cronDocument, randomizedDocument):
+                    if not delayedEnough(mail, DELAY_SHORT):
+                        return
                     #TODO what if document is used?
                     newMail.subject = Mail.SUBJECT_ERROR
                     newMail.bodyType = Mail.BODY_ERROR_EXISTING_DOCUMENT
                 elif not hasEnoughTrust(mail.mop, cronDocument, randomizedDocument):
+                    if not delayedEnough(mail, DELAY_SHORT):
+                        return
                     newMail.subject = Mail.SUBJECT_ERROR
                     newMail.bodyType = Mail.BODY_ERROR_LACKING_TRUST
                 else:
+                    if not delayedEnough(mail, DELAY_MEDIUM):
+                        return
                     mopDocumentInstance = assignDocument(mail.mop, cronDocument, randomizedDocument)
                     newMail.mopDocumentInstance = mopDocumentInstance
                     clearance = Clearance(mopDocumentInstance.getClearance())
@@ -109,13 +153,19 @@ def check_mail(mail_list):
                 newMail.subject = Mail.SUBJECT_REPORT_EVALUATION
                 newMail.mopDocumentInstance = mail.mopDocumentInstance
                 if mail.mopDocumentInstance.correct:
+                    if not delayedEnough(mail, DELAY_LONG):
+                        return
                     newMail.bodyType = Mail.BODY_REPORT_SUCCESS
                     newMail.trust = clearance.getTrustReportedCorrect()
                     tutorial.submitDocument(mail.mop.mopTracker)
                 else:
+                    if not delayedEnough(mail, DELAY_LONG):
+                        return
                     newMail.bodyType = Mail.BODY_REPORT_FAIL
                     newMail.trust = clearance.getTrustReportedIncorrect()
             else:
+                if not delayedEnough(mail, DELAY_SHORT):
+                    return
                 newMail.subject = Mail.SUBJECT_UNCAUGHT_CASE
                 newMail.body = Mail.BODY_UNCAUGHT_CASE
                 
