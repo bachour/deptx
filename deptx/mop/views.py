@@ -136,7 +136,7 @@ def documents_pool(request):
 
     randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.mopTracker)
     if randomizedDocument_list == None:
-        randomizedDocument_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=request.user.mop.mopTracker.clearance)
+        randomizedDocument_list = getDocumentPoolForMop(request.user.mop)
 
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
@@ -150,6 +150,14 @@ def documents_pool(request):
  
     log_mop(request.user.mop, 'view pool')   
     return render(request, 'mop/documents_pool.html', {"randomizedDocument_list": randomizedDocument_list})
+
+def getDocumentPoolForMop(mop):
+        all_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=mop.mopTracker.clearance)
+        public_list = all_list.filter(mop__isnull=True)
+        personal_list = all_list.filter(mop=mop)
+        randomizedDocument_list = public_list | personal_list
+        return randomizedDocument_list.order_by('createdAt')
+
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -529,12 +537,12 @@ def control(request):
     mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False).filter(state=Mail.STATE_NORMAL)
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
-        mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).count()
+        mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
     mop_list = Mop.objects.all()
 
     for mop in mop_list:
-        mop.availableDocs = RandomizedDocument.objects.all().count() - MopDocumentInstance.objects.filter(mop=mop).count()
+        mop.availableDocs = getDocumentPoolForMop(mop).count() - MopDocumentInstance.objects.filter(mop=mop).count()
     
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 
