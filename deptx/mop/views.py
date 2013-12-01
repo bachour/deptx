@@ -527,7 +527,8 @@ def control(request):
             output = analyze_performance()
         elif 'randomizer' in request.POST:
             output = create_documents()
-    return render(request, 'mop/control.html', {'output':output})       
+    mail_list = Mail.objects.filter(processed=False)
+    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list})       
 
 
     

@@ -12,6 +12,13 @@
 			<input class="button" type="submit" value="process performance" name="performance" /><br/>
 			<input class="button" type="submit" value="process randomizer" name="randomizer" />
 			</form>
+		<h1>Unprocessed Mails</h1>
+		<table>
+		<tr><th>Mop</th><th>Id</th><th>Subject</th><th>Sent</th></tr>
+		{% for mail in mail_list %}
+			<tr><td>{{mail.mop.user.username}}</td><td>{{mail.id}}</td><td>{{mail.get_subject_display}}</td><td>{{mail.createdAt}}</td></tr>
+		{% endfor %}
+		</table>
 	</div>
 </div>
 
