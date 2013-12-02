@@ -24,7 +24,9 @@ DELAY_MEDIUM = 3 * 60
 DELAY_LONG = 5 * 60 
 
 def delayedEnough(mail, delay):
-    reallogging.log(reallogging.ERROR, 'in delay')
+    log = reallogging.getLogger('mailserver')
+    
+    log.error('in mailserver')
     if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
         print "tutorial so no delay"
         return True
