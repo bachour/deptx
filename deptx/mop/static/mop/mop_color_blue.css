@@ -16,3 +16,7 @@ td {
 }
 
 
+.styled-select option 
+{
+	background-color:#3e55cc;
+}
