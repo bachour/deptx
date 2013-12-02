@@ -278,16 +278,13 @@ def prov_check(request):
                     cronDocumentInstance.save()
                     close_prov = True
                     stars = cronDocumentInstance.getStars()
-                    if is_empty:
-                        message = "Yes, it seems like the provenance of this document actually checks out."
-                    else:
-                        message = "You found the suspicious data!"
+
                     if stars == 3:
-                        message = message + "\nThis was an excellent job, and will be reflected in your agent profile."
+                        message = message + "Excellent job! This will be reflected in your agent profile."
                     elif stars == 2:
-                        message = message + "\nGood job. Next time try to be a bit more thorough in your investigation though. Your agent profile has been updated."
+                        message = message + "It took you a couple of tries, but good job anyway. Your agent profile has been updated."
                     elif stars == 1:
-                        message = message + "\nFinally. We were unsure if you would be able to figure it. But you did, after all, and that's all that counts. Your success has been logged in your agent profile."
+                        message = message + "Yes, you did it, after all, and that's all that counts. Your success has been logged in your agent profile."
                     
                     
                 else:
