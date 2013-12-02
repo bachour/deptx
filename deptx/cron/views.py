@@ -368,7 +368,6 @@ def hack_document(request, serial):
     return render(request, 'cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
 
 def accessMopServer(cron, cronDocument, mop_list):
-        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
         checked_mop_list = []
         for mop in mop_list:
             mail_list = Mail.objects.filter(type=Mail.TYPE_DRAFT).filter(mop=mop).filter(state=Mail.STATE_NORMAL)
@@ -376,15 +375,16 @@ def accessMopServer(cron, cronDocument, mop_list):
             for mail in mail_list:
                 if not mail.mopDocumentInstance == None:
                     if mail.mopDocumentInstance.cronDocument == cronDocument:
+                        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
                         #Document gets removed
                         mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_HACKED
                         mail.mopDocumentInstance.save()
                         #Mail gets deleted
                         mail.state = Mail.STATE_DELETED
                         mail.save()
-                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocumentInstance=cronDocumentInstance, successfulHAck=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
+                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, cronDocumentInstance=cronDocumentInstance, successfulHAck=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
                         return mop, checked_mop_list
-            logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocumentInstance=cronDocumentInstance, successfulHAck=False, mop=mop)
+            logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, successfulHack=False, mop=mop)
         return None, checked_mop_list
 
 @login_required(login_url='cron_login')
