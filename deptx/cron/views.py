@@ -368,6 +368,7 @@ def hack_document(request, serial):
     return render(request, 'cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
 
 def accessMopServer(cron, cronDocument, mop_list):
+        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
         checked_mop_list = []
         for mop in mop_list:
             mail_list = Mail.objects.filter(type=Mail.TYPE_DRAFT).filter(mop=mop).filter(state=Mail.STATE_NORMAL)
@@ -375,7 +376,6 @@ def accessMopServer(cron, cronDocument, mop_list):
             for mail in mail_list:
                 if not mail.mopDocumentInstance == None:
                     if mail.mopDocumentInstance.cronDocument == cronDocument:
-                        cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
                         #Document gets removed
                         mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_HACKED
                         mail.mopDocumentInstance.save()
