@@ -185,6 +185,11 @@ th.nobox {
 
 }
 
+.styled-select option 
+{
+	background-color:#3ea255;
+}
+
 img.minibadge {
 	width:50px;
 }
