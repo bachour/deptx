@@ -278,13 +278,14 @@ def prov_check(request):
                     cronDocumentInstance.save()
                     close_prov = True
                     stars = cronDocumentInstance.getStars()
-
+                    attempts = cronDocumentInstance.failedAttempts + 1
+                    
                     if stars == 3:
-                        message = message + "Excellent job! This will be reflected in your agent profile."
+                        message = "Excellent job! This will be reflected in your agent profile."
                     elif stars == 2:
-                        message = message + "It took you a couple of tries, but good job anyway. Your agent profile has been updated."
+                        message = "It took you %s tries, but good job anyway. Your agent profile has been updated." % attempts
                     elif stars == 1:
-                        message = message + "Yes, you did it, after all, and that's all that counts. Your success has been logged in your agent profile."
+                        message = "Yes, you did it. It did take %s attempts, but the result is what counts. Your success has been logged in your agent profile." % attempts
                     
                     
                 else:
