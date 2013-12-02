@@ -5,7 +5,7 @@
 <h1>Signed Forms</h1>
 {% if requisitionInstance_list %}
 <table>
-<tr><th class="nobox"></th><th>Form</th><th>Unit</th><th>Identifier</th><th>Content</th><th>Timestamp</th></tr>
+<tr><th class="nobox"></th><th>Form</th><th>Unit</th><th>Identifier</th><th>Content</th><th>Timestamp</th><th class="nobox"></th></tr>
 {% for reqInstance in requisitionInstance_list %}
 	<tr>
 	<td class="nobox"><a href="{% url 'mop_mail_compose' reqInstance.fullSerial %}">mail</a></td>
@@ -13,7 +13,10 @@
 	<td>{{reqInstance.blank.requisition.unit.serial}}</dt>
 	<td>{{reqInstance.fullSerial}}</td>
 	<td>{{reqInstance.data}}</td>
-	<td>{{reqInstance.modifiedAt|date:"Y-m-d H:i"}}</td></tr>
+	<td>{{reqInstance.modifiedAt|date:"Y-m-d H:i"}}</td>
+	<td class="nobox"><a href="{% url 'mop_form_trashing' reqInstance.fullSerial %}">trash</a></td>
+	</tr>
+	
 {% endfor %}
 </table>
 {% else %}

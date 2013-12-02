@@ -7,7 +7,7 @@
 <table>
 <tr><th>Form</th><th>Unit</th><th>Identifier</th><th>Content</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}
-	<tr>
+	<tr {% if reqInstance.trashed %}class="trashed"{% endif %}>
 	<td>{{reqInstance.blank.requisition.name}}</td>
 	<td>{{reqInstance.blank.requisition.unit.serial}}</td>
 	<td>{{reqInstance.fullSerial}}</td>
@@ -22,8 +22,7 @@ No archived forms.
 {% endblock %}
 
 {% block help %}
-<p>
-Here a copy of all forms that you have signed is stored.
-</p>
+<p>Here a copy of all forms that you have signed is stored.</p>
+<p>Forms you have trashed are crossed out. You have used the other ones in your communication with the various units of the Ministry of Provenance.</p>
 <p>If you want to fill in a new form, you must go to the <a href="{% url 'mop_forms_blank' %}">Blank Forms</a> page.</p>
 {% endblock %}
