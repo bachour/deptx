@@ -20,12 +20,12 @@ from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, Hel
 from mop.models import Mail, MopDocumentInstance
 from cron.forms import HelpMailForm
 
-
+from logger import logging
+from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
 
-from logger.logging import log_cron, log_mop
-from provmanager.provlogging import provlog_add_cron_login, provlog_add_cron_logout, provlog_add_mop_register
-
+from logger.models import ActionLog
+from logger import logging
 
 import json
 
@@ -56,8 +56,7 @@ def login(request):
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
         if not user == None and user.is_active and isCron(user):
             auth.login(request, user)
-            log_cron(request.user.cron, 'login')
-            provlog_add_cron_login(request.user.cron, request.session.session_key)
+            logging.log_action(ActionLog.ACTION_CRON_LOGIN, cron=request.user.cron)
             return HttpResponseRedirect(reverse('cron_index'))
             
         else:
@@ -68,9 +67,9 @@ def login(request):
         return render(request, 'cron/login.html', {'form' : form,})
 
 def logout_view(request):
-    #log_cron(request.user.cron, 'logout')
-    #provlog_add_cron_logout(request.user.cron, request.session.session_key)
-    logout(request)    
+    cron = request.user.cron
+    logout(request)
+    logging.log_action(ActionLog.ACTION_CRON_LOGOUT, cron=cron)    
     return redirect('cron_index')
 
 def getCurrentMissionInstance(cron):
@@ -116,7 +115,7 @@ def index(request):
             else:
                 missionInstance = None
                 
-                 
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_INDEX, cron=request.user.cron)         
         context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
         return render(request, 'cron/index.html', context)
     else:
@@ -140,11 +139,10 @@ def mopmaker(request, missionInstance):
             mop.cron = request.user.cron
             mop.user = new_user
             mop.save()
+            logging.log_action(ActionLog.ACTION_MOP_CREATED, cron=request.user.cron, mop=mop)
 
             missionInstance.makeProgress()
-            
-            log_mop(mop, 'mop account created')
-            provlog_add_mop_register(request.user.cron, mop, request.session.session_key)
+
             return redirect('cron_mission_debriefing', missionInstance.mission.serial)
         else:
             return render(request, 'cron/mopmaker.html', {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance})
@@ -158,6 +156,10 @@ def mopmaker(request, missionInstance):
 @user_passes_test(isCron, login_url='cron_login')
 def mission_intro(request, serial):
     needed_progress = MissionInstance.PROGRESS_0_INTRO
+    
+    mission, missionInstance = getMissionAndInstanceFromSerial(request.user.cron, serial)
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_MISSION_INTRO, cron=request.user.cron, mission=mission, missionState=missionInstance.progress)
+    
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
     return render(request, 'cron/mission.html', context)
 
@@ -165,6 +167,10 @@ def mission_intro(request, serial):
 @user_passes_test(isCron, login_url='cron_login')
 def mission_briefing(request, serial):
     needed_progress = MissionInstance.PROGRESS_1_BRIEFING
+    
+    mission, missionInstance = getMissionAndInstanceFromSerial(request.user.cron, serial)
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_MISSION_BRIEFING, cron=request.user.cron, mission=mission, missionState=missionInstance.progress)
+    
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
     return render(request, 'cron/mission.html', context)
 
@@ -208,12 +214,19 @@ def mission_cases(request, serial):
         if (finished and not unpublished):
             missionInstance.makeProgress()
         text = renderContent(mission.activity, request.user)
+        
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_MISSION_CASES, cron=request.user.cron, mission=mission, missionState=missionInstance.progress)
+        
     return render(request, 'cron/case_list.html', {'user':request.user, 'cron':request.user.cron, 'text':text, 'missionInstance':missionInstance, 'caseInstance_list':caseInstance_list, 'unpublished':unpublished, 'finished':finished, 'MEDIA_URL': MEDIA_URL})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def mission_debriefing(request, serial):
     needed_progress = MissionInstance.PROGRESS_3_DEBRIEFING
+    
+    mission, missionInstance = getMissionAndInstanceFromSerial(request.user.cron, serial)
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_MISSION_DEBRIEFING, cron=request.user.cron, mission=mission, missionState=missionInstance.progress)
+    
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
     return render(request, 'cron/mission.html', context)
 
@@ -221,8 +234,21 @@ def mission_debriefing(request, serial):
 @user_passes_test(isCron, login_url='cron_login')
 def mission_outro(request, serial):
     needed_progress = MissionInstance.PROGRESS_4_OUTRO
+    
+    mission, missionInstance = getMissionAndInstanceFromSerial(request.user.cron, serial)
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_MISSION_OUTRO, cron=request.user.cron, mission=mission, missionState=missionInstance.progress)
+    
     context = getMissionOutput(request.user.cron, serial, needed_progress)   
     return render(request, 'cron/mission.html', context)
+
+def getMissionAndInstanceFromSerial(cron, serial):
+    try:
+        mission = Mission.objects.get(serial=serial)
+        missionInstance = MissionInstance.objects.get(cron=cron, mission=mission)
+    except:
+        return None, None
+    return mission, missionInstance
+
 
 def getMissionOutput(cron, serial, needed_progress):
     text = None
@@ -231,11 +257,7 @@ def getMissionOutput(cron, serial, needed_progress):
     mission = None
     missionInstance = None
     
-    try:
-        mission = Mission.objects.get(serial=serial)
-        missionInstance = MissionInstance.objects.get(cron=cron, mission=mission)
-    except:
-        return None
+    mission, missionInstance = getMissionAndInstanceFromSerial(cron, serial)
     
     if not mission == None and not missionInstance == None:
         if needed_progress <= missionInstance.progress:
@@ -275,8 +297,8 @@ def getMissionOutput(cron, serial, needed_progress):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def archive(request):
-    #TODO: Sort by mission.rank
-    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron).exclude(progress=MissionInstance.PROGRESS_0_INTRO)
+    missionInstance_list = MissionInstance.objects.filter(cron=request.user.cron).exclude(progress=MissionInstance.PROGRESS_0_INTRO).order_by('mission__rank')
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_ARCHIVE, cron=request.user.cron)
     return render(request, 'cron/archive.html', {"missionInstance_list": missionInstance_list})
 
 def renderContent(content, user):
@@ -360,8 +382,9 @@ def accessMopServer(cron, cronDocument, mop_list):
                         #Mail gets deleted
                         mail.state = Mail.STATE_DELETED
                         mail.save()
+                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocumentInstance=cronDocumentInstance, successfulHAck=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
                         return mop, checked_mop_list
-                        
+            logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocumentInstance=cronDocumentInstance, successfulHAck=False, mop=mop)
         return None, checked_mop_list
 
 @login_required(login_url='cron_login')
@@ -379,7 +402,9 @@ def case_intro(request, mission_serial, case_serial):
     text = renderContent(content, request.user)
     
     requiredDocuments = getAllDocumentStates(request.user.cron, case)
-
+    
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_INTRO, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved)
+    
     return render(request, 'cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "cronDocument_list": requiredDocuments, "text":text })
     
 @login_required(login_url='cron_login')
@@ -398,7 +423,9 @@ def case_outro(request, mission_serial, case_serial):
         text = renderContent(content, request.user)
         
         requiredDocuments = getAllDocumentStates(request.user.cron, case)
-    
+        
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_OUTRO, cron=request.user.cron, case=case)
+        
         return render(request, 'cron/case_outro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "document_list": requiredDocuments, "text":text })
     else: 
         return HttpResponseRedirect(reverse('cron_case_intro', args=(mission_serial, case_serial,)))
@@ -414,11 +441,8 @@ def provenance(request, mission_serial, case_serial, document_serial):
     cronDocument = CronDocument.objects.get(serial=document_serial)
     cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
     
-    doc ={}
-    doc['id'] = cronDocument.id
-    doc['serial'] = cronDocument.serial
-    doc['store_id'] = cronDocument.provenance.store_id    
-    log_cron(request.user.cron, 'view provenance', json.dumps(doc))
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_PROVENANCE, cron=request.user.cron, cronDocumentInstance=cronDocumentInstance, cronDocumentInstanceCorrect=cronDocumentInstance.solved)
+    logging.log_prov(action=ProvLog.ACTION_OPEN, cronDocumentInstance=cronDocumentInstance)
     
     return render(request, 'cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance })
     
@@ -433,7 +457,8 @@ def profile(request):
     
     cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=request.user.cron).order_by('-modifiedAt')
     mop_list = Mop.objects.filter(cron=request.user.cron)
-
+    
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_PROFILE, cron=request.user.cron)
     return render(request, 'cron/profile.html', {"cron": request.user.cron, 'missionInstance_list': missionInstance_list, "mop_list":mop_list, "cronDocumentInstance_list":cronDocumentInstance_list })
 
 @login_required(login_url='cron_login')
@@ -444,25 +469,55 @@ def message_compose(request):
         helpMail = HelpMail(cron=request.user.cron, type=HelpMail.TYPE_FROM_PLAYER)
         form = HelpMailForm(data=request.POST, instance=helpMail)
         if form.is_valid():
-            form.save()
+            message = form.save()
+            logging.log_action(ActionLog.ACTION_CRON_MESSAGE_SEND, cron=request.user.cron, message=message)
             return render(request, 'cron/message_sent.html', {})
         else:
+            logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE, cron=request.user.cron)
             return render(request, 'cron/message_compose.html', {"form": form})
             
     else:
         form = HelpMailForm()
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE, cron=request.user.cron)
         return render(request, 'cron/message_compose.html', {"form": form})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def messages(request):
     message_list = HelpMail.objects.filter(cron=request.user.cron).order_by('-createdAt')
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES, cron=request.user.cron)
     return render(request, 'cron/messages.html', {"message_list": message_list})
+
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
-def bunker_image(request, image_name):
+def intelligence_report_gc8(request):
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff='cr0n-report-gc8.html')
+    return render(request, 'cron/pages/cr0n-report-gc8.html', {})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def intelligence_bunker(request):
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff='inside-the-bunker.html')
+    return render(request, 'cron/pages/inside-the-bunker.html', {})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def intelligence_mop_message(request):
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff='mop-message.html')
+    return render(request, 'cron/pages/mop-message.html', {})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def intelligence_dr_moreau(request):
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff='dr-moreau.html')
+    return render(request, 'cron/pages/dr-moreau.html', {})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def intelligence_bunker_image(request, image_name):
     image_url = STATIC_URL + 'cron/images/bunker/' + image_name
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff=image_name)
     return render(request, 'cron/pages/bunker_image.html', {'image_url': image_url})
 
 

@@ -32,10 +32,9 @@
 	<form action="{% url 'players_registration' %}" method="post">{% csrf_token %}
 	<table>
 	<tr><td>Agent Codename:</td><td>{{user_form.username}}</td><td>{{user_form.username.errors}}Letters, digits and @/./+/-/_ only.</td></tr>
-	<tr><td>Email:</td><td>{{cron_form.email}}</td><td>{{cron_form.email.errors}}Used for account activation</td></tr>
+	<tr><td>Email:</td><td>{{cron_form.email}}</td><td>{{cron_form.email.errors}}Used for account activation and notifications.</td></tr>
 	<tr><td>Password:</td><td>{{user_form.password1}}</td><td>{{user_form.password1.errors}}</td></tr>
 	<tr><td>Password Confirmation:</td><td>{{user_form.password2}}</td><td>{{user_form.password2.errors}}</td></tr>
-	<tr><td>Secret Passcode:</td><td><input type="text" name="registration_passcode" /></td><td></td></tr>
 	<tr><td>I am sixteen or older:</td><td>{{cron_form.overSixteen}}</td><td>{{cron_form.overSixteen.errors}}We do not believe in child agents.</td></tr>
 	</table>
 	<input class='button' type="submit" value="Submit" />

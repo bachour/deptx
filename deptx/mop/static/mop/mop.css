@@ -155,6 +155,10 @@ th.nobox {
 	background-color:#eee;
 }
 
+tr.trashed {
+	text-decoration:line-through;
+}
+
 
 .styled-select {
 	overflow: hidden;

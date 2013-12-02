@@ -1,13 +1,17 @@
 from assets.models import Unit
 from mop.models import Mail, MopTracker, RandomizedDocument, Mop
 from cron import mailer
+from logger.models import ActionLog
+from logger import logging
 
 def getUnitComm():
     return Unit.objects.get(type=Unit.TYPE_COMMUNICATIVE)
 
 def createMail(bodyType, mop):
     mopco = getUnitComm()
-    Mail.objects.create(bodyType=bodyType, mop=mop, unit=mopco, subject=Mail.SUBJECT_HELP, type=Mail.TYPE_RECEIVED, processed=True)
+    mail = Mail(bodyType=bodyType, mop=mop, unit=mopco, subject=Mail.SUBJECT_HELP, type=Mail.TYPE_RECEIVED, processed=True)
+    mail.save()
+    logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_TUTORIAL, mop=mop, mail=mail)
 
 def hide(mopTracker, created):
     hide = {}
@@ -25,6 +29,7 @@ def hide(mopTracker, created):
             createMail(Mail.BODY_TUTORIAL_1_INTRO, mopTracker.mop)
             mopTracker.tutorial = MopTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM
             mopTracker.save()
+            logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
             
         if mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_5_CONCLUSION).filter(read=True):
             hide = []                
@@ -65,12 +70,14 @@ def assignForm(mopTracker):
         createMail(Mail.BODY_TUTORIAL_2_DOCUMENT_REQUEST, mopTracker.mop)
         mopTracker.tutorial = MopTracker.TUTORIAL_2_SENT_HOW_TO_REQUEST_DOCUMENT
         mopTracker.save()
+        logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
         
 def assignDocument(mopTracker):
     if mopTracker.tutorial == MopTracker.TUTORIAL_2_SENT_HOW_TO_REQUEST_DOCUMENT:
         createMail(Mail.BODY_TUTORIAL_3_TASK_COMPLETION, mopTracker.mop)
         mopTracker.tutorial = MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE
         mopTracker.save()
+        logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
         
 def checkProvenance(mopTracker, correct):
     if mopTracker.tutorial == MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE:
@@ -78,6 +85,7 @@ def checkProvenance(mopTracker, correct):
             createMail(Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION, mopTracker.mop)
             mopTracker.tutorial = MopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT
             mopTracker.save()
+            logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
         else:
             mopTracker.tutorialProvErrors += 1
             mopTracker.save()
@@ -91,6 +99,7 @@ def submitDocument(mopTracker):
         createMail(Mail.BODY_TUTORIAL_5_CONCLUSION, mopTracker.mop)
         mopTracker.tutorial = MopTracker.TUTORIAL_5_SENT_CONCLUSION
         mopTracker.save()
+        logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
 
 def getTutorialDocument(mopTracker):
     if not mopTracker.tutorial == MopTracker.TUTORIAL_6_DONE:
@@ -102,15 +111,5 @@ def cronMail(mopTracker, mail):
     if mopTracker.tutorial == MopTracker.TUTORIAL_5_SENT_CONCLUSION and mail.bodyType == Mail.BODY_TUTORIAL_5_CONCLUSION:
         mopTracker.tutorial = MopTracker.TUTORIAL_6_DONE
         mopTracker.save()
+        logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
         mailer.mopTutorialDone(mopTracker.mop.cron)
-#         mop_list = Mop.objects.filter(cron=mopTracker.mop.cron)
-#         oneMopHasPassedTutorial = False
-#         for mop in mop_list:
-#             try:
-#                 if not mop.mopTracker.isTutorial():
-#                     oneMopHasPassedTutorial = True
-#                     break
-#             except:
-#                 pass
-#         if oneMopHasPassedTutorial:
-#             mailer.mopTutorialDone(mopTracker.mop.cron)

@@ -2,7 +2,7 @@ from django.db import models
 
 from deptx.helpers import generateUUID, now, random_chars
 from deptx import friendly_id
-from players.models import Cron
+
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 
 

@@ -28,11 +28,10 @@ Assigned Provenances have the following colors:<br/>
 {% for provenance in provenance_list %}
 	<tr style="background-color:{% if provenance.get_type_display == 'CRON' %}#9bb6d4{% elif provenance.get_type_display == 'MOP_TEMPLATE' %}#729e52{% elif provenance.get_type_display == 'MOP_INSTANCE' %}#cfd681{% else %}white{% endif %}">
 		<td>{% if provenance.store_id %}<a href="{% url 'provmanager_view' provenance.id %}">view</a>{% endif %}</td>
-		<td style="white-space: nowrap">{{provenance.name}}</td>
+		<td style="white-space: nowrap"><a href="{% url 'admin:provmanager_provenance_change' provenance.id %}">{{provenance.name}}</a></td>
 		<td>{{provenance.attribute1}}</td>
 		<td>{{provenance.attribute2}}</td>
-		<td>{{provenance.cronDocument.serial}}{{provenance.randomizedDocument.serial}} (id: {{provenance.cronDocument.id}}{{provenance.randomizedDocument.id}})
-		</td>
+		<td>{{provenance.document.id}}{{provenance.randomizedDocument.id}} {{provenance.document.name}}{{provenance.randomizedDocument.serial}}</td>
 		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
 		<td style="white-space:nowrap">{{provenance.modifiedAt|date:'d.m.y. H:i'}}</td>		
 	</tr>

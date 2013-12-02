@@ -28,14 +28,12 @@ urlpatterns = patterns('',
     url(r'messages/$', views.messages, name='cron_messages'),
     url(r'messages/compose/', views.message_compose, name='cron_message_compose'),
     
-    
-    url(r'cr0n-report-gc8', TemplateView.as_view(template_name='cron/pages/cr0n-report-gc8.html'), name='cr0n-report-gc8'),
-    url(r'inside-the-bunker/$', TemplateView.as_view(template_name='cron/pages/Inside-the-bunker.html'), name='inside-the-bunker'),
-    url(r'inside-the-bunker/([-\w].+)/', views.bunker_image, name='cron_bunker_image'),
-    url(r'dr-moreau', TemplateView.as_view(template_name='cron/pages/dr-moreau.html'), name='dr-moreau'),
-    url(r'mop-message', TemplateView.as_view(template_name='cron/pages/mop-message.html'), name='mop-message'),
-    
-    
+    url(r'intelligence/cr0n-report-gc8.html', views.intelligence_report_gc8, name='cron_intelligence_report_gc8'),
+    url(r'intelligence/inside-the-bunker.html', views.intelligence_bunker, name='cron_intelligence_bunker'),
+    url(r'intelligence/mop-message.html', views.intelligence_mop_message, name='cron_intelligence_mop_message'),
+    url(r'intelligence/dr-moreau.html', views.intelligence_dr_moreau, name='cron_intelligence_dr_moreau'),
+    url(r'intelligence/inside-the-bunker/([-\w].+)', views.intelligence_bunker_image, name='cron_intelligence_bunker_image'),
+       
      
     url(r'profile/', views.profile, name='cron_profile'),
     url(r'hack/([-\w]+)', views.hack_document, name='cron_hack_document'),
