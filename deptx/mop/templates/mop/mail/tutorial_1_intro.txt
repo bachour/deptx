@@ -15,7 +15,7 @@ Our {{tutorialData.form_requisition.unit.name}} is the department that is respon
 We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents from a specific department. To get this form follow these simple steps:
 
 1.	Go to the Blank Forms page from the Control Centre (I suggest you open that in a new window or tab so you can come back to these steps easily).
-2.	Select {{tutorialData.form_requisition.name}} by clicking the "fill in" button next to it.
+2.	Select "{{tutorialData.form_requisition.name}}" by clicking the "fill in" button next to it.
 3.	You need to insert the form ID for the form you want to request. You can normally lookup the necessary form ID in the table at the bottom of the forms page. 
 4.  For now, enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field.
 6.	Attach your digital signature by clicking the "Sign Form" button.
@@ -24,7 +24,7 @@ We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". Thi
 9.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
 10.	Select "Requesting form" as the subject.
 11.	Click "Send".
-12.	Go back to your Inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}.
+12.	Go back to your Inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}. It might take a couple of minutes to process some emails. This one shouldn't take more than one or two.
 
 Phew! Now wasn't that fun! :)
 
