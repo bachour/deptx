@@ -377,7 +377,7 @@ function setupMouseInteractions()
           attribLayer[l].on('mouseup', function(evt) {
               shape = evt.targetNode;
               if (shapePosition == shape.getX()*shape.getY())
-            	  toggleAttributeSelection(shape);
+            	  toggleAttributeSelection(shape, false);
             });
           attribLayer[l].on('mouseover', function(evt) {
                 shape = evt.targetNode;
@@ -1162,7 +1162,7 @@ function toggleNodeSelection(shape)
 	var clickedNode = getNodeFromShape(shape);
 
 	if (clickedNode == null)
-		toggleAttributeSelection(shape);
+		toggleAttributeSelection(shape, false);
 	
 	// see if this node already selected
 	if (selectedNodes['1'] == clickedNode)
@@ -1265,7 +1265,10 @@ function toggleHighlightAttribute(shape,on)
 				}
 }
 
-function toggleAttributeSelection(shape)
+// toggles selection of attribute given the shape that represents the attribute
+// setup is a boolean that determines whether or not the changes are taking place as part of initialization (loading saved state)
+// if true, the effects of this toggle are not logged.
+function toggleAttributeSelection(shape, setup)
 {
 	// if already selected, deselect it
 	for (var i in selectedAttributes)
@@ -1278,7 +1281,8 @@ function toggleAttributeSelection(shape)
 				setTextHighlight(shape, false, false);
 			}
 			clickSound.play();
-			logClick(selectedNodes[i].id, selectedAttributes[i], false, i);
+			if (!setup)
+				logClick(selectedNodes[i].id, selectedAttributes[i], false, i);
 			selectedAttributes[i] = null;
 			return;
 		}
@@ -1317,12 +1321,14 @@ function toggleAttributeSelection(shape)
 					{
 						setTextHighlight(shape, true, false);
 					}
-					logClick(selectedNodes[i].id, j, true,i);
+					if (!setup)
+						logClick(selectedNodes[i].id, j, true,i);
 					clickSound.play();
 					return;
 				}
 	// do nothing is shape does not match any selectable object
  }
+
 
 function setTextHighlight(shape, selected, highlighted)
 {
@@ -1933,13 +1939,15 @@ function updateState(state)
 		{
 			if (state[n].selected_node)
 			{
+				// select the node
 				selectedNodes[state[n].position] = nodes[state[n].selected_node];
 				showAttributes(nodes[state[n].selected_node], state[n].position);
 				setImageHighlight(nodes[state[n].selected_node].image, true, false);
 				
 				if (state[n].selected_attribute)
 				{
-					toggleAttributeSelection(nodes[state[n].selected_node].attribValues[state[n].selected_attribute]);
+					// select the attribute
+					toggleAttributeSelection(nodes[state[n].selected_node].attribValues[state[n].selected_attribute], true);
 				}
 			}
 		}
