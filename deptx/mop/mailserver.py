@@ -8,6 +8,9 @@ from django.core.mail import EmailMessage
 from deptx.helpers import now
 from random import getrandbits
 
+from logger.models import ActionLog
+from logger import logging 
+
 try:
     from deptx.settings_production import TO_ALL
 except:
@@ -175,6 +178,7 @@ def check_mail(mail):
     
             if newMail.subject == Mail.SUBJECT_ERROR:
                 newMail.trust = -1
+                
                 if not mail.mopDocumentInstance == None:
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_ACTIVE
                     mail.mopDocumentInstance.save()
@@ -186,6 +190,16 @@ def check_mail(mail):
             
             if newMail.trust is not None:
                 mail.mop.mopTracker.addTrust(newMail.trust)
+                
+            if newMail.subject == Mail.SUBJECT_ERROR:
+                logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_ERROR, mop=mail.mop, mail=newMail)
+            elif newMail.subject == Mail.SUBJECT_RECEIVE_DOCUMENT:
+                logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_DOCUMENT, mop=mail.mop, mail=newMail)
+            elif newMail.subject == Mail.SUBJECT_RECEIVE_FORM:
+                logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM, mop=mail.mop, mail=newMail)
+            elif newMail.subject == Mail.SUBJECT_REPORT_EVALUATION:
+                logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_REPORT, mop=mail.mop, mail=newMail)
+           
 
 
 def requisitionBlankExists(mop, requisition):

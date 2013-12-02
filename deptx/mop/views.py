@@ -16,9 +16,6 @@ from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
 
-from provmanager.provlogging import provlog_add_mop_login, provlog_add_mop_logout, provlog_add_mop_sign_form, provlog_add_mop_send_form, provlog_add_mop_issue_form, provlog_add_mop_issue_document
-
-from logger.logging import log_cron, log_mop
 import json
 
 from mop.performer import analyze_performance
@@ -27,6 +24,8 @@ from django.views.decorators.csrf import csrf_exempt
 from mop.mailserver import analyze_mail
 import tutorial
 from deptx.helpers import now
+from logger import logging
+from logger.models import ProvLog, ActionLog
 
 def isMop(user):
     if user:
@@ -58,7 +57,8 @@ def index(request):
         
         request.session['inbox_unread'] = inbox_unread
         
-        log_mop(request.user.mop, 'index')
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_INDEX, mop=request.user.mop)
+        
         context = {'user': request.user, 'inbox_unread': inbox_unread, 'hide':hide}
 
         return render(request, 'mop/index.html', context)
@@ -80,8 +80,8 @@ def login(request):
         # TODO: Code is almost identical to CRON-code
         if not user == None and user.is_active and isMop(user):
             auth.login(request, user)
-            log_mop(request.user.mop, 'login')
-            provlog_add_mop_login(request.user.mop, request.session.session_key)
+
+            logging.log_action(ActionLog.ACTION_MOP_LOGIN, mop=request.user.mop)
             
             request.session['has_checked_inbox'] = False
             return HttpResponseRedirect(reverse('mop_index'))
@@ -94,8 +94,7 @@ def login(request):
         return render(request, 'mop/login.html', {'form' : form})
 
 def logout_view(request):
-    log_mop(request.user.mop, 'logout')
-    provlog_add_mop_logout(request.user.mop, request.session.session_key)
+    logging.log_action(ActionLog.ACTION_MOP_LOGOUT, mop=request.user.mop)
     logout(request)
     return redirect('mop_index')
 
@@ -104,7 +103,7 @@ def logout_view(request):
 def rules(request):
     unit_list = Unit.objects.all().order_by('serial')
     requisition_list = Requisition.objects.all().order_by('serial')
-    log_mop(request.user.mop, 'read rules')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_GUIDEBOOK, mop=request.user.mop)
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
 @login_required(login_url='mop_login')
@@ -127,7 +126,7 @@ def performance(request):
 #     weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
 
     trustInstance_list = TrustInstance.objects.filter(mop=request.user.mop).order_by('-createdAt')
-    log_mop(request.user.mop, 'read performance')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_PERFORMANCE, mop=request.user.mop)
     return render(request, 'mop/performance.html', {'trustInstance_list':trustInstance_list})
 
 @login_required(login_url='mop_login')
@@ -148,7 +147,7 @@ def documents_pool(request):
                 break
         
  
-    log_mop(request.user.mop, 'view pool')   
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL, mop=request.user.mop)
     return render(request, 'mop/documents_pool.html', {"randomizedDocument_list": randomizedDocument_list})
 
 def getDocumentPoolForMop(mop):
@@ -164,7 +163,7 @@ def getDocumentPoolForMop(mop):
 def documents(request):
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE)
     
-    log_mop(request.user.mop, 'view documents')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER, mop=request.user.mop)
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
 @login_required(login_url='mop_login')
@@ -172,7 +171,7 @@ def documents(request):
 def documents_archive(request):
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
     
-    log_mop(request.user.mop, 'view documents archive')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
 
@@ -207,8 +206,14 @@ def provenance(request, serial):
             inactive = False
         else:
             inactive = True
+        if documentInstance.type == MopDocumentInstance.TYPE_MOP:
+            logging.log_prov(action=ProvLog.ACTION_OPEN, mopDocumentInstance=documentInstance)
+        else:
+            logging.log_prov(action=ProvLog.ACTION_OPEN, cronDocumentInstance=documentInstance)
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_PROVENANCE, mop=request.user.mop, mopDocumentInstance=documentInstance, mopDocumentInstanceCorrect=documentInstance.correct)
         return render(request, 'mop/provenance.html', {'document': document, "inactive":inactive})
     else:
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_PROVENANCE_NO_CLEARANCE, mop=request.user.mop, mopDocumentInstance=documentInstance)
         return render(request, 'mop/provenance_noclearance.html', {'document': document})
 
 
@@ -219,21 +224,21 @@ def mail_inbox(request):
     request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
     request.session['has_checked_inbox'] = True
 
-    log_mop(request.user.mop, 'view inbox')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_INBOX, mop=request.user.mop)
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_outbox(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-createdAt')
-    log_mop(request.user.mop, 'view outbox')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_OUTBOX, mop=request.user.mop)
     return render(request, 'mop/mail_outbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_draft(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-createdAt')
-    log_mop(request.user.mop, 'view drafts')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_DRAFT, mop=request.user.mop)
     return render(request, 'mop/mail_draft.html', {"mail_list": mail_list})
 
 
@@ -241,7 +246,7 @@ def mail_draft(request):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_trash(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-createdAt')
-    log_mop(request.user.mop, 'view trash')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_TRASH, mop=request.user.mop)
     return render(request, 'mop/mail_trash.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
@@ -256,8 +261,10 @@ def mail_view(request, serial):
     
     request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
     
+    #to check if this is the last tutorial email
     tutorial.cronMail(request.user.mop.mopTracker, mail)
     
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_MAIL, mop=request.user.mop)
     return render(request, 'mop/mail_view.html', {'mail': mail})
 
 @login_required(login_url='mop_login')
@@ -271,11 +278,7 @@ def mail_trashing(request, serial):
     mail.state = Mail.STATE_TRASHED
     mail.save()
     
-    if not mail == None:
-        m ={}
-        m['id'] = mail.id
-        m['subject'] = mail.subject
-        log_mop(request.user.mop, 'trash mail', json.dumps(m))
+    logging.log_action(ActionLog.ACTION_MOP_MAIL_TRASH, mop=request.user.mop, mail=mail)
     
     if mail.type == Mail.TYPE_RECEIVED:
         return redirect('mop_mail_inbox')
@@ -296,11 +299,7 @@ def mail_untrashing(request, serial):
     mail.state = Mail.STATE_NORMAL
     mail.save()
     
-    if not mail == None:
-        m ={}
-        m['id'] = mail.id
-        m['subject'] = mail.subject
-        log_mop(request.user.mop, 'untrash mail', json.dumps(m))
+    logging.log_action(ActionLog.ACTION_MOP_MAIL_UNTRASH, mop=request.user.mop, mail=mail)
     
     return redirect('mop_mail_trash')
 
@@ -315,12 +314,6 @@ def mail_deleting(request, serial):
     mail.read = True
     mail.state = Mail.STATE_DELETED
     mail.save()
-    
-    if not mail == None:
-        m ={}
-        m['id'] = mail.id
-        m['subject'] = mail.subject
-        log_mop(request.user.mop, 'delete mail', json.dumps(m))
     
     return redirect('mop_mail_trash')
 
@@ -355,7 +348,9 @@ def mail_compose(request, fullSerial=None):
                 if not mail.mopDocumentInstance == None:
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
-                
+                logging.log_action(ActionLog.ACTION_MOP_MAIL_SEND, mop=request.user.mop, mail=mail)
+            else:
+                logging.log_action(ActionLog.ACTION_MOP_MAIL_DRAFT, mop=request.user.mop, mail=mail)    
             return redirect('mop_index')
         else:
             #TODO code duplication between here and the else below
@@ -363,6 +358,8 @@ def mail_compose(request, fullSerial=None):
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+            
+            logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
             return render(request, 'mop/mail_compose.html', {'form' : form,})
         
     else:
@@ -377,6 +374,7 @@ def mail_compose(request, fullSerial=None):
         form.fields["requisitionInstance"].queryset = requisitionInstance_list
         form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form,})
 
 #TODO code duplication between mail_edit and mail_compose    
@@ -411,13 +409,16 @@ def mail_edit(request, serial):
                 if not mail.mopDocumentInstance == None:
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_LIMBO
                     mail.mopDocumentInstance.save()
-            
+                logging.log_action(ActionLog.ACTION_MOP_MAIL_SEND, mop=request.user.mop, mail=mail)
+            else:
+                logging.log_action(ActionLog.ACTION_MOP_MAIL_DRAFT, mop=request.user.mop, mail=mail)
             return redirect('mop_index')
         else:
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
             form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
             form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+            logging.log_action(ActionLog.ACTION_MOP_VIEW_EDIT, mop=request.user.mop)
             return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
         
     else:
@@ -427,6 +428,7 @@ def mail_edit(request, serial):
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
         form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_EDIT, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 
 #@login_required(login_url='mop_login')
@@ -476,7 +478,7 @@ def forms_blank(request):
         if not requisition.acquired:
             requisition_list.allAcquired = False
     
-    log_mop(request.user.mop, 'blank forms')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS, mop=request.user.mop)
     return render(request, 'mop/forms_blank.html', {"blank_list": blank_list, "requisition_list":requisition_list})
 
 @login_required(login_url='mop_login')
@@ -492,18 +494,12 @@ def form_fill(request, reqBlank_serial):
         requisitionInstance = RequisitionInstance(blank=reqBlank)
         form = RequisitionInstanceForm(data=request.POST, instance=requisitionInstance)
         if form.is_valid():
-            form.save()
-            
-            f ={}
-            f['form_id'] = reqBlank.requisition.id
-            f['form_name'] = reqBlank.requisition.name
-            f['instance_id'] = requisitionInstance.id
-            f['data'] = form.data
-            log_mop(request.user.mop, 'fill form', json.dumps(f))
-            provlog_add_mop_sign_form(request.user.mop, requisitionInstance, request.session.session_key)
+            requisitionInstance = form.save()
+            logging.log_action(ActionLog.ACTION_MOP_FORM_SIGN, mop=request.user.mop, requisitionInstance=requisitionInstance)
             return redirect('mop_forms_signed')
     else:
         form = RequisitionInstanceForm()
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_FILL, mop=request.user.mop)
         return render(request, 'mop/forms_fill.html', {"reqBlank": reqBlank, "form": form})
 
 @login_required(login_url='mop_login')
@@ -511,7 +507,7 @@ def form_fill(request, reqBlank_serial):
 def forms_signed(request):
     requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-modifiedAt")
     
-    log_mop(request.user.mop, 'view filled forms')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED, mop=request.user.mop)
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
 
 
@@ -519,8 +515,7 @@ def forms_signed(request):
 @user_passes_test(isMop, login_url='mop_login')
 def forms_archive(request):
     requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
-    
-    log_mop(request.user.mop, 'view archived forms')
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/forms_archive.html', {"requisitionInstance_list": requisitionInstance_list})
 
 

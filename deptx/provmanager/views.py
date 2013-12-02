@@ -23,7 +23,7 @@ import json
 
 from graphml2prov import convert_graphml_string, validate
 import prov.model
-from logger.models import ProvLog
+from logger.models import ProvLog, ActionLog
 from logger import logging
 
 
@@ -272,6 +272,7 @@ def prov_check(request):
             if provenance.type == Provenance.TYPE_CRON:
                 #TODO check properly for cron-user and if Instance exists
                 cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
+                logging.log_action(ActionLog.ACTION_CRON_PROVENANCE_SUBMIT, cron=cronDocumentInstance.cron, cronDocumentInstance=cronDocumentInstance, cronDocumentInstanceCorrect=correct)
                 if correct:
                     cronDocumentInstance.solved = True
                     cronDocumentInstance.save()
@@ -304,6 +305,7 @@ def prov_check(request):
                 mopDocumentInstance.modified = True
                 mopDocumentInstance.correct = correct
                 mopDocumentInstance.save()
+                logging.log_action(ActionLog.ACTION_MOP_PROVENANCE_SUBMIT, mop=mopDocumentInstance.mop, mopDocumentInstance=mopDocumentInstance, mopDocumentInstanceCorrect=correct)
                 tutorial.checkProvenance(mopDocumentInstance.mop.mopTracker, mopDocumentInstance.correct)
                 close_prov = True
             logging.log_prov(action=ProvLog.ACTION_SUBMIT, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=post_node1, node2=post_node2, attribute1=post_attribute1, attribute2=post_attribute2, empty=is_empty, correct=correct)

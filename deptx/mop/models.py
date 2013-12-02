@@ -495,7 +495,6 @@ class Mail(models.Model):
         if self.id and not self.serial:
             self.serial = "%s" % (friendly_id.encode(self.id))
             super(Mail, self).save(*args, **kwargs)
-
     
     def __unicode__(self):
         if self.subject == None:

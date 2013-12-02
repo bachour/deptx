@@ -47,9 +47,6 @@ class Cron(models.Model):
     
     def __unicode__(self):
         return self.user.username
-
-
-
     
 class Mop(models.Model):
     

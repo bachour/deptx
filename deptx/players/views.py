@@ -9,7 +9,8 @@ from django.contrib.auth.forms import UserCreationForm
 from deptx.secrets import registration_passcode
 from provmanager.provlogging import provlog_add_cron_register
 from players.models import Cron
-
+from logger.models import ActionLog
+from logger import logging
 
 #TODO: Move registration over to CRON
 #TODO: Request new activation link in case old one was lost
@@ -27,7 +28,7 @@ def register(request):
             cron.user = user
             cron.save()
             
-            provlog_add_cron_register(cron)
+            logging.log_action(ActionLog.ACTION_CRON_CREATED, cron)
             
             email_tpl = loader.get_template('players/activation.txt')
             url_study = request.build_absolute_uri(reverse('players_activation_study', args=[cron.activationCode]))
@@ -76,12 +77,14 @@ def activate_study(request, code):
                 cron.player = player
                 cron.activated = True
                 cron.save()
+                logging.log_action(ActionLog.ACTION_CRON_ACTIVATED, cron)
                 return render(request, 'players/registration.html', {"cron": player.cron, "study":True})
             else:
                 return render(request, 'players/study.html', {"form": form, "code":code})
          
         else:
             form = PlayerForm(prefix='player')
+            logging.log_action(ActionLog.ACTION_CRON_VIEW_STUDY, cron)
             return render(request, 'players/study.html', {"form": form, "code":code})
 
 
@@ -98,5 +101,6 @@ def activate_nostudy(request, code):
     else:
         cron.activated = True
         cron.save()
+        logging.log_action(ActionLog.ACTION_CRON_CREATED, cron)
         return render(request, 'players/registration.html', {"cron": cron}) 
 
