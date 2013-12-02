@@ -67,9 +67,8 @@ def login(request):
         return render(request, 'cron/login.html', {'form' : form,})
 
 def logout_view(request):
-    cron = request.user.cron
+    logging.log_action(ActionLog.ACTION_CRON_LOGOUT, cron=request.user.cron)
     logout(request)
-    logging.log_action(ActionLog.ACTION_CRON_LOGOUT, cron=cron)    
     return redirect('cron_index')
 
 def getCurrentMissionInstance(cron):
