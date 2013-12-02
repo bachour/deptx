@@ -17,9 +17,9 @@ try:
 except:
     TO_ALL = ["1@localhost.com", "2@localhost.com"]
 
-DELAY_SHORT = 1 * 60
-DELAY_MEDIUM = 3 * 60
-DELAY_LONG = 5 * 60 
+DELAY_SHORT = 0 * 60
+DELAY_MEDIUM = 1 * 60
+DELAY_LONG = 3 * 60 
 
 def delayedEnough(mail, delay):
     if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
