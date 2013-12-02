@@ -71,7 +71,7 @@
               <tr>
                 <td><ul class="tooltips">
                   {% if form.errors %}
-	<p style="color:red">Your username and password didn't match. Please try again.</p>
+	<p class="tweet" style="color:red">Your username and password didn't match. Please try again.</p>
 {% endif %}
 
 <form method="post" action="{% url 'cron_login' %}">
@@ -91,9 +91,10 @@
 		</table>
 	
 	 
-</form>
+		</form>
                 </ul></td>
               </tr>
+              <tr><p class="tweet" >If you're having any trouble with this site, contact us at <a href="mailto:support@cr0n.org">support@cr0n.org</a>.</p> </tr>
             </table>
           </div>
           <ul class="tooltips">
