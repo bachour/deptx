@@ -20,7 +20,6 @@ def hide(mopTracker, created):
         mopco_mails = Mail.objects.filter(mop=mopTracker.mop).filter(unit=getUnitComm()).filter(type=Mail.TYPE_RECEIVED)
         
         hide['performance'] = True
-        hide['guidebook'] = True
         hide['documentsArchive'] = True
         hide['formsArchive'] = True
         hide['mail'] = True
@@ -34,7 +33,6 @@ def hide(mopTracker, created):
         if mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_5_CONCLUSION).filter(read=True):
             hide = []                
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_4c_CORRECT_MODIFICATION).filter(read=True):
-            hide['guidebook'] = False
             hide['documentsPool'] = True
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2).filter(read=True):
             hide['compose'] = True
@@ -52,11 +50,14 @@ def hide(mopTracker, created):
             hide['formsSigned'] = True
             hide['documentsPool'] = True
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_2_DOCUMENT_REQUEST).filter(read=True):
+            hide['guidebook'] = True
             hide['documentsDrawer'] = True 
         elif mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_1_INTRO).filter(read=True):
+            hide['guidebook'] = True
             hide['documentsDrawer'] = True
             hide['documentsPool'] = True
         else:
+            hide['guidebook'] = True
             hide['compose'] = True
             hide['formsBlank'] = True
             hide['formsSigned'] = True
