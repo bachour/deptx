@@ -382,7 +382,7 @@ def accessMopServer(cron, cronDocument, mop_list):
                         #Mail gets deleted
                         mail.state = Mail.STATE_DELETED
                         mail.save()
-                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, cronDocumentInstance=cronDocumentInstance, successfulHAck=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
+                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, cronDocumentInstance=cronDocumentInstance, successfulHack=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
                         return mop, checked_mop_list
             logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, successfulHack=False, mop=mop)
         return None, checked_mop_list
