@@ -40,7 +40,7 @@
 	{% if reqBlank.requisition.category == reqBlank.requisition.CATEGORY_HELP %}
 		<textarea cols="80" id="id_{{form.data.name}}" name="{{form.data.name}}" rows="10"></textarea>
 	{% else %}
-		<input type="text" id="id_{{form.data.name}}" name="{{form.data.name}} size="64" />
+		<input type="text" id="id_{{form.data.name}}" name="{{form.data.name}}" size="64" />
 	{% endif %}
 </td></tr>
 <tr><th>Citizen Helper (name)</th><td>{{user.mop.firstname}} {{user.mop.lastname}}</td></tr>
