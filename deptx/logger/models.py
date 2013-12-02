@@ -2,7 +2,7 @@ from django.db import models
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron, Mop
-from assets.models import Mission, Case, Requisition
+from assets.models import Mission, Case, Requisition, CronDocument
 from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail
 from mop.models import MopDocumentInstance, Mail, MopTracker, RequisitionInstance
     
@@ -152,6 +152,7 @@ class ActionLog(models.Model):
     missionState = models.IntegerField(choices=MissionInstance.CHOICES_PROGRESS, blank=True, null=True)
     case = models.ForeignKey(Case, blank=True, null=True)
     caseSolved = models.NullBooleanField(blank=True, null=True)
+    cronDocument = models.ForeignKey(CronDocument, blank=True, null=True)
     cronDocumentInstance = models.ForeignKey(CronDocumentInstance, blank=True, null=True)
     cronDocumentInstanceCorrect = models.NullBooleanField(blank=True, null=True)
     message = models.ForeignKey(HelpMail, blank=True, null=True)

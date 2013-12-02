@@ -3,6 +3,8 @@ Agent {{cron.user.username}},
 Report back to HQ immediately.
 There is a message waiting for you.
 
+http://www.cr0n.org
+
 -- 
 cr0nogram v1.45b
 
