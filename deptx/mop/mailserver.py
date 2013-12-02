@@ -12,6 +12,7 @@ from logger.models import ActionLog
 from logger import logging 
 from mop.models import MopTracker
 
+import logging as reallogging
 
 try:
     from deptx.settings_production import TO_ALL
@@ -23,6 +24,7 @@ DELAY_MEDIUM = 3 * 60
 DELAY_LONG = 5 * 60 
 
 def delayedEnough(mail, delay):
+    reallogging.log(reallogging.ERROR, 'in delay')
     if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
         print "tutorial so no delay"
         return True

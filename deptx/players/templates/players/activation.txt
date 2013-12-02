@@ -1,6 +1,6 @@
 Thank you for signing up to a good cause, agent {{cron.user.username}}.
 
-Before we can start we would like you to read the following:
+Before we can start we would like you to read the following about a research study we are conducting:
 
 ===============================================
 The 'Apocalypse of MoP' Study Information Sheet

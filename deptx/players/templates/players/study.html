@@ -5,7 +5,7 @@
 
 <h1>Registration for Study</h1>
 <p>Thank you for wanting to participate in our research!</p>
-<p>We would like to ask you for some demographic data for our study. Remember, we will always anonymise your data before publishing.</p>
+<p>We would like to ask you for some demographic data for our study. This data is purely for research purposes and is not part of the game. Remember, we will also always anonymise your data before publishing.</p>
 <form action="{% url 'players_activation_study' code %}" method="post">{% csrf_token %}
 <table>
 <tr><td>Name:</td><td>{{form.name}}</td><td>{{form.name.errors}}</td></tr>
