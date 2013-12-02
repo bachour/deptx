@@ -351,7 +351,7 @@ def mail_compose(request, fullSerial=None):
                 logging.log_action(ActionLog.ACTION_MOP_MAIL_SEND, mop=request.user.mop, mail=mail)
             else:
                 logging.log_action(ActionLog.ACTION_MOP_MAIL_DRAFT, mop=request.user.mop, mail=mail)    
-            return redirect('mop_index')
+            return redirect('mop_mail_outbox')
         else:
             #TODO code duplication between here and the else below
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
@@ -376,19 +376,6 @@ def mail_compose(request, fullSerial=None):
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form,})
-
-
-@login_required(login_url='mop_login')
-@user_passes_test(isMop, login_url='mop_login')
-def form_trashing(request, fullSerial):
-    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
-    for requisitionInstance in requisitionInstance_list:
-        if requisitionInstance.fullSerial() == fullSerial:
-            requisitionInstance.trashed = True
-            requisitionInstance.used = True
-            requisitionInstance.save()
-            logging.log_action(ActionLog.ACTION_MOP_FORM_TRASH, mop=request.user.mop, requisitionInstance=requisitionInstance)
-            return redirect('mop_forms_signed')
 
 #TODO code duplication between mail_edit and mail_compose    
 @login_required(login_url='mop_login')
@@ -425,7 +412,7 @@ def mail_edit(request, serial):
                 logging.log_action(ActionLog.ACTION_MOP_MAIL_SEND, mop=request.user.mop, mail=mail)
             else:
                 logging.log_action(ActionLog.ACTION_MOP_MAIL_DRAFT, mop=request.user.mop, mail=mail)
-            return redirect('mop_index')
+            return redirect('mop_mail_outbox')
         else:
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
@@ -531,6 +518,17 @@ def forms_archive(request):
     logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/forms_archive.html', {"requisitionInstance_list": requisitionInstance_list})
 
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def form_trashing(request, fullSerial):
+    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop)
+    for requisitionInstance in requisitionInstance_list:
+        if requisitionInstance.fullSerial() == fullSerial:
+            requisitionInstance.trashed = True
+            requisitionInstance.used = True
+            requisitionInstance.save()
+            logging.log_action(ActionLog.ACTION_MOP_FORM_TRASH, mop=request.user.mop, requisitionInstance=requisitionInstance)
+            return redirect('mop_forms_signed')
 
 @staff_member_required
 def control(request):

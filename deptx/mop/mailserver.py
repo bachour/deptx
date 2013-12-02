@@ -10,6 +10,8 @@ from random import getrandbits
 
 from logger.models import ActionLog
 from logger import logging 
+from mop.models import MopTracker
+
 
 try:
     from deptx.settings_production import TO_ALL
@@ -21,9 +23,13 @@ DELAY_MEDIUM = 3 * 60
 DELAY_LONG = 5 * 60 
 
 def delayedEnough(mail, delay):
-    if mail.mop.user.is_staff:
-        print "staff"
+    if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
+        print "tutorial so no delay"
         return True
+    elif mail.mop.user.is_staff:
+        print "staff so no delay"
+        return True
+    
     difference = (now() - mail.sentAt).total_seconds()
     if difference >= delay:
         if getrandbits(1):
