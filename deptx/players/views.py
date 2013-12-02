@@ -20,9 +20,7 @@ def register(request):
         cron_form = CronForm(request.POST, prefix="cron")
         user_form = UserCreationForm(request.POST, prefix = "user")
          
-        passcode = request.POST.get('registration_passcode', '')
-         
-        if passcode == registration_passcode and cron_form.is_valid() and user_form.is_valid():
+        if cron_form.is_valid() and user_form.is_valid():
             user = user_form.save()
             cron = cron_form.save(commit=False)
             cron.user = user
