@@ -463,6 +463,7 @@ class Mail(models.Model):
         elif self.bodyType == self.BODY_TUTORIAL_4c_CORRECT_MODIFICATION:
             template = loader.get_template('mop/mail/tutorial_4c_correct_modification.txt')
             tutorialData['document'] = RandomizedDocument.objects.get(isTutorial=True)
+            tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL, category=Requisition.CATEGORY_FORM)
         elif self.bodyType == self.BODY_TUTORIAL_5_CONCLUSION:
             template = loader.get_template('mop/mail/tutorial_5_conclusion.txt')
         elif self.bodyType == self.BODY_HELP:
