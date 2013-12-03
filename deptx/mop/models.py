@@ -39,6 +39,8 @@ class MopTracker(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     mop = models.OneToOneField(Mop, related_name="mopTracker")
+    unreadEmails = models.IntegerField(default=0)
+    hasCheckedInbox = models.BooleanField(default=False)
     trust = models.IntegerField(default=0)
     totalTrust = models.IntegerField(default=0)
     credit = models.IntegerField(default=0)

@@ -44,9 +44,7 @@ def index(request):
 
     if not request.user == None and request.user.is_active and isMop(request.user):
 
-        mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
-        
-        hide = tutorial.hide(mopTracker, created)
+        hide = tutorial.hide(request.user.mop.mopTracker)
   
         #MAIL MANAGING
         #inbox = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).count()
@@ -55,7 +53,8 @@ def index(request):
         #trash = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).count()
         #draft = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).count()
         
-        request.session['inbox_unread'] = inbox_unread
+        request.user.mop.mopTracker.unreadEmails = inbox_unread
+        request.user.mop.mopTracker.save()
         
         logging.log_action(ActionLog.ACTION_MOP_VIEW_INDEX, mop=request.user.mop)
         
@@ -82,8 +81,13 @@ def login(request):
             auth.login(request, user)
 
             logging.log_action(ActionLog.ACTION_MOP_LOGIN, mop=request.user.mop)
+            mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
+            mopTracker.hasCheckedInbox = False
+            mopTracker.save()
             
-            request.session['has_checked_inbox'] = False
+            if created:
+                tutorial.firstLogin(mopTracker)
+            
             return HttpResponseRedirect(reverse('mop_index'))
             
         else:
@@ -222,8 +226,9 @@ def provenance(request, serial):
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
     mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
-    request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
-    request.session['has_checked_inbox'] = True
+    request.user.mop.mopTracker.unreadEmails = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+    request.user.mop.mopTracker.hasCheckedInbox = True
+    request.user.mop.mopTracker.save()
 
     logging.log_action(ActionLog.ACTION_MOP_VIEW_INBOX, mop=request.user.mop)
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
@@ -260,7 +265,8 @@ def mail_view(request, serial):
     except Mail.DoesNotExist:
         mail = None
     
-    request.session['inbox_unread'] = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+    request.user.mop.mopTracker.unreadEmails = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+    request.user.mop.mopTracker.save()
     
     #to check if this is the last tutorial email
     tutorial.cronMail(request.user.mop.mopTracker, mail)
@@ -456,14 +462,16 @@ def mail_check(request):
         except:
             total_unread = None
         has_new_mail = False
-        if total_unread > request.session['inbox_unread']:
+        if total_unread > request.user.mop.mopTracker.unreadEmails:
             has_new_mail = True
-            request.session['has_checked_inbox'] = False
+            request.user.mop.mopTracker.hasCheckedInbox = False
         
         try:
-            request.session['inbox_unread'] = total_unread
+            request.user.mop.mopTracker.unreadEmails = total_unread
         except:
             pass
+        
+        request.user.mop.mopTracker.save()
         
         json_data = json.dumps({'total_unread':total_unread, 'has_new_mail':has_new_mail})
     
