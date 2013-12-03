@@ -11,7 +11,7 @@ Here's what you need to do:
 2.  Acquire the blank {{tutorialData.document.mopDocument.unit.serial}}'s document submission form by submitting a "{{tutorialData.form_requisition.name}}" to {{tutorialData.form_requisition.unit.serial}} like you did in the first part of this tutorial.
 3.	Once you have acquired this form, come back here to and proceed to step 4.
 <br/>
-4.  Go to the "Blank Forms" page and fill in the new form form with the document ID for the document you want to submit. You can find this document ID in the Document Drawer. Sign the form.
+4.  Go to the "Blank Forms" page and fill in the new form with the document ID for the document you want to submit. You can find this document ID in the Document Drawer. Sign the form.
 5.	From the "Signed Forms" page, click the "mail" button next to the newly signed form.
 6.	Select {{tutorialData.document.mopDocument.unit.serial}} as the recipient.
 7.	Select "Submitting document" as the subject.
