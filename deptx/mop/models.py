@@ -526,6 +526,6 @@ class Mail(models.Model):
             sender_receiver = "draft by %s" % sender
             state = ""
             
-        return "%s - %s - %s - %s" % (sender_receiver, subject, self.trust, state)
+        return "%s - %s - %s - %s (%s)" % (sender_receiver, subject, self.trust, state, self.sentAt)
 
 
