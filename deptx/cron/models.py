@@ -182,5 +182,5 @@ class HelpMail(models.Model):
             fromto = "From"
         else:
             fromto = "To"
-        return "%s: %s - %s" % (fromto, self.cron.user.username, self.get_subject_display())
+        return "%s: %s - %s (%s)" % (fromto, self.cron.user.username, self.get_subject_display(), self.createdAt)
     

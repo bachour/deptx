@@ -39,6 +39,8 @@ class MopTracker(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     mop = models.OneToOneField(Mop, related_name="mopTracker")
+    unreadEmails = models.IntegerField(default=0)
+    hasCheckedInbox = models.BooleanField(default=False)
     trust = models.IntegerField(default=0)
     totalTrust = models.IntegerField(default=0)
     credit = models.IntegerField(default=0)
@@ -463,6 +465,7 @@ class Mail(models.Model):
         elif self.bodyType == self.BODY_TUTORIAL_4c_CORRECT_MODIFICATION:
             template = loader.get_template('mop/mail/tutorial_4c_correct_modification.txt')
             tutorialData['document'] = RandomizedDocument.objects.get(isTutorial=True)
+            tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL, category=Requisition.CATEGORY_FORM)
         elif self.bodyType == self.BODY_TUTORIAL_5_CONCLUSION:
             template = loader.get_template('mop/mail/tutorial_5_conclusion.txt')
         elif self.bodyType == self.BODY_HELP:
@@ -523,6 +526,6 @@ class Mail(models.Model):
             sender_receiver = "draft by %s" % sender
             state = ""
             
-        return "%s - %s - %s - %s" % (sender_receiver, subject, self.trust, state)
+        return "%s - %s - %s - %s (%s)" % (sender_receiver, subject, self.trust, state, self.sentAt)
 
 

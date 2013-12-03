@@ -2,7 +2,7 @@
 	Citizen Helper {{mail.mop.firstname}} {{mail.mop.lastname}},
 	<br/>
 	{{ mail.generateBody|linebreaks }}
-	{% if mail.trust %}
+	{% if mail.trust and mail.bodyType != mail.BODY_HELP %}
 		<p>Your TRUST has been adjusted accordingly ({{mail.trust}}).</p>
 	{% endif %}
 	{{mail.unit.name}}<br/>

@@ -17,8 +17,9 @@
 		{% else %}
 			{{ mail.sentAt|date:"Y-m-d H:i" }}
 		{% endif %}</td></tr>
-{% if mail.bodyType %}<tr><th>Message</th><td>{% include 'mop/mail/mail.html' %}</td></tr>{% endif %}
-{% if mail.bodyType == mail.BODY_HELP%}<tr><th>Message</th><td>{{mail.body}}</td></tr>{% endif %}
+{% if mail.bodyType %}
+	<tr><th>Message</th><td>{% include 'mop/mail/mail.html' %}</td></tr>
+{% endif %}
 <tr><th>TRUST</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>
 <tr><th>Form</th><td>{% if mail.requisitionInstance.blank %}{{ mail.requisitionInstance.blank.requisition.serial}}{% elif mail.requisitionBlank %}{{mail.requisitionBlank.requisition.serial}}{% else %} no form attached{% endif %}</td></tr>
 <tr><th>Document</th><td>{% if mail.mopDocumentInstance %}{{ mail.mopDocumentInstance.getDocumentSerial}}{% else %}no document attached{% endif %}</td></tr>
