@@ -94,8 +94,9 @@ def login(request):
         return render(request, 'mop/login.html', {'form' : form})
 
 def logout_view(request):
-    logging.log_action(ActionLog.ACTION_MOP_LOGOUT, mop=request.user.mop)
-    logout(request)
+    if not request.user == None and request.user.is_active and isMop(request.user):
+        logging.log_action(ActionLog.ACTION_MOP_LOGOUT, mop=request.user.mop)
+        logout(request)
     return redirect('mop_index')
 
 @login_required(login_url='mop_login')
@@ -365,16 +366,29 @@ def mail_compose(request, fullSerial=None):
     else:
         form = MailForm()
         requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
+        withForm = False
         if fullSerial is not None:
             for requisitionInstance in requisitionInstance_list:
                 if requisitionInstance.fullSerial() == fullSerial:
-                    form = MailForm(initial={'requisitionInstance': requisitionInstance})
+                    subject = None
+                    if requisitionInstance.blank.requisition.category == Requisition.CATEGORY_FORM:
+                        subject = Mail.SUBJECT_REQUEST_FORM
+                    elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_DOCUMENT:
+                        subject = Mail.SUBJECT_REQUEST_DOCUMENT
+                    elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SUBMISSION:
+                        subject = Mail.SUBJECT_SUBMIT_DOCUMENT
+                    elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
+                        subject = Mail.SUBJECT_REQUEST_HELP
+                    form = MailForm(initial={'requisitionInstance': requisitionInstance, 'unit': requisitionInstance.blank.requisition.unit, 'subject':subject})
+                    logging.log_action(ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM, mop=request.user.mop, requisitionInstance=requisitionInstance)
+                    withForm = True
                     break
         form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = requisitionInstance_list
         form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
         form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
-        logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
+        if not withForm:
+            logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form,})
 
 #TODO code duplication between mail_edit and mail_compose    

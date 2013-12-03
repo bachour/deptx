@@ -67,9 +67,9 @@ def login(request):
         return render(request, 'cron/login.html', {'form' : form,})
 
 def logout_view(request):
-    cron = request.user.cron
-    logout(request)
-    logging.log_action(ActionLog.ACTION_CRON_LOGOUT, cron=cron)    
+    if not request.user == None and request.user.is_active and isCron(request.user):
+        logging.log_action(ActionLog.ACTION_CRON_LOGOUT, cron=request.user.cron)
+        logout(request)
     return redirect('cron_index')
 
 def getCurrentMissionInstance(cron):
@@ -382,7 +382,7 @@ def accessMopServer(cron, cronDocument, mop_list):
                         #Mail gets deleted
                         mail.state = Mail.STATE_DELETED
                         mail.save()
-                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, cronDocumentInstance=cronDocumentInstance, successfulHAck=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
+                        logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, cronDocumentInstance=cronDocumentInstance, successfulHack=True, mop=mop, mail=mail, mopDocumentInstance=mail.mopDocumentInstance)
                         return mop, checked_mop_list
             logging.log_action(ActionLog.ACTION_CRON_HACK_DOCUMENT, cron=cron, cronDocument=cronDocument, successfulHack=False, mop=mop)
         return None, checked_mop_list
@@ -478,6 +478,7 @@ def message_compose(request):
             
     else:
         form = HelpMailForm()
+        form.fields["subject"].choices = HelpMail.CHOICES_SUBJECT_PLAYER
         logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE, cron=request.user.cron)
         return render(request, 'cron/message_compose.html', {"form": form})
 
