@@ -94,8 +94,9 @@ def login(request):
         return render(request, 'mop/login.html', {'form' : form})
 
 def logout_view(request):
-    logging.log_action(ActionLog.ACTION_MOP_LOGOUT, mop=request.user.mop)
-    logout(request)
+    if not request.user == None and request.user.is_active and isMop(request.user):
+        logging.log_action(ActionLog.ACTION_MOP_LOGOUT, mop=request.user.mop)
+        logout(request)
     return redirect('mop_index')
 
 @login_required(login_url='mop_login')
