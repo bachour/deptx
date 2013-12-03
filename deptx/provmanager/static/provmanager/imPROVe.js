@@ -1004,7 +1004,7 @@ function showAttributes(node, position)
 		  
 		  // create the attribute label
 		  node.attribName = new Kinetic.Text({
-		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
+		        x: node.attribImage.getX() + node.attribImage.getWidth() + 7,
 		        y: Y + 20,
 		        text: wordWrap(node.attributes['prov:label'], 10),
 		        fontSize: ATTRIBBOX_LARGE_FONT,
