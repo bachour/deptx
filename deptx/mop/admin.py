@@ -17,7 +17,7 @@ class RequisitionInstanceAdmin(admin.ModelAdmin):
     list_filter = ('blank__mop', 'blank__requisition', 'blank__requisition__type', 'blank__requisition__unit', 'createdAt')
 
 class MopDocumentInstanceAdmin(admin.ModelAdmin):
-    list_filter = ('status', 'randomizedDocument__mopDocument', 'modified', 'correct', 'modifiedAt')
+    list_filter = ('mop', 'status', 'randomizedDocument__mopDocument', 'modified', 'correct', 'modifiedAt')
 
 class MopTrackerAdmin(admin.ModelAdmin):
     list_filter = ('trust', 'clearance', 'tutorial', 'tutorialProvErrors', 'modifiedAt')
