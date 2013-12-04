@@ -16,8 +16,9 @@ from assets.models import CronDocument
 from django.views.decorators.csrf import csrf_exempt
 from deptx.helpers import now, generateUUID
 from provmanager.utility_scripts import get_random_graph, get_inconsistencies
-
+from deptx.settings import MEDIA_URL
 from mop import tutorial
+import urllib2
 
 import json
 
@@ -68,12 +69,12 @@ def view_randomize(request, id):
 
 def getStuff(request):
     filename = request.POST["filename"]
-    filepath = request.POST["filepath"]
-    request.session['filepath'] = filepath
     request.session['filename'] = filename
-    full = "%s/%s" % (filepath, filename)
-    handle = open(full,'r+')
-    return filename, filepath, handle.read();
+    full = "http://univeam1.miniserver.com/media/GRINDINGTEST/%s" % (filename)
+    response = urllib2.urlopen(full)
+    content = response.read()
+    response.close()
+    return filename, content
 
 @staff_member_required
 def create(request):
@@ -86,7 +87,7 @@ def create(request):
                 isCron = False
                 isMop = True
             #graphml_str = request.POST["graphml"]
-            filename, filepath, graphml_str = getStuff(request)
+            filename, graphml_str = getStuff(request)
             
             
             provn_str, output = convert_graphml_string(graphml_str)
@@ -103,10 +104,13 @@ def create(request):
             
             #print json_str
                 
+            inconsistencies_list = None
             if 'randomize' in request.POST:
-                json_str = json.dumps(get_random_graph(json.loads(json_str)))
+                random_graph = get_random_graph(json.loads(json_str))
+                json_str = json.dumps(random_graph)
+                inconsistencies_list, clean_graph = get_inconsistencies(random_graph)
             
-            return render(request, 'provmanager/create.html', {"output_list":output_list, "filename":filename, "filepath":filepath, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url})
+            return render(request, 'provmanager/create.html', {"inconsistencies_list":inconsistencies_list, "output_list":output_list, "filename":filename, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url})
 
         elif 'saveMop' in request.POST or 'saveCron' in request.POST:
             if 'saveCron' in request.POST:
@@ -114,7 +118,7 @@ def create(request):
             else:
                 type = Provenance.TYPE_MOP_TEMPLATE
             
-            filename, filepath, graphml_str = getStuff(request)
+            filename, graphml_str = getStuff(request)
             provn_str, output = convert_graphml_string(graphml_str)
             
             valid = True
@@ -143,12 +147,10 @@ def create(request):
                 return HttpResponseRedirect(reverse('provmanager_index'))
             
     try:
-        filepath = request.session['filepath']
         filename = request.session['filename']
     except:
-        filepath = ""
         filename = ""      
-    return render(request, 'provmanager/create.html', {"filepath":filepath, "filename":filename})
+    return render(request, 'provmanager/create.html', {"filename":filename})
 
 def randomize_document(mopDocument):
     #bundle = API.get_document(task.provenance.store_id)

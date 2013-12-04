@@ -11,8 +11,7 @@
 		<div id="dropzone" style="width:100%;height:50px;background-color:grey;color:white;text-align:center;">drag Graphml file here</div>
 		<strong>Filename (just drop file above):</strong>
 		<input id="filename" type="text" name="filename" value="{{filename}}" size="50"/><br/>
-		<strong>Filepath (full path to file; manually):</strong>
-		<input id="filepath" type="text" name="filepath" value="{{filepath}}" size="50"/>
+		<strong>The file needs to be in MEDIA/GRINDINGTEST. (And check your proxy settings if @uni.)</strong>
 	</td>
 	<td>
 		{% for output in output_list %}
@@ -36,7 +35,7 @@
 	</td>
 </tr>
 </table>
-<input type="submit" value="Convert to Cr0n" name="convertCron" /><br/>
+<input type="submit" value="Convert to Cr0n" name="convertCron" /> 
 <input type="submit" value="Convert to MoP" name="convertMop" />
 {% if valid == None %}
 {% else %}
@@ -48,14 +47,13 @@
 {% if valid == None %}
 {% else %}
 	{% if valid %}
-	<input type="submit" value="Save as Cr0n" name="saveCron" /><br/>
-	<input type="submit" value="Save as MoP" name="saveMop" /> 
+		<input type="submit" value="Save as Cr0n" name="saveCron" />	<input type="submit" value="Save as MoP" name="saveMop" /> 
 	{% endif %}
 	<br/><br/>
+	<br/>
 	<strong>Ingame preview:</strong><br/>
 	{% include 'provmanager/improve.html' with is_test=True %}
-	<br/><br/>
-	The 'save' button has been moved above the Provenance thingy!
+
 {% endif %}
 </form>
 <br/><br/>
