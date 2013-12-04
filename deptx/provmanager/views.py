@@ -106,11 +106,19 @@ def create(request):
                 
             inconsistencies_list = None
             if 'randomize' in request.POST:
+                print request.POST
                 random_graph = get_random_graph(json.loads(json_str))
                 json_str = json.dumps(random_graph)
                 inconsistencies_list, clean_graph = get_inconsistencies(random_graph)
-            
-            return render(request, 'provmanager/create.html', {"inconsistencies_list":inconsistencies_list, "output_list":output_list, "filename":filename, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url})
+                if 'spoilers' in request.POST: 
+                    spoilers = True
+                else:
+                    spoilers = False
+                    json_str = json.dumps(clean_graph)
+                print spoilers
+                
+                
+            return render(request, 'provmanager/create.html', {"inconsistencies_list":inconsistencies_list, "spoilers":spoilers, "output_list":output_list, "filename":filename, "json_str": json_str, "isMop":isMop, "isCron":isCron, "valid":valid, "validation_url":validation_url})
 
         elif 'saveMop' in request.POST or 'saveCron' in request.POST:
             if 'saveCron' in request.POST:
