@@ -118,7 +118,7 @@ class RandomizedDocument(models.Model):
             active = "ACTIVE"
         else:
             active = "INACTIVE"
-        return "%s: %s (%s)" % (active, self.serial, self.mopDocument.provenance.name)
+        return "%s: %s - %s (%s)" % (active, self.serial, self.mopDocument.provenance.name, self.createdAt)
     
     def getBadgeUrl(self):
         return Clearance(self.mopDocument.clearance).getBadgeUrl()
