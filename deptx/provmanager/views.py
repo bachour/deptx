@@ -105,6 +105,7 @@ def create(request):
             #print json_str
                 
             inconsistencies_list = None
+            spoilers = False
             if 'randomize' in request.POST:
                 print request.POST
                 random_graph = get_random_graph(json.loads(json_str))
