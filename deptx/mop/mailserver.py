@@ -96,7 +96,6 @@ def check_mail(mail):
                     return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_REDUNDANT_DOCUMENT
-                newMail.bodyData
             elif missingDocument(mail):
                 if not delayedEnough(mail, DELAY_SHORT):
                     return
