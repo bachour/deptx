@@ -67,10 +67,10 @@ def view_randomize(request, id):
     return render(request, 'provmanager/view_randomize.html', {'provenance_name':provenance.name, 'provenance_store_id':provenance.store_id, 'json_str':json.dumps(clean_graph) })
 
 
-def getStuff(request):
+def getStuff(request, folder):
     filename = request.POST["filename"]
     request.session['filename'] = filename
-    full = "http://univeam1.miniserver.com/media/GRINDINGTEST/%s" % (filename)
+    full = "http://univeam1.miniserver.com/media/PROVENANCE/test/%s" % (folder, filename)
     response = urllib2.urlopen(full)
     content = response.read()
     response.close()
