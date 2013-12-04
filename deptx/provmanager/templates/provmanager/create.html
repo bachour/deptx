@@ -40,7 +40,7 @@
 {% if valid == None %}
 {% else %}
 	{% if valid %}
-		<input type="submit" value="Randomize" name="randomize" />
+		<input type="submit" value="Randomize" name="randomize" /> <input type="checkbox" name="spoilers" {% if spoilers %}checked{% endif %}>Show inconsistencies<br>
 	{% endif %}
 {% endif %}
 <br/><br/>
@@ -50,6 +50,9 @@
 		<input type="submit" value="Save as Cr0n" name="saveCron" />	<input type="submit" value="Save as MoP" name="saveMop" /> 
 	{% endif %}
 	<br/><br/>
+	{% if not spoilers %}<span style="color:white">{{inconsistencies_list}}</span><br/>(mark above to uncover inconsistencies)
+	{% else %}{{inconsistencies_list}}
+	{% endif %}
 	<br/>
 	<strong>Ingame preview:</strong><br/>
 	{% include 'provmanager/improve.html' with is_test=True %}
