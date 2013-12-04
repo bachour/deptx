@@ -25,15 +25,15 @@ def create_daily_documents():
     mopDocument_high_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_HIGH)
     mopDocument_severe_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_SEVERE)
     
-    for x in range(0, 10):
+    for x in range(0, 5):
         output.append(create_random_from_list(mopDocument_low_list))
-    for x in range(0, 8):
-        output.append(create_random_from_list(mopDocument_guarded_list))
-    for x in range(0, 6):
-        output.append(create_random_from_list(mopDocument_elevated_list))
     for x in range(0, 4):
-        output.append(create_random_from_list(mopDocument_high_list))
+        output.append(create_random_from_list(mopDocument_guarded_list))
+    for x in range(0, 3):
+        output.append(create_random_from_list(mopDocument_elevated_list))
     for x in range(0, 2):
+        output.append(create_random_from_list(mopDocument_high_list))
+    for x in range(0, 1):
         output.append(create_random_from_list(mopDocument_severe_list))
     return output
 
