@@ -70,7 +70,7 @@ def view_randomize(request, id):
 def getStuff(request):
     filename = request.POST["filename"]
     request.session['filename'] = filename
-    full = "http://univeam1.miniserver.com/media/GRINDINGTEST/%s" % (filename)
+    full = "http://univeam1.miniserver.com/media/PROVENANCE/test/%s" % (filename)
     response = urllib2.urlopen(full)
     content = response.read()
     response.close()
