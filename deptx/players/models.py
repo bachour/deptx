@@ -37,7 +37,7 @@ class Cron(models.Model):
     email = models.EmailField()
     overSixteen = models.BooleanField()
     user = models.OneToOneField(User)
-    
+        
     player = models.OneToOneField(Player, blank=True, null=True)
     activated = models.BooleanField(default=False)
     activationCode = models.CharField(max_length=36, default=generateUUID)
