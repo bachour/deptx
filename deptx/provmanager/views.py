@@ -26,7 +26,7 @@ from graphml2prov import convert_graphml_string, validate
 import prov.model
 from logger.models import ProvLog, ActionLog
 from logger import logging
-
+from players.models import Cron
 
 api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
 
@@ -34,6 +34,11 @@ API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 
 @staff_member_required    
 def index(request):
+    
+    cron_list = Cron.objects.all()
+    for cron in cron_list:
+        cron.user.email = cron.email
+        cron.user.save()
     
     provenance_list = Provenance.objects.all().order_by("type", "-modifiedAt")
     

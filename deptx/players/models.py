@@ -45,6 +45,11 @@ class Cron(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    def save(self, *args, **kwargs):
+        super(Cron, self).save(*args, **kwargs)
+        self.user.email = self.email
+        self.user.save()
+    
     def __unicode__(self):
         return self.user.username
     
