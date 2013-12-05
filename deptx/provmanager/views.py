@@ -35,11 +35,6 @@ API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 @staff_member_required    
 def index(request):
     
-    cron_list = Cron.objects.all()
-    for cron in cron_list:
-        cron.user.email = cron.email
-        cron.user.save()
-    
     provenance_list = Provenance.objects.all().order_by("type", "-modifiedAt")
     
     return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
