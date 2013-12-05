@@ -18,7 +18,7 @@ from django.contrib.auth.forms import UserCreationForm
 from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
 from mop.forms import MailForm, RequisitionInstanceForm
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
 
 from mop.performer import analyze_performance
@@ -141,19 +141,19 @@ def performance(request):
 @user_passes_test(isMop, login_url='mop_login')
 def documents_pool(request):
 
-    randomizedDocument_list = tutorial.getTutorialDocument(request.user.mop.mopTracker)
-    if randomizedDocument_list == None:
-        randomizedDocument_list = getDocumentPoolForMop(request.user.mop)
+    randomizedDocument_list_all = tutorial.getTutorialDocument(request.user.mop.mopTracker)
+    if randomizedDocument_list_all == None:
+        randomizedDocument_list_all = getDocumentPoolForMop(request.user.mop)
 
     mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
         
-    for randomizedDocument in randomizedDocument_list:
+    for randomizedDocument in randomizedDocument_list_all:
         for mopDocumentInstance in mopDocumentInstance_list:
             if mopDocumentInstance.randomizedDocument == randomizedDocument:
                 randomizedDocument.exists = True
                 break
-        
+    randomizedDocument_list = paginate(request, randomizedDocument_list_all)
  
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL, mop=request.user.mop)
     return render(request, 'mop/documents_pool.html', {"randomizedDocument_list": randomizedDocument_list})
@@ -169,16 +169,16 @@ def getDocumentPoolForMop(mop):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE)
-    
+    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE)
+    mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER, mop=request.user.mop)
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents_archive(request):
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
-    
+    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
+    mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
@@ -228,10 +228,17 @@ def provenance(request, serial):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
-    request.user.mop.mopTracker.unreadEmails = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
-    request.user.mop.mopTracker.hasCheckedInbox = True
-    request.user.mop.mopTracker.save()
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
+    mail_list = paginate(request, mail_list_all)
+    
+    try:
+        page = request.GET.get['page']
+    except:
+        page = 1
+    if page == 1:
+        request.user.mop.mopTracker.unreadEmails = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).filter(read=False).count()
+        request.user.mop.mopTracker.hasCheckedInbox = True
+        request.user.mop.mopTracker.save()
 
     logging.log_action(ActionLog.ACTION_MOP_VIEW_INBOX, mop=request.user.mop)
     return render(request, 'mop/mail_inbox.html', {"mail_list": mail_list})
@@ -239,22 +246,24 @@ def mail_inbox(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_outbox(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-createdAt')
+    mail_list = paginate(request, mail_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_OUTBOX, mop=request.user.mop)
     return render(request, 'mop/mail_outbox.html', {"mail_list": mail_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_draft(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-createdAt')
+    mail_list = paginate(request, mail_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DRAFT, mop=request.user.mop)
     return render(request, 'mop/mail_draft.html', {"mail_list": mail_list})
-
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_trash(request):
-    mail_list = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-createdAt')
+    mail_list = paginate(request, mail_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_TRASH, mop=request.user.mop)
     return render(request, 'mop/mail_trash.html', {"mail_list": mail_list})
 
@@ -530,8 +539,8 @@ def form_fill(request, reqBlank_serial):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def forms_signed(request):
-    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-modifiedAt")
-    
+    requisitionInstance_list_all = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by("-modifiedAt")
+    requisitionInstance_list = paginate(request, requisitionInstance_list_all)    
     logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED, mop=request.user.mop)
     return render(request, 'mop/forms_signed.html', {"requisitionInstance_list": requisitionInstance_list})
 
@@ -539,7 +548,8 @@ def forms_signed(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def forms_archive(request):
-    requisitionInstance_list = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
+    requisitionInstance_list_all = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=True).order_by("-modifiedAt")
+    requisitionInstance_list = paginate(request, requisitionInstance_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/forms_archive.html', {"requisitionInstance_list": requisitionInstance_list})
 
@@ -554,6 +564,18 @@ def form_trashing(request, fullSerial):
             requisitionInstance.save()
             logging.log_action(ActionLog.ACTION_MOP_FORM_TRASH, mop=request.user.mop, requisitionInstance=requisitionInstance)
             return redirect('mop_forms_signed')
+
+def paginate(request, all_list, items=20):
+    paginator = Paginator(all_list, items)
+
+    page = request.GET.get('page')
+    try:
+        paginated = paginator.page(page)
+    except PageNotAnInteger:
+        paginated = paginator.page(1)
+    except EmptyPage:
+        paginated = paginator.page(paginator.num_pages)
+    return paginated
 
 def password(request):
     if request.method == 'POST':
