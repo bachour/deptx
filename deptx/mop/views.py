@@ -11,6 +11,9 @@ from django.contrib.auth.forms import AuthenticationForm
 
 from mop import documentcreator
 from players.models import Mop
+from players.forms import MopCheckForm, PasswordForm
+
+from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
@@ -551,6 +554,51 @@ def form_trashing(request, fullSerial):
             requisitionInstance.save()
             logging.log_action(ActionLog.ACTION_MOP_FORM_TRASH, mop=request.user.mop, requisitionInstance=requisitionInstance)
             return redirect('mop_forms_signed')
+
+def password(request):
+    if request.method == 'POST':
+        mop_form = MopCheckForm(request.POST, prefix="mop")
+        pass_form = PasswordForm(request.POST, prefix="pass")
+        if mop_form.is_valid() and pass_form.is_valid():
+            mop_data = mop_form.cleaned_data
+            pass_data = pass_form.cleaned_data
+            mop = Mop.objects.get(serial=pass_data['serial'])
+            if not mop.firstname == mop_data['firstname']:
+                correct = False
+            elif not mop.lastname == mop_data['lastname']:
+                correct = False
+            elif not mop.dob == mop_data['dob']:
+                correct = False
+            elif not mop.gender == mop_data['gender']:
+                correct = False
+            elif not mop.weight == mop_data['weight']:
+                correct = False
+            elif not mop.height == mop_data['height']:
+                correct = False
+            elif not mop.marital == mop_data['marital']:
+                correct = False
+            elif not mop.hair == mop_data['hair']:
+                correct = False
+            elif not mop.eyes == mop_data['eyes']:
+                correct = False
+            else:
+                correct = True
+            if correct:
+                mop.user.set_password(pass_data['password1'])
+                mop.user.save()
+                return render(request, 'mop/password.html', {'correct':correct, "mop":mop})
+            else:
+                error = 'The data you entered does not match our records of Citizen Helper %s.' % mop.serial
+                return render(request, 'mop/password.html', {'mop_form':mop_form, 'pass_form':pass_form, 'error':error})
+        
+        else:
+            return render(request, 'mop/password.html', {'mop_form':mop_form, 'pass_form':pass_form})
+        
+    else:
+        mop_form = MopCheckForm(prefix='mop')
+        pass_form = PasswordForm(prefix='pass', initial={'pasword1':'haha'})
+        return render(request, 'mop/password.html', {'mop_form':mop_form, 'pass_form':pass_form})
+
 
 @staff_member_required
 def control(request):

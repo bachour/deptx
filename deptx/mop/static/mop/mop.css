@@ -59,8 +59,8 @@ p.nav {
 
 input.button {
 	color:#000;	
-	background-color:#3ea255;
-	border:1px solid #3ea255;
+	background-color:#777;
+	border:1px solid #777;
 	border-radius:25px;
 	padding:15px;
 	font-size:20px;
@@ -75,8 +75,8 @@ ul.table_of_contents li {
 a {
 	color:#000;	
 	text-decoration:none;
-	background-color:#3ea255;
-	border:1px solid #3ea255;
+	background-color:#777;
+	border:1px solid #777;
 	border-radius:25px;
 	padding-left:5px;
 	padding-right:5px;
@@ -91,7 +91,7 @@ a.button, a.button:hover {
 a:hover, input.button:hover {
 	border-color:#000;
 	background-color:#000;
-	color:#3ea255;
+	color:#777;
 }
 
 a.internal, a.internal:hover {
@@ -137,7 +137,7 @@ th, h1, h2 {
 }
 
 td {
-	border:2px solid #3ea255;
+	border:2px solid #777;
 	border-radius:10px;
 	padding:4px;
 }
@@ -165,7 +165,7 @@ tr.trashed {
 	float: left;
 	width: 340px;
 	margin-right: 10px;
-	background-color:#3ea255;
+	background-color:#777;
 	border-radius:10px;
 	padding:0px;
 }
@@ -191,7 +191,7 @@ tr.trashed {
 
 .styled-select option 
 {
-	background-color:#3ea255;
+	background-color:#777;
 }
 
 img.minibadge {

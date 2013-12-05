@@ -20,24 +20,34 @@
     <!-- MoP scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script> 
     <script src="{% static 'mop/assets/js/bootstrap.min.js' %}"></script>
+    {% if form.errors %}
+    <script>
+    $(function(){
+    	$('#sign-up-button').click();
+    });
+    </script>
+    {% endif %}
+
 {% include 'mop/analytics.html' %}	   
   </head>
   <body>
+  
 <div id="signup">
   <div class="container">
     <div class="row pagination-centered">
       <img src="{% static 'mop/assets/images/mop-logo.png' %}">
       <h1>Ministry of Provenance</h1>
-      <a href="#" class="button" data-target="#sign-up-modal" role="button" data-toggle="modal">Intranet</a>
+      <a href="#" id="sign-up-button" class="button" data-target="#sign-up-modal" role="button" data-toggle="modal">Intranet</a>
       <!-- MoP Modal -->
-      <div id="sign-up-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div id="sign-up-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="True">
         <div class="modal-body">
           <div class="pagination-centered">
           </div>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
           <div class="well alert-error"><span class="big">MOP INTRANET</span><br><span>Please enter your credentials to continue.</span>
-          {% if form.errors %}
-	<p>Your username and password didn't match. Please try again.</p>
-{% endif %}
+          <br/><br/>
+          
+	
 
 <form method="post" action="{% url 'mop_login' %}">
 	{% csrf_token %}
@@ -45,6 +55,7 @@
 		<tr>
 		    <td>{{ form.username.label_tag }}</td>
 		    <td>{{ form.username }}</td>
+		    <td rowspan="2"><p {% if not form.errors %}style="visibility:hidden;"{% endif %}>Your username and password didn't match. Please try again.</p></td>
 		</tr>
 		<tr>
 		    <td>{{ form.password.label_tag }}</td>
@@ -54,6 +65,7 @@
 	
 	<input type="submit" value="login" />
 </form>
+<div style="text-align:left;">Click <a style="color:black;text-decoration:underline;" href="{% url 'mop_password' %}">here</a> to reset your password.</div>
         </div>			   
       </div>
     </div>
