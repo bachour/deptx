@@ -52,7 +52,7 @@ def get_random_graph(graph):
                     # if this is a super main attribute, store it's value
                     elif graph[c][e][a][0] == '&' and graph[c][e][a][1] == '&':
                         if identifier_main_att.has_key(id)  or identifier_super_main_att.has_key(id):
-                            print "WARNING: multiple main attributes detected for identifier: ", id
+                            print "WARNING: multiple super main attributes detected for identifier: ", id
                         identifier_super_main_att[id] = identifiers[id][-1]
                         
     #make duplicate_count a random number between 0 and duplicate_count
@@ -149,8 +149,8 @@ def test_graph(grph, trials):
         lists, graph = get_inconsistencies(r_graph)
         all_inconsistencies.append(lists)
         
-    #for j in all_inconsistencies:
-    #    print j
+    for j in all_inconsistencies:
+        print j
     return all_inconsistencies
         
         
