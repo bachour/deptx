@@ -563,33 +563,42 @@ def password(request):
             mop_data = mop_form.cleaned_data
             pass_data = pass_form.cleaned_data
             mop = Mop.objects.get(serial=pass_data['serial'])
+            wrong = {}
+            correct = True
             if not mop.firstname == mop_data['firstname']:
                 correct = False
-            elif not mop.lastname == mop_data['lastname']:
+                wrong['firstname'] = True
+            if not mop.lastname == mop_data['lastname']:
                 correct = False
-            elif not mop.dob == mop_data['dob']:
+                wrong['lastname'] = True 
+            if not mop.dob == mop_data['dob']:
                 correct = False
-            elif not mop.gender == mop_data['gender']:
+                wrong['dob'] = True
+            if not mop.gender == mop_data['gender']:
                 correct = False
-            elif not mop.weight == mop_data['weight']:
+                wrong['gender'] = True
+            if not mop.weight == mop_data['weight']:
                 correct = False
-            elif not mop.height == mop_data['height']:
+                wrong['weight'] = True
+            if not mop.height == mop_data['height']:
                 correct = False
-            elif not mop.marital == mop_data['marital']:
+                wrong['height'] = True
+            if not mop.marital == mop_data['marital']:
                 correct = False
-            elif not mop.hair == mop_data['hair']:
+                wrong['marital'] = True
+            if not mop.hair == mop_data['hair']:
                 correct = False
-            elif not mop.eyes == mop_data['eyes']:
+                wrong['hair'] = True
+            if not mop.eyes == mop_data['eyes']:
                 correct = False
-            else:
-                correct = True
+                wrong['eyes'] = True
+            
             if correct:
                 mop.user.set_password(pass_data['password1'])
                 mop.user.save()
                 return render(request, 'mop/password.html', {'correct':correct, "mop":mop})
             else:
-                error = 'The data you entered does not match our records of Citizen Helper %s.' % mop.serial
-                return render(request, 'mop/password.html', {'mop_form':mop_form, 'pass_form':pass_form, 'error':error})
+                return render(request, 'mop/password.html', {'mop_form':mop_form, 'pass_form':pass_form, 'wrong':wrong})
         
         else:
             return render(request, 'mop/password.html', {'mop_form':mop_form, 'pass_form':pass_form})

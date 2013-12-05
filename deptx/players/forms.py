@@ -47,7 +47,7 @@ class PasswordForm(forms.Form):
         try:
             Mop.objects.get(serial=s)
         except:
-            raise forms.ValidationError('no citizen helper with this identifier found')
+            raise forms.ValidationError('No citizen helper with this identifier found.')
         return s    
     
     def clean(self):
