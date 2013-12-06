@@ -32,27 +32,6 @@ a {
 	text-decoration:none;
 }
 
-a:before {
-	content: '[';
-}
-a:after {
-	content: ']';
-}
-
-div.ui-datepicker a:before {
-	content: '';
-	
-}
-div.ui-datepicker a:after {
-	content: '';
-	
-}
-
-
-a.button:before, a.button:after, a.image:before, a.image:after {
-	content:'';
-}
-
 a.none {
 	color:#03c1e2;
 	text-decoration:none;

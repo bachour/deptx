@@ -42,10 +42,12 @@ def delayedEnough(mail, delay):
         return False
     
 
+def getUnprocessedMails():
+    return Mail.objects.filter(processed=False).filter(type=Mail.TYPE_SENT).order_by('?')
 
 def analyze_mail():
     output = []
-    mail_list = Mail.objects.filter(processed=False).filter(type=Mail.TYPE_SENT).filter(state=Mail.STATE_NORMAL)
+    mail_list = getUnprocessedMails()
     #TODO add more output
     output.append("Unprocessed mails: %d" % mail_list.count())
     for mail in mail_list:
@@ -96,7 +98,6 @@ def check_mail(mail):
                     return
                 newMail.subject = Mail.SUBJECT_ERROR
                 newMail.bodyType = Mail.BODY_ERROR_REDUNDANT_DOCUMENT
-                newMail.bodyData
             elif missingDocument(mail):
                 if not delayedEnough(mail, DELAY_SHORT):
                     return

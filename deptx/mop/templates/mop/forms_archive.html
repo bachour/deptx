@@ -4,6 +4,15 @@
 
 <h1>Archived Forms</h1>
 {% if requisitionInstance_list %}
+	{% if requisitionInstance_list.has_previous or requisitionInstance_list.has_next %}
+		{% for num in requisitionInstance_list.paginator.page_range %}
+		  {% ifequal num requisitionInstance_list.number %}
+		    <span style="padding-left:5px;padding-right:5px;"><strong>{{ num }}</strong></span>
+		  {% else %}
+		    <a href="?page={{ num }}"> {{ num }}</a>
+		  {% endifequal %} 
+		{% endfor %}
+	{% endif %}
 <table>
 <tr><th>Form</th><th>Unit</th><th>Identifier</th><th>Content</th><th>Timestamp</th></tr>
 {% for reqInstance in requisitionInstance_list %}

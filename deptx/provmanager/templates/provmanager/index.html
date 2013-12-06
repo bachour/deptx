@@ -32,7 +32,7 @@ Assigned Provenances have the following colors:<br/>
 		<td>{{provenance.attribute1}}</td>
 		<td>{{provenance.attribute2}}</td>
 		<td>{{provenance.document.id}}{{provenance.randomizedDocument.id}} {{provenance.document.name}}{{provenance.randomizedDocument.serial}}</td>
-		<td><a href="https://provenance.ecs.soton.ac.uk/store/documents/{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
+		<td><a href="{{PROVSTORE_URL}}{{provenance.store_id}}/" target="_blank">{{provenance.store_id}}</a></td>
 		<td style="white-space:nowrap">{{provenance.modifiedAt|date:'d.m.y. H:i'}}</td>		
 	</tr>
 {% endfor %}

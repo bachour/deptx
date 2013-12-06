@@ -174,7 +174,7 @@ class ActionLog(models.Model):
             name = "Mop: %s" % self.mop.user.username
         else:
             name = "ERROR"
-        return "%s - %s" % (name, self.get_action_display())
+        return "%s - %s (%s)" % (name, self.get_action_display(), self.createdAt)
 
     
 class ProvLog(models.Model):
@@ -217,5 +217,5 @@ class ProvLog(models.Model):
             name = "Mop: %s (%s)" % (self.mopDocumentInstance.mop.user.username, self.mopDocumentInstance.randomizedDocument.serial)
         else:
             name = "ERROR"
-        return "%s - %s" % (name, self.get_action_display())
+        return "%s - %s (%s)" % (name, self.get_action_display(), self.createdAt)
     

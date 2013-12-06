@@ -5,6 +5,9 @@ from mop import views
 urlpatterns = patterns('',
     url(r'^$', views.login, name='mop_login'),
     url(r'intranet/$', views.index, name='mop_index'),
+    
+    url(r'intranet/password/$', views.password, name='mop_password'),
+    
 
     url(r'intranet/logout/', views.logout_view, name='mop_logout'),
     url(r'intranet/rules/', views.rules, name='mop_rules'),

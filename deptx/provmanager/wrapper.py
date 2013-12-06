@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+from provmanager import provstore_settings
+
 '''
 Python ProvStore API wrapper
 
@@ -6,7 +9,7 @@ Example usage:
 
     api = new Api()  # uses settings provided in this file
     # or
-    api = new Api(api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/",
+    api = new Api(api_location="http://pat.ecs.soton.ac.uk/store/api/v0/",
                   api_username="provstoreusername",
                   api_key="yourapikey")  # uses parameter settings
 
@@ -35,7 +38,7 @@ import json
 from prov.model import ProvBundle
 
 
-API_LOCATION = "https://provenance.ecs.soton.ac.uk/store/api/v0/"
+API_LOCATION = provstore_settings.api_location
 
 
 class ApiError(Exception):

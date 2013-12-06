@@ -5,6 +5,15 @@
 <h1>Document Pool</h1>
 <p>Shortcut: <a href="{% url 'mop_forms_blank' %}">blank forms</a></p>
 {% if randomizedDocument_list %}
+	{% if randomizedDocument_list.has_previous or randomizedDocument_list.has_next %}
+		{% for num in randomizedDocument_list.paginator.page_range %}
+		  {% ifequal num randomizedDocument_list.number %}
+		    <span style="padding-left:5px;padding-right:5px;"><strong>{{ num }}</strong></span>
+		  {% else %}
+		    <a href="?page={{ num }}"> {{ num }}</a>
+		  {% endifequal %} 
+		{% endfor %}
+	{% endif %}
 	<table>
 	<tr><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Published</th></tr>
 	{% for randomizedDocument in randomizedDocument_list %}

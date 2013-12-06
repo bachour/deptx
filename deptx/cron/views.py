@@ -478,6 +478,7 @@ def message_compose(request):
             
     else:
         form = HelpMailForm()
+        form.fields["subject"].choices = HelpMail.CHOICES_SUBJECT_PLAYER
         logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE, cron=request.user.cron)
         return render(request, 'cron/message_compose.html', {"form": form})
 

@@ -46,7 +46,9 @@
         </div>
         <div class="grid_12">
        	  <div class="banner-1">
-          	  <h2>Together we can <span class="clr-0">stop</span> the Ministry of provenance<span class="clr-1"></span></h2></div>
+          	  <h2>Together we can <span class="clr-0">stop</span> the Ministry of provenance<span class="clr-1"></span><br/>
+          	  <a class="button" style="width:300px; margin:auto; margin-top:10px;" href="{% url 'players_registration' %}">join the fight</a></h2></div>
+          	  
         </div>
         <div class="grid_4">
           <h6 class="clr-9">Connect with cr0n</h6>
@@ -77,6 +79,7 @@
 <form method="post" action="{% url 'cron_login' %}">
 	{% csrf_token %}
 	<table class='slim' style='font-size:14px;'>
+	
 		<tr>
 		    <td>Agent Codename: </td>
 		    <td>&nbsp;{{ form.username }}</td>
@@ -86,7 +89,7 @@
 		    <td>&nbsp;{{ form.password }}</td>
 		</tr>
 		<tr>
-			<td style="vertical-align:middle;"><a href="{% url 'players_registration' %}">join Cr0n</a></td><td style="text-align:right;"><input class='buttonslim' type="submit" value="login" /></td>
+			<td style="vertical-align:middle;"><a href="{% url 'password_reset' %}">forgot your password?</a></td><td style="text-align:right;"><input class='buttonslim' type="submit" value="login" /></td>
 		</tr>
 		</table>
 	
@@ -94,7 +97,7 @@
 		</form>
                 </ul></td>
               </tr>
-              <tr><p class="tweet" >If you're having any trouble with this site, contact us at <a href="mailto:support@cr0n.org">support@cr0n.org</a>.</p> </tr>
+              <tr><td><p class="tweet" >If you're having any trouble with this site, contact us at <a href="mailto:support@cr0n.org">support@cr0n.org</a>.</p> </td></tr>
             </table>
           </div>
           <ul class="tooltips">

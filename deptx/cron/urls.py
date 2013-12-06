@@ -8,7 +8,12 @@ urlpatterns = patterns('',
     url(r'registration/$', players_views.register, name='players_registration'),
     url(r'registration/([-\w]+)/study', players_views.activate_study, name='players_activation_study'),
     url(r'registration/([-\w]+)/nostudy', players_views.activate_nostudy, name='players_activation_nostudy'),
-    #url(r'changePassword/$', players_views.changePassword, name='players_change_password'),
+    
+    url(r'password/reset/$', 'django.contrib.auth.views.password_reset', {'post_reset_redirect' : '/password/reset/done/'}, name="password_reset"),
+    url(r'password/reset/done/$', 'django.contrib.auth.views.password_reset_done'),
+    url(r'password/reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm', {'post_reset_redirect' : '/password/done/'}),
+    url(r'password/done/$', 'django.contrib.auth.views.password_reset_complete'),
+
 
 
     url(r'^$', views.index, name='cron_index'),

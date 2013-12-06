@@ -13,7 +13,15 @@ def createMail(bodyType, mop):
     mail.save()
     logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_TUTORIAL, mop=mop, mail=mail)
 
-def hide(mopTracker, created):
+
+def firstLogin(mopTracker):
+    createMail(Mail.BODY_TUTORIAL_1_INTRO, mopTracker.mop)
+    mopTracker.tutorial = MopTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM
+    mopTracker.save()
+    logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
+
+
+def hide(mopTracker):
     hide = {}
     
     if not mopTracker.tutorial == MopTracker.TUTORIAL_6_DONE:
@@ -23,12 +31,6 @@ def hide(mopTracker, created):
         hide['documentsArchive'] = True
         hide['formsArchive'] = True
         hide['mail'] = True
-
-        if (created):
-            createMail(Mail.BODY_TUTORIAL_1_INTRO, mopTracker.mop)
-            mopTracker.tutorial = MopTracker.TUTORIAL_1_SENT_HOW_TO_REQUEST_FORM
-            mopTracker.save()
-            logging.log_action(ActionLog.ACTION_MOP_TUTORIAL_PROGRESS, mop=mopTracker.mop, tutorialProgress=mopTracker.tutorial)
             
         if mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_5_CONCLUSION).filter(read=True):
             hide = []                

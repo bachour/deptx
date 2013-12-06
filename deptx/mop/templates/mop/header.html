@@ -12,16 +12,18 @@
 <link rel="shortcut icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon" />
 
 {% include 'mop/analytics.html' %}
+{% if user.is_authenticated %}
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="{% static "mop/js/spin.js" %}"></script>
+	
+	<script type="text/javascript">
+	CHECK_MAIL_URL = '{% url 'mop_mail_check' %}';
+	NEW_MAIL_AUDIO = '{% static 'mop/sound/mail.mp3' %}';
+	</script>
+	
+	<script src="{% static "mop/js/checkmail.js" %}"></script>
+{% endif %}
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script src="{% static "mop/js/spin.js" %}"></script>
-
-<script type="text/javascript">
-CHECK_MAIL_URL = '{% url 'mop_mail_check' %}';
-NEW_MAIL_AUDIO = '{% static 'mop/sound/mail.mp3' %}';
-</script>
-
-<script src="{% static "mop/js/checkmail.js" %}"></script>
 
 {% block head %}
 {% endblock %}

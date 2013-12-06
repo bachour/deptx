@@ -37,13 +37,18 @@ class Cron(models.Model):
     email = models.EmailField()
     overSixteen = models.BooleanField()
     user = models.OneToOneField(User)
-    
+        
     player = models.OneToOneField(Player, blank=True, null=True)
     activated = models.BooleanField(default=False)
     activationCode = models.CharField(max_length=36, default=generateUUID)
     
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    
+    def save(self, *args, **kwargs):
+        super(Cron, self).save(*args, **kwargs)
+        self.user.email = self.email
+        self.user.save()
     
     def __unicode__(self):
         return self.user.username

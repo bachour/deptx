@@ -1,6 +1,7 @@
 import json
 import random
 import string
+import copy
 
 try:
     from deptx.settings_production import MEDIA_ROOT
@@ -51,7 +52,7 @@ def get_random_graph(graph):
                     # if this is a super main attribute, store it's value
                     elif graph[c][e][a][0] == '&' and graph[c][e][a][1] == '&':
                         if identifier_main_att.has_key(id)  or identifier_super_main_att.has_key(id):
-                            print "WARNING: multiple main attributes detected for identifier: ", id
+                            print "WARNING: multiple super main attributes detected for identifier: ", id
                         identifier_super_main_att[id] = identifiers[id][-1]
                         
     #make duplicate_count a random number between 0 and duplicate_count
@@ -135,10 +136,41 @@ def get_random_from_file(file, not_in):
         if line in not_in or len(line) < 1:
             continue
         lines.append(line)
-        
-        
+           
     return lines[random.randint(0, len(lines)-1)].strip()
 
+# test graphs
+def test_graph(grph, trials):
+    all_inconsistencies = []
+    for i in range(trials):
+        d_graph = duplicate_graph(grph)
+        r_graph = get_random_graph(d_graph)
+        
+        lists, graph = get_inconsistencies(r_graph)
+        all_inconsistencies.append(lists)
+        
+    for j in all_inconsistencies:
+        print j
+    return all_inconsistencies
+        
+        
+# function to duplicate graph
+def duplicate_graph(graph):
+    d_graph = {}
+    #print(graph)
+    if type(graph) is dict or type(graph) is type([]):
+        for i in graph:
+            d_graph[i] = duplicate_graph(graph[i])
+        
+    else:
+        d_graph = copy.deepcopy(graph)
+        #print d_graph
+    
+    return d_graph
+    
 #RANDOM_FILES_PATH = '/Users/khaled/Dropbox/Dept.X/MEDIA/GRINDING/'
 #grph = json.load(open("/Users/khaled/Documents/amptest.json",'r'))
-#print get_inconsistencies(get_random_graph(grph))
+#RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Dropbox\\Dept.X\\MEDIA\\GRINDING\\'
+#grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\vehicle_offence.json",'r'))
+
+#test_graph(grph, 100)
