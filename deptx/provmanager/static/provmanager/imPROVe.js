@@ -1038,7 +1038,7 @@ function showAttributes(node, position)
 		  node.contentLabel = new Kinetic.Text({
 		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
 		        y: Y + 25 + node.attribName.getHeight(),
-		        text: "(media content)",
+		        text: "(content)",
 		        fontSize: ATTRIBBOX_SMALL_FONT,
 		        fontFamily: ATTRIBBOX_FONT_FAMILY,
 		        fontStyle: ATTRIBBOX_FONT_STYLE,
