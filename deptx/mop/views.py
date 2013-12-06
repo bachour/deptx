@@ -24,7 +24,7 @@ import json
 from mop.performer import analyze_performance
 
 from django.views.decorators.csrf import csrf_exempt
-from mop.mailserver import analyze_mail
+from mop.mailserver import analyze_mail, getUnprocessedMails
 import tutorial
 from deptx.helpers import now
 from logger import logging
@@ -642,7 +642,7 @@ def control(request):
             output = documentcreator.create_daily_documents()
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
-    mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False)
+    mail_list = getUnprocessedMails().order_by('sentAt')
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
