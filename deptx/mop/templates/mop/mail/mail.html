@@ -1,9 +1,12 @@
 {% if mail.unit %}
-	Citizen Helper {{mail.mop.firstname}} {{mail.mop.lastname}},
-	<br/>
-	{{ mail.generateBody|linebreaks }}
-	{% if mail.trust and mail.bodyType != mail.BODY_HELP %}
-		<p>Your TRUST has been adjusted accordingly ({{mail.trust}}).</p>
+	{% if mail.bodyType == mail.BODY_MANUAL %}
+		{{ mail.generateBody|linebreaksbr }}
+	{% else %}
+		Citizen Helper {{mail.mop.firstname}} {{mail.mop.lastname}},
+		{{ mail.generateBody|linebreaksbr }}
+		{% if mail.trust %}
+			<p>Your TRUST has been adjusted accordingly ({{mail.trust}}).</p>
+		{% endif %}
 	{% endif %}
 	{{mail.unit.name}}<br/>
 	{{mail.unit.serial}} - {{mail.unit.tagline}}<br/>
@@ -14,5 +17,5 @@
 	This message has been checked for viruses but the contents of an attachment may still contain software viruses which could damage your computer system, you are advised to perform your own checks. Email communications with the Ministry of Provenance is monitored as permitted by EU legislation.<br/>
 	<br/>
 {% else %}
-	{{ mail.generateBody|linebreaks }}
+	{{ mail.generateBody|linebreaksbr }}
 {% endif %}
