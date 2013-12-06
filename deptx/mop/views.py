@@ -642,7 +642,7 @@ def control(request):
             output = documentcreator.create_daily_documents()
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
-    mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False).filter(state=Mail.STATE_NORMAL)
+    mail_list = Mail.objects.filter(type=Mail.TYPE_SENT).filter(processed=False)
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
