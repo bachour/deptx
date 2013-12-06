@@ -651,7 +651,7 @@ def control(request):
     mop_list = Mop.objects.all()
 
     for mop in mop_list:
-        mop.availableDocs = getDocumentPoolForMop(mop).count() - MopDocumentInstance.objects.filter(mop=mop).count()
+        mop.availableDocs = getDocumentPoolForMop(mop).count()
     
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 
