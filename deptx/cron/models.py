@@ -120,7 +120,7 @@ class CronDocumentInstance(models.Model):
             status = "SOLVED"
         else:
             status = "IN PROGRESS"
-        return self.cronDocument.serial + " / " + self.cron.user.username + " (" + status + ")"
+        return "%s - %s - %s - wrong tries: %s - %s" % (self.cronDocument.serial, self.cron.user.username, status, self.failedAttempts, self.modifiedAt)
     
 
 class HelpMail(models.Model):
