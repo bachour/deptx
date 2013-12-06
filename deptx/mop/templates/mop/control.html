@@ -33,7 +33,7 @@
 		<table>
 		<tr><th>MoP</th><th>TRUST</th><th>Total TRUST</th><th>Document Pool</th><th>Documents</th></tr>
 		{% for mop in mop_list %}
-		<tr><td>{{mop.user.username}}{% if mop.user.is_staff %} (staff){% endif %}</td><td>{{mop.mopTracker.trust}}</td><td>{{mop.mopTracker.totalTrust}}</td><td>{{mop.availableDocs}}</td><td>{{mop.mopdocumentinstance_set.all.count }}</td></tr>
+		<tr style="text-align:center;"><td>{{mop.user.username}}{% if mop.user.is_staff %} (staff){% endif %}</td><td>{{mop.mopTracker.trust}}</td><td>{{mop.mopTracker.totalTrust}}</td><td>{{mop.availableDocs}}</td><td>{{mop.mopdocumentinstance_set.all.count }}</td></tr>
 		{% endfor %}
 		</table>
 	</div>

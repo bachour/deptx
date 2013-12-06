@@ -145,15 +145,7 @@ def documents_pool(request):
     randomizedDocument_list_all = tutorial.getTutorialDocument(request.user.mop.mopTracker)
     if randomizedDocument_list_all == None:
         randomizedDocument_list_all = getDocumentPoolForMop(request.user.mop)
-
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
-        
-    for randomizedDocument in randomizedDocument_list_all:
-        for mopDocumentInstance in mopDocumentInstance_list:
-            if mopDocumentInstance.randomizedDocument == randomizedDocument:
-                randomizedDocument.exists = True
-                break
     randomizedDocument_list = paginate(request, randomizedDocument_list_all)
  
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL, mop=request.user.mop)
@@ -164,7 +156,20 @@ def getDocumentPoolForMop(mop):
         public_list = all_list.filter(mop__isnull=True)
         personal_list = all_list.filter(mop=mop)
         randomizedDocument_list = public_list | personal_list
-        return randomizedDocument_list.order_by('createdAt')
+        randomizedDocument_list.order_by('createdAt')
+        mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mop)
+        
+        cleaned_list = []
+        
+        for randomizedDocument in randomizedDocument_list:
+            exists = False
+            for mopDocumentInstance in mopDocumentInstance_list:
+                if mopDocumentInstance.randomizedDocument == randomizedDocument:
+                    exists = True
+            if not exists:
+                cleaned_list.append(randomizedDocument)
+
+        return cleaned_list
 
 
 @login_required(login_url='mop_login')
@@ -651,7 +656,7 @@ def control(request):
     mop_list = Mop.objects.all()
 
     for mop in mop_list:
-        mop.availableDocs = getDocumentPoolForMop(mop).count()
+        mop.availableDocs = len(getDocumentPoolForMop(mop))
     
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 
