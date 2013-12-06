@@ -15,6 +15,7 @@ converter is a tool for extracting PROV annotations from a graphML file
 @deffield    updated: 2013-10-15
 '''
 
+
 import codecs
 import sys
 import os
@@ -31,6 +32,7 @@ from argparse import RawDescriptionHelpFormatter
 
 import xml.etree.ElementTree as etree
 
+from provmanager import provstore_settings
 import prov.model
 
 __all__ = []
@@ -75,7 +77,7 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-URL_VALIDATOR_SERVICE = 'http://pat.ecs.soton.ac.uk//validator/provapi/documents/'
+URL_VALIDATOR_SERVICE = provstore_settings.api_validator
 
 NS_URI_GRAPH_ML = 'http://graphml.graphdrawing.org/xmlns'
 NS_URI_YWORKS = 'http://www.yworks.com/xml/graphml'

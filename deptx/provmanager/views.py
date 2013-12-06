@@ -27,18 +27,17 @@ import prov.model
 from logger.models import ProvLog, ActionLog
 from logger import logging
 from players.models import Cron
+from provmanager import provstore_settings
 
-#api_location="http://pat.ecs.soton.ac.uk/store/api/v0/"
-api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
 
-API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
+API = Api(api_location=provstore_settings.api_location, api_username=api_username, api_key=api_key)
 
 @staff_member_required    
 def index(request):
     
     provenance_list = Provenance.objects.all().order_by("type", "-modifiedAt")
     
-    return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
+    return render(request, 'provmanager/index.html', {'provenance_list':provenance_list, 'PROVSTORE_URL':provstore_settings.api_documents})
 
 @staff_member_required
 def view(request, id):
@@ -414,7 +413,7 @@ def prov_log_action(request):
                 
             
             elif action == 'click':
-                if attribute == 'mop:url':
+                if attribute == 'mop__url':
                     message = 'media opened registered'
                     error = False
                     logAction = ProvLog.ACTION_MEDIA

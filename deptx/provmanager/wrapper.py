@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+from provmanager import provstore_settings
+
 '''
 Python ProvStore API wrapper
 
@@ -35,7 +38,7 @@ import json
 from prov.model import ProvBundle
 
 
-API_LOCATION = "http://pat.ecs.soton.ac.uk/store/api/v0/"
+API_LOCATION = provstore_settings.api_location
 
 
 class ApiError(Exception):
