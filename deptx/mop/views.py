@@ -17,9 +17,10 @@ from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
-from mop.forms import MailForm, RequisitionInstanceForm
+from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
+from copy import deepcopy
 
 from mop.performer import analyze_performance
 
@@ -659,6 +660,42 @@ def control_randomize(request, mopDocument_id):
     mopDocument = MopDocument.objects.get(id=mopDocument_id)
     documentcreator.create_single_document(mopDocument)
     return HttpResponseRedirect(reverse('mop_control'))
-    
-    
+
+@staff_member_required
+def control_mail(request):
+    if request.method == 'POST':
+        form = ControlMailForm(request.POST)
+        if form.is_valid():
+            mail = form.save(commit=False)
+            mail.type = Mail.TYPE_RECEIVED
+            mail.bodyType = Mail.BODY_MANUAL
+            mail.processed = True
+            mail.sentAt = now()
+            if 'preview' in request.POST:
+                return render(request, 'mop/control_mail.html', {'form':form, 'mail':mail})
+            elif 'send' in request.POST:
+                save_manual_mail(mail)
+                return render(request, 'mop/control_mail.html', {'mail':mail})
+            elif 'bulk' in request.POST:
+                if 'spam' in request.POST:
+                    mop_list = Mop.objects.all()
+                    for mop in mop_list:
+                        new_mail = deepcopy(mail)
+                        new_mail.id = None
+                        new_mail.mop = mop
+                        save_manual_mail(new_mail)
+                    return render(request, 'mop/control_mail.html', {'mail':mail, 'mop_list':mop_list})
+                else:
+                    return render(request, 'mop/control_mail.html', {'form':form, 'mail':mail, 'nospam':True})
+                
+        else:
+            return render(request, 'mop/control_mail.html', {'form':form})
+    else:
+        form = ControlMailForm()
+    return render(request, 'mop/control_mail.html', {'form':form})
+
+def save_manual_mail(mail):
+    mail.save()
+    if not mail.trust is None:
+        mail.mop.mopTracker.addTrust(mail.trust)
     

@@ -118,7 +118,7 @@ class Mop(models.Model):
     )
     
     cron = models.ForeignKey(Cron)
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='mop')
     active = models.BooleanField(default=True)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()

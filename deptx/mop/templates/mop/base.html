@@ -18,7 +18,8 @@
 		<span class="marquee">MoP - The need is great, the time is short, PROVENANCE must be the watchword.</span>
 		</marquee>
 	</div>
-{% if user.is_authenticated %}	
+
+{% if user.is_authenticated and user.mop %}	
 	<div class="navbar">
 		<table>
 		<tr>
