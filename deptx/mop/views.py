@@ -463,10 +463,9 @@ def mail_edit(request, serial):
         logging.log_action(ActionLog.ACTION_MOP_VIEW_EDIT, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 
-@login_required()
-@user_passes_test(isMop)
 @csrf_exempt
 def mail_check(request):
+    json_data = json.dumps({'error':True})
     #TODO: populate with current unread count
     if not request.user == None and request.user.is_active and isMop(request.user):
         if request.is_ajax() and request.method == 'POST':
@@ -487,8 +486,8 @@ def mail_check(request):
             request.user.mop.mopTracker.save()
             
             json_data = json.dumps({'total_unread':total_unread, 'has_new_mail':has_new_mail})
-        
-            return HttpResponse(json_data, mimetype="application/json")
+
+    return HttpResponse(json_data, mimetype="application/json")
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
