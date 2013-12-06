@@ -28,8 +28,8 @@ from logger.models import ProvLog, ActionLog
 from logger import logging
 from players.models import Cron
 
-api_location="http://pat.ecs.soton.ac.uk/store/api/v0/"
-#api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
+#api_location="http://pat.ecs.soton.ac.uk/store/api/v0/"
+api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
 
 API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
 
