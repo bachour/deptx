@@ -12,7 +12,6 @@
 {% if form %}
 	<form action="{% url 'mop_control_mail' %}" method="post">{% csrf_token %}
 	<p>Personal data: {% verbatim %}{{mop.firstname}}, {{mop.lastname}}, {{mop.dob}}, ...{% endverbatim %}</p>
-	<p>Changing data: {% verbatim %}{{mop.mopTracker.trust}}, ...{% endverbatim %}</p>
 	<p>Signatures: {% verbatim %} {% include 'mop/mail/sig_sandy.txt' %}, ...{% endverbatim %}
 	<table>
 	{{form.as_table}}

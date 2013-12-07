@@ -701,6 +701,7 @@ def control_mail(request):
 
 def save_manual_mail(mail):
     mail.save()
+    logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL, mop=mail.mop, mail=mail)
     if not mail.trust is None:
         mail.mop.mopTracker.addTrust(mail.trust)
     
