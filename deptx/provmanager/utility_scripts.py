@@ -153,6 +153,8 @@ def test_graph(grph, trials):
         print j
     return all_inconsistencies
         
+
+            
         
 # function to duplicate graph
 def duplicate_graph(graph):
