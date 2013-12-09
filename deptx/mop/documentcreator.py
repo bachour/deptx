@@ -4,6 +4,7 @@ from provmanager.views import randomize_document
 from mop.clearance import Clearance
 from deptx.helpers import now
 from datetime import timedelta
+from random import randrange
 
 def remove_old_documents():
     output = []
@@ -25,15 +26,21 @@ def create_daily_documents():
     mopDocument_high_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_HIGH)
     mopDocument_severe_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_SEVERE)
     
-    for x in range(0, 5):
+    low = 5 + randrange(5)
+    guarded = 4 + randrange(4)
+    elevated = 3 + randrange(3)
+    high = 2 + randrange(2)
+    severe = 1 + randrange(1)
+    
+    for x in range(0, low):
         output.append(create_random_from_list(mopDocument_low_list))
-    for x in range(0, 4):
+    for x in range(0, guarded):
         output.append(create_random_from_list(mopDocument_guarded_list))
-    for x in range(0, 3):
+    for x in range(0, elevated):
         output.append(create_random_from_list(mopDocument_elevated_list))
-    for x in range(0, 2):
+    for x in range(0, high):
         output.append(create_random_from_list(mopDocument_high_list))
-    for x in range(0, 1):
+    for x in range(0, severe):
         output.append(create_random_from_list(mopDocument_severe_list))
     return output
 

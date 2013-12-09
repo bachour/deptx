@@ -1,3 +1,0 @@
-{{data}}
-
-{% include 'mop/mail/sandy_sig.txt' %}

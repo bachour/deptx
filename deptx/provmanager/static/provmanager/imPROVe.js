@@ -548,6 +548,7 @@ function toggleHighlightShape(target, on)
 
 function setImageHighlight(image, selected, highlight, isThumb)
 {
+
 	if (isThumb)
 	{
 		if (selected)
@@ -1034,6 +1035,17 @@ function showAttributes(node, position)
 			  node.attribURL.setX(node.attribURL.getX() - node.attribURL.getWidth());
 			  node.attribURL.setY(node.attribURL.getY() - node.attribURL.getHeight());
 		  }
+		  node.contentLabel = new Kinetic.Text({
+		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
+		        y: Y + 25 + node.attribName.getHeight(),
+		        text: "(content)",
+		        fontSize: ATTRIBBOX_SMALL_FONT,
+		        fontFamily: ATTRIBBOX_FONT_FAMILY,
+		        fontStyle: ATTRIBBOX_FONT_STYLE,
+		        fill: ATTRIBBOX_FONT_FILL,
+		        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
+		  });
 		  
 		  // current cumulative height of all components created so far
 		  var totalY = node.attribImage.getHeight() + Y + 20;
@@ -1076,7 +1088,10 @@ function showAttributes(node, position)
 		  node.attribValues['prov:label'] = node.attribName;
 		  node.attribValues['mop:image'] = node.attribImage;
 		  if (node.attribURL)
-			  node.attribValues['mop:url'] = node.attribURL;
+		  {
+			  node.attribValues['mop:__url'] = node.attribURL;
+			  node.attribValues['mop:url'] = node.contentLabel;
+		  }
 	 }
 	 else // if this node has already been displayed before, all it's shapes/texts already exists, 
 		 // so simply update their positions
@@ -1112,7 +1127,10 @@ function showAttributes(node, position)
 	  attribLayer[position].add(node.attribImage);
       attribLayer[position].add(node.attribName);
 	  if (node.attribURL)
+	  {
 		  attribLayer[position].add(node.attribURL);
+		  attribLayer[position].add(node.contentLabel);
+	  }
 	  attribLayer[position].draw();
 }
 
@@ -1406,7 +1424,8 @@ function submitPushed()
 {
 	if (taskCompleted || INACTIVE)
 	{
-		window.location.href = URL_CONTINUE;
+		//window.location.href = URL_CONTINUE;
+		validateSubmit();
 	}
 	else
 	{
@@ -1840,7 +1859,7 @@ function createAndAddMediaJQueryDialog(url, id)
         		  show: "fade",
         		  containment: "parent",
         		  close: function( event, ui ) {
-        			  logClick(selectedNodes[id].id,"mop:url",false,id);
+        			  logClick(selectedNodes[id].id,"mop:__url",false,id);
         		  },
         		  buttons: [
         		            {
@@ -1886,7 +1905,7 @@ function logResponse(response)
 // Send an ajax request to log the click of a user on a node/attribute in the graph
 function logClick(node, attribute, newState, position)
 {
-	if (IS_TEST==false)
+	//if (IS_TEST==false)
 	{
 		var message = "action=click" +
 					  "&serial=" + PROV_SERIAL + 

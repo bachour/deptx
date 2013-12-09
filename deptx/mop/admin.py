@@ -3,7 +3,7 @@ from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentI
 from provmanager.models import Provenance
 
 class RandomizedDocumentAdmin(admin.ModelAdmin):
-    list_filter = ('mopDocument', 'active')
+    list_filter = ('mopDocument', 'active', 'mopDocument__clearance')
     
     def get_form(self, request, obj=None, **kwargs):
         form = super(RandomizedDocumentAdmin,self).get_form(request, obj,**kwargs)

@@ -37,13 +37,18 @@ class Cron(models.Model):
     email = models.EmailField()
     overSixteen = models.BooleanField()
     user = models.OneToOneField(User)
-    
+        
     player = models.OneToOneField(Player, blank=True, null=True)
     activated = models.BooleanField(default=False)
     activationCode = models.CharField(max_length=36, default=generateUUID)
     
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    
+    def save(self, *args, **kwargs):
+        super(Cron, self).save(*args, **kwargs)
+        self.user.email = self.email
+        self.user.save()
     
     def __unicode__(self):
         return self.user.username
@@ -113,7 +118,7 @@ class Mop(models.Model):
     )
     
     cron = models.ForeignKey(Cron)
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='mop')
     active = models.BooleanField(default=True)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()

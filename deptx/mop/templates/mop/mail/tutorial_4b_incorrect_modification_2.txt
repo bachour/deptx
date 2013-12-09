@@ -10,4 +10,8 @@ Have you tried asking these questions?
 
 Find an inconsistency in one of these and save the document again.
 
-{% include 'mop/mail/sandy_sig.txt' %}
+Best of luck!
+
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

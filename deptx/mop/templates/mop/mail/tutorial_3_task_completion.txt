@@ -25,4 +25,8 @@ If you're having difficulty understanding the graph, have a look at the "What is
 
 If you followed these steps correctly, you will receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
 
-{% include 'mop/mail/sandy_sig.txt' %}
+Best of luck!
+
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

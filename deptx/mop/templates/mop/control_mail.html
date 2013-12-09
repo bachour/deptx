@@ -1,0 +1,42 @@
+{% load staticfiles %}
+
+{% if mail %}
+	{% include 'mop/mail_view.html' %}
+{% endif %}
+<div style="clear:left;"></div>
+
+<div class="wrapper">
+	<div class="main">
+		<div class="content">
+<h1>MoP Mail Centre</h1>
+{% if form %}
+	<form action="{% url 'mop_control_mail' %}" method="post">{% csrf_token %}
+	<p>Personal data: {% verbatim %}{{mop.firstname}}, {{mop.lastname}}, {{mop.dob}}, ...{% endverbatim %}</p>
+	<p>Signatures: {% verbatim %} {% include 'mop/mail/sig_sandy.txt' %}, ...{% endverbatim %}
+	<table>
+	{{form.as_table}}
+	</table>
+	<input class="button" type="submit" value="preview mail" name="preview" /><br/>
+	{% if mail %}
+		<input class="button" type="submit" value="send mail" name="send" /><br/>
+		{% if nospam %}
+			<br/><br/><strong style="color:red">NO SPAM SENT</strong><br/><br/><br/>
+		{% endif %}
+		<input class="button" type="submit" value="send to everyone" name="bulk" /><br/><br/><br/><br/><br/><br/> <input type="checkbox" name="spam" >Yes, I really want to SPAM everyone!<br>
+	{% endif %}
+{% else %}
+	{% if mop_list %}
+		<strong>bulk email sent to <ul>{% for mop in mop_list %}<li>{{mop.user.username}}</li>{% endfor %}</ul></strong>
+	{% else %}
+		<strong>mail sent to {{mail.mop.user.username}}!</strong>
+	{% endif %}
+{% endif %}
+</form>
+</div>
+</div>
+</div>
+
+
+
+
+

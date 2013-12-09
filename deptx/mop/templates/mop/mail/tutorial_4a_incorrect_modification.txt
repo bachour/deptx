@@ -4,4 +4,8 @@ Go back to the Document Drawer and click the Work button to try again. Look for 
 
 When you do that, you will receive a new email with further information.
 
-{% include 'mop/mail/sandy_sig.txt' %}
+Best of luck!
+
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

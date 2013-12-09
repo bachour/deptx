@@ -26,18 +26,18 @@ from graphml2prov import convert_graphml_string, validate
 import prov.model
 from logger.models import ProvLog, ActionLog
 from logger import logging
+from players.models import Cron
+from provmanager import provstore_settings
 
 
-api_location="https://provenance.ecs.soton.ac.uk/store/api/v0/"
-
-API = Api(api_location=api_location, api_username=api_username, api_key=api_key)
+API = Api(api_location=provstore_settings.api_location, api_username=api_username, api_key=api_key)
 
 @staff_member_required    
 def index(request):
     
     provenance_list = Provenance.objects.all().order_by("type", "-modifiedAt")
     
-    return render(request, 'provmanager/index.html', {'provenance_list':provenance_list})
+    return render(request, 'provmanager/index.html', {'provenance_list':provenance_list, 'PROVSTORE_URL':provstore_settings.api_documents})
 
 @staff_member_required
 def view(request, id):
@@ -318,12 +318,19 @@ def prov_check(request):
                     
                     
                 else:
-                    if is_empty:
+                    cronDocumentInstance.increaseFailedAttempts()
+                    close_prov = False
+                    if cronDocumentInstance.failedAttempts >= 50:
+                        message = "Yeah. Not it."
+                    elif cronDocumentInstance.failedAttempts >= 30:
+                        message = "Honestly, now you are just guessing, right? Contact HQ, they might have uncovered an additional clue!"
+                    elif cronDocumentInstance.failedAttempts >= 10:
+                        message = "You are trying very hard, but this is not it. Maybe send a message to HQ to see if they have more intel."
+                    elif is_empty:
                         message = "No, we are pretty sure that something is wrong with this data. Please keep investigating."
                     else:
                         message = "The data you submitted does not seem suspicious. Please keep investigating."
-                    cronDocumentInstance.increaseFailedAttempts()
-                    close_prov = False
+                    
                   
             elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
                 message = "Provenance modification saved. Please submit document now."  
@@ -413,7 +420,7 @@ def prov_log_action(request):
                 
             
             elif action == 'click':
-                if attribute == 'mop:url':
+                if attribute == 'mop__url':
                     message = 'media opened registered'
                     error = False
                     logAction = ProvLog.ACTION_MEDIA

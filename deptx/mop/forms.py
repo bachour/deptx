@@ -10,4 +10,9 @@ class RequisitionInstanceForm(ModelForm):
     class Meta:
         model = RequisitionInstance
         fields = ['data']
+        
+class ControlMailForm(ModelForm):
+    class Meta:
+        model = Mail
+        fields = ['mop', 'unit', 'subject', 'trust', 'body']
     

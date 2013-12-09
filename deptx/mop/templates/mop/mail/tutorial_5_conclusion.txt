@@ -21,5 +21,8 @@ If you have any questions or problems, just drop us a message using the feedback
 It is also a good idea to study the Guidebook thoroughly! :) It's not as fun as filling out forms, but it's certainly very helpful.
 
 
+Best of luck!
 
-{% include 'mop/mail/sandy_sig.txt' %}
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

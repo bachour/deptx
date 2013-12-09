@@ -20,7 +20,6 @@ from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, Hel
 from mop.models import Mail, MopDocumentInstance
 from cron.forms import HelpMailForm
 
-from logger import logging
 from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
 
