@@ -140,7 +140,7 @@ class RandomizedDocument(models.Model):
         self.full_clean()
         super(RandomizedDocument, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            self.serial = Clearance(self.mopDocument.clearance).generateSerial(self.mopDocument)
+            self.serial = Clearance(self.mopDocument.clearance).generateSerial(self)
             super(RandomizedDocument, self).save()
     
 class MopDocumentInstance(models.Model):
