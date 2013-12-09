@@ -1,7 +1,7 @@
 from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron
-from assets.models import Mission, Case, CronDocument
+from assets.models import Mission, Case, CronDocument, CaseQuestion
 from django.template import Context, loader
 from django.core.mail import EmailMessage, mail_admins
 
@@ -66,7 +66,18 @@ class CaseInstance(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
-    def isSolved(self):
+    def allQuestionsSolved(self):
+        question_list = CaseQuestion.objects.filter(case=self.case)
+        for question in question_list:
+            try:
+                questionInstance = CaseQuestionInstance.objects.get(question=question, cron=self.cron)
+            except CaseQuestionInstance.DoesNotExist:
+                return False
+            if not questionInstance.correct:
+                return False
+        return True
+    
+    def allDocumentsSolved(self):
         cronDocument_list = CronDocument.objects.filter(case=self.case)
         for cronDocument in cronDocument_list:
             try:
@@ -77,13 +88,39 @@ class CaseInstance(models.Model):
                 return False
         return True
     
-    def __unicode__(self):
-        if (self.isSolved):
-            status = "SOLVED"
+    def isSolved(self):
+        if self.allDocumentsSolved() and self.allQuestionsSolved():
+            return True
         else:
-            status = "IN PROGRESS"
-        return self.cron.user.username + " (" + self.case.name + ": " + status + ")"
+            return False
     
+    def __unicode__(self):
+        if (self.isSolved()):
+            status = "SOLVED"
+        elif (self.allDocumentsSolved()):
+            status = "QUESTIONS NOT SOLVED"
+        else:
+            status = "DOCUMENTS NOT SOLVED"
+        return self.cron.user.username + " (" + self.case.name + ": " + status + ")"
+
+class CaseQuestionInstance(models.Model):
+    cron = models.ForeignKey(Cron)
+    question = models.ForeignKey(CaseQuestion)
+    correct = models.BooleanField(default=False)
+    failedAttempts = models.IntegerField(default=0)
+    
+    answer1 = models.CharField(max_length=256, blank=True, null=True)
+    answer2 = models.CharField(max_length=256, blank=True, null=True)
+    
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    def increaseFailedAttempts(self):
+        self.failedAttempts += 1
+        self.save()
+    
+    def __unicode__(self):
+        return "%s - %s - %s - %s - %s" % (self.cron.user.username, self.question.case.serial, self.question.id, self.correct, self.failedAttempts)
 
 class CronDocumentInstance(models.Model):
     cronDocument = models.ForeignKey(CronDocument)

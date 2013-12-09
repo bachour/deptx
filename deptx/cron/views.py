@@ -15,8 +15,8 @@ from django.template import Context, Template, loader
 
 from players.forms import MopForm
 
-from assets.models import Case, Mission, CronDocument
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail
+from assets.models import Case, Mission, CronDocument, CaseQuestion
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance
 from mop.models import Mail, MopDocumentInstance
 from cron.forms import HelpMailForm
 
@@ -125,7 +125,7 @@ def index(request):
 def mopmaker(request, missionInstance):
     mop_list = Mop.objects.filter(cron=request.user.cron)
     if mop_list:
-        return render(request, 'cron/mopmaker_exists.html', {"mop_list":mop_list})
+        return render(request, 'cron/mopmaker_exists.html', {"mop_list":mop_list, "missionInstance":missionInstance})
     
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
@@ -405,6 +405,45 @@ def case_intro(request, mission_serial, case_serial):
     logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_INTRO, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved)
     
     return render(request, 'cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "cronDocument_list": requiredDocuments, "text":text })
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def case_report(request, mission_serial, case_serial):
+    try:
+        mission = Mission.objects.get(serial=mission_serial, isPublished=True)
+        case = Case.objects.get(serial=case_serial, isPublished=True)
+        caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
+    except:
+        return
+    
+    if caseInstance.allDocumentsSolved():
+        question_list = CaseQuestion.objects.filter(case=case)
+        for question in question_list:
+            questionInstance = CaseQuestionInstance.objects.get_or_create(cron=request.user.cron, question=question)
+            
+        questionInstance_list = CaseQuestionInstance.objects.filter(cron=request.user.cron, question__case=case)
+    
+        if request.method == 'POST':
+            hasGuessed = True
+            for questionInstance in questionInstance_list:
+                if not questionInstance.correct:
+                    questionInstance.answer1 = request.POST.get('%s_answer1' % questionInstance.question.id, None)
+                    questionInstance.answer2 = request.POST.get('%s_answer2' % questionInstance.question.id, None)
+                    questionInstance.correct = questionInstance.question.isAllCorrect(questionInstance.answer1, questionInstance.answer2)
+                    if not questionInstance.correct:
+                        questionInstance.increaseFailedAttempts()
+                    questionInstance.save()
+                    
+                    data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answer1':questionInstance.answer1, 'answer2':questionInstance.answer2})
+                    logging.log_action(ActionLog.ACTION_CRON_REPORT_SUBMIT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved(), questionInstance=questionInstance, questionInstanceCorrect=questionInstance.correct, data=data)
+        else:
+            hasGuessed = False
+            
+    
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_REPORT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved())
+        return render(request, 'cron/case_report.html', {'questionInstance_list':questionInstance_list, 'mission':mission, 'case':case, 'hasGuessed':hasGuessed, 'caseInstance':caseInstance})
+    else:
+        return
     
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')    

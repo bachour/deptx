@@ -173,8 +173,10 @@ class Mission(models.Model):
     
     def __unicode__(self):
         return self.name + " (" + str(self.rank) + " - published: " + str(self.isPublished) + ") " + self.serial
+
   
 class Case(models.Model):
+    
     name = models.CharField(max_length=50)
     mission = models.ForeignKey(Mission)
     rank = models.IntegerField()
@@ -182,7 +184,9 @@ class Case(models.Model):
     preCase = models.ForeignKey('self', blank=True, null=True, help_text="The preCase has to be solved before this case is accesible to the players. Before you can select a preCase, the current Case needs to be saved and added to a mission.")
     
     intro = models.TextField(blank=True, null=True)
+    report = models.TextField(blank=True, null=True)
     outro = models.TextField(blank=True, null=True)
+    
     
     isPublished = models.BooleanField(default=False)
     createdAt = CreationDateTimeField()
@@ -197,6 +201,61 @@ class Case(models.Model):
     def __unicode__(self):
         return self.mission.name + " - Case " + str(self.rank) + ": " + self.name + " (published: " + str(self.isPublished) + ") " + self.serial 
 
+
+class CaseQuestion(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    case = models.ForeignKey(Case)
+    question = models.TextField()
+    correct1 = models.TextField()
+    wrong1 = models.TextField()
+    correct2 = models.TextField(blank=True, null=True)
+    wrong2 = models.TextField(blank=True, null=True)
+
+    
+    def getList(self, wrong, correct):
+        wrong_list = list(wrong.splitlines())
+        correct_list = list(correct.splitlines())
+        combined_list = list(set(wrong_list + correct_list))
+        sorted_list = sorted(combined_list)
+        return sorted_list
+
+    def isCorrect(self, guess, correct):
+        if guess == None:
+            if correct == None or correct == "":
+                return True
+            else:
+                return False
+        else:
+            correct_list = list(correct.splitlines())
+            for correct in correct_list:
+                if guess == correct:
+                    return True
+            return False
+
+    def getList1(self):
+        return self.getList(self.wrong1, self.correct1)
+    
+    def getList2(self):
+        return self.getList(self.wrong2, self.correct2)
+    
+    def isCorrect1(self, guess):
+        return self.isCorrect(guess, self.correct1)
+    
+    def isCorrect2(self, guess):
+        return self.isCorrect(guess, self.correct2)
+    
+    def isAllCorrect(self, guess1, guess2=None):
+        if self.isCorrect1(guess1) and self.isCorrect2(guess2):
+            return True
+        else:
+            return False
+    
+    def __unicode__(self):
+        return "answers: %s (%s)" % (self.getList1(), self.isAllCorrect("red", "van"))
+        
+        
 class AbstractDocument(models.Model):
     class meta:
         abstract = True

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from assets.models import Unit, Requisition, CronDocument, MopDocument, Mission, Case
+from assets.models import Unit, Requisition, CronDocument, MopDocument, Mission, Case, CaseQuestion
 from provmanager.models import Provenance
 
 class CronDocumentAdmin(admin.ModelAdmin):
@@ -30,5 +30,6 @@ admin.site.register(CronDocument, CronDocumentAdmin)
 admin.site.register(MopDocument, MopDocumentAdmin)
 admin.site.register(Mission)
 admin.site.register(Case, CaseAdmin)
+admin.site.register(CaseQuestion)
 
 

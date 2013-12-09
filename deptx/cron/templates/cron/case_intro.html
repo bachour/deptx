@@ -70,11 +70,14 @@ Our hackers will access your MoP Draft folder to retrieve the document and bypas
 </ol>
 {% endif %}
 <br/>
-{% if caseInstance.isSolved %}
-<p>This case is now resolved! Great job!</p>
-<br/>
-<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">Continue to Outcome</a></p>
+{% if caseInstance.allDocumentsSolved %}
+	<p>This case is ready for reporting! Great job!</p>
+	<br/>
+	<p><a href="{% url 'cron_case_report' mission.serial case.serial %}">Continue to Report</a></p>
+{% elif caseInstance.isSolved %}
+	<p><a href="{% url 'cron_case_report' mission.serial case.serial %}">Continue to Report</a></p>
+	<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">Continue to Outcome</a></p>
 {% else %}
-<p><a href="{% url 'cron_mission_cases' mission.serial %}">Back to Mission Overview</a></p>
+	<p><a href="{% url 'cron_mission_cases' mission.serial %}">Back to Mission Overview</a></p>
 {% endif %}
 {% endblock %}
