@@ -639,6 +639,13 @@ def hq_case_intro(request, id):
     return render(request, 'cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
+def hq_case_report(request, id):
+    case = Case.objects.get(id=id)
+    question_list = CaseQuestion.objects.filter(case=case)
+    return render(request, 'cron/case_report.html', {'question_list':question_list, 'case':case, 'cheat':True})
+
+
+@staff_member_required
 def hq_case_outro(request, id):
     case = Case.objects.get(id=id)
     content = case.outro

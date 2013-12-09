@@ -33,8 +33,5 @@ urlpatterns = patterns('',
     url(r'intranet/mail/compose/form/([-\w]+)', views.mail_compose, name='mop_mail_compose'),
     url(r'intranet/mail/compose/([-\w]+)', views.mail_edit, name='mop_mail_edit'),
     url(r'intranet/mail/check/', views.mail_check, name='mop_mail_check'),
-    
-    url(r'intranet/control/$', views.control, name='mop_control'),
-    url(r'intranet/control/randomize/(\d+)', views.control_randomize, name='mop_control_randomize'),
-    url(r'intranet/control/mail/$', views.control_mail, name='mop_control_mail'),      
+     
 )

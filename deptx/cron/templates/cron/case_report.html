@@ -4,60 +4,72 @@
 
 <h1>{{ case.name }} - Report</h1>
 <p>{{case.report}}</p>
-<form action="{% url 'cron_case_report' mission.serial case.serial %}" method="post">{% csrf_token %}
-<table>
-{% for questionInstance in questionInstance_list %}
-	<tr></tr>
-	{% if questionInstance.correct %}
-		<tr>
-		<td style='vertical-align:middle'>
-			<div style="position:relative;">
-				<div style="position:absolute;top:50%;margin-top:-25px">
-					<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>
+
+{% if cheat %}
+	<table>
+	{% for question in question_list %}
+		<tr><td><h2>{{question.question}}</td><td>{% for answer in question.getList1 %}{{answer}}<br/>{% endfor %}</td><td>{{question.correct1|linebreaksbr}}</td><td>{% for answer in question.getList2 %}{{answer}}<br/>{% endfor %}</td><td>{{question.correct2|linebreaksbr}}</td></tr>
+	{% endfor %}
+	</table>
+
+{% else %}
+	<form action="{% url 'cron_case_report' mission.serial case.serial %}" method="post">{% csrf_token %}
+	<table>
+	{% for questionInstance in questionInstance_list %}
+		<tr></tr>
+		{% if questionInstance.correct %}
+			<tr>
+			<td style='vertical-align:middle'>
+				<div style="position:relative;">
+					<div style="position:absolute;top:50%;margin-top:-25px">
+						<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>
+					</div>
+					<div>
+						<h2>{{questionInstance.question.question}}</h2>
+					</div>
 				</div>
-				<div>
-					<h2>{{questionInstance.question.question}}</h2>
-				</div>
-			</div>
-		</td>
-		<td style='vertical-align:middle;text-align:center;'>{{questionInstance.answer1}} {% if questionInstance.answer2 %}{{questionInstance.answer2}}{% endif %}</td><td></td>
-		</tr>
-	{% else %}
-		<tr>
-		<td style='vertical-align:middle;'><h2>{{questionInstance.question.question}}</h2></td>
-		<td style='vertical-align:middle;'>
-			<select name="{{questionInstance.question.id}}_answer1">
-			{% for answer in questionInstance.question.getList1 %}
-				<option value="{{answer}}" {% if answer == questionInstance.answer1 %}selected{% endif %}>{{answer}}</option>	
-			{% endfor %}
-			</select>
-			{% if questionInstance.question.getList2 %}
-				<select name="{{questionInstance.question.id}}_answer2">
-				{% for answer in questionInstance.question.getList2 %}
-					<option value="{{answer}}" {% if answer == questionInstance.answer2 %}selected{% endif %}>{{answer}}</option>	
+			</td>
+			<td style='vertical-align:middle;text-align:center;'>{{questionInstance.answer1}} {% if questionInstance.answer2 %}{{questionInstance.answer2}}{% endif %}</td><td></td>
+			</tr>
+		{% else %}
+			<tr>
+			<td style='vertical-align:middle;'><h2>{{questionInstance.question.question}}</h2></td>
+			<td style='vertical-align:middle;'>
+				<select name="{{questionInstance.question.id}}_answer1">
+				{% for answer in questionInstance.question.getList1 %}
+					<option value="{{answer}}" {% if answer == questionInstance.answer1 %}selected{% endif %}>{{answer}}</option>	
 				{% endfor %}
 				</select>
+				{% if questionInstance.question.getList2 %}
+					<select name="{{questionInstance.question.id}}_answer2">
+					{% for answer in questionInstance.question.getList2 %}
+						<option value="{{answer}}" {% if answer == questionInstance.answer2 %}selected{% endif %}>{{answer}}</option>	
+					{% endfor %}
+					</select>
+				{% endif %}
+			</td>
+			<td style='vertical-align:middle;'>
+			{% if hasGuessed %}
+				<strong style="color:red">Incorrect</strong>
 			{% endif %}
-		</td>
-		<td style='vertical-align:middle;'>
-		{% if hasGuessed %}
-			<strong style="color:red">Incorrect</strong>
+			</td>
+			</tr>
 		{% endif %}
-		</td>
-		</tr>
+	
+	{% endfor %}
+	</table>
+
+
+	{% if caseInstance.allQuestionsSolved %}
+		<br/>
+		<p>This case is now resolved! Great job!</p>
+		<br/>
+		<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">Continue to Outcome</a></p>
+	{% else %}
+		<input class="button" type="submit" value="submit" name="submit" />
+		</form><br/>
+		<p><a href="{% url 'cron_case_intro' mission.serial case.serial %}">Back to Overview</a></p>
 	{% endif %}
-
-{% endfor %}
-</table>
-
-{% if caseInstance.allQuestionsSolved %}
-	<br/>
-	<p>This case is now resolved! Great job!</p>
-	<br/>
-	<p><a href="{% url 'cron_case_outro' mission.serial case.serial %}">Continue to Outcome</a></p>
-{% else %}
-	<input class="button" type="submit" value="submit" name="submit" />
-	</form><br/>
-	<p><a href="{% url 'cron_case_intro' mission.serial case.serial %}">Back to Overview</a></p>
 {% endif %}
+
 {% endblock %}

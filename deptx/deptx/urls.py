@@ -18,6 +18,8 @@ urlpatterns = patterns('',
     
     url(r'^cron/', include('cron.urls')),
     url(r'^mop/', include('mop.urls')),
+    url(r'^control/mop/', include('mop.urls_control')),
+    url(r'^control/cron/', include('cron.urls_control')),
     url(r'^provmanager/', include('provmanager.urls')),
     
 )
