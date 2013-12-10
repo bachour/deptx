@@ -12,4 +12,5 @@ urlpatterns = patterns('',
     url(r'c/(\d+)/intro', views.hq_case_intro, name='cron_hq_case_intro'),
     url(r'c/(\d+)/report', views.hq_case_report, name='cron_hq_case_report'),
     url(r'c/(\d+)/outro', views.hq_case_outro, name='cron_hq_case_outro'),
+    url(r'mail/$', views.hq_mail, name='cron_hq_mail'),
 )

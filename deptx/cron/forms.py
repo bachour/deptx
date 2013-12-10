@@ -7,5 +7,8 @@ class HelpMailForm(ModelForm):
         model = HelpMail
         fields = ['subject', 'body']
      
-
+class ControlHelpMailForm(ModelForm):
+    class Meta:
+        model = HelpMail
+        fields = ['cron', 'subject', 'isReply', 'body']
     

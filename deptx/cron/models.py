@@ -197,6 +197,7 @@ class HelpMail(models.Model):
     type = models.IntegerField(choices=CHOICES_TYPE)
     body = models.TextField()
     isReply = models.BooleanField(default=False)
+    isRead = models.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
         if not self.pk:

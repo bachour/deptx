@@ -18,13 +18,14 @@ from players.forms import MopForm
 from assets.models import Case, Mission, CronDocument, CaseQuestion
 from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance
 from mop.models import Mail, MopDocumentInstance
-from cron.forms import HelpMailForm
+from cron.forms import HelpMailForm, ControlHelpMailForm
 
 from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
 
 from logger.models import ActionLog
 from logger import logging
+from copy import deepcopy
 
 import json
 
@@ -113,9 +114,9 @@ def index(request):
                     mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
             else:
                 missionInstance = None
-                
+        unread_count = HelpMail.objects.filter(cron=request.user.cron, isRead=False).count()
         logging.log_action(ActionLog.ACTION_CRON_VIEW_INDEX, cron=request.user.cron)         
-        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
+        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count }
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
@@ -524,6 +525,10 @@ def message_compose(request):
 @user_passes_test(isCron, login_url='cron_login')
 def messages(request):
     message_list = HelpMail.objects.filter(cron=request.user.cron).order_by('-createdAt')
+    for message in message_list:
+        if not message.isRead:
+            message.isRead = True
+            message.save()
     logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES, cron=request.user.cron)
     return render(request, 'cron/messages.html', {"message_list": message_list})
 
@@ -651,3 +656,41 @@ def hq_case_outro(request, id):
     content = case.outro
     text = renderContent(content, request.user)
     return render(request, 'cron/case_outro.html', {'text':text, 'mission':case.mission, 'case':case })
+
+@staff_member_required
+def hq_mail(request):
+    if request.method == 'POST':
+        form = ControlHelpMailForm(request.POST)
+        if form.is_valid():
+            mail = form.save(commit=False)
+            mail.type = HelpMail.TYPE_TO_PLAYER
+            mail.isRead = False
+            text = mail.body
+            c = Context({"cron": mail.cron})    
+            t = Template(text)
+            mail.body = t.render(c)
+            if 'preview' in request.POST:
+                return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail})
+            elif 'send' in request.POST:
+                mail.save()
+                logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=mail)
+                return render(request, 'cron/hq_mail.html', {'mail':mail})
+            elif 'bulk' in request.POST:
+                if 'spam' in request.POST:
+                    cron_list = Cron.objects.all()
+                    for cron in cron_list:
+                        new_mail = deepcopy(mail)
+                        new_mail.id = None
+                        new_mail.cron = cron
+                        new_mail.save()
+                        logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=new_mail)
+                    return render(request, 'cron/hq_mail.html', {'mail':mail, 'cron_list':cron_list})
+                else:
+                    return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail, 'nospam':True})
+                
+        else:
+            return render(request, 'cron/hq_mail.html', {'form':form})
+    else:
+        form = ControlHelpMailForm()
+    return render(request, 'cron/hq_mail.html', {'form':form})
+
