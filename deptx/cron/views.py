@@ -423,7 +423,9 @@ def case_report(request, mission_serial, case_serial):
             questionInstance = CaseQuestionInstance.objects.get_or_create(cron=request.user.cron, question=question)
             
         questionInstance_list = CaseQuestionInstance.objects.filter(cron=request.user.cron, question__case=case)
-    
+        
+        text = renderContent(case.report, request.user)
+        
         if request.method == 'POST':
             hasGuessed = True
             for questionInstance in questionInstance_list:
@@ -442,7 +444,7 @@ def case_report(request, mission_serial, case_serial):
             
     
         logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_REPORT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved())
-        return render(request, 'cron/case_report.html', {'questionInstance_list':questionInstance_list, 'mission':mission, 'case':case, 'hasGuessed':hasGuessed, 'caseInstance':caseInstance})
+        return render(request, 'cron/case_report.html', {'text':text, 'questionInstance_list':questionInstance_list, 'mission':mission, 'case':case, 'hasGuessed':hasGuessed, 'caseInstance':caseInstance})
     else:
         return
     
@@ -647,7 +649,8 @@ def hq_case_intro(request, id):
 def hq_case_report(request, id):
     case = Case.objects.get(id=id)
     question_list = CaseQuestion.objects.filter(case=case)
-    return render(request, 'cron/case_report.html', {'question_list':question_list, 'case':case, 'cheat':True})
+    text = renderContent(case.report, request.user)
+    return render(request, 'cron/case_report.html', {'text':text, 'question_list':question_list, 'case':case, 'cheat':True})
 
 
 @staff_member_required
