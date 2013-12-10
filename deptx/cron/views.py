@@ -669,12 +669,15 @@ def hq_mail(request):
             mail.type = HelpMail.TYPE_TO_PLAYER
             mail.isRead = False
             text = mail.body
-            c = Context({"cron": mail.cron})    
-            t = Template(text)
-            mail.body = t.render(c)
             if 'preview' in request.POST:
+                c = Context({"cron": mail.cron})    
+                t = Template(text)
+                mail.body = t.render(c)
                 return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail})
             elif 'send' in request.POST:
+                c = Context({"cron": mail.cron})    
+                t = Template(text)
+                mail.body = t.render(c)
                 mail.save()
                 logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=mail)
                 return render(request, 'cron/hq_mail.html', {'mail':mail})
@@ -685,6 +688,9 @@ def hq_mail(request):
                         new_mail = deepcopy(mail)
                         new_mail.id = None
                         new_mail.cron = cron
+                        c = Context({"cron": new_mail.cron})    
+                        t = Template(text)
+                        new_mail.body = t.render(c)
                         new_mail.save()
                         logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=new_mail)
                     return render(request, 'cron/hq_mail.html', {'mail':mail, 'cron_list':cron_list})
