@@ -15,7 +15,7 @@
 
 {% if finished %}
 	{% if unpublished %}
-		<p>More cases coming soon...</p>
+		<p style="color:white"><strong>Great job so far! We are following some leads rights now and will inform you when we have more for you to do.</strong></p>
 	{% else %}
 		<a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Proceed to Mission Debriefing</a>
 	{% endif %}
