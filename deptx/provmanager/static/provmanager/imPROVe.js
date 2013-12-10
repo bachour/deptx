@@ -1905,7 +1905,7 @@ function logResponse(response)
 // Send an ajax request to log the click of a user on a node/attribute in the graph
 function logClick(node, attribute, newState, position)
 {
-	//if (IS_TEST==false)
+	if (IS_TEST==false)
 	{
 		var message = "action=click" +
 					  "&serial=" + PROV_SERIAL + 
