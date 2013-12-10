@@ -1841,13 +1841,13 @@ function createAndAddMediaJQueryDialog(url, id)
 	// if video
 	if (url.indexOf("youtu")!= -1)
 		{
-			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
+			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=1&showinfo=0";
 			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.5 + '" height="' +SCREEN_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
 		}
 	else // if image
 	{
 		url = URL_MEDIA + url;
-		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image">';
+		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + SCREEN_WIDTH*0.5 +'" id="image">';
 	}
 	var dialog = document.getElementById(dialogID);
 	dialog.innerHTML = innerHTML;

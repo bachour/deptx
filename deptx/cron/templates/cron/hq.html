@@ -1,7 +1,7 @@
 {% extends 'cron/base.html' %}
 
 {% block content %}
-
+<a href="{% url 'cron_hq_mail' %}">send message</a>
 <ul>
 {% for mission in mission_list %}
 	<h1>{{mission.rank}} - {{mission.name}} ({% if mission.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h1>
@@ -17,6 +17,7 @@
 				<h2>{{case.rank}} - {{case.name}} {% if case.preCase %} - requires: {{case.preCase.rank}} - {{case.preCase.name}} {% endif %}({% if case.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h2>
 				<h3>
 					<a href="{% url 'cron_hq_case_intro' case.id %}">Intro</a>
+					<a href="{% url 'cron_hq_case_report' case.id %}">Report</a>
 					<a href="{% url 'cron_hq_case_outro' case.id %}">Outro</a>
 				</h3>
 			{% endif %}

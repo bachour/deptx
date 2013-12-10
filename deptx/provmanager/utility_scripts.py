@@ -153,6 +153,55 @@ def test_graph(grph, trials):
         print j
     return all_inconsistencies
         
+
+def get_fancy_random_graph(graph):
+    identifiers = {}
+    identifier_main_att = {}
+    identifier_super_main_att = {}
+    sub_identifiers = {}
+    duplicate_count = 0
+    triplicate_count = 0
+    
+    #first collect all identifiers and assign random values to them from their respective source files
+    for c in graph: #node class
+        if c == 'prefix':
+            continue
+        for e in graph[c]: #individual elements
+            for a in graph[c][e]:
+                if graph[c][e][a][0] == '$' or graph[c][e][a][0] == '&':
+                    values = graph[c][e][a].split()
+                    file = values[0][1:]
+                    if file[0] == '&':
+                        file = file[1:]
+                    id = values[1]
+                    if not identifiers.has_key(id):
+                        identifiers[id] = []
+                        identifiers[id].append(get_random_from_file(RANDOM_FILES_PATH + file + ".txt", identifiers[id]))
+                    elif len(identifiers[id]) == 1:
+                        identifiers[id].append(get_random_from_file(RANDOM_FILES_PATH + file + ".txt", identifiers[id]))
+                        duplicate_count += 1
+                    else:
+                        identifiers[id].append(identifiers[id][random.randint(0,1)])
+                        triplicate_count += 1
+                        if graph[c][e][a][0] == '&':
+                            print "WARNING: main attribute for identifier that has more than 2 occurences: ", id
+                        
+                    # if this is the main attribute, store its value
+                    if graph[c][e][a][0] == '&' and not graph[c][e][a][1] == '&':
+                        if identifier_main_att.has_key(id) or identifier_super_main_att.has_key(id):
+                            print "WARNING: multiple main attributes detected for identifier: ", id
+                        identifier_main_att[id] = identifiers[id][-1]
+                    # if this is a super main attribute, store it's value
+                    elif graph[c][e][a][0] == '&' and graph[c][e][a][1] == '&':
+                        if identifier_main_att.has_key(id)  or identifier_super_main_att.has_key(id):
+                            print "WARNING: multiple super main attributes detected for identifier: ", id
+                        identifier_super_main_att[id] = identifiers[id][-1]
+                elif graph[c][e][a][0] == '#':
+                    sub_id = graph[c][e][a][1:]
+                    sub_identifiers[sub_ids] = ""
+                              
+                    
+
         
 # function to duplicate graph
 def duplicate_graph(graph):

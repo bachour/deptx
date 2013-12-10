@@ -318,12 +318,19 @@ def prov_check(request):
                     
                     
                 else:
-                    if is_empty:
+                    cronDocumentInstance.increaseFailedAttempts()
+                    close_prov = False
+                    if cronDocumentInstance.failedAttempts >= 50:
+                        message = "Yeah. Not it."
+                    elif cronDocumentInstance.failedAttempts >= 30:
+                        message = "Honestly, now you are just guessing, right? Contact HQ, they might have uncovered an additional clue!"
+                    elif cronDocumentInstance.failedAttempts >= 10:
+                        message = "You are trying very hard, but this is not it. Maybe send a message to HQ to see if they have more intel."
+                    elif is_empty:
                         message = "No, we are pretty sure that something is wrong with this data. Please keep investigating."
                     else:
                         message = "The data you submitted does not seem suspicious. Please keep investigating."
-                    cronDocumentInstance.increaseFailedAttempts()
-                    close_prov = False
+                    
                   
             elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
                 message = "Provenance modification saved. Please submit document now."  
@@ -413,7 +420,7 @@ def prov_log_action(request):
                 
             
             elif action == 'click':
-                if attribute == 'mop__url':
+                if attribute == 'mop:__url':
                     message = 'media opened registered'
                     error = False
                     logAction = ProvLog.ACTION_MEDIA

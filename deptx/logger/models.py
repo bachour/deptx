@@ -3,7 +3,7 @@ from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron, Mop
 from assets.models import Mission, Case, Requisition, CronDocument
-from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail
+from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail, CaseQuestionInstance
 from mop.models import MopDocumentInstance, Mail, MopTracker, RequisitionInstance
     
 class ActionLog(models.Model):
@@ -29,10 +29,13 @@ class ActionLog(models.Model):
     ACTION_CRON_VIEW_CASE_INTRO = 30
     ACTION_CRON_VIEW_PROVENANCE = 31
     ACTION_CRON_VIEW_CASE_OUTRO = 32
+    ACTION_CRON_VIEW_CASE_REPORT = 33
     
     ACTION_CRON_PROVENANCE_SUBMIT = 40
     ACTION_CRON_MESSAGE_SEND = 41
     ACTION_CRON_HACK_DOCUMENT = 42
+    ACTION_CRON_MESSAGE_RECEIVE = 43
+    ACTION_CRON_REPORT_SUBMIT = 44
 
     
     ACTION_MOP_CREATED = 100
@@ -76,6 +79,7 @@ class ActionLog(models.Model):
     ACTION_MOP_RECEIVE_MAIL_REPORT = 163
     ACTION_MOP_RECEIVE_MAIL_TUTORIAL = 164
     ACTION_MOP_RECEIVE_MAIL_PERFORMANCE = 165
+    ACTION_MOP_RECEIVE_MAIL_MANUAL = 166
     
     ACTION_MOP_TUTORIAL_PROGRESS = 170
     
@@ -101,9 +105,12 @@ class ActionLog(models.Model):
         (ACTION_CRON_VIEW_CASE_INTRO, "ACTION_CRON_VIEW_CASE_INTRO"),
         (ACTION_CRON_VIEW_PROVENANCE, "ACTION_CRON_VIEW_PROVENANCE"),
         (ACTION_CRON_VIEW_CASE_OUTRO, "ACTION_CRON_VIEW_CASE_OUTRO"),
+        (ACTION_CRON_VIEW_CASE_REPORT, "ACTION_CRON_VIEW_CASE_REPORT"),
         (ACTION_CRON_PROVENANCE_SUBMIT, "ACTION_CRON_PROVENANCE_SUBMIT"),
         (ACTION_CRON_MESSAGE_SEND, "ACTION_CRON_MESSAGE_SEND"),
         (ACTION_CRON_HACK_DOCUMENT, "ACTION_CRON_HACK_DOCUMENT"),
+        (ACTION_CRON_MESSAGE_RECEIVE, "ACTION_CRON_MESSAGE_RECEIVE"),
+        (ACTION_CRON_REPORT_SUBMIT, "ACTION_CRON_REPORT_SUBMIT"),
         (ACTION_MOP_CREATED, "ACTION_MOP_CREATED"),
         (ACTION_MOP_LOGIN, "ACTION_MOP_LOGIN"),
         (ACTION_MOP_LOGOUT, "ACTION_MOP_LOGOUT"),
@@ -140,6 +147,7 @@ class ActionLog(models.Model):
         (ACTION_MOP_RECEIVE_MAIL_REPORT, "ACTION_MOP_RECEIVE_MAIL_REPORT"),
         (ACTION_MOP_RECEIVE_MAIL_TUTORIAL, "ACTION_MOP_RECEIVE_MAIL_TUTORIAL"),
         (ACTION_MOP_RECEIVE_MAIL_PERFORMANCE, "ACTION_MOP_RECEIVE_MAIL_PERFORMANCE"),
+        (ACTION_MOP_RECEIVE_MAIL_MANUAL, "ACTION_MOP_RECEIVE_MAIL_MANUAL"),
         (ACTION_MOP_TUTORIAL_PROGRESS, "ACTION_MOP_TUTORIAL_PROGRESS"),
     )
     
@@ -154,6 +162,10 @@ class ActionLog(models.Model):
     missionState = models.IntegerField(choices=MissionInstance.CHOICES_PROGRESS, blank=True, null=True)
     case = models.ForeignKey(Case, blank=True, null=True)
     caseSolved = models.NullBooleanField(blank=True, null=True)
+    caseDocumentsSolved = models.NullBooleanField(blank=True, null=True)
+    caseQuestionsSolved = models.NullBooleanField(blank=True, null=True)
+    questionInstance = models.ForeignKey(CaseQuestionInstance, blank=True, null=True)
+    questionInstanceCorrect = models.NullBooleanField(blank=True, null=True)
     cronDocument = models.ForeignKey(CronDocument, blank=True, null=True)
     cronDocumentInstance = models.ForeignKey(CronDocumentInstance, blank=True, null=True)
     cronDocumentInstanceCorrect = models.NullBooleanField(blank=True, null=True)
@@ -166,6 +178,8 @@ class ActionLog(models.Model):
     mopDocumentInstanceCorrect = models.NullBooleanField(blank=True, null=True)
     requisitionInstance = models.ForeignKey(RequisitionInstance, blank=True, null=True)
     tutorialProgress = models.IntegerField(choices=MopTracker.CHOICES_TUTORIAL, blank=True, null=True)
+    
+    data = models.TextField(blank=True, null=True)
     
     def __unicode__(self):
         if self.cron is not None:

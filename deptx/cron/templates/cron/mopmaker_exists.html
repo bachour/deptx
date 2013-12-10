@@ -1,6 +1,7 @@
 {% extends 'cron/base.html' %}
 
 {% block content %}
+<h1>{{missionInstance.mission.name}}</h1>
 <br/>
 <p>You have succesfully created a fake identity. For now, this is all you need.</p>
 <br/>
@@ -20,5 +21,5 @@
 </table>
 <br/>
 {% endfor %}
-
+	<a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Proceed to Mission Debriefing</a>
 {% endblock content %}

@@ -15,17 +15,17 @@ from django.template import Context, Template, loader
 
 from players.forms import MopForm
 
-from assets.models import Case, Mission, CronDocument
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail
+from assets.models import Case, Mission, CronDocument, CaseQuestion
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance
 from mop.models import Mail, MopDocumentInstance
-from cron.forms import HelpMailForm
+from cron.forms import HelpMailForm, ControlHelpMailForm
 
-from logger import logging
 from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
 
 from logger.models import ActionLog
 from logger import logging
+from copy import deepcopy
 
 import json
 
@@ -114,9 +114,9 @@ def index(request):
                     mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
             else:
                 missionInstance = None
-                
+        unread_count = HelpMail.objects.filter(cron=request.user.cron, isRead=False).count()
         logging.log_action(ActionLog.ACTION_CRON_VIEW_INDEX, cron=request.user.cron)         
-        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url }
+        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count }
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
@@ -126,7 +126,7 @@ def index(request):
 def mopmaker(request, missionInstance):
     mop_list = Mop.objects.filter(cron=request.user.cron)
     if mop_list:
-        return render(request, 'cron/mopmaker_exists.html', {"mop_list":mop_list})
+        return render(request, 'cron/mopmaker_exists.html', {"mop_list":mop_list, "missionInstance":missionInstance})
     
     if request.method == 'POST' and 'proceed' not in request.POST:
         mop_form = MopForm(request.POST, prefix="mop")
@@ -406,6 +406,47 @@ def case_intro(request, mission_serial, case_serial):
     logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_INTRO, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved)
     
     return render(request, 'cron/case_intro.html', {"user": request.user, "mission": mission, "case":case, "missionInstance":missionInstance, "caseInstance":caseInstance, "cronDocument_list": requiredDocuments, "text":text })
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def case_report(request, mission_serial, case_serial):
+    try:
+        mission = Mission.objects.get(serial=mission_serial, isPublished=True)
+        case = Case.objects.get(serial=case_serial, isPublished=True)
+        caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
+    except:
+        return
+    
+    if caseInstance.allDocumentsSolved():
+        question_list = CaseQuestion.objects.filter(case=case)
+        for question in question_list:
+            questionInstance = CaseQuestionInstance.objects.get_or_create(cron=request.user.cron, question=question)
+            
+        questionInstance_list = CaseQuestionInstance.objects.filter(cron=request.user.cron, question__case=case)
+        
+        text = renderContent(case.report, request.user)
+        
+        if request.method == 'POST':
+            hasGuessed = True
+            for questionInstance in questionInstance_list:
+                if not questionInstance.correct:
+                    questionInstance.answer1 = request.POST.get('%s_answer1' % questionInstance.question.id, None)
+                    questionInstance.answer2 = request.POST.get('%s_answer2' % questionInstance.question.id, None)
+                    questionInstance.correct = questionInstance.question.isAllCorrect(questionInstance.answer1, questionInstance.answer2)
+                    if not questionInstance.correct:
+                        questionInstance.increaseFailedAttempts()
+                    questionInstance.save()
+                    
+                    data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answer1':questionInstance.answer1, 'answer2':questionInstance.answer2})
+                    logging.log_action(ActionLog.ACTION_CRON_REPORT_SUBMIT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved(), questionInstance=questionInstance, questionInstanceCorrect=questionInstance.correct, data=data)
+        else:
+            hasGuessed = False
+            
+    
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_REPORT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved())
+        return render(request, 'cron/case_report.html', {'text':text, 'questionInstance_list':questionInstance_list, 'mission':mission, 'case':case, 'hasGuessed':hasGuessed, 'caseInstance':caseInstance})
+    else:
+        return
     
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')    
@@ -486,6 +527,10 @@ def message_compose(request):
 @user_passes_test(isCron, login_url='cron_login')
 def messages(request):
     message_list = HelpMail.objects.filter(cron=request.user.cron).order_by('-createdAt')
+    for message in message_list:
+        if not message.isRead:
+            message.isRead = True
+            message.save()
     logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES, cron=request.user.cron)
     return render(request, 'cron/messages.html', {"message_list": message_list})
 
@@ -601,8 +646,60 @@ def hq_case_intro(request, id):
     return render(request, 'cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
+def hq_case_report(request, id):
+    case = Case.objects.get(id=id)
+    question_list = CaseQuestion.objects.filter(case=case)
+    text = renderContent(case.report, request.user)
+    return render(request, 'cron/case_report.html', {'text':text, 'question_list':question_list, 'case':case, 'cheat':True})
+
+
+@staff_member_required
 def hq_case_outro(request, id):
     case = Case.objects.get(id=id)
     content = case.outro
     text = renderContent(content, request.user)
     return render(request, 'cron/case_outro.html', {'text':text, 'mission':case.mission, 'case':case })
+
+@staff_member_required
+def hq_mail(request):
+    if request.method == 'POST':
+        form = ControlHelpMailForm(request.POST)
+        if form.is_valid():
+            mail = form.save(commit=False)
+            mail.type = HelpMail.TYPE_TO_PLAYER
+            mail.isRead = False
+            text = mail.body
+            if 'preview' in request.POST:
+                c = Context({"cron": mail.cron})    
+                t = Template(text)
+                mail.body = t.render(c)
+                return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail})
+            elif 'send' in request.POST:
+                c = Context({"cron": mail.cron})    
+                t = Template(text)
+                mail.body = t.render(c)
+                mail.save()
+                logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=mail)
+                return render(request, 'cron/hq_mail.html', {'mail':mail})
+            elif 'bulk' in request.POST:
+                if 'spam' in request.POST:
+                    cron_list = Cron.objects.all()
+                    for cron in cron_list:
+                        new_mail = deepcopy(mail)
+                        new_mail.id = None
+                        new_mail.cron = cron
+                        c = Context({"cron": new_mail.cron})    
+                        t = Template(text)
+                        new_mail.body = t.render(c)
+                        new_mail.save()
+                        logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=new_mail)
+                    return render(request, 'cron/hq_mail.html', {'mail':mail, 'cron_list':cron_list})
+                else:
+                    return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail, 'nospam':True})
+                
+        else:
+            return render(request, 'cron/hq_mail.html', {'form':form})
+    else:
+        form = ControlHelpMailForm()
+    return render(request, 'cron/hq_mail.html', {'form':form})
+

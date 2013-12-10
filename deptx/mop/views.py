@@ -17,9 +17,10 @@ from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
-from mop.forms import MailForm, RequisitionInstanceForm
+from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
+from copy import deepcopy
 
 from mop.performer import analyze_performance
 
@@ -144,15 +145,7 @@ def documents_pool(request):
     randomizedDocument_list_all = tutorial.getTutorialDocument(request.user.mop.mopTracker)
     if randomizedDocument_list_all == None:
         randomizedDocument_list_all = getDocumentPoolForMop(request.user.mop)
-
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=request.user.mop)
     
-        
-    for randomizedDocument in randomizedDocument_list_all:
-        for mopDocumentInstance in mopDocumentInstance_list:
-            if mopDocumentInstance.randomizedDocument == randomizedDocument:
-                randomizedDocument.exists = True
-                break
     randomizedDocument_list = paginate(request, randomizedDocument_list_all)
  
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL, mop=request.user.mop)
@@ -163,7 +156,20 @@ def getDocumentPoolForMop(mop):
         public_list = all_list.filter(mop__isnull=True)
         personal_list = all_list.filter(mop=mop)
         randomizedDocument_list = public_list | personal_list
-        return randomizedDocument_list.order_by('createdAt')
+        randomizedDocument_list.order_by('createdAt')
+        mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mop)
+        
+        cleaned_list = []
+        
+        for randomizedDocument in randomizedDocument_list:
+            exists = False
+            for mopDocumentInstance in mopDocumentInstance_list:
+                if mopDocumentInstance.randomizedDocument == randomizedDocument:
+                    exists = True
+            if not exists:
+                cleaned_list.append(randomizedDocument)
+
+        return cleaned_list
 
 
 @login_required(login_url='mop_login')
@@ -650,7 +656,7 @@ def control(request):
     mop_list = Mop.objects.all()
 
     for mop in mop_list:
-        mop.availableDocs = getDocumentPoolForMop(mop).count() - MopDocumentInstance.objects.filter(mop=mop).count()
+        mop.availableDocs = len(getDocumentPoolForMop(mop))
     
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 
@@ -659,6 +665,43 @@ def control_randomize(request, mopDocument_id):
     mopDocument = MopDocument.objects.get(id=mopDocument_id)
     documentcreator.create_single_document(mopDocument)
     return HttpResponseRedirect(reverse('mop_control'))
-    
-    
+
+@staff_member_required
+def control_mail(request):
+    if request.method == 'POST':
+        form = ControlMailForm(request.POST)
+        if form.is_valid():
+            mail = form.save(commit=False)
+            mail.type = Mail.TYPE_RECEIVED
+            mail.bodyType = Mail.BODY_MANUAL
+            mail.processed = True
+            mail.sentAt = now()
+            if 'preview' in request.POST:
+                return render(request, 'mop/control_mail.html', {'form':form, 'mail':mail})
+            elif 'send' in request.POST:
+                save_manual_mail(mail)
+                return render(request, 'mop/control_mail.html', {'mail':mail})
+            elif 'bulk' in request.POST:
+                if 'spam' in request.POST:
+                    mop_list = Mop.objects.all()
+                    for mop in mop_list:
+                        new_mail = deepcopy(mail)
+                        new_mail.id = None
+                        new_mail.mop = mop
+                        save_manual_mail(new_mail)
+                    return render(request, 'mop/control_mail.html', {'mail':mail, 'mop_list':mop_list})
+                else:
+                    return render(request, 'mop/control_mail.html', {'form':form, 'mail':mail, 'nospam':True})
+                
+        else:
+            return render(request, 'mop/control_mail.html', {'form':form})
+    else:
+        form = ControlMailForm()
+    return render(request, 'mop/control_mail.html', {'form':form})
+
+def save_manual_mail(mail):
+    mail.save()
+    logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL, mop=mail.mop, mail=mail)
+    if not mail.trust is None:
+        mail.mop.mopTracker.addTrust(mail.trust)
     

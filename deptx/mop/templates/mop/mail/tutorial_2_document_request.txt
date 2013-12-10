@@ -27,4 +27,8 @@ If you followed these steps correctly, you should receive an email from {{tutori
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
 
-{% include 'mop/mail/sandy_sig.txt' %}
+Best of luck!
+
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

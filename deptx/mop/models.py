@@ -140,7 +140,7 @@ class RandomizedDocument(models.Model):
         self.full_clean()
         super(RandomizedDocument, self).save(*args, **kwargs)
         if self.id and not self.serial:
-            self.serial = Clearance(self.mopDocument.clearance).generateSerial(self.mopDocument)
+            self.serial = Clearance(self.mopDocument.clearance).generateSerial(self)
             super(RandomizedDocument, self).save()
     
 class MopDocumentInstance(models.Model):
@@ -341,7 +341,7 @@ class Mail(models.Model):
     BODY_TUTORIAL_4c_CORRECT_MODIFICATION = 243
     BODY_TUTORIAL_5_CONCLUSION = 250
     
-    BODY_HELP = 300
+    BODY_MANUAL = 300
     
     CHOICES_BODY_TYPE = (
         (BODY_UNCAUGHT_CASE, 'BODY_UNCAUGHT_CASE'),
@@ -370,7 +370,7 @@ class Mail(models.Model):
         (BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2, 'BODY_TUTORIAL_4b_INCORRECT_MODIFICATION_2'),
         (BODY_TUTORIAL_4c_CORRECT_MODIFICATION, 'BODY_TUTORIAL_4c_CORRECT_MODIFICATION'),
         (BODY_TUTORIAL_5_CONCLUSION, 'BODY_TUTORIAL_5_CONCLUSION'),
-        (BODY_HELP, 'BODY_HELP'),
+        (BODY_MANUAL, 'BODY_MANUAL'),
     )
     
     mop = models.ForeignKey(Mop)
@@ -402,7 +402,7 @@ class Mail(models.Model):
             data = self.replyTo.requisitionInstance.data
         except:
             data = None
-        
+        mop = self.mop
         text = None
         template = None
         tutorialData = {}
@@ -468,16 +468,15 @@ class Mail(models.Model):
             tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL, category=Requisition.CATEGORY_FORM)
         elif self.bodyType == self.BODY_TUTORIAL_5_CONCLUSION:
             template = loader.get_template('mop/mail/tutorial_5_conclusion.txt')
-        elif self.bodyType == self.BODY_HELP:
-            template = loader.get_template('mop/mail/message_to_player.txt')
-            data = self.body
+        elif self.bodyType == self.BODY_MANUAL:
+            text = self.body
         else:
             text = self.get_bodyType_display()
         
-        c = Context({"data": data, "tutorialData":tutorialData})    
+        c = Context({"data": data, "tutorialData":tutorialData, "mop":mop})    
         if not template == None:
             output = template.render(c)
-        else :
+        else:
             t = Template(text)
             output = t.render(c)
         

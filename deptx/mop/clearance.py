@@ -103,7 +103,7 @@ class Clearance():
         elif self.clearance == self.CLEARANCE_MAX:
             beginning = "UVWXYZ"
             end = "URBANANGEL"
-        return "DOC-%s-%s-%s-%s" % (document.unit.serial, random_chars(size=2, chars=beginning), friendly_id.encode(document.id), random_chars(chars=end))
+        return "DOC-%s-%s-%s%s-%s" % (document.mopDocument.unit.serial, random_chars(size=2, chars=beginning), random_chars(size=1, chars=end), friendly_id.encode(document.id), random_chars(size=4, chars=end))
     
     
     def getBadgeUrl(self):
