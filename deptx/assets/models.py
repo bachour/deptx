@@ -253,7 +253,7 @@ class CaseQuestion(models.Model):
             return False
     
     def __unicode__(self):
-        return "answers: %s (%s)" % (self.getList1(), self.isAllCorrect("red", "van"))
+        return "%s - %s - %s - %s" % (self.case, self.question, self.correct1, self.correct2)
         
         
 class AbstractDocument(models.Model):
