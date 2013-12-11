@@ -8,6 +8,7 @@ class ActionLogAdmin(admin.ModelAdmin):
 
 class ProvLogAdmin(admin.ModelAdmin):
     list_filter = ('action', 'cronDocumentInstance__cron', 'mopDocumentInstance__mop', 'createdAt')
+    raw_id_fields = ('cronDocumentInstance', 'mopDocumentInstance')
 
 admin.site.register(ProvLog, ProvLogAdmin)
 admin.site.register(ActionLog, ActionLogAdmin)
