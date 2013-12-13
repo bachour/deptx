@@ -1424,8 +1424,8 @@ function submitPushed()
 {
 	if (taskCompleted || INACTIVE)
 	{
-		//window.location.href = URL_CONTINUE;
-		validateSubmit();
+		window.location.href = URL_CONTINUE;
+		//validateSubmit();
 	}
 	else
 	{
