@@ -4,23 +4,20 @@
 
 <h1>Where do you want to go today?</h1>
 
-<p>
-<strong>Important message from MOPAIN:</strong><br/>
-At 13:02, December 9th, our provenance archive came under attack by an unknown source. The archive itself is safe, but our delivery system is disrupted. We believe this to be linked to the previous attack that took place on Dec. 3rd. We have reopened the investigation and are doing what we can to discover the source of the attack and put an end to it.
-Pending this investigation, you will likely experience some technical difficulties when attempting to open provenance documents through PROMPT. <br/>
-Thanks for your attention and sorry for any inconvenience caused. 
-<br/><br/>
-<span style = "color:gray"> At 19:17, December 3rd, our intranet mailserver was briefly compromised by a worm that was attached to an email. Our server logs showed that it was sent from inside the intranet - and we have dealt with the culprit in an efficient manner already.<br/>
-In the future, please do not open messages that are sent from unknown sources.<br/>
-Thanks for your attention and sorry for any inconvenience caused. </span>
-</p> 
+{% if nextPeriod %}
+	<p>
+	<strong style="color:red">Next performance review: {{nextPeriod.reviewDate}}</strong>
+	</p> 
+{% endif %}
 
 <p class="nav">
 	{% if not hide.guidebook %}
 		<a class="button" href="{% url 'mop_rules' %}"><input class="button" type="submit" value="guidebook" /></a>
 	{% endif %}
 	{% if not hide.performance %}
+	<!--
 		<a class="button" href="{% url 'mop_performance' %}"><input class="button" type="submit" value="performance" /></a>
+	-->
 	{% endif %}
 </p>
 <p class="nav">

@@ -9,20 +9,21 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-from mop import documentcreator
+from mop import documentcreator, performer
 from players.models import Mop
 from players.forms import MopCheckForm, PasswordForm
 
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, TrustInstance
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
 from copy import deepcopy
 
-from mop.performer import analyze_performance
+
+from mop import performer
 
 from django.views.decorators.csrf import csrf_exempt
 from mop.mailserver import analyze_mail, getUnprocessedMails
@@ -62,7 +63,9 @@ def index(request):
         
         logging.log_action(ActionLog.ACTION_MOP_VIEW_INDEX, mop=request.user.mop)
         
+        #lastPeriod, nextPeriod, days = performer.getPeriods()
         context = {'user': request.user, 'inbox_unread': inbox_unread, 'hide':hide}
+        #           , 'nextPeriod':nextPeriod}
 
         return render(request, 'mop/index.html', context)
     
@@ -118,25 +121,13 @@ def rules(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def performance(request):
-#     badge_list = Badge.objects.filter(mop=request.user.mop).order_by('-modifiedAt')
+    lastPeriod, nextPeriod, days = performer.getPeriods()
     
-#     taskInstance_list = TaskInstance.objects.filter(mop=request.user.mop).exclude(status=TaskInstance.STATUS_ACTIVE).order_by('modifiedAt')
-#     print taskInstance_list
-#     
-#     #creationDate = request.user.mop.created
-#     creationDate = request.user.mop.created - timedelta(weeks=-3)
-#     today = now()
-#     print creationDate
-#     print today
-#     nextMonday = timedelta(days=-today.weekday(), weeks=1)
-#     lastMonday = today - timedelta(days=today.weekday())
-#     print nextMonday
-#     print lastMonday
-#     weekTrust_list = WeekTrust.objects.filter(mop=request.user.mop).order_by('-year', '-week')
-
-    trustInstance_list = TrustInstance.objects.filter(mop=request.user.mop).order_by('-createdAt')
+    lastPeriod_performanceInstance_list = PerformanceInstance.objects.filter(period=lastPeriod).order_by('-trust')
+    mop_performanceInstance_list = PerformanceInstance.objects.filter(mop=request.user.mop).order_by('-period__reviewDate')
+    
     logging.log_action(ActionLog.ACTION_MOP_VIEW_PERFORMANCE, mop=request.user.mop)
-    return render(request, 'mop/performance.html', {'trustInstance_list':trustInstance_list})
+    return render(request, 'mop/performance.html', {'lastPeriod_performanceInstance_list':lastPeriod_performanceInstance_list, 'mop_performanceInstance_list':mop_performanceInstance_list, 'lastPeriod':lastPeriod, 'nextPeriod':nextPeriod})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -155,8 +146,8 @@ def getDocumentPoolForMop(mop):
         all_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=mop.mopTracker.clearance)
         public_list = all_list.filter(mop__isnull=True)
         personal_list = all_list.filter(mop=mop)
-        randomizedDocument_list = public_list | personal_list
-        randomizedDocument_list.order_by('createdAt')
+        unsorted_randomizedDocument_list = public_list | personal_list
+        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('createdAt')
         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mop)
         
         cleaned_list = []
@@ -642,8 +633,10 @@ def control(request):
     if request.method == 'POST':
         if 'mail' in request.POST:
             output = analyze_mail()
-        elif 'performance' in request.POST:
-            output = analyze_performance()
+        elif 'simulate performance' in request.POST:
+            output = performer.analyze_performance(simulation=True)
+        elif 'process performance' in request.POST:
+            output = performer.analyze_performance()
         elif 'create daily documents' in request.POST:
             output = documentcreator.create_daily_documents()
         elif 'remove old documents' in request.POST:
@@ -657,6 +650,12 @@ def control(request):
 
     for mop in mop_list:
         mop.availableDocs = len(getDocumentPoolForMop(mop))
+        mop.activeDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
+        mop.limboDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
+        mop.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
+        mop.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
+        mop.revokedDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
+        mop.hackedDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
     
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
 

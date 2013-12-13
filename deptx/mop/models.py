@@ -4,7 +4,7 @@ from players.models import Mop
 from assets.models import Unit, Requisition, CronDocument, MopDocument
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
-from mop.clearance import Clearance, convertTrustIntoClearance
+from mop.clearance import Clearance, getMinimumGreen, getMinimumYellow, getMinimumOrange, getMinimumRed
 import deptx.friendly_id as friendly_id
 import re
 from django.template import Context, loader, Template
@@ -44,7 +44,7 @@ class MopTracker(models.Model):
     trust = models.IntegerField(default=0)
     totalTrust = models.IntegerField(default=0)
     credit = models.IntegerField(default=0)
-    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW)
+    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
     
     tutorial = models.IntegerField(choices=CHOICES_TUTORIAL, default=TUTORIAL_0_START)
     tutorialProvErrors = models.IntegerField(default=0)
@@ -72,36 +72,87 @@ class MopTracker(models.Model):
     def __unicode__(self):
         return "%s %s %s" % (self.mop.user.username, self.trust, self.get_clearance_display())
 
-class TrustInstance(models.Model):
+
+class PerformancePeriod(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    
+    reviewDate = models.DateField()
+    reviewTime = models.TimeField(blank=True, null=True)
+    processed = models.BooleanField(default=False)
+    
+    @property
+    def startDate(self):
+        performancePeriod_list = PerformancePeriod.objects.all().order_by('-reviewDate')
+        for performancePeriod in performancePeriod_list:
+            if performancePeriod.processed and not performancePeriod == self:
+                return performancePeriod.reviewDate
 
+    @property
+    def days(self):
+        days = (self.reviewDate - self.startDate).days
+        return days
+    
+    def trustForBlue(self):
+        return "1-%s" % (getMinimumGreen(self.days)-1)
+    def trustForGreen(self):
+        return "%s-%s" % (getMinimumGreen(self.days), getMinimumYellow(self.days)-1)
+    def trustForYellow(self):
+        return "%s-%s" % (getMinimumYellow(self.days), getMinimumOrange(self.days)-1)
+    def trustForOrange(self):
+        return "%s-%s" % (getMinimumOrange(self.days), getMinimumRed(self.days)-1)    
+    def trustForRed(self):
+        return "&#8805;%s" % getMinimumRed(self.days)
+    
+    def __unicode__(self):
+        return "%s (processed: %s)" % (self.reviewDate, self.processed)
+
+class PerformanceInstance(models.Model):
+    TYPE_PROMOTION = 1
+    TYPE_DEMOTION = 2
+    TYPE_NEUTRAL = 3
+    
+    CHOICES_TYPE = (
+        (TYPE_PROMOTION, "promotion"),
+        (TYPE_DEMOTION, "demotion"),
+        (TYPE_NEUTRAL, "neutral"),
+    )
+    
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     mop = models.ForeignKey(Mop)
     trust = models.IntegerField(default=0)
-    clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_LOW, help_text="will be overridden when saved")
+    performance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
+    result = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
+    type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_NEUTRAL)
+    period = models.ForeignKey(PerformancePeriod)
     
+    @property
     def credit(self):
-        credit = int(self.trust * 0.1)
+        credit = int(self.trust * 0.2)
         if credit <0:
             credit = 0
         return credit
     
-    def convertTrustIntoClearance(self):
-        return convertTrustIntoClearance(self.trust)
+    @property
+    def rank(self):
+        performanceInstance_list = PerformanceInstance.objects.filter(period=self.period).order_by('-trust')
+        counter = 1
+        for performanceInstance in performanceInstance_list:
+            if performanceInstance.trust == self.trust:
+                return counter
+            else:
+                counter = counter + 1
     
-    def getBadgeUrl(self):
-        return Clearance(self.clearance).getBadgeUrl()
+    def getPerformanceBadgeUrl(self):
+        return Clearance(self.performance).getBadgeUrlStar()
     
-    def save(self, *args, **kwargs):
-        self.clearance = self.convertTrustIntoClearance()
-        super(TrustInstance, self).save(*args, **kwargs)    
+    def getResultBadgeUrl(self):
+        return Clearance(self.result).getBadgeUrl()
     
     def __unicode__(self):
-        return "%s - %s - %s" % (self.createdAt, self.mop.user.username, self.trust)
+        return "%s %s - trust: %s - clearance: %s - result: %s" % (self.period.reviewDate, self.mop.user.username, self.trust, self.get_performance_display(), self.get_type_display())
     
-
-
-
 class RandomizedDocument(models.Model):
     mop = models.ForeignKey(Mop, blank=True, null=True)
     mopDocument = models.ForeignKey(MopDocument)
@@ -331,7 +382,9 @@ class Mail(models.Model):
     BODY_REPORT_FAIL = 110
     BODY_REPORT_SUCCESS = 111
     
-    BODY_PERFORMANCE_REPORT = 120
+    BODY_PERFORMANCE_REPORT_PROMOTION = 120
+    BODY_PERFORMANCE_REPORT_DEMOTION = 121
+    BODY_PERFORMANCE_REPORT_NEUTRAL = 122
     
     BODY_TUTORIAL_1_INTRO = 210
     BODY_TUTORIAL_2_DOCUMENT_REQUEST = 220
@@ -362,7 +415,9 @@ class Mail(models.Model):
         (BODY_ASSIGNING_DOCUMENT, 'BODY_ASSIGNING_DOCUMENT'), 
         (BODY_REPORT_FAIL, 'BODY_REPORT_FAIL'),
         (BODY_REPORT_SUCCESS, 'BODY_REPORT_SUCCESS'),
-        (BODY_PERFORMANCE_REPORT, 'BODY_PERFORMANCE_REPORT'),
+        (BODY_PERFORMANCE_REPORT_PROMOTION, 'BODY_PERFORMANCE_REPORT_PROMOTION'),
+        (BODY_PERFORMANCE_REPORT_DEMOTION, 'BODY_PERFORMANCE_REPORT_DEMOTION'),
+        (BODY_PERFORMANCE_REPORT_NEUTRAL, 'BODY_PERFORMANCE_REPORT_NEUTRAL'),
         (BODY_TUTORIAL_1_INTRO, 'BODY_TUTORIAL_1_INTRO'),
         (BODY_TUTORIAL_2_DOCUMENT_REQUEST, 'BODY_TUTORIAL_2_DOCUMENT_REQUEST'),
         (BODY_TUTORIAL_3_TASK_COMPLETION, 'BODY_TUTORIAL_3_TASK_COMPLETION'),
@@ -385,11 +440,13 @@ class Mail(models.Model):
     trust = models.IntegerField(blank=True, null=True)
     bodyType = models.IntegerField(choices=CHOICES_BODY_TYPE, blank=True, null=True)
     replyTo = models.ForeignKey('self', blank=True, null=True)
-    trustInstance = models.ForeignKey(TrustInstance, blank=True, null=True)
-    
+        
     requisitionBlank = models.ForeignKey(RequisitionBlank, null=True, blank=True)
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)
     mopDocumentInstance = models.ForeignKey(MopDocumentInstance, null=True, blank=True)
+    performanceInstance = models.ForeignKey(PerformanceInstance, blank=True, null=True)
+    
+    trustInstance = models.IntegerField(blank=True, null=True)
     
     serial = models.CharField(max_length=36, blank=True, null=True, unique=True, help_text="leave blank, will be generated by system")
     sentAt = models.DateTimeField(default=now())
@@ -445,9 +502,15 @@ class Mail(models.Model):
             text = self.unit.mail_report_fail
         elif self.bodyType == self.BODY_REPORT_SUCCESS:
             text = self.unit.mail_report_success
-        elif self.bodyType == self.BODY_PERFORMANCE_REPORT:
-            template = loader.get_template('mop/mail/performance_report.txt')
-            data = self.trustInstance
+        elif self.bodyType == self.BODY_PERFORMANCE_REPORT_PROMOTION:
+            template = loader.get_template('mop/mail/performance_report_promotion.txt')
+            data = self.performanceInstance
+        elif self.bodyType == self.BODY_PERFORMANCE_REPORT_DEMOTION:
+            template = loader.get_template('mop/mail/performance_report_demotion.txt')
+            data = self.performanceInstance
+        elif self.bodyType == self.BODY_PERFORMANCE_REPORT_NEUTRAL:
+            template = loader.get_template('mop/mail/performance_report_neutral.txt')
+            data = self.performanceInstance
         elif self.bodyType == self.BODY_TUTORIAL_1_INTRO:
             template = loader.get_template('mop/mail/tutorial_1_intro.txt')
             tutorialData['document_requisition'] = Requisition.objects.get(type=Requisition.TYPE_TUTORIAL)

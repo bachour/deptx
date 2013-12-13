@@ -1,0 +1,5 @@
+In the last performance period you gained {{data.trust}} TRUST.
+
+As a result, your clearance level stays the same.
+
+For more detail please visit the performance page of the intranet and the Guidebook.

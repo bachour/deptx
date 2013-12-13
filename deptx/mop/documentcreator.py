@@ -20,28 +20,28 @@ def remove_old_documents():
 def create_daily_documents():
     output = []
     mopDocument_list = MopDocument.objects.filter(active=True)
-    mopDocument_low_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_LOW)
-    mopDocument_guarded_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_GUARDED)
-    mopDocument_elevated_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_ELEVATED)
-    mopDocument_high_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_HIGH)
-    mopDocument_severe_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_SEVERE)
+    mopDocument_blue_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_BLUE)
+    mopDocument_green_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_GREEN)
+    mopDocument_yellow_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_YELLOW)
+    mopDocument_orange_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_ORANGE)
+    mopDocument_red_list = mopDocument_list.filter(clearance=Clearance.CLEARANCE_RED)
     
-    low = 5 + randrange(5)
-    guarded = 4 + randrange(4)
-    elevated = 3 + randrange(3)
-    high = 2 + randrange(2)
-    severe = 1 + randrange(1)
+    blue = 5 + randrange(5)
+    green = 4 + randrange(4)
+    yellow = 3 + randrange(3)
+    orange = 2 + randrange(2)
+    red = 1 + randrange(1)
     
-    for x in range(0, low):
-        output.append(create_random_from_list(mopDocument_low_list))
-    for x in range(0, guarded):
-        output.append(create_random_from_list(mopDocument_guarded_list))
-    for x in range(0, elevated):
-        output.append(create_random_from_list(mopDocument_elevated_list))
-    for x in range(0, high):
-        output.append(create_random_from_list(mopDocument_high_list))
-    for x in range(0, severe):
-        output.append(create_random_from_list(mopDocument_severe_list))
+    for x in range(0, blue):
+        output.append(create_random_from_list(mopDocument_blue_list))
+    for x in range(0, green):
+        output.append(create_random_from_list(mopDocument_green_list))
+    for x in range(0, yellow):
+        output.append(create_random_from_list(mopDocument_yellow_list))
+    for x in range(0, orange):
+        output.append(create_random_from_list(mopDocument_orange_list))
+    for x in range(0, red):
+        output.append(create_random_from_list(mopDocument_red_list))
     return output
 
 def create_random_from_list(mopDocument_list):

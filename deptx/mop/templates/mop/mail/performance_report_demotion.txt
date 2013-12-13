@@ -1,0 +1,5 @@
+In the last performance period you gained {{data.trust}} TRUST.
+
+Sadly, this means you have underperformed and your clearance level has been reduced (effective immediately).
+
+For more detail please visit the performance page of the intranet and the Guidebook.

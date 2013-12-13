@@ -1,5 +1,5 @@
 In the last performance period you gained {{data.trust}} TRUST.
 
-Your clearance level for the new period has been adjusted accordingly (effective immediately).
+Congratulations, this means you have been promoted to a new clearance level (effective immediately).
 
 For more detail please visit the performance page of the intranet and the Guidebook.

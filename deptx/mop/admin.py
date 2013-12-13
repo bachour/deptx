@@ -1,5 +1,5 @@
 from django.contrib import admin
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, TrustInstance, MopTracker
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformanceInstance, PerformancePeriod
 from provmanager.models import Provenance
 
 class RandomizedDocumentAdmin(admin.ModelAdmin):
@@ -12,6 +12,7 @@ class RandomizedDocumentAdmin(admin.ModelAdmin):
 
 class MailAdmin(admin.ModelAdmin):
     list_filter = ('mop', 'type', 'subject', 'processed', 'read', 'unit', 'sentAt', 'bodyType')
+    raw_id_fields = ('mop', 'unit', 'requisitionBlank', 'requisitionInstance', 'mopDocumentInstance', 'performanceInstance', 'replyTo')
 
 class RequisitionInstanceAdmin(admin.ModelAdmin):
     list_filter = ('blank__mop', 'blank__requisition', 'blank__requisition__type', 'blank__requisition__unit', 'createdAt')
@@ -27,7 +28,8 @@ admin.site.register(RequisitionInstance, RequisitionInstanceAdmin)
 admin.site.register(RequisitionBlank)
 admin.site.register(RandomizedDocument, RandomizedDocumentAdmin)
 admin.site.register(MopDocumentInstance, MopDocumentInstanceAdmin)
-admin.site.register(TrustInstance)
 admin.site.register(MopTracker, MopTrackerAdmin)
+admin.site.register(PerformanceInstance)
+admin.site.register(PerformancePeriod)
 
 
