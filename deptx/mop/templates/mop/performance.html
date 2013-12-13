@@ -82,7 +82,7 @@ You have not been reviewed yet.
 	<table>
 	<tr><th>Rank</th><th>ORCHID</th><th>TRUST</th><th>Rating</th><th>Resulting<br/>Clearance</th></tr>
 	{% for performanceInstance in lastPeriod_performanceInstance_list %}
-		{% if performanceInstance.rank <= 100 or user.mop == performanceInstance.mop %}
+		{% if performanceInstance.rank <= 10 or user.mop == performanceInstance.mop %}
 			<tr style="text-align:center;{% if user.mop == performanceInstance.mop %}background-color:#999;{% endif %}">
 			<td>{{performanceInstance.rank}}.</td>
 			<td>{{performanceInstance.mop.firstname}} {{performanceInstance.mop.lastname}}</td>
