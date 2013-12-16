@@ -147,7 +147,7 @@ def getDocumentPoolForMop(mop):
         public_list = all_list.filter(mop__isnull=True)
         personal_list = all_list.filter(mop=mop)
         unsorted_randomizedDocument_list = public_list | personal_list
-        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('createdAt')
+        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-mopDocument__clearance', '-createdAt')
         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mop)
         
         cleaned_list = []
