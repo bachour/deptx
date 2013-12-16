@@ -27,7 +27,11 @@ from StringIO import StringIO
 from prov.model import ProvException, PROV
 #logger = logging.getLogger(__name__)
 logger = logging.getLogger('provlogger')
-logger.addHandler(logging.FileHandler('/tmp/provlogger.log'))
+format = '%(asctime)s %(levelname)s %(message)s'
+fmt = logging.Formatter(format,datefmt='%Y-%m-%d')
+handler = logging.FileHandler('/tmp/provlogger.log')
+handler.setFormatter(fmt)
+logger.addHandler(handler)
 import re
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
