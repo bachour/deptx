@@ -158,7 +158,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # more details on how to customize your logging configuration.
 
 logging.basicConfig(
-    level = logging.ERROR,
+    level = logging.INFO,
     format = '%(asctime)s %(levelname)s %(message)s',
     filename = '/tmp/djangoLog.log',)
 
