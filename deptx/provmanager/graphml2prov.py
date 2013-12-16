@@ -25,7 +25,9 @@ import urllib2
 import datetime
 from StringIO import StringIO
 from prov.model import ProvException, PROV
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
+logger = logging.getLogger('provlogger')
+logger.addHandler(logging.FileHandler('/tmp/provlogger.log'))
 import re
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
