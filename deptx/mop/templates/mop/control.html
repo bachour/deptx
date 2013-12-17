@@ -18,9 +18,9 @@
 		<input class="button" type="submit" value="process mail" name="mail" /><br/>
 		<h1>Available Document Templates</h1>
 		<table>
-		<tr><th>Amount</th><th>Document</th><th>Provenance</th><th>Unit</th><th>Clearance</th><th>Create Randomized</th></tr>
+		<tr><th>Amount</th><th>Active</th><th>Document</th><th>Provenance</th><th>Unit</th><th>Clearance</th><th>Create Randomized</th></tr>
 		{% for mopDocument in mopDocument_list %}
-			<tr><td>{{mopDocument.amount}}</td><td>{{mopDocument.name}}</td><td>{{mopDocument.provenance.name}}</td><td>{{mopDocument.unit.serial}}</td><td>{{mopDocument.get_clearance_display}}</td><td><a href="{% url 'mop_control_randomize' mopDocument.id %}">randomize</a></td></tr>
+			<tr style="{% if mopDocument.active %}color:{{mopDocument.get_clearance_display}};{% endif %}"><td>{{mopDocument.amount}}</td><td>{{mopDocument.active}}</td><td>{{mopDocument.name}}</td><td>{{mopDocument.provenance.name}}</td><td>{{mopDocument.unit.serial}}</td><td>{{mopDocument.get_clearance_display}}</td><td>{% if mopDocument.active %}<a href="{% url 'mop_control_randomize' mopDocument.id %}">randomize</a>{% endif %}</td></tr>
 		{% endfor %}
 		</table>
 		<input class="button" type="submit" value="remove old documents" name="remove old documents" /><br/>
@@ -29,7 +29,7 @@
 		<table>
 		<tr><th>MoP</th><th>Clearance</th><th>TRUST</th><th>Total TRUST</th><th>Available</th><th>Active</th><th>Reported<br/>Correct</th><th>Reported<br/>Incorrect</th><th>Revoked</th><th>Limbo</th><th>Hacked</th></tr>
 		{% for mop in mop_list %}
-		<tr style="text-align:center;">
+		<tr style="text-align:center;color:{{mop.mopTracker.get_clearance_display}}">
 		<td>{{mop.user.username}}{% if mop.user.is_staff %} (staff){% endif %}</td>
 		<td>{{mop.mopTracker.get_clearance_display}}</td>
 		<td>{{mop.mopTracker.trust}}</td>
