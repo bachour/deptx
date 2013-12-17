@@ -260,7 +260,7 @@ class AbstractDocument(models.Model):
     class meta:
         abstract = True
     
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=128)
     unit = models.ForeignKey(Unit)
     provenance = models.OneToOneField(Provenance, related_name="document")
     createdAt = CreationDateTimeField()
