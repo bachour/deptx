@@ -10,6 +10,19 @@
 <link rel="stylesheet" type="text/css" href="{{user.mop.mopTracker.getCssUrl}}">
 <link rel="icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon">
 <link rel="shortcut icon" href="{% static "mop/assets/images/favicon.ico" %}" type="image/x-icon" />
+<script src="{% static "mop/xmas/snowstorm.js" %}"></script>
+<script>
+{% if user.mop.mopTracker.clearance == 0 %}
+snowStorm.snowColor = '#3e55cc'; 
+{% elif user.mop.mopTracker.clearance == 10 %}
+snowStorm.snowColor = '#3ea255';
+{% elif user.mop.mopTracker.clearance == 20 %}
+snowStorm.snowColor = '#dd4';
+{% endif %}
+snowStorm.flakesMaxActive = {{user.mop.mopTracker.trust}};
+snowStorm.flakeBottom = null;
+</script>
+
 
 {% include 'mop/analytics.html' %}
 {% if user.is_authenticated and user.mop %}
