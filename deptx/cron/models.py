@@ -161,24 +161,6 @@ class CronDocumentInstance(models.Model):
     
 
 class HelpMail(models.Model):
-    SUBJECT_TECH = 1
-    SUBJECT_STORY = 2
-    SUBJECT_OTHER = 3
-    
-    SUBJECT_INFORMATION = 10
-    
-    CHOICES_SUBJECT_PLAYER = (
-        (SUBJECT_OTHER, "I have an idea"),
-        (SUBJECT_STORY, "I need help"),
-        (SUBJECT_TECH, "I have a technical problem"),
-    )
-    
-    CHOICES_SUBJECT_CRON = (
-        (SUBJECT_INFORMATION, "Field Communication"),
-    )
-    
-    CHOICES_SUBJECT_ALL = CHOICES_SUBJECT_PLAYER + CHOICES_SUBJECT_CRON
-    
     
     TYPE_FROM_PLAYER = 1
     TYPE_TO_PLAYER = 2
@@ -193,7 +175,6 @@ class HelpMail(models.Model):
     
     
     cron = models.ForeignKey(Cron)
-    subject = models.IntegerField(choices=CHOICES_SUBJECT_ALL)
     type = models.IntegerField(choices=CHOICES_TYPE)
     body = models.TextField()
     isReply = models.BooleanField(default=False)
@@ -202,7 +183,7 @@ class HelpMail(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             if self.type == self.TYPE_FROM_PLAYER:
-                subject = "[cr0n] %s: %s" % (self.cron.user.username, self.get_subject_display())
+                subject = "[cr0n] %s: Field Communication" % (self.cron.user.username)
                 email_tpl = loader.get_template('cron/mail/message_from_player.txt')
                 c = Context({'body':self.body})
                 email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
@@ -220,5 +201,5 @@ class HelpMail(models.Model):
             fromto = "From"
         else:
             fromto = "To"
-        return "%s: %s - %s (%s)" % (fromto, self.cron.user.username, self.get_subject_display(), self.createdAt)
+        return "%s: %s - %s" % (fromto, self.cron.user.username, self.createdAt)
     

@@ -6,8 +6,7 @@
 <p><a href="{% url 'cron_message_compose' %}">Send a message</a></p><br/>
 {% if message_list %}
 	{% for message in message_list %}
-		<h4>{% if message.isReply %}Re: {% endif %}{{message.get_subject_display}}</h4>
-		<h5>{% if message.type == message.TYPE_FROM_PLAYER %}Sent:{% else %}Received:{% endif %} {{message.createdAt}}</h5>
+		<h4>{% if message.type == message.TYPE_FROM_PLAYER %}Sent:{% else %}Received:{% endif %} {{message.createdAt}}</h4>
 		<p>{{message.body|linebreaks}}</p>
 		<hr/>
 	{% endfor %}

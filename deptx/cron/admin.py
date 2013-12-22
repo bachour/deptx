@@ -11,7 +11,7 @@ class CronDocumentInstanceAdmin(admin.ModelAdmin):
     list_filter = ('cron', 'cronDocument', 'solved', 'failedAttempts', 'modifiedAt')
 
 class HelpMailAdmin(admin.ModelAdmin):
-    list_filter = ('cron', 'subject', 'type', 'isRead', 'modifiedAt')
+    list_filter = ('cron', 'type', 'isRead', 'modifiedAt')
 
 class CaseQuestionInstanceAdmin(admin.ModelAdmin):
     list_filter = ('cron', 'question', 'correct', 'failedAttempts', 'answer1', 'answer2', 'modifiedAt')

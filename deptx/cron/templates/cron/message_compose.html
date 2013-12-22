@@ -2,14 +2,14 @@
 {% load staticfiles %}
 
 {% block content %}
-<h1>Message</h1>
-<p>Agent {{user.username}}, if you should come across any suspicious activities, have questions concerning your duties as an agent, if cr0nogram is not working as expected or you have ideas on how to improve upon it - send us a quick message and we will see how we can help you.</p>
+<h1>Message Composition</h1>
+<p>Agent {{user.username}}, you should always use our secure and encrypted messaging system for any communication. </p>
 <br/>
+Your message:
 <form method="post" action="">
 <table>
 	{% csrf_token %}
-	<tr><td>Subject</td><td>{{form.subject}}</td><td>{{form.subject.errors}}</td></tr>
-	<tr><td>Message</td><td>{{form.body}}</td><td>{{form.body.errors}}</td></tr>
+	<tr><td>{{form.body}}</td><td>{{form.body.errors}}</td></tr>
 </table>
 <input class="button" type="submit" value="Send" />
 </form>

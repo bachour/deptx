@@ -3,8 +3,7 @@
 {% if mail %}
 	Preview:
 	<hr/>
-	<h4>{% if mail.isReply %}Re: {% endif %}{{mail.get_subject_display}}</h4>
-	<h5>{% if mail.type == mail.TYPE_FROM_PLAYER %}Sent:{% else %}Received:{% endif %} {{mail.createdAt}}</h5>
+	<h4>{% if mail.type == mail.TYPE_FROM_PLAYER %}Sent:{% else %}Received:{% endif %} {{mail.createdAt}}</h4>
 	<p>{{mail.body|linebreaks}}</p>
 	<hr/>
 {% endif %}

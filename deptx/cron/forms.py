@@ -5,10 +5,10 @@ from models import HelpMail
 class HelpMailForm(ModelForm):
     class Meta:
         model = HelpMail
-        fields = ['subject', 'body']
+        fields = ['body']
      
 class ControlHelpMailForm(ModelForm):
     class Meta:
         model = HelpMail
-        fields = ['cron', 'subject', 'isReply', 'body']
+        fields = ['cron', 'body']
     
