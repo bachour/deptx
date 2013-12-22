@@ -174,7 +174,7 @@ def documents(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents_archive(request):
-    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_HACKED)
+    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_LIMBO).exclude(status=MopDocumentInstance.STATUS_HACKED).order_by('-modifiedAt')
     mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})

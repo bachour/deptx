@@ -159,8 +159,6 @@ def check_mail(mail):
                     newMail.subject = Mail.SUBJECT_RECEIVE_DOCUMENT
                     newMail.bodyType = Mail.BODY_ASSIGNING_DOCUMENT
             elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
-                mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_REPORTED
-                mail.mopDocumentInstance.save()
                 clearance = Clearance(mail.mopDocumentInstance.getClearance())
                 newMail.subject = Mail.SUBJECT_REPORT_EVALUATION
                 newMail.mopDocumentInstance = mail.mopDocumentInstance
@@ -175,6 +173,8 @@ def check_mail(mail):
                         return
                     newMail.bodyType = Mail.BODY_REPORT_FAIL
                     newMail.trust = clearance.getTrustReportedIncorrect()
+                mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_REPORTED
+                mail.mopDocumentInstance.save()
             else:
                 if not delayedEnough(mail, DELAY_SHORT):
                     return
