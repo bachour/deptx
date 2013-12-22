@@ -22,7 +22,7 @@
 		<td>{{mopDocumentInstance.modified|yesno:'please submit, needs processing'}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
-		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
+		<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
 		<td>{{mopDocumentInstance.createdAt|date:"Y-m-d"}}</td>
 		</tr>

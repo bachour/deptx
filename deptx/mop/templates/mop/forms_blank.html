@@ -9,11 +9,11 @@
 <tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
 {% for blank in blank_list %}
 	<tr>
-	<td class="nobox"><a href="{% url 'mop_forms_fill' blank.requisition.serial %}">fill in</a></td>
-	<td>{{blank.requisition.unit.serial}}</td>
+	<td class="nobox" style="white-space:nowrap;"><a href="{% url 'mop_forms_fill' blank.requisition.serial %}">fill in</a></td>
+	<td style="white-space:nowrap;">{{blank.requisition.unit.serial}}</td>
 	<td>{{blank.requisition.name}}</td>
 	<td>{{blank.requisition.get_category_display}}</td>
-	<td>{{blank.requisition.serial}}</td>
+	<td style="white-space:nowrap;">{{blank.requisition.serial}}</td>
 	</tr>
 {% endfor %}
 </table>
@@ -25,10 +25,10 @@ No blank forms available.
 You have aquired all forms from the Unit of Administration.
 {% else %}
 <table>
-<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
+<tr><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
 {% for req in requisition_list %}
 	{% if not req.acquired %}
-		<tr><td class="nobox"><span style="visibility:hidden;">fill in</span></td><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td>{{req.serial}}</td></tr>
+		<tr><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td style="white-space:nowrap;">{{req.serial}}</td></tr>
 	{% endif %}
 {% endfor %}
 </table>
