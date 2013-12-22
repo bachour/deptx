@@ -692,7 +692,7 @@ def hq_mail(request):
                         t = Template(text)
                         new_mail.body = t.render(c)
                         new_mail.save()
-                        logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=new_mail)
+                        logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=cron, message=new_mail)
                     return render(request, 'cron/hq_mail.html', {'mail':mail, 'cron_list':cron_list})
                 else:
                     return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail, 'nospam':True})
