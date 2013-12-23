@@ -1,5 +1,6 @@
 from django.forms import ModelForm
 from models import Mail, RequisitionInstance
+from django import forms
 
 class MailForm(ModelForm):
     class Meta:
@@ -16,3 +17,8 @@ class ControlMailForm(ModelForm):
         model = Mail
         fields = ['mop', 'unit', 'subject', 'trust', 'body']
     
+class MopFileForm(forms.Form):
+    data= forms.FileField(
+        label='Select a file to upload',
+        help_text='max. 2 megabytes'
+    )

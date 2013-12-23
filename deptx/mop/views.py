@@ -16,8 +16,8 @@ from players.forms import MopCheckForm, PasswordForm
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance
-from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile
+from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
 from copy import deepcopy
@@ -560,6 +560,23 @@ def form_trashing(request, fullSerial):
             requisitionInstance.save()
             logging.log_action(ActionLog.ACTION_MOP_FORM_TRASH, mop=request.user.mop, requisitionInstance=requisitionInstance)
             return redirect('mop_forms_signed')
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def files(request):
+    # Handle file upload
+    if request.method == 'POST':
+        form = MopFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            mopFile = MopFile(data=request.FILES['data'], mop=request.user.mop)
+            mopFile.save()
+            logging.log_action(ActionLog.ACTION_MOP_FILE_UPLOAD, mop=request.user.mop, mopFile=mopFile)
+            return render(request, 'mop/files.html', {"upload":True})
+    else:
+        form = MopFileForm() # A empty, unbound form
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_FILES, mop=request.user.mop)
+    return render(request, 'mop/files.html', {"form":form})
+
 
 def paginate(request, all_list, items=20):
     paginator = Paginator(all_list, items)

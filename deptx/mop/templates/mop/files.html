@@ -1,0 +1,29 @@
+{% extends 'mop/base.html' %}
+
+{% block content %}
+
+<h1>File Management</h1>
+{% if upload %}
+<p>Your file has been uploaded.</p>
+{% else %}
+<form action="{% url 'mop_files' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>{{ form.non_field_errors }}</p>
+    <p>{{ form.data.label_tag }} ({{ form.data.help_text }})</p>
+    <p>
+        {{ form.data.errors }}
+        {{ form.data }}
+    </p>
+    <p><input type="submit" value="Upload" /></p>
+</form>
+{% endif %}
+
+{% endblock %}
+
+
+
+{% block help %}
+<p>
+Please use this page to upload specific files from external sources. Please only do so when asked.
+</p>
+{% endblock %}

@@ -295,6 +295,16 @@ class RequisitionInstance(models.Model):
             self.serial = "%s" % (friendly_id.encode(self.id))
             super(RequisitionInstance, self).save(*args, **kwargs)
 
+class MopFile(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    mop = models.ForeignKey(Mop)
+    data = models.FileField(upload_to='uploads/%Y/%m/%d')   
+    
+    def __unicode__(self):
+        return "%s %s" % (self.mop.user.username, self.data.name)
+
 class Mail(models.Model):
     TYPE_RECEIVED = 0
     TYPE_SENT = 1
