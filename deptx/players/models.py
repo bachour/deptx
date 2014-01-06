@@ -141,4 +141,4 @@ class Mop(models.Model):
             super(Mop, self).save(*args, **kwargs)
     
     def __unicode__(self):
-        return "%s (cron: %s)" % (self.user.username, self.cron.user.username)
+        return "%s - %s %s (cron: %s)" % (self.user.username, self.firstname, self.lastname, self.cron.user.username)
