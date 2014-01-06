@@ -33,7 +33,7 @@ urlpatterns = patterns('',
     url(r'intranet/mail/compose/form/([-\w]+)', views.mail_compose, name='mop_mail_compose'),
     url(r'intranet/mail/compose/([-\w]+)', views.mail_edit, name='mop_mail_edit'),
     url(r'intranet/mail/check/', views.mail_check, name='mop_mail_check'),
-    #url(r'intranet/files', views.files, name='mop_files'),
+    url(r'intranet/files', views.files, name='mop_files'),
     
      
 )
