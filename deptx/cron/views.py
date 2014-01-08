@@ -698,7 +698,7 @@ def hq_mail(request):
             elif 'bulk' in request.POST:
                 if 'spam' in request.POST:
                     email_list = []
-                    cron_list = Cron.objects.filter(cancelled=True).exclude(activated=False)
+                    cron_list = Cron.objects.exclude(cancelled=True).exclude(activated=False)
                     for cron in cron_list:
                         new_mail = deepcopy(mail)
                         new_mail.id = None
