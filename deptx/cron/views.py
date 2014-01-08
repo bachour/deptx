@@ -708,7 +708,7 @@ def hq_mail(request):
                         new_mail.body = t.render(c)
                         new_mail.save()
 
-                        to = mail.cron.email
+                        to = new_mail.cron.email
                         email_tpl = loader.get_template('cron/mail/message_to_player.txt')
                         email = ('[cr0n] New Message', email_tpl.render(c), DEFAULT_FROM_EMAIL, [to])
                         email_list.append(email) 
