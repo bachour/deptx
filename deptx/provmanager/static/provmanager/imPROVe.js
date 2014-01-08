@@ -170,6 +170,12 @@ function initStage()
         height: containerHeight,
         scale:scale // scale to the size of the container
       });
+	
+	if (Object.keys(sources).length >= 8)
+	{
+		NODE_DEFAULT_SIZE = NODE_DEFAULT_SIZE/(Math.sqrt(Object.keys(sources).length/8));
+		NODE_FONT_SIZE = NODE_FONT_SIZE/Math.sqrt(Math.sqrt(Object.keys(sources).length/8));
+	}
 
 	// create Kinetic Images for all objects and put them in nodes
 	for (var name in sources)

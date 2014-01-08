@@ -56,13 +56,14 @@
 		var ARROW_URL_2 = "improve/arrow2.png";
 		var MAGNIFY_URL = "improve/magnify.png";
 		var IS_TEST = true;
+		var INACTIVE = true;
     </script>
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="C:/Users/kqb.CS/Dropbox/Dept.X/MEDIA/improve/mopKss.js"></script>
     <script src="../deptx/provmanager/static/provmanager/imPROVe.js"></script>
     <script>
-    //$.getJSON("https://dl.dropboxusercontent.com/u/17451725/PROV_Blood-1Kclean.json", function(json) {
-    	$.getJSON("https://dl.dropboxusercontent.com/u/17451725/GRIND_speeding1.json", function(json) {
+    $.getJSON("https://dl.dropboxusercontent.com/u/17451725/PROV_Blood-1Kclean-many.json", function(json) {
+    //	$.getJSON("https://dl.dropboxusercontent.com/u/17451725/GRIND_speeding1.json", function(json) {
     	   loadJSONProv(json);
     	   loadImages(initStage);
     	 });
