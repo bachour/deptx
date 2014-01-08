@@ -26,13 +26,19 @@ from deptx.settings import MEDIA_URL, STATIC_URL
 from logger.models import ActionLog
 from logger import logging
 from copy import deepcopy
+from django.core.mail import EmailMessage, send_mass_mail
 
 import json
+
+try:
+    from deptx.settings_production import DEFAULT_FROM_EMAIL
+except:
+    DEAFAULT_FROM_EMAIL = 'admin@localhost'
 
 def isCron(user):
     if user:
         try:
-            cron = Cron.objects.get(user=user, activated=True)
+            cron = Cron.objects.get(user=user, activated=True, cancelled=False)
             return True
         except Cron.DoesNotExist:
             pass
@@ -54,10 +60,13 @@ def login(request):
         
         # this is used to check if the user is a cron user
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
-        if not user == None and user.is_active and isCron(user):
-            auth.login(request, user)
-            logging.log_action(ActionLog.ACTION_CRON_LOGIN, cron=request.user.cron)
-            return HttpResponseRedirect(reverse('cron_index'))
+        if not user == None:
+            if user.is_active and isCron(user):
+                auth.login(request, user)
+                logging.log_action(ActionLog.ACTION_CRON_LOGIN, cron=request.user.cron)
+                return HttpResponseRedirect(reverse('cron_index'))
+            else:
+                return render(request, 'cron/login.html', {'form' : form, 'wrong':True})
             
         else:
             return render(request, 'cron/login.html', {'form' : form,})
@@ -678,11 +687,18 @@ def hq_mail(request):
                 t = Template(text)
                 mail.body = t.render(c)
                 mail.save()
+
+                to = mail.cron.email
+                email_tpl = loader.get_template('cron/mail/message_to_player.txt')
+                email = EmailMessage(subject='[cr0n] New Message', body = email_tpl.render(c), to=[to,])
+                email.send(fail_silently=False)
+
                 logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=mail)
                 return render(request, 'cron/hq_mail.html', {'mail':mail})
             elif 'bulk' in request.POST:
                 if 'spam' in request.POST:
-                    cron_list = Cron.objects.all()
+                    email_list = []
+                    cron_list = Cron.objects.exclude(cancelled=True).exclude(activated=False)
                     for cron in cron_list:
                         new_mail = deepcopy(mail)
                         new_mail.id = None
@@ -691,7 +707,15 @@ def hq_mail(request):
                         t = Template(text)
                         new_mail.body = t.render(c)
                         new_mail.save()
+
+                        to = mail.cron.email
+                        email_tpl = loader.get_template('cron/mail/message_to_player.txt')
+                        email = ('[cr0n] New Message', email_tpl.render(c), DEFAULT_FROM_EMAIL, [to])
+                        email_list.append(email) 
+
                         logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=cron, message=new_mail)
+                    send_mass_mail(tuple(email_list), fail_silently=False)
+                    
                     return render(request, 'cron/hq_mail.html', {'mail':mail, 'cron_list':cron_list})
                 else:
                     return render(request, 'cron/hq_mail.html', {'form':form, 'mail':mail, 'nospam':True})

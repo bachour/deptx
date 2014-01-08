@@ -42,6 +42,8 @@ class Cron(models.Model):
     activated = models.BooleanField(default=False)
     activationCode = models.CharField(max_length=36, default=generateUUID)
     
+    cancelled = models.BooleanField(default=False)
+    
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
@@ -51,7 +53,10 @@ class Cron(models.Model):
         self.user.save()
     
     def __unicode__(self):
-        return self.user.username
+        cancelled = ""
+        if self.cancelled:
+            cancelled = "CANCELLED - "
+        return "%s%s" % (cancelled, self.user.username)
     
 class Mop(models.Model):
     
