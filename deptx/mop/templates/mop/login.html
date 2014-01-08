@@ -20,7 +20,7 @@
     <!-- MoP scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script> 
     <script src="{% static 'mop/assets/js/bootstrap.min.js' %}"></script>
-    {% if form.errors %}
+    {% if form.errors or wrong %}
     <script>
     $(function(){
     	$('#sign-up-button').click();
@@ -55,7 +55,7 @@
 		<tr>
 		    <td>{{ form.username.label_tag }}</td>
 		    <td>{{ form.username }}</td>
-		    <td rowspan="2"><p {% if not form.errors %}style="visibility:hidden;"{% endif %}>Your username and password didn't match. Please try again.</p></td>
+		    <td rowspan="2"><p {% if not form.errors and not wrong %}style="visibility:hidden;"{% endif %}>Your username and password didn't match or the user does not exist. Please try again.</p></td>
 		</tr>
 		<tr>
 		    <td>{{ form.password.label_tag }}</td>

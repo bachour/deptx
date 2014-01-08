@@ -84,18 +84,21 @@ def login(request):
         # (also in if-clause
         # TODO: at the moment there is no proper error message when trying to login with a non-cron account
         # TODO: Code is almost identical to CRON-code
-        if not user == None and user.is_active and isMop(user):
-            auth.login(request, user)
-
-            logging.log_action(ActionLog.ACTION_MOP_LOGIN, mop=request.user.mop)
-            mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
-            mopTracker.hasCheckedInbox = False
-            mopTracker.save()
-            
-            if created:
-                tutorial.firstLogin(mopTracker)
-            
-            return HttpResponseRedirect(reverse('mop_index'))
+        if not user == None:
+            if user.is_active and isMop(user):
+                auth.login(request, user)
+    
+                logging.log_action(ActionLog.ACTION_MOP_LOGIN, mop=request.user.mop)
+                mopTracker, created = MopTracker.objects.get_or_create(mop=request.user.mop)
+                mopTracker.hasCheckedInbox = False
+                mopTracker.save()
+                
+                if created:
+                    tutorial.firstLogin(mopTracker)
+                
+                return HttpResponseRedirect(reverse('mop_index'))
+            else:
+                return render(request, 'mop/login.html', {'form' : form, 'wrong':True})
             
         else:
             return render(request, 'mop/login.html', {'form' : form})

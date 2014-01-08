@@ -187,12 +187,7 @@ class HelpMail(models.Model):
                 email_tpl = loader.get_template('cron/mail/message_from_player.txt')
                 c = Context({'body':self.body})
                 email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
-            else:
-                to = self.cron.email
-                email_tpl = loader.get_template('cron/mail/message_to_player.txt')
-                c = Context({'cron': self.cron})
-                email = EmailMessage(subject='[cr0n] New Message', body = email_tpl.render(c), to=[to,])
-            email.send(fail_silently=False)
+                email.send(fail_silently=False)
         super(HelpMail, self).save(*args, **kwargs)
     
     
