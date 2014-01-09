@@ -46,7 +46,6 @@ def getUnprocessedMails():
     return Mail.objects.filter(processed=False).filter(type=Mail.TYPE_SENT).order_by('?')
 
 def analyze_mail():
-    dgkdjsghdjs shghsjgs jsjhs
     output = []
     mail_list = getUnprocessedMails()
     #TODO add more output
