@@ -3,12 +3,12 @@ import random
 import string
 import copy
 
-try:
-    from deptx.settings_production import MEDIA_ROOT
-except:
-    from deptx.settings import MEDIA_ROOT
+#try:
+#    from deptx.settings_production import MEDIA_ROOT
+#except:
+#    from deptx.settings import MEDIA_ROOT
 
-RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
+#RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
 
 # takes a json for a graph with randomizable content, randomizes all values in the graph, randomly chooses one set
 # of critical values and makes at least one of them different from the others. adds question mark before all these values
@@ -144,7 +144,7 @@ def test_graph(grph, trials):
     all_inconsistencies = []
     for i in range(trials):
         d_graph = duplicate_graph(grph)
-        r_graph = get_fancy_random_graph(d_graph)
+        r_graph = get_random_graph(d_graph)
         print r_graph
         lists, graph = get_inconsistencies(r_graph)
         all_inconsistencies.append(lists)
@@ -198,25 +198,39 @@ def get_random_graph(graph):
                         identifier_super_main_att[id] = identifiers[id][-1]
                 elif graph[c][e][a][0] == '#':
                     values = graph[c][e][a][1:].split()
+                    # get the id of the main attribute and the sub id of the sub-attrubte
                     id = values[0].strip()
                     sub_id = values[1].strip()
-                    
+                    # create a place holder for the sub attribute which will be filled later
                     if not id in sub_identifiers:
                         sub_identifiers[id] = {}
-                        sub_identifiers[id][sub_id] = "" 
-                    else:
                         sub_identifiers[id][sub_id] = ""
-                    duplicate_count += 1
+                        duplicate_count += 1
+                    else:
+                        if not sub_id in sub_identifiers[id]:
+                            sub_identifiers[id][sub_id] = ""
+                            duplicate_count += 1
+    
     
     for i in sub_identifiers:
         for j in sub_identifiers[i]:
+            # get the list of available attributes for this sub identifier from the the main identifier's value
             sub_identifiers[i][j] = get_sub_identifier_list(identifiers[i][0], j)
+        # remove the list of sub-attributes from the main attribute value
         identifiers[i][0] = identifiers[i][0][0:identifiers[i][0].index('{')].strip()
+        if identifier_super_main_att.has_key(i):
+            identifier_super_main_att[i] = identifier_super_main_att[i][0:identifier_super_main_att[i].index('{')].strip()
                               
+    #ignore supermain attributes. they can't be inconsistencies
+    for sma in identifier_super_main_att:
+        if sma in sub_identifiers:
+            duplicate_count = duplicate_count - len(sub_identifiers[sma])
+        else:
+            duplicate_count = duplicate_count - 1
+            
     #make duplicate_count a random number between 0 and duplicate_count
-    duplicate_count = duplicate_count - len(identifier_super_main_att) #ignore supermain attributes. they can't be inconsistencies
     duplicate_count = duplicate_count - random.randint(0,duplicate_count) # we want a random number between 1 and duplicate_count + 1 for no inconsistency case  
-                
+             
     #choose duplicate_countTH duplicated identifier, and add ?'s to it's value 
     #since duplicate count can go 1 above the last possible value, then           
     for i in identifiers:
@@ -225,6 +239,9 @@ def get_random_graph(graph):
             selected = identifier_super_main_att[i]
             for j in range(len(identifiers[i])):
                 identifiers[i][j] = selected
+            if i in sub_identifiers:
+                for j in sub_identifiers[i]:
+                    sub_identifiers[i][j] = get_sub_identifier_value(sub_identifiers[i][j], True)
         #now deal with the rest
         elif len(identifiers[i]) >= 2:
             if (duplicate_count == 0):
@@ -250,7 +267,13 @@ def get_random_graph(graph):
                 else:
                     sub_identifiers[i][j] = get_sub_identifier_value(sub_identifiers[i][j], True)
                 duplicate_count -= 1
-            
+                
+    #replace all sub-enabled attributes with simple attributes
+    for i in identifiers:
+        for j in range(len(identifiers[i])):
+            if '{' in identifiers[i][j]:
+                identifiers[i][j] = identifiers[i][j][0:identifiers[i][j].index('{')].strip()
+     
     #replace every element in the graph with an element from the randomly generated list
     for c in graph: #node class
         if c == 'prefix':
@@ -304,9 +327,9 @@ def duplicate_graph(graph):
     
 #RANDOM_FILES_PATH = '/Users/khaled/Dropbox/Dept.X/MEDIA/GRINDING/'
 #grph = json.load(open("/Users/khaled/Documents/amptest.json",'r'))
-#RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Documents\\'
-#grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\fancy_random_graph_test.json",'r'))
+RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Documents\\grinding_script_tests\\random_files\\'
+grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\grinding_script_tests\\orphan.json",'r'))
 
-#test_graph(grph,100)
+test_graph(grph,100)
 #gph = get_fancy_random_graph(grph)
 #print gph
