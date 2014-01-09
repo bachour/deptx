@@ -2,6 +2,8 @@
 import os
 import sys
 import socket
+from django.utils.log import getLogger
+from django.core.management import execute_from_command_line
 from deptx.secrets import PRODUCTION_HOSTNAME
 
 try:
@@ -9,7 +11,7 @@ try:
 except:
     HOSTNAME = 'exception'
 
-#print HOSTNAME
+logger = getLogger('management_commands')
 
 if __name__ == "__main__":
     if HOSTNAME == PRODUCTION_HOSTNAME:
@@ -18,7 +20,9 @@ if __name__ == "__main__":
     else:
         #print 'local'
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "deptx.settings")
-    
-    from django.core.management import execute_from_command_line
 
-    execute_from_command_line(sys.argv)
+    try:
+        execute_from_command_line(sys.argv)
+    except Exception as e:
+        logger.error('Admin Command Error: %s', ' '.join(sys.argv), exc_info=sys.exc_info())
+        raise e
