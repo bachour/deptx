@@ -1544,7 +1544,8 @@ function showMessage(msg, removable)
 	messageLayer.add(background);
 	messageLayer.add(box);
 	messageLayer.add(message);
-	messageLayer.add(submessage);
+	if (removable)
+		messageLayer.add(submessage);
 	messageLayer.draw();
 	
 	if (removable)
