@@ -1426,90 +1426,6 @@ function createButtons()
 	 
 }
 
-function submitPushed()
-{
-	if (taskCompleted || INACTIVE)
-	{
-		window.location.href = URL_CONTINUE;
-		//validateSubmit();
-	}
-	else
-	{
-		if ((selectedAttributes['1'] && selectedAttributes['2'])||(!((selectedAttributes['1'] || selectedAttributes['2']))))
-		{
-			validateSubmit();
-		}
-		else
-			showMessage("You need to either select TWO attributes if you think there's an inconsistency OR select NO attributes if there isn't one.");
-	}
-}
-
-function ajaxCall(URL, message, callback)
-{
-	var xmlhttp;
-	if (window.XMLHttpRequest)
-	{// code for IE7+, Firefox, Chrome, Opera, Safari
-		xmlhttp=new XMLHttpRequest();
-	}
-	else
-	{// code for IE6, IE5
-	  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-	}
-	
-	xmlhttp.onreadystatechange=function()
-	{
-	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
-	    {
-	      // alert("Server says:" + xmlhttp.responseText);
-		  if (callback)
-			  callback(xmlhttp.responseText);
-	    }
-	 };
-	xmlhttp.open("POST",URL,true);
-	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-	xmlhttp.send(message);
-}
-
-function validateSubmit()
-{
-	var message;
-	
-	if (selectedAttributes['1'] && selectedAttributes['2'])
-		message = "node1=" + selectedNodes['1'].id + 
-			"&node2=" + selectedNodes['2'].id + 
-			"&attribute1=" + selectedAttributes['1'] +
-			"&attribute2=" + selectedAttributes['2'] +
-			"&serial=" + PROV_SERIAL +
-			"&is_test=" + IS_TEST +
-			"&is_empty=false";
-	else
-		message = "serial=" + PROV_SERIAL +
-			"&is_test=" + IS_TEST +
-			"&is_empty=true";
-	
-	ajaxCall(URL_CHECK, message, handleValidateResponse);
-}
-
-function handleValidateResponse(response)
-{
-	var response;
-	if (DEBUG)
-	{
-		response = {"close_prov":true,"message":"You are correct! Press continue to continue."};
-	}
-	else
-		response = jQuery.parseJSON(response);
-
-	if (response.close_prov)
-	{
-		if (IS_TEST==false)
-		{
-			taskCompleted = true;
-		}
-	}
-	showMessage(response.message);
-}
-
 function setupAttribPanes()
 {
 	var X = 0.83 * STAGE_WIDTH;
@@ -1567,7 +1483,7 @@ function clearAttributePane(position)
 }
 
 // display popup message for user
-function showMessage(msg)
+function showMessage(msg, removable)
 {
 	var background = new Kinetic.Rect({
         x: 0,
@@ -1631,13 +1547,16 @@ function showMessage(msg)
 	messageLayer.add(submessage);
 	messageLayer.draw();
 	
-	messageLayer.on('mouseup', function(evt){
-		messageLayer.removeChildren();
-		messageLayer.draw();
-
-		if (taskCompleted)
-			window.location.href = URL_CONTINUE;
-	});
+	if (removable)
+	{
+		messageLayer.on('mouseup', function(evt){
+			messageLayer.removeChildren();
+			messageLayer.draw();
+	
+			if (taskCompleted)
+				window.location.href = URL_CONTINUE;
+		});
+	}
 }
 
 // redraw all persistent layers
@@ -1881,6 +1800,96 @@ function createAndAddMediaJQueryDialog(url, id)
       });
 	
 }
+
+function submitPushed()
+{
+	if (taskCompleted || INACTIVE)
+	{
+		window.location.href = URL_CONTINUE;
+		//validateSubmit();
+	}
+	else
+	{
+		if ((selectedAttributes['1'] && selectedAttributes['2'])||(!((selectedAttributes['1'] || selectedAttributes['2']))))
+		{
+			validateSubmit();
+		}
+		else
+			showMessage("You need to either select TWO attributes if you think there's an inconsistency OR select NO attributes if there isn't one.", true);
+	}
+}
+
+function ajaxCall(URL, message, callback)
+{
+	var xmlhttp;
+	if (window.XMLHttpRequest)
+	{// code for IE7+, Firefox, Chrome, Opera, Safari
+		xmlhttp=new XMLHttpRequest();
+	}
+	else
+	{// code for IE6, IE5
+	  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	
+	xmlhttp.onreadystatechange=function()
+	{
+	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+	    {
+	      // alert("Server says:" + xmlhttp.responseText);
+		  if (callback)
+			  callback(xmlhttp.responseText);
+	    }
+	 };
+	xmlhttp.open("POST",URL,true);
+	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	xmlhttp.send(message);
+}
+
+function validateSubmit()
+{
+	var message;
+	
+	if (selectedAttributes['1'] && selectedAttributes['2'])
+		message = "node1=" + selectedNodes['1'].id + 
+			"&node2=" + selectedNodes['2'].id + 
+			"&attribute1=" + selectedAttributes['1'] +
+			"&attribute2=" + selectedAttributes['2'] +
+			"&serial=" + PROV_SERIAL +
+			"&is_test=" + IS_TEST +
+			"&is_empty=false";
+	else
+		message = "serial=" + PROV_SERIAL +
+			"&is_test=" + IS_TEST +
+			"&is_empty=true";
+	
+	ajaxCall(URL_CHECK, message, handleValidateResponse);
+}
+
+function handleValidateResponse(response)
+{
+	var response;
+	if (DEBUG)
+	{
+		response = {"close_prov":true,"message":"You are correct! Press continue to continue.","status":"ok"};
+	}
+	else
+		response = jQuery.parseJSON(response);
+
+	if (response.status != "logged_out")
+	{
+		if (response.close_prov)
+		{
+			if (IS_TEST==false)
+			{
+				taskCompleted = true;
+			}
+		}
+		showMessage(response.message, true);
+	}
+	else
+		notifyLoggedOut(response.message);
+}
+
 // Send an ajax request to log the movement of a node on the graph
 function logDrag(shape)
 {
@@ -1905,6 +1914,13 @@ function logDrag(shape)
 // Handle response from the log request
 function logResponse(response)
 {
+	if (DEBUG == false)
+		response = jQuery.parseJSON(response);
+	else
+		response = {"status":"ok"};
+	
+	if (response.status == "logged_out")
+		notifyLoggedOut(response.message);
 	//alert("Logging response: " + response)
 }
 
@@ -1999,6 +2015,11 @@ function updateState(state)
 	}
 	
 	redraw();
+}
+
+function notifyLoggedOut(message)
+{
+	showMessage(message, false);
 }
 
 function moveNodeToTop(node)
