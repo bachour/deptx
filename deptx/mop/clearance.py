@@ -102,9 +102,10 @@ class Clearance():
             beginning = "QRST89"
             end = "MIXEDREALITYLAB"
         elif self.clearance == self.CLEARANCE_UV:
+            #IMPORTANT: CronDocuments are based on a different ID-counter, so no MopDocuments should ever be UV (and all CronDocuments need to be UV)
             beginning = "UVWXYZ"
             end = "URBANANGEL"
-        return "DOC-%s-%s-%s%s-%s" % (document.mopDocument.unit.serial, random_chars(size=2, chars=beginning), random_chars(size=1, chars=end), friendly_id.encode(document.id), random_chars(size=4, chars=end))
+        return "DOC-%s-%s-%s%s-%s" % (document.unit.serial, random_chars(size=2, chars=beginning), random_chars(size=1, chars=end), friendly_id.encode(document.id), random_chars(size=4, chars=end))
     
     
     def getBadgeUrl(self):
