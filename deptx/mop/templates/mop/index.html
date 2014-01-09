@@ -11,6 +11,9 @@
 	{% if not hide.performance %}
 		<a class="button" href="{% url 'mop_performance' %}"><input class="button" type="submit" value="performance" /></a>
 	{% endif %}
+	{% if user.mop.mopTracker.fileUploadAllowed %}
+		<a class="button" href="{% url 'mop_files' %}"><input class="button" type="submit" value="files" /></a>
+	{% endif %}
 </p>
 <p class="nav">
 	{% if not hide.compose %}

@@ -2,20 +2,41 @@
 
 {% block content %}
 
+
+
+
 <h1>File Management</h1>
-{% if upload %}
-<p>Your file has been uploaded.</p>
+{% if user.mop.mopTracker.fileUploadAllowed %}
+	{% if upload %}
+		<p>Your file has been uploaded.</p>
+	{% else %}
+		<form action="{% url 'mop_files' %}" method="post" enctype="multipart/form-data">
+		    {% csrf_token %}
+		    <p>{{ form.non_field_errors }}</p>
+		    <p>{{ form.data.label_tag }} ({{ form.data.help_text }})</p>
+		    <p>
+		        {{ form.data.errors }}
+		        {{ form.data }} <strong id='toobig' style="color:red;visibility:hidden;">Your file is bigger than 2MB. Please select a smaller file.</strong>
+		    </p>
+		    <p><input id='submit' type="submit" value="Upload" style="visibility:hidden;" /></p>
+		    <script type="text/javascript">
+		        $('#id_data').bind('change', function() {
+		            fileInMB = this.files[0].size/1024/1024;
+		            if (fileInMB > 2) {
+		            	$('#submit').css("visibility", "hidden");
+		            	$('#toobig').css("visibility", "visible");
+		            }
+		            else {
+		            	$('#submit').css("visibility", "visible");
+		            	$('#toobig').css("visibility", "hidden");
+		            };
+
+		        });
+			</script>
+		</form>
+	{% endif %}
 {% else %}
-<form action="{% url 'mop_files' %}" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <p>{{ form.non_field_errors }}</p>
-    <p>{{ form.data.label_tag }} ({{ form.data.help_text }})</p>
-    <p>
-        {{ form.data.errors }}
-        {{ form.data }}
-    </p>
-    <p><input type="submit" value="Upload" /></p>
-</form>
+	<p>You do not possess the necessary rights to perform file uploads. Please contact your designated MOPCOR supervisor if you think you need to be able to upload files.</p>
 {% endif %}
 
 {% endblock %}

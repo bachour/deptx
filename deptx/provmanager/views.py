@@ -236,6 +236,11 @@ def prov_check(request):
     
     correct = False
     message = "This is not correct."
+    status = "ok"
+    
+    if not request.user.is_active:
+        json_data = json.dumps({"message":"You are currently not logged in. Please login to continue.", "status":"logged_out"})            
+        return HttpResponse(json_data, mimetype="application/json")
 
     #if request.is_ajax():
     if request.method == 'POST':
@@ -345,7 +350,7 @@ def prov_check(request):
             logging.log_prov(action=ProvLog.ACTION_SUBMIT, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=post_node1, node2=post_node2, attribute1=post_attribute1, attribute2=post_attribute2, empty=is_empty, correct=correct)
 
         
-        json_data = json.dumps({"close_prov":close_prov, "message":message, "stars":stars})
+        json_data = json.dumps({"close_prov":close_prov, "status":status, "message":message, "stars":stars})
 
         return HttpResponse(json_data, mimetype="application/json")
 
@@ -356,9 +361,13 @@ def makeAttributeString(node, attribute):
 @csrf_exempt
 def prov_log_action(request):
     #TODO better error handling and feedback
-    correct = False
+    status = "ok"
     message = "This is not correct."
-
+    
+    if not request.user.is_active:
+        json_data = json.dumps({"message":"You are currently not logged in. Please login to continue.", "status":"logged_out"})            
+        return HttpResponse(json_data, mimetype="application/json")
+    
     #if request.is_ajax():
     if request.method == 'POST':
         serial = request.POST.get('serial', None)
@@ -461,8 +470,10 @@ def prov_log_action(request):
                     error = False
                     logAction = ProvLog.ACTION_CLICK
             logging.log_prov(action=logAction, cronDocumentInstance=cronDocumentInstance, mopDocumentInstance=mopDocumentInstance, node1=node, attribute1=attribute, x=x, y=y, selected=state, inactive=inactive)
-
-        json_data = json.dumps({"message":message, "error":error})            
-        return HttpResponse("json_data", mimetype="application/json") 
+        
+        if error:
+            status = "error"
+        json_data = json.dumps({"message":message, "status":status})            
+        return HttpResponse(json_data, mimetype="application/json") 
         
   

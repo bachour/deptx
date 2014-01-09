@@ -46,6 +46,8 @@ class MopTracker(models.Model):
     credit = models.IntegerField(default=0)
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
     
+    fileUploadAllowed = models.BooleanField(default=False)
+    
     tutorial = models.IntegerField(choices=CHOICES_TUTORIAL, default=TUTORIAL_0_START)
     tutorialProvErrors = models.IntegerField(default=0)
     
