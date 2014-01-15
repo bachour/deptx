@@ -1451,6 +1451,7 @@ function createButtons()
 	 
 	 // now create the guide button
 	 if (!(typeof GUIDE_HTML === 'undefined'))
+		if (GUIDE_HTML != null && GUIDE_HTML != "")
 		 {
 			guideButton = new Kinetic.Rect({
 		        x: 0.05 * STAGE_WIDTH,
