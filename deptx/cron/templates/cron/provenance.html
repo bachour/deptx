@@ -4,4 +4,4 @@
 <head>
 {% include 'cron/analytics.html' %}
 </head>
-{% include 'provmanager/improve.html' with provenance=cronDocumentInstance.cronDocument.provenance case=cronDocumentInstance.cronDocument.case isCron=True inactive=cronDocumentInstance.solved %}
+{% include 'provmanager/improve.html' with provenance=cronDocumentInstance.cronDocument.provenance case=cronDocumentInstance.cronDocument.case isCron=True inactive=cronDocumentInstance.solved guide=cronDocumentInstance.cronDocument.guide %}

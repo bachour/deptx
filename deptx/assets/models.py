@@ -263,6 +263,7 @@ class AbstractDocument(models.Model):
     name = models.CharField(max_length=128)
     unit = models.ForeignKey(Unit)
     provenance = models.OneToOneField(Provenance, related_name="document")
+    guide = models.TextField(blank=True, null=True)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
 

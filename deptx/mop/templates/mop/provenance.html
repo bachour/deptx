@@ -4,5 +4,5 @@
 <head>
 {% include 'mop/analytics.html' %}
 </head>
-{% include 'provmanager/improve.html' with provenance=document.provenance isMop=True %}
+{% include 'provmanager/improve.html' with provenance=document.provenance isMop=True guide=document.mopDocument.guide %}
 </html>

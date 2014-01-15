@@ -30,6 +30,9 @@
 	</div>
 	<div id="dialog2" title="Media Inspector">
 	</div>
+	<div id="guide" title="Guide">
+	</div>
+	
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
     
@@ -66,6 +69,13 @@
     	{% else %}
     		var URL_CONTINUE = "";
     	{% endif %}
+    	
+    	{% if guide %}
+    		var GUIDE_HTML = "{{guide|escapejs}}";
+    	{% else %}
+    		var GUIDE_HTML = null;
+    	{% endif %}
+    	 
 		var DEBUG = false;
 		var URL_MEDIA = "{{MEDIA_URL}}";
 

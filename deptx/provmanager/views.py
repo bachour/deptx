@@ -44,7 +44,15 @@ def view(request, id):
     provenance = Provenance.objects.get(id=id)
     json_str = getProvJsonStr(provenance)
     
-    return render(request, 'provmanager/view.html', {'provenance': provenance, 'json':json_str})
+    try:
+        guide = provenance.document.guide
+    except:
+        try:
+            guide = provenance.randomizedDocument.mopDocument.guide
+        except:
+            guide = None
+    
+    return render(request, 'provmanager/view.html', {'provenance': provenance, 'json':json_str, 'guide':guide})
 
 @staff_member_required
 def view_randomize(request, id):
@@ -62,9 +70,13 @@ def view_randomize(request, id):
         request.session['attribute2'] = None
     request.session['prov_id'] = provenance.id
     
-    print request.session['attribute1']
+    try:
+        guide = provenance.document.guide
+    except:
+        guide = None
+        
     
-    return render(request, 'provmanager/view_randomize.html', {'provenance_name':provenance.name, 'provenance_store_id':provenance.store_id, 'json_str':json.dumps(clean_graph) })
+    return render(request, 'provmanager/view_randomize.html', {'provenance_name':provenance.name, 'provenance_store_id':provenance.store_id, 'json_str':json.dumps(clean_graph), 'guide':guide })
 
 
 def getStuff(request):
