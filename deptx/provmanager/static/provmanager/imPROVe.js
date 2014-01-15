@@ -1450,7 +1450,7 @@ function createButtons()
 	 }
 	 
 	 // now create the guide button
-	 if (GUIDE_HTML)
+	 if (!(typeof GUIDE_HTML === 'undefined'))
 		 {
 			guideButton = new Kinetic.Rect({
 		        x: 0.05 * STAGE_WIDTH,
@@ -1479,9 +1479,10 @@ function createButtons()
 		        height: 30,
 		        align: 'center'
 			});
+			layer.add(guideButton);
+			layer.add(guideText);
 		 }
-	 layer.add(guideButton);
-	 layer.add(guideText);
+
 	 
 }
 
