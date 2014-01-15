@@ -30,7 +30,7 @@ class Player(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return self.name
+        return "%s (%s)" % (self.name, self.cron.user.username)
 
   
 class Cron(models.Model):
