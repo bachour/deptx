@@ -30,8 +30,8 @@ var CONTAINER = document.getElementById("container");
 //buttons
 var submitButton;
 var submitText;
-var resetButton;
-var resetText;
+var guideButton;
+var guideText;
 
 //selected Nodes
 var selectedNodes = {};
@@ -340,6 +340,12 @@ function setupMouseInteractions()
 	            document.body.style.cursor = 'pointer';
 	            
 	    	}
+	        else if (shape == guideButton || shape == guideText)
+	    	{
+	            guideButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
+	            document.body.style.cursor = 'pointer';
+	            
+	    	}
 	        else if (shape.getClassName() == 'Line')
 	        {
 		    	tooltipText.setText(getName(shape));
@@ -361,6 +367,11 @@ function setupMouseInteractions()
         else if (shape && (shape == submitButton || shape == submitText))
     	{
             submitButton.setFill(SUBMIT_FILL);
+            document.body.style.cursor = 'default';
+    	}
+        else if (shape && (shape == guideButton || shape == guideText))
+    	{
+            guideButton.setFill(SUBMIT_FILL);
             document.body.style.cursor = 'default';
     	}
         else if (shape && shape.getClassName() == 'Line')
@@ -417,6 +428,15 @@ function setupMouseInteractions()
                   //submitText.setY(submitButton.getY());
                   layer.draw();
           	}
+          	else if (shape && (shape == guideButton || shape == guideText))
+        	{
+                guideButton.setFill(SUBMIT_PRESSED_FILL);
+                //submitButton.setX(submitButton.getX()+10);
+                //submitButton.setY(submitButton.getY()+10);
+                //submitText.setX(submitButton.getX());
+                //submitText.setY(submitButton.getY());
+                layer.draw();
+        	}
         });
      
       layer.on('mouseup', function(evt) {
@@ -435,7 +455,12 @@ function setupMouseInteractions()
                   layer.draw();
                   submitPushed();
           	}
-          
+          	else if (shape && (shape == guideButton || shape == guideText))
+          	{
+                  guideButton.setFill(SUBMIT_HIGHLIGHTED_FILL);
+                  layer.draw();
+                  guidePushed();
+          	}
         });
 }
 
@@ -1424,6 +1449,40 @@ function createButtons()
 		 layer.add(submitText);
 	 }
 	 
+	 // now create the guide button
+	 if (GUIDE_HTML)
+		 {
+			guideButton = new Kinetic.Rect({
+		        x: 0.05 * STAGE_WIDTH,
+		        y: 10,
+		        stroke: BUTTON_BORDER_COLOUR,
+		        strokeWidth: BUTTON_BORDER_WIDTH,
+		        fill: SUBMIT_FILL,
+		        width: BUTTON_WIDTH/2,
+		        height: 33,
+		        shadowEnabled: BUTTON_SHADOW,
+		        shadowColor: BUTTON_SHADOW_COLOUR,
+		        shadowBlur: BUTTON_SHADOW_BLUR,
+		        shadowOffset: BUTTON_SHADOW_OFFSET,
+		        shadowOpacity: BUTTON_SHADOW_OPACITY,
+		        cornerRadius: BUTTON_CORNER_RADIUS
+		      });
+		
+			guideText = new Kinetic.Text({
+			    x: guideButton.getX(),
+		        y: 15,
+		        text: "Guide",
+		        fontSize: ATTRIBBOX_SMALL_FONT,
+		        fontFamily: ATTRIBBOX_FONT_FAMILY,
+		        fill: BUTTON_FONT_FILL,
+		        width: guideButton.getWidth(),
+		        height: 30,
+		        align: 'center'
+			});
+		 }
+	 layer.add(guideButton);
+	 layer.add(guideText);
+	 
 }
 
 function setupAttribPanes()
@@ -1768,20 +1827,20 @@ function createAndAddMediaJQueryDialog(url, id)
 	if (url.indexOf("youtu")!= -1)
 		{
 			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=1&showinfo=0";
-			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.5 + '" height="' +SCREEN_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
+			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + STAGE_WIDTH*0.5 + '" height="' +STAGE_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
 		}
 	else // if image
 	{
 		url = URL_MEDIA + url;
-		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + SCREEN_WIDTH*0.5 +'" id="image">';
+		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*0.5 +'" id="image">';
 	}
 	var dialog = document.getElementById(dialogID);
 	dialog.innerHTML = innerHTML;
 
 	$(function() {
         $( "#"+dialogID ).dialog({
-        		  width: SCREEN_WIDTH*0.6,
-        		  height: SCREEN_HEIGHT*0.8,
+        		  width: STAGE_WIDTH*0.6,
+        		  height: STAGE_HEIGHT*0.8,
         		  show: "fade",
         		  containment: "parent",
         		  close: function( event, ui ) {
@@ -1798,8 +1857,37 @@ function createAndAddMediaJQueryDialog(url, id)
         		            }
         		          ]
         		        });
-      });
+      });	
+}
+
+function guidePushed()
+{
+	var dialog = document.getElementById("guide");
+	dialog.innerHTML = GUIDE_HTML;
 	
+	logClick("__guide","none",true,0);
+
+	$(function() {
+        $( "#guide").dialog({
+        		  width: STAGE_WIDTH*0.5,
+        		  height: STAGE_HEIGHT*0.6,
+        		  show: "fade",
+        		  containment: "parent",
+        		  close: function( event, ui ) {
+        			  logClick("__guide","none",false,0);
+        		  },
+        		  buttons: [
+        		            {
+        		              text: "Close",
+        		              click: function() {
+        		            		document.getElementById("guide").innerHTML = "";
+        		                $( this ).dialog( "close" );
+        		                
+        		              }
+        		            }
+        		          ]
+        		        });
+      });	
 }
 
 function submitPushed()

@@ -16,12 +16,20 @@
             background-color: white;
             visibility: visible;
             border: 1px solid black;
-            z-index: 1;
         } 
+      #dialog1
+      {
+      	z-index:1;
+      }
+      #dialog2
+      {
+      	z-index:1;
+      }
     </style>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script type="text/javascript" src="custom.js"></script>
 	<link href='overlaypopup.css' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
 	
   </head>
   <body style="overflow: hidden">
@@ -37,9 +45,15 @@
 <div class="overlay-bg">
 	<div class="overlay-content" id="overlay">
  -->
+ <div id="dialog1" title="Media Inspector">
+	</div>
+	<div id="dialog2" title="Media Inspector">
+	</div>
+	<div id="guide" title="Guide">
+	</div>
 	<div id = container style = "width:100%"></div>
 	<div id="overlay" text-align="center" style="display:none;width:100%;height: 100%;position: absolute;top: 0;left: 0;z-index: 10;margin: 0 auto 0 auto;";> </div>
-
+	
 <!-- 	</div>
 </div>
  -->
@@ -57,10 +71,12 @@
 		var MAGNIFY_URL = "improve/magnify.png";
 		var IS_TEST = true;
 		var INACTIVE = true;
+		var GUIDE_HTML = "something something \u0022\u0022 something\u003Cstrong\u003Ehaha\u003C/strong\u003E\u000D\u000Asomething something \u0022\u0022 something\u003Cstrong\u003Ehaha\u003C/strong\u003E\u000D\u000Asomething something \u0022\u0022 something\u003Cstrong\u003Ehaha\u003C/strong\u003E";
     </script>
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="C:/Users/kqb.CS/Dropbox/Dept.X/MEDIA/improve/mopKss.js"></script>
     <script src="../deptx/provmanager/static/provmanager/imPROVe.js"></script>
+    <script src="../deptx/provmanager/static/provmanager/jquery-ui-git.js"></script>
     <script>
     $.getJSON("https://dl.dropboxusercontent.com/u/17451725/PROV_Blood-1Kclean-many.json", function(json) {
     //	$.getJSON("https://dl.dropboxusercontent.com/u/17451725/GRIND_speeding1.json", function(json) {
