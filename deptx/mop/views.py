@@ -15,7 +15,7 @@ from players.forms import MopCheckForm, PasswordForm
 
 from django.contrib.auth.forms import UserCreationForm
 
-from assets.models import Requisition, Unit, CronDocument, MopDocument
+from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
@@ -567,6 +567,8 @@ def form_trashing(request, fullSerial):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def files(request):
+    
+    file_list = StoryFile.objects.filter(published=True).filter(public=True)
     # Handle file upload
     if request.method == 'POST':
         form = MopFileForm(request.POST, request.FILES)
@@ -574,11 +576,19 @@ def files(request):
             mopFile = MopFile(data=request.FILES['data'], mop=request.user.mop)
             mopFile.save()
             logging.log_action(ActionLog.ACTION_MOP_FILE_UPLOAD, mop=request.user.mop, mopFile=mopFile)
-            return render(request, 'mop/files.html', {"upload":True})
+            form = MopFileForm() # A empty, unbound form
+            return render(request, 'mop/files.html', {"upload":True, "form":form, "file_list":file_list})
     else:
         form = MopFileForm() # A empty, unbound form
     logging.log_action(ActionLog.ACTION_MOP_VIEW_FILES, mop=request.user.mop)
-    return render(request, 'mop/files.html', {"form":form})
+    return render(request, 'mop/files.html', {"form":form, "file_list":file_list})
+
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def file_view(request, serial):
+    storyFile = StoryFile.objects.get(serial=serial)
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_STORY_FILE, mop=request.user.mop, storyFile=storyFile)
+    return render(request, 'mop/file_view.html', {"file":storyFile})
 
 
 def paginate(request, all_list, items=20):

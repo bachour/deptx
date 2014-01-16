@@ -34,6 +34,7 @@ urlpatterns = patterns('',
     url(r'intranet/mail/compose/([-\w]+)', views.mail_edit, name='mop_mail_edit'),
     url(r'intranet/mail/check/', views.mail_check, name='mop_mail_check'),
     url(r'intranet/files', views.files, name='mop_files'),
+    url(r'intranet/file/view/([-\w]+)', views.file_view, name='mop_file_view'),
     
      
 )

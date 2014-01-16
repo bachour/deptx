@@ -31,6 +31,7 @@ def hide(mopTracker):
         hide['documentsArchive'] = True
         hide['formsArchive'] = True
         hide['mail'] = True
+        hide['files'] = True
             
         if mopco_mails.filter(bodyType=Mail.BODY_TUTORIAL_5_CONCLUSION).filter(read=True):
             hide = []                
