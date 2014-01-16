@@ -41,6 +41,10 @@ var selectedAttributes = {};
 var taskCompleted = false;
 var revisiting = false;
 
+//media browser
+var innerHTMLs = [];
+var contentIndex = [];
+
 //Object declarations
 // graph node
 function ProvNode (type, id, ressource, attributes, showLabel, name)
@@ -319,6 +323,9 @@ function initStage()
      
      if (FIRST_TIME)
     	 showTutorial();
+     
+     $( "#dialog1" ).dialog({ autoOpen: false });
+     $( "#dialog2" ).dialog({ autoOpen: false });
    } // end of function init stage
 
 function setupMouseInteractions()
@@ -1216,26 +1223,32 @@ function toggleNodeSelection(shape)
 	// see if this node already selected
 	if (selectedNodes['1'] == clickedNode)
 	{
+		
+		if ( $("#dialog1").dialog("isOpen")){
+			document.getElementById("dialog1").innerHTML = "";
+			$("#dialog1").dialog("close");
+		}
 		selectedNodes['1'] = null;
 		clearAttributePane('1');
 		selectedAttributes['1'] = null;
 		setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
 	    logClick(clickedNode.id, "none", false, '1');
-	    document.getElementById("dialog1").innerHTML = "";
-	    $("#dialog1").dialog("close");
 		return;
 	}
 	else if (selectedNodes['2'] == clickedNode)
 	{
+		if ( $("#dialog2").dialog("isOpen")){
+			document.getElementById("dialog2").innerHTML = "";
+		    $("#dialog2").dialog("close");
+		}
+		    
 		selectedNodes['2'] = null;
 		clearAttributePane('2');
 		selectedAttributes['2'] = null;
 	    setImageHighlight(clickedNode.image, false, true);
 	    clickSound.play();
 	    logClick(clickedNode.id, "none", false, '2');
-	    document.getElementById("dialog2").innerHTML = "";
-	    $("#dialog2").dialog("close");
 		return;
 	}
 
@@ -1738,108 +1751,34 @@ function showTutorial()
 
 // setup and display the fade-out and background of the media display
 function showMedia(url, id)
-{/*
-	var background = new Kinetic.Rect({
-        x: 0,
-        y: 0,
-        strokeEnabled: false,
-        fill: 'black',
-        opacity: 1,
-        width: STAGE_WIDTH,
-        height: STAGE_HEIGHT,
-        shadowEnabled: false,
-      });
-	var box = new Kinetic.Rect({
-        x: 0.025*STAGE_WIDTH,
-        y: 0.05*STAGE_HEIGHT,
-        stroke: ATTRIBBOX_BORDER_COLOUR,
-        strokeWidth: ATTRIBBOX_BORDER_WIDTH,
-        fill: 'black',
-        width: 0.95*STAGE_WIDTH,
-        height: 0.9*STAGE_HEIGHT,
-        cornerRadius: 10
-      });
-	
-	mediaLayer.setOpacity(0);
-	
-	mediaLayer.add(background);
-	mediaLayer.draw();
-	
-	var anim = new Kinetic.Animation(function(frame) {
-		
-		mediaLayer.setOpacity(Math.min(1.0*frame.time/ 1000, 1));
-		if (2.0*frame.time/1000 >= 1.2)
-		{
-			//mediaLayer.add(box);
-			
-			this.stop();
-		}
-		
-		}, mediaLayer);
-	
-	anim.start();*/
-	media = createAndAddMediaJQueryDialog(url, id);
-}
-
-// setup and display the media represented in the the string url
-function createAndAddMedia(url)
 {
-	document.getElementById('overlay').style.display = 'block';
-	document.getElementById('overlay').style.padding = SCREEN_HEIGHT*0.06 + 'px';
-
-	// if video
-	if (url.indexOf("youtu")!= -1)
-		{
-			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
-			document.getElementById('overlay').innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.8 + '" height="' +SCREEN_HEIGHT*0.8 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';		
-		}
-	else // if image
-	{
-		url = URL_MEDIA + url;
-		document.getElementById('overlay').innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
-	}
-				
+	createAndAddMedia(url, id);
 }
 
-function createAndAddMediaNW(url)
-{
-	var innerHTML = "";
-	var newWindow = null;
-	// if video
-	if (url.indexOf("youtu")!= -1)
-		{
-			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=0&showinfo=0";
-			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + SCREEN_WIDTH*0.6 + '" height="' +SCREEN_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';			
-		}
-	else // if image
-	{
-		url = URL_MEDIA + url;
-		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" height="' + SCREEN_HEIGHT*0.8 +'" id="image"></iframe> <br/><button type="button" onclick="hideOverlay()" class="close-btn">Close</button>';
-	}
-	newWindow = window.open("media_viewer.html","newWindow", "width="+SCREEN_WIDTH*0.6+",height="+SCREEN_HEIGHT*0.6 + ",menubar=0,status=0,resizable=0,title=0,toolbar=0,left=20,top=20");
-	newWindow.document.write(innerHTML);
-}
-
-function createAndAddMediaJQueryDialog(url, id)
+// display the media represented in the the string url
+function createAndAddMedia(url, id)
 {
 	var innerHTML = "";
 	var dialogID = "dialog" + id;
 	
-	// if video
-	if (url.indexOf("youtu")!= -1)
-		{
-			url = url + "?modestbranding=1&rel=0&autoplay=1&controls=1&showinfo=0";
-			innerHTML = '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + STAGE_WIDTH*0.5 + '" height="' +STAGE_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
-		}
-	else // if image
+	if (url.charAt(0) == '[')
 	{
-		url = URL_MEDIA + url;
-		innerHTML = '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*0.5 +'" id="image">';
+		var urls = url.substr(1,url.length-2).split(',');
+		innerHTMLs[id] = [];
+		for (var i in urls)
+			innerHTMLs[id][i] = getHTMLFromURL(urls[i], id);
+		contentIndex[id] = 0;
+		innerHTML = '<div style="width:100%;text-align:center;"> <a id="nextClick" title="Previous item" href="#" onclick="mediaBrowserPrevious('+id + ');return false;">Previous</a> <label id="count'+id+'"> 1 of '+innerHTMLs[id].length + '</label> <a id="nextClick" title="Next item" href="#" onclick="mediaBrowserNext('+id + ');return false;"> Next </a></div><div id="content'+id+'" style="width:100%;">'+innerHTMLs[id][contentIndex[id]]+'</div>';
 	}
+	else
+		innerHTML = getHTMLFromURL(url, id);
+	
+	
 	var dialog = document.getElementById(dialogID);
 	dialog.innerHTML = innerHTML;
 
 	$(function() {
+		$( "#"+dialogID ).dialog( "destroy" );
         $( "#"+dialogID ).dialog({
         		  width: STAGE_WIDTH*0.6,
         		  height: STAGE_HEIGHT*0.8,
@@ -1860,6 +1799,42 @@ function createAndAddMediaJQueryDialog(url, id)
         		          ]
         		        });
       });	
+}
+
+function mediaBrowserNext(id)
+{
+	var component = document.getElementById("content" + id);
+	contentIndex[id] = (contentIndex[id]+1 + innerHTMLs[id].length)%innerHTMLs[id].length;
+	component.innerHTML = innerHTMLs[id][contentIndex[id]];
+	
+	component = document.getElementById("count" + id);
+	component.innerHTML = ' ' + (contentIndex[id]+1) + ' of '+innerHTMLs[id].length +' ';
+}
+function mediaBrowserPrevious(id)
+{
+	var component = document.getElementById("content" + id);
+	contentIndex[id] = (contentIndex[id]-1 + innerHTMLs[id].length)%innerHTMLs[id].length;
+	component.innerHTML = innerHTMLs[id][contentIndex[id]];
+	
+	component = document.getElementById("count" + id);
+	component.innerHTML = ' ' + (contentIndex[id]+1) + ' of '+innerHTMLs[id].length +' ';
+}
+
+
+// converts a reference URL to an HTML tag required to show that component
+function getHTMLFromURL(url, id)
+{
+	url = url.trim();
+	if (url.indexOf("youtu")!= -1)
+	{
+		url = url + "?modestbranding=1&rel=0&autoplay=1&controls=1&showinfo=0";
+		return '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + STAGE_WIDTH*0.5 + '" height="' +STAGE_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
+	}
+	else // if image
+	{
+		url = URL_MEDIA + url;
+		return '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*0.5 +'" id="image">';
+	}
 }
 
 function guidePushed()
