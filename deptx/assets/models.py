@@ -1,3 +1,4 @@
+import os.path
 from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
@@ -295,4 +296,22 @@ class MopDocument(AbstractDocument):
     def __unicode__(self):
         return "Active: %s - %s - %s - %s" % (self.active, self.unit.serial, self.get_clearance_display(), self.provenance.name)
 
-
+class StoryFile(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    serial = models.SlugField(max_length=36, unique=True)
+    data = models.FileField(upload_to='files')
+    timestamp = models.DateTimeField()
+    published = models.BooleanField(default=False)
+    public = models.BooleanField(default=False)
+    
+    @property
+    def filename(self):
+        return os.path.basename(self.data.name)
+    
+    def __unicode__(self):
+        return "%s (%s)" % (self.serial, self.filename)
+         
+    
+    

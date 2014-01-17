@@ -2,7 +2,7 @@ from django.db import models
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron, Mop
-from assets.models import Mission, Case, Requisition, CronDocument
+from assets.models import Mission, Case, Requisition, CronDocument, StoryFile
 from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail, CaseQuestionInstance
 from mop.models import MopDocumentInstance, Mail, MopTracker, RequisitionInstance, MopFile
     
@@ -62,7 +62,8 @@ class ActionLog(models.Model):
     ACTION_MOP_VIEW_PROVENANCE = 126
     ACTION_MOP_VIEW_PROVENANCE_NO_CLEARANCE = 127
     ACTION_MOP_VIEW_FILES = 128
-
+    ACTION_MOP_VIEW_STORY_FILE = 129
+    
     ACTION_MOP_MAIL_SEND = 130
     ACTION_MOP_MAIL_DRAFT = 131
     ACTION_MOP_MAIL_TRASH = 132
@@ -137,6 +138,7 @@ class ActionLog(models.Model):
         (ACTION_MOP_VIEW_PROVENANCE, "ACTION_MOP_VIEW_PROVENANCE"),
         (ACTION_MOP_VIEW_PROVENANCE_NO_CLEARANCE, "ACTION_MOP_VIEW_PROVENANCE_NO_CLEARANCE"),
         (ACTION_MOP_VIEW_FILES, "ACTION_MOP_VIEW_FILES"),
+        (ACTION_MOP_VIEW_STORY_FILE, "ACTION_MOP_VIEW_STORY_FILE"),
         (ACTION_MOP_MAIL_SEND, "ACTION_MOP_MAIL_SEND"),
         (ACTION_MOP_MAIL_DRAFT, "ACTION_MOP_MAIL_DRAFT"),
         (ACTION_MOP_MAIL_TRASH, "ACTION_MOP_MAIL_TRASH"),
@@ -184,6 +186,7 @@ class ActionLog(models.Model):
     requisitionInstance = models.ForeignKey(RequisitionInstance, blank=True, null=True)
     tutorialProgress = models.IntegerField(choices=MopTracker.CHOICES_TUTORIAL, blank=True, null=True)
     mopFile = models.ForeignKey(MopFile, blank=True, null=True)
+    storyFile = models.ForeignKey(StoryFile, blank=True, null=True)
     
     data = models.TextField(blank=True, null=True)
     

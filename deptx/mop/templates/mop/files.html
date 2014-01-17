@@ -2,10 +2,19 @@
 
 {% block content %}
 
+<h1>Available Files</h1>
+{% if file_list %}
+	<table>
+	<tr><th class="nobox"></th><th>File</th><th>Name</th></tr>
+	{% for file in file_list %}
+		<tr><td class="nobox"><a href="{% url 'mop_file_view' file.serial %}">view</a></td><td>{{file.serial}}</td><td>{{file.filename}}</td></tr>
+	{% endfor %}
+	</table>
+{% else %}
+You do not have access to any files.
+{% endif %}
 
-
-
-<h1>File Management</h1>
+<h1>File Upload</h1>
 {% if user.mop.mopTracker.fileUploadAllowed %}
 	{% if upload %}
 		<p>Your file has been uploaded.</p>
@@ -45,6 +54,6 @@
 
 {% block help %}
 <p>
-Please use this page to upload specific files from external sources. Please only do so when asked.
+This page displays all files you have access to. It is also possible to upload files to the central server, but please only do so when prompted by your superiors.
 </p>
 {% endblock %}
