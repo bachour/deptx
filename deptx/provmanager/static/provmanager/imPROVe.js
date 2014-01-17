@@ -1766,12 +1766,12 @@ function createAndAddMedia(url, id)
 		var urls = url.substr(1,url.length-2).split(',');
 		innerHTMLs[id] = [];
 		for (var i in urls)
-			innerHTMLs[id][i] = getHTMLFromURL(urls[i], id);
+			innerHTMLs[id][i] = getHTMLFromURL(urls[i]);
 		contentIndex[id] = 0;
 		innerHTML = '<div style="width:100%;text-align:center;"> <a id="nextClick" title="Previous item" href="#" onclick="mediaBrowserPrevious('+id + ');return false;">Previous</a> <label id="count'+id+'"> 1 of '+innerHTMLs[id].length + '</label> <a id="nextClick" title="Next item" href="#" onclick="mediaBrowserNext('+id + ');return false;"> Next </a></div><div id="content'+id+'" style="width:100%;">'+innerHTMLs[id][contentIndex[id]]+'</div>';
 	}
 	else
-		innerHTML = getHTMLFromURL(url, id);
+		innerHTML = getHTMLFromURL(url);
 	
 	
 	var dialog = document.getElementById(dialogID);
@@ -1822,7 +1822,7 @@ function mediaBrowserPrevious(id)
 
 
 // converts a reference URL to an HTML tag required to show that component
-function getHTMLFromURL(url, id)
+function getHTMLFromURL(url)
 {
 	url = url.trim();
 	if (url.indexOf("youtu")!= -1)
@@ -1840,7 +1840,10 @@ function getHTMLFromURL(url, id)
 function guidePushed()
 {
 	var dialog = document.getElementById("guide");
-	dialog.innerHTML = GUIDE_HTML;
+	if (GUIDE_HTML.charAt(0) == '<')
+		dialog.innerHTML = GUIDE_HTML;
+	else
+		dialog.innerHTML = getHTMLFromURL(GUIDE_HTML);
 	
 	logClick("__guide","none",true,0);
 
