@@ -76,7 +76,7 @@ def view_randomize(request, id):
         guide = None
         
     
-    return render(request, 'provmanager/view_randomize.html', {'provenance_name':provenance.name, 'provenance_store_id':provenance.store_id, 'json_str':json.dumps(clean_graph), 'guide':guide })
+    return render(request, 'provmanager/view_randomize.html', {'inconsistencies_list':inconsistencies_list, 'provenance_name':provenance.name, 'provenance_store_id':provenance.store_id, 'json_str':json.dumps(clean_graph), 'guide':guide })
 
 
 def getStuff(request):
