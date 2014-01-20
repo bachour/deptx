@@ -15,7 +15,7 @@ Here's what you need to do:
 5.	From the "Signed Forms" page, click the "mail" button next to the newly signed form.
 6.	Select {{tutorialData.document.mopDocument.unit.serial}} as the recipient.
 7.	Select "Submitting document" as the subject.
-8.	Now, select the document you just modified as the document to send.
+8.	Now, next to "Attach Document", select the document you just modified as the document to send.
 9.	Click "Send".
 10.	Wait for a response from {{tutorialData.document.mopDocument.unit.serial}}.
 
