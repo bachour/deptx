@@ -1,9 +1,17 @@
+from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
-from provmanager.provenance import export
+from provmanager.provenance import ActionLogProvConverter
 from players.models import Player
 
 
 class Command(BaseCommand):
+    option_list = BaseCommand.option_list + (
+        make_option('-j', '--prov-json',
+                    action='store_true',
+                    dest='prov-json',
+                    default=False,
+                    help='Output the PROV-JSON instead of the default PROV-N format'),
+    )
     args = '<player_id>'
     help = 'Exporting the provenance for player IDs'
 
@@ -14,7 +22,9 @@ class Command(BaseCommand):
             except Player.DoesNotExist:
                 raise CommandError('Player "%s" does not exist' % player_id)
 
-            g = export(player)
+            converter = ActionLogProvConverter(player)
 
-            self.stdout.write('Exporting "%s"' % player_id)
-            self.stdout.write(g.get_provn())
+            if options['prov-json']:
+                self.stdout.write(converter.get_provjson())
+            else:
+                self.stdout.write(converter.get_provn())
