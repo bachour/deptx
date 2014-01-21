@@ -16,7 +16,7 @@ And remember: Not all documents have an error in them! If you find a provenance 
 
 If you return to the document pool you will see all the documents MoP departments currently have to offer. You can now go ahead and start working on those documents, finding out what (if anything) is wrong!
 
-If you have any questions or problems, just drop us a message using the feedback form and someone from {{tutorialData.mopco.serial}} will be in touch with you as soon as possible.
+If you have any questions or problems, just drop us a message using the "Ask Mop For Help" form (now available to you in the Blank Forms page) and someone from {{tutorialData.mopco.serial}} will be in touch with you as soon as possible.
 
 It is also a good idea to study the Guidebook thoroughly! :) It's not as fun as filling out forms, but it's certainly very helpful.
 
