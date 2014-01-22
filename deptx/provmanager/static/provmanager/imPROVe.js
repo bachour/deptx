@@ -1782,7 +1782,7 @@ function createAndAddMedia(url, id)
 	$(function() {
 		$( "#"+dialogID ).dialog( "destroy" );
         $( "#"+dialogID ).dialog({
-        		  width: STAGE_WIDTH*CURRENT_SCALE*0.5,
+        		  width: STAGE_WIDTH*CURRENT_SCALE*0.6,
         		  height: STAGE_HEIGHT*CURRENT_SCALE*0.65,
         		  show: "fade",
         		  containment: "parent",
@@ -1835,7 +1835,7 @@ function getHTMLFromURL(url)
 	else // if image
 	{
 		url = URL_MEDIA + url;
-		return '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*CURRENT_SCALE*0.4 +'" id="image">';
+		return '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*CURRENT_SCALE*0.5 +'" id="image">';
 	}
 }
 
@@ -1851,8 +1851,8 @@ function guidePushed()
 
 	$(function() {
         $( "#guide").dialog({
-        		  width: STAGE_WIDTH*0.5,
-        		  height: STAGE_HEIGHT*0.65,
+        		  width: STAGE_WIDTH*CURRENT_SCALE*0.6,
+        		  height: STAGE_HEIGHT*CURRENT_SCALE*0.65,
         		  show: "fade",
         		  containment: "parent",
         		  close: function( event, ui ) {
