@@ -10,7 +10,7 @@ var staticImages = {}; //TEMP: collection of images for non-graph elements
 var lines = []; // PROCESS: array of connectors;
 
 //zoom variables
-var currentZoom = 0;
+var CURRENT_SCALE = 1.0;
 var MAX_ZOOM = 0.0;
 var MIN_ZOOM = -0.5;
 
@@ -174,6 +174,8 @@ function initStage()
         height: containerHeight,
         scale:scale // scale to the size of the container
       });
+	
+	CURRENT_SCALE = scale;
 	
 	if (Object.keys(sources).length >= 8)
 	{
@@ -1780,8 +1782,8 @@ function createAndAddMedia(url, id)
 	$(function() {
 		$( "#"+dialogID ).dialog( "destroy" );
         $( "#"+dialogID ).dialog({
-        		  width: STAGE_WIDTH*0.6,
-        		  height: STAGE_HEIGHT*0.8,
+        		  width: STAGE_WIDTH*CURRENT_SCALE*0.6,
+        		  height: STAGE_HEIGHT*CURRENT_SCALE*0.65,
         		  show: "fade",
         		  containment: "parent",
         		  close: function( event, ui ) {
@@ -1828,12 +1830,12 @@ function getHTMLFromURL(url)
 	if (url.indexOf("youtu")!= -1)
 	{
 		url = url + "?modestbranding=1&rel=0&autoplay=1&controls=1&showinfo=0";
-		return '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + STAGE_WIDTH*0.5 + '" height="' +STAGE_HEIGHT*0.6 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
+		return '<iframe style="display:block;margin:0 auto 0 auto" src="' + url + '" name="video" id="video" frameborder="0" width ="' + STAGE_WIDTH*CURRENT_SCALE*0.4 + '" height="' +STAGE_HEIGHT*CURRENT_SCALE*0.4 + '" scrolling="auto" onload="" allowtransparency="false"></iframe>';			
 	}
 	else // if image
 	{
 		url = URL_MEDIA + url;
-		return '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*0.5 +'" id="image">';
+		return '<img style="display:block;margin:0 auto 0 auto" src="' + url + '" width="' + STAGE_WIDTH*CURRENT_SCALE*0.5 +'" id="image">';
 	}
 }
 
@@ -1849,8 +1851,8 @@ function guidePushed()
 
 	$(function() {
         $( "#guide").dialog({
-        		  width: STAGE_WIDTH*0.5,
-        		  height: STAGE_HEIGHT*0.6,
+        		  width: STAGE_WIDTH*CURRENT_SCALE*0.6,
+        		  height: STAGE_HEIGHT*CURRENT_SCALE*0.65,
         		  show: "fade",
         		  containment: "parent",
         		  close: function( event, ui ) {
