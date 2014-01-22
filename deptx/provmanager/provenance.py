@@ -93,6 +93,16 @@ class ActionLogProvConverter():
     def get_provjson(self):
         return self.prov.get_provjson()
 
+    def create_cron_activity(self, bundle, activity, cron, log, act_attrs=None, ag_attrs=None):
+        act_id = 'cronact:{activity}/{cron_id}/{log_id}'.format(activity=activity, cron_id=cron.id, log_id=log.id)
+        act = bundle.activity(act_id, log.createdAt, log.createdAt, act_attrs)
+        bundle.wasAssociatedWith(act, self.ag_cron_current)
+        ag_cron_new = bundle.agent('cronuser:{cron_id}/{log_id}'.format(cron_id=cron.id, log_id=log.id), ag_attrs)
+        bundle.wasRevisionOf(ag_cron_new, self.ag_cron_current)
+        bundle.wasGeneratedBy(ag_cron_new, act)
+        self.ag_cron_current = ag_cron_new
+        return act
+
     def action_cron_created(self, log):
         g = self.prov
         cron = log.cron
@@ -183,16 +193,64 @@ class ActionLogProvConverter():
         g.wasDerivedFrom(ag_cron_new, e_mission_briefing)
         self.ag_cron_current = ag_cron_new
 
+    def action_cron_view_mission_debriefing(self, log):
+        g = self.prov
+        cron = log.cron
+        mission = log.mission
+        e_mission_debriefing = g.entity('mission:{mission_id}/debriefing'.format(mission_id=mission.id))
+        act = g.activity('cronact:view_mission_debriefing/{mission_id}/{log_id}'.format(mission_id=mission.id, log_id=log.id),
+                         log.createdAt, None,
+                         {'cron:action_log_id': log.id})
+        g.wasAssociatedWith(act, self.ag_cron_current)
+        g.used(act, e_mission_debriefing)
+        ag_cron_new = g.agent('cronuser:{cron_id}/{log_id}'.format(cron_id=cron.id, log_id=log.id),
+                              {'cron:mission': 'mission:{mission_id}'.format(mission_id=mission.id),
+                               'cron:missionState': log.get_missionState_display()})
+        g.specialization(ag_cron_new, self.ag_cron)
+        g.wasGeneratedBy(ag_cron_new, act)
+        g.wasRevisionOf(ag_cron_new, self.ag_cron_current)
+        g.wasDerivedFrom(ag_cron_new, e_mission_debriefing)
+        self.ag_cron_current = ag_cron_new
+
+    def action_cron_view_mission_outro(self, log):
+        g = self.prov
+        cron = log.cron
+        mission = log.mission
+        e_mission_outro = g.entity('mission:{mission_id}/outro'.format(mission_id=mission.id))
+        act = g.activity('cronact:view_mission_outro/{mission_id}/{log_id}'.format(mission_id=mission.id, log_id=log.id),
+                         log.createdAt, None,
+                         {'cron:action_log_id': log.id})
+        g.wasAssociatedWith(act, self.ag_cron_current)
+        g.used(act, e_mission_outro)
+        ag_cron_new = g.agent('cronuser:{cron_id}/{log_id}'.format(cron_id=cron.id, log_id=log.id),
+                              {'cron:mission': 'mission:{mission_id}'.format(mission_id=mission.id),
+                               'cron:missionState': log.get_missionState_display()})
+        g.specialization(ag_cron_new, self.ag_cron)
+        g.wasGeneratedBy(ag_cron_new, act)
+        g.wasRevisionOf(ag_cron_new, self.ag_cron_current)
+        g.wasDerivedFrom(ag_cron_new, e_mission_outro)
+        self.ag_cron_current = ag_cron_new
+
+    def action_cron_view_fluff(self, log):
+        self.create_cron_activity(self.prov, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
+
+    def create_mop_activity(self, bundle, activity, mop, log, act_attrs=None, ag_attrs=None):
+        act_id = 'mopact:{activity}/{mop_id}/{log_id}'.format(activity=activity, mop_id=mop.id, log_id=log.id)
+        act = bundle.activity(act_id, log.createdAt, log.createdAt, act_attrs)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        ag_mop_new = bundle.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id), ag_attrs)
+        bundle.wasRevisionOf(ag_mop_new, self.ag_mop_current)
+        bundle.wasGeneratedBy(ag_mop_new, act)
+        self.ag_mop_current = ag_mop_new
+        return act
+
     def action_mop_created(self, log):
         g = self.prov
         mop = log.mop
 
         act = g.activity('mopact:registration/{mop_id}'.format(mop_id=mop.id), log.createdAt, log.createdAt,
                          {'cron:action_log_id': log.id})
-        ag_mop_inactive = g.agent('mopuser:{mop_id}/inactive'.format(mop_id=mop.id))
-        self.ag_mop_current = ag_mop_inactive
-        g.specialization(ag_mop_inactive, self.ag_mop)
-        g.wasGeneratedBy(ag_mop_inactive, act)
+        g.wasGeneratedBy(self.ag_mop, act)
         g.wasAssociatedWith(act, self.ag_cron_current)
         g.agent('app:mop')
         g.wasAssociatedWith(act, 'app:mop')
@@ -204,6 +262,24 @@ class ActionLogProvConverter():
         g.wasGeneratedBy(ag_cron_new, act)
         g.wasRevisionOf(ag_cron_new, self.ag_cron_current)
 
+    def action_mop_login(self, log):
+        g = self.prov
+        mop = log.mop
+        act = g.activity('mopact:login/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
+                         log.createdAt, log.createdAt,
+                         {'cron:action_log_id': log.id})
+        g.wasAssociatedWith(act, self.ag_player)
+        ag_mop_logged_in = g.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id))
+        g.alternate(ag_mop_logged_in, self.ag_mop_current)
+        g.specialization(ag_mop_logged_in, self.ag_mop)
+        g.wasGeneratedBy(ag_mop_logged_in, act)
+        self.ag_mop_current = ag_mop_logged_in
+
+    def action_mop_receive_mail_tutorial(self, log):
+        g = self.prov
+        mop = log.mop
+        act = self.create_mop_activity(g, 'receive_mail_tutorial', mop, log)
+
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
         ActionLog.ACTION_CRON_VIEW_STUDY:               action_cron_view_study,
@@ -212,6 +288,12 @@ class ActionLogProvConverter():
         ActionLog.ACTION_CRON_VIEW_INDEX:               action_cron_view_index,
         ActionLog.ACTION_CRON_VIEW_MISSION_INTRO:       action_cron_view_mission_intro,
         ActionLog.ACTION_CRON_VIEW_MISSION_BRIEFING:    action_cron_view_mission_briefing,
+        ActionLog.ACTION_CRON_VIEW_MISSION_DEBRIEFING:  action_cron_view_mission_debriefing,
+        ActionLog.ACTION_CRON_VIEW_MISSION_OUTRO:       action_cron_view_mission_outro,
+        ActionLog.ACTION_CRON_VIEW_FLUFF:               action_cron_view_fluff,
 
         ActionLog.ACTION_MOP_CREATED:                   action_mop_created,
+        ActionLog.ACTION_MOP_LOGIN:                     action_mop_login,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_TUTORIAL:     action_mop_receive_mail_tutorial,
+
     }
