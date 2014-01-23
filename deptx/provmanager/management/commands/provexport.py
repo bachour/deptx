@@ -11,6 +11,11 @@ class Command(BaseCommand):
                     dest='prov-json',
                     default=False,
                     help='Output the PROV-JSON instead of the default PROV-N format'),
+        make_option('-s', '--no-spe',
+                    action='store_true',
+                    dest='no_specialization',
+                    default=False,
+                    help='Do not generate specialization relations'),
     )
     args = '<player_id>'
     help = 'Exporting the provenance for player IDs'
@@ -23,6 +28,13 @@ class Command(BaseCommand):
                 raise CommandError('Player "%s" does not exist' % player_id)
 
             converter = ActionLogProvConverter(player)
+
+            if options['no_specialization']:
+                converter.generating_cron_specialization = False
+                converter.generating_mop_specialization = False
+
+            # Start the conversion
+            converter.convert()
 
             if options['prov-json']:
                 self.stdout.write(converter.get_provjson())
