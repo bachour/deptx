@@ -35,6 +35,11 @@ try:
 except:
     DEFAULT_FROM_EMAIL = 'admin@localhost'
 
+try:
+    from deptx.settings_production import TO_ALL
+except:
+    TO_ALL = ["1@localhost.com", "2@localhost.com"]
+
 def isCron(user):
     if user:
         try:
@@ -692,6 +697,13 @@ def hq_mail(request):
                 email_tpl = loader.get_template('cron/mail/message_to_player.txt')
                 email = EmailMessage(subject='[cr0n] New Message', body = email_tpl.render(c), to=[to,])
                 email.send(fail_silently=False)
+                
+                subject = "[cr0n] %s: Field Communication (sent to player)" % (mail.cron.user.username)
+                email_tpl = loader.get_template('cron/mail/message_from_player.txt')
+                c = Context({'body':mail.body})
+                email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+                email.send(fail_silently=False)
+                
 
                 logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=mail.cron, message=mail)
                 return render(request, 'cron/hq_mail.html', {'mail':mail})
@@ -715,6 +727,12 @@ def hq_mail(request):
 
                         logging.log_action(ActionLog.ACTION_CRON_MESSAGE_RECEIVE, cron=cron, message=new_mail)
                     send_mass_mail(tuple(email_list), fail_silently=False)
+                    
+                    subject = "[cr0n] Field Communication (sent to all players)"
+                    email_tpl = loader.get_template('cron/mail/message_from_player.txt')
+                    c = Context({'body':mail.body})
+                    email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+                    email.send(fail_silently=False)
                     
                     return render(request, 'cron/hq_mail.html', {'mail':mail, 'cron_list':cron_list})
                 else:

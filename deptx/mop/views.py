@@ -32,6 +32,13 @@ from deptx.helpers import now
 from logger import logging
 from logger.models import ProvLog, ActionLog
 
+from django.template import Context, Template, loader
+from django.core.mail import EmailMessage
+try:
+    from deptx.settings_production import TO_ALL
+except:
+    TO_ALL = ["1@localhost.com", "2@localhost.com"]
+
 def isMop(user):
     if user:
         for mop in Mop.objects.filter(user=user):
@@ -709,6 +716,13 @@ def control_mail(request):
                 return render(request, 'mop/control_mail.html', {'form':form, 'mail':mail})
             elif 'send' in request.POST:
                 save_manual_mail(mail)
+                
+                subject = "[MoP] %s to %s: %s (TRUST mod: %s)" % (mail.unit.serial, mail.mop.user.username, mail.get_subject_display(), mail.trust)
+                email_tpl = loader.get_template('mop/mail/message_from_player.txt')
+                c = Context({'body':mail.body})
+                email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+                email.send(fail_silently=False)
+                
                 return render(request, 'mop/control_mail.html', {'mail':mail})
             elif 'bulk' in request.POST:
                 if 'spam' in request.POST:
@@ -718,6 +732,13 @@ def control_mail(request):
                         new_mail.id = None
                         new_mail.mop = mop
                         save_manual_mail(new_mail)
+                    
+                    subject = "[MoP] %s to ALL: %s (TRUST mod: %s)" % (mail.unit.serial, mail.get_subject_display(), mail.trust)
+                    email_tpl = loader.get_template('mop/mail/message_from_player.txt')
+                    c = Context({'body':mail.body})
+                    email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+                    email.send(fail_silently=False)
+                    
                     return render(request, 'mop/control_mail.html', {'mail':mail, 'mop_list':mop_list})
                 else:
                     return render(request, 'mop/control_mail.html', {'form':form, 'mail':mail, 'nospam':True})
