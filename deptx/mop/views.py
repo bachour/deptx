@@ -290,7 +290,7 @@ def mail_view(request, serial):
     #to check if this is the last tutorial email
     tutorial.cronMail(request.user.mop.mopTracker, mail)
     
-    logging.log_action(ActionLog.ACTION_MOP_VIEW_MAIL, mop=request.user.mop)
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_MAIL, mop=request.user.mop, mail=mail)
     return render(request, 'mop/mail_view.html', {'mail': mail})
 
 @login_required(login_url='mop_login')
@@ -539,7 +539,7 @@ def form_fill(request, reqBlank_serial):
             return redirect('mop_forms_signed')
     else:
         form = RequisitionInstanceForm()
-        logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_FILL, mop=request.user.mop)
+        logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_FILL, mop=request.user.mop, requisitionBlank=reqBlank)
         return render(request, 'mop/forms_fill.html', {"reqBlank": reqBlank, "form": form})
 
 @login_required(login_url='mop_login')
