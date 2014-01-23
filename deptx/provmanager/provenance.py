@@ -47,11 +47,15 @@ def action_log_to_dict(action_log):
 
 
 class ActionLogProvConverter():
-    def __init__(self, player):
+    def __init__(self, player,
+                 generating_bundle=True,
+                 generating_specialization=True,
+                 including_view_actions=True):
         self.cache = {}
-        self.including_view_actions = True
-        self.generating_cron_specialization = True
-        self.generating_mop_specialization = True
+        self.generating_bundle = generating_bundle
+        self.including_view_actions = including_view_actions
+        self.generating_cron_specialization = generating_specialization
+        self.generating_mop_specialization = generating_specialization
 
         self.prov = ProvBundle(namespaces=NAMESPACES)
         self.player = player
@@ -93,8 +97,11 @@ class ActionLogProvConverter():
 
     def _convert_action_log(self, log):
         if log.action in ActionLogProvConverter._converters:
+            bundle = self.prov.bundle('b:{player_id}/{log_id}'.format(player_id=self.player.id, log_id=log.id))\
+                if self.generating_bundle else self.prov
+
             # TODO Surround by try/except block to fail gracefully should there is any exception during conversion
-            self._converters[log.action](self, log)
+            self._converters[log.action](self, bundle, log)
         else:
             # TODO: Emit warnings for inconvertible logs
             pass
@@ -122,16 +129,16 @@ class ActionLogProvConverter():
         self._create_new_cron_entity(bundle, log, act, cron_attrs)
         return act
 
-    def create_cron_view_action(self, log, view):
+    def _create_cron_view_action(self, bundle, log, view):
         if self.including_view_actions:
-            g = self.prov
+            g = bundle
             act = g.activity('cronact:view_{view}/{log_id}'.format(view=view, log_id=log.id),
                              log.createdAt, log.createdAt,
                              {'cron:action_log_id': log.id})
             g.wasAssociatedWith(act, self.ag_cron_current)
 
-    def action_cron_created(self, log):
-        g = self.prov
+    def action_cron_created(self, bundle, log):
+        g = bundle
         cron = log.cron
 
         act = g.activity('cronact:registration/{cron_id}'.format(cron_id=cron.id), log.createdAt, log.createdAt,
@@ -144,8 +151,8 @@ class ActionLogProvConverter():
         g.agent('app:cron')
         g.wasAssociatedWith(act, 'app:cron')
 
-    def action_cron_activated(self, log):
-        g = self.prov
+    def action_cron_activated(self, bundle, log):
+        g = bundle
         cron = log.cron
         act = g.activity('cronact:activation/{cron_id}'.format(cron_id=cron.id), log.createdAt, log.createdAt,
                          {'cron:action_log_id': log.id})
@@ -157,8 +164,8 @@ class ActionLogProvConverter():
         g.specialization(ag_cron_active, self.ag_cron)
         self.ag_cron_current = ag_cron_active
 
-    def action_cron_login(self, log):
-        g = self.prov
+    def action_cron_login(self, bundle, log):
+        g = bundle
         cron = log.cron
         act = g.activity('cronact:login/{cron_id}/{log_id}'.format(cron_id=cron.id, log_id=log.id),
                          log.createdAt, log.createdAt,
@@ -173,26 +180,17 @@ class ActionLogProvConverter():
         g.wasGeneratedBy(ag_cron_logged_in, act)
         self.ag_cron_current = ag_cron_logged_in
 
-    def action_cron_view_index(self, log):
-        self.create_cron_view_action(log, 'index')
+    def action_cron_view_index(self, bundle, log):
+        self._create_cron_view_action(bundle, log, 'index')
 
-    def action_cron_view_study(self, log):
-        self.create_cron_view_action(log, 'study')
+    def action_cron_view_study(self, bundle, log):
+        self._create_cron_view_action(bundle, log, 'study')
 
-    def get_or_create_mission(self, mission):
-        if mission not in self.cache:
-            e_mission = self.prov.entity(
-                'mission:{mission_id}'.format(mission_id=mission.id),
-                {'cron:mission': mission.name}
-            )
-            self.cache[mission] = e_mission
-        return self.cache[mission]
-
-    def create_mission_action(self, action, log):
-        g = self.prov
-        cron = log.cron
+    def create_mission_action(self, bundle, action, log):
+        g = bundle
         mission = log.mission
-        e_mission = self.get_or_create_mission(mission)
+        e_mission = g.entity('mission:{mission_id}'.format(mission_id=mission.id),
+                             {'cron:mission': mission.name})
         e_mission_part = g.entity(
             'mission:{mission_id}/{action}'.format(mission_id=mission.id, action=action)
         )
@@ -212,20 +210,20 @@ class ActionLogProvConverter():
         )
         g.wasDerivedFrom(ag_cron_new, e_mission_part)
 
-    def action_cron_view_mission_intro(self, log):
-        self.create_mission_action('intro', log)
+    def action_cron_view_mission_intro(self, bundle, log):
+        self.create_mission_action(bundle, 'intro', log)
 
-    def action_cron_view_mission_briefing(self, log):
-        self.create_mission_action('briefing', log)
+    def action_cron_view_mission_briefing(self, bundle, log):
+        self.create_mission_action(bundle, 'briefing', log)
 
-    def action_cron_view_mission_debriefing(self, log):
-        self.create_mission_action('debriefing', log)
+    def action_cron_view_mission_debriefing(self, bundle, log):
+        self.create_mission_action(bundle, 'debriefing', log)
 
-    def action_cron_view_mission_outro(self, log):
-        self.create_mission_action('outro', log)
+    def action_cron_view_mission_outro(self, bundle, log):
+        self.create_mission_action(bundle, 'outro', log)
 
-    def action_cron_view_fluff(self, log):
-        self._create_cron_activity(self.prov, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
+    def action_cron_view_fluff(self, bundle, log):
+        self._create_cron_activity(bundle, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
 
     def _create_new_mop_entity(self, bundle, log, activity=None, mop_attrs=None):
         ag_mop_new = bundle.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=self.mop.id, log_id=log.id), mop_attrs)
@@ -242,15 +240,16 @@ class ActionLogProvConverter():
         self.ag_mop_current = ag_mop_new
         return ag_mop_new
 
-    def _create_mop_activity(self, bundle, activity, mop, log, act_attrs=None, mop_attrs=None):
+    def _create_mop_activity(self, bundle, log, activity, act_attrs=None, mop_attrs=None):
+        mop = log.mop
         act_id = 'mopact:{activity}/{mop_id}/{log_id}'.format(activity=activity, mop_id=mop.id, log_id=log.id)
         act = bundle.activity(act_id, log.createdAt, log.createdAt, act_attrs)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
         return act
 
-    def action_mop_created(self, log):
-        g = self.prov
+    def action_mop_created(self, bundle, log):
+        g = bundle
         mop = log.mop
         act = g.activity('mopact:registration/{mop_id}'.format(mop_id=mop.id), log.createdAt, log.createdAt,
                          {'cron:action_log_id': log.id})
@@ -267,8 +266,8 @@ class ActionLogProvConverter():
         g.wasGeneratedBy(ag_cron_new, act)
         g.wasRevisionOf(ag_cron_new, self.ag_cron_current)
 
-    def action_mop_login(self, log):
-        g = self.prov
+    def action_mop_login(self, bundle, log):
+        g = bundle
         mop = log.mop
         act = g.activity('mopact:login/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
                          log.createdAt, log.createdAt,
@@ -276,16 +275,12 @@ class ActionLogProvConverter():
         g.wasAssociatedWith(act, self.ag_player)
         self._create_new_mop_entity(g, log, act)
 
-    def action_mop_receive_mail_tutorial(self, log):
-        g = self.prov
-        mop = log.mop
-        act = self._create_mop_activity(g, 'receive_mail_tutorial', mop, log)
+    def action_mop_receive_mail_tutorial(self, bundle, log):
+        self._create_mop_activity(bundle, log, 'receive_mail_tutorial')
 
-    def action_mop_tutorial_progress(self, log):
-        g = self.prov
-        mop = log.mop
-        act = self._create_mop_activity(g, 'progress_tutorial', mop, log,
-                                        mop_attrs={'cron:tutorialProgress': log.tutorialProgress})
+    def action_mop_tutorial_progress(self, bundle, log):
+        self._create_mop_activity(bundle, log, 'progress_tutorial',
+                                  mop_attrs={'cron:tutorialProgress': log.tutorialProgress})
 
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,

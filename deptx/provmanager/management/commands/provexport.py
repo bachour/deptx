@@ -11,6 +11,11 @@ class Command(BaseCommand):
                     dest='prov-json',
                     default=False,
                     help='Output the PROV-JSON instead of the default PROV-N format'),
+        make_option('-b', '--bundled',
+                    action='store_true',
+                    dest='bundle',
+                    default=False,
+                    help='Each action has its own bundle'),
         make_option('-s', '--no-spe',
                     action='store_true',
                     dest='no_specialization',
@@ -27,11 +32,7 @@ class Command(BaseCommand):
             except Player.DoesNotExist:
                 raise CommandError('Player "%s" does not exist' % player_id)
 
-            converter = ActionLogProvConverter(player)
-
-            if options['no_specialization']:
-                converter.generating_cron_specialization = False
-                converter.generating_mop_specialization = False
+            converter = ActionLogProvConverter(player, options['bundle'], not options['no_specialization'])
 
             # Start the conversion
             converter.convert()
