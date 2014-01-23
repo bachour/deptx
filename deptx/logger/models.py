@@ -4,7 +4,7 @@ from django_extensions.db.fields import CreationDateTimeField, ModificationDateT
 from players.models import Cron, Mop
 from assets.models import Mission, Case, Requisition, CronDocument, StoryFile
 from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail, CaseQuestionInstance
-from mop.models import MopDocumentInstance, Mail, MopTracker, RequisitionInstance, MopFile
+from mop.models import MopDocumentInstance, Mail, MopTracker, RequisitionInstance, RequisitionBlank, MopFile
     
 class ActionLog(models.Model):
     ACTION_CRON_CREATED = 0
@@ -183,6 +183,7 @@ class ActionLog(models.Model):
     mail = models.ForeignKey(Mail, blank=True, null=True)
     mopDocumentInstance = models.ForeignKey(MopDocumentInstance, blank=True, null=True)
     mopDocumentInstanceCorrect = models.NullBooleanField(blank=True, null=True)
+    requisitionBlank = models.ForeignKey(RequisitionBlank, blank=True, null=True)
     requisitionInstance = models.ForeignKey(RequisitionInstance, blank=True, null=True)
     tutorialProgress = models.IntegerField(choices=MopTracker.CHOICES_TUTORIAL, blank=True, null=True)
     mopFile = models.ForeignKey(MopFile, blank=True, null=True)

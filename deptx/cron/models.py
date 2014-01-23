@@ -101,7 +101,7 @@ class CaseInstance(models.Model):
             status = "QUESTIONS NOT SOLVED"
         else:
             status = "DOCUMENTS NOT SOLVED"
-        return self.cron.user.username + " (" + self.case.name + ": " + status + ")"
+        return "%s (%s: %s)" % (self.cron.user.username, self.case.name, status)
 
 class CaseQuestionInstance(models.Model):
     cron = models.ForeignKey(Cron)
