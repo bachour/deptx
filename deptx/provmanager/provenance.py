@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.db.models.fields.related import ForeignKey
 from prov.model import ProvBundle
+from mop.models import Mail
 from players.models import Mop
 from logger.models import ActionLog
 
@@ -18,6 +19,7 @@ NAMESPACES = {
     'cronuser': 'http://www.cr0n.org/user/',
     'mopuser': 'http://mofp.net/user/',
     'mopact': 'http://mofp.net/activity/',
+    'mopmail': 'http://mofp.net/mail/',
     'mop': 'http://mofp.net/ns#',
     'dept': 'http://mofp.net/departments/',
     'form': 'http://mofp.net/forms/',
@@ -100,8 +102,12 @@ class ActionLogProvConverter():
         self.ag_cron_current = self.ag_cron
         self.ag_mop_current = self.ag_mop
 
-    def convert(self):
+    def convert(self, offset=0, limit=None, ids=None):
         actions_logs = ActionLog.objects.filter(Q(cron=self.cron) | Q(mop=self.mop)).order_by('id')
+        if ids:
+            actions_logs = actions_logs.filter(id__in=ids)
+        if offset or limit:
+            actions_logs = actions_logs[offset:] if limit is None else actions_logs[offset:limit]
         for log in actions_logs:
             self._convert_action_log(log)
 
@@ -118,6 +124,15 @@ class ActionLogProvConverter():
 
             # TODO Surround by try/except block to fail gracefully should there is any exception during conversion
             self._converters[log.action](self, bundle, log)
+            if self.generating_bundle:
+                if bundle._records:
+                    # Cache the bundle for this action log (mainly for debugging)
+                    self.cache[log.id] = bundle
+                else:
+                    # Remove the empty bundle
+                    # TODO Remove the hack below
+                    self.prov._records.remove(bundle)
+                    del self.prov._bundles[bundle.get_identifier()]
         else:
             # TODO: Emit warnings for inconvertible logs
             pass
@@ -187,7 +202,6 @@ class ActionLogProvConverter():
                          log.createdAt, log.createdAt,
                          {'cron:action_log_id': log.id})
         g.wasAssociatedWith(act, self.ag_player)
-        self._create_new_cron_entity(g, log, act)
 
         ag_cron_logged_in = g.agent('cronuser:{cron_id}/{log_id}'.format(cron_id=cron.id, log_id=log.id))
         g.alternate(ag_cron_logged_in, self.ag_cron_current)
@@ -300,6 +314,100 @@ class ActionLogProvConverter():
         self._create_mop_activity(bundle, log, 'progress_tutorial',
                                   mop_attrs={'cron:tutorialProgress': log.tutorialProgress})
 
+    def _create_form_blank_entity(self, bundle, form_blank, attrs=None):
+        return bundle.entity('form:{form_serial}'.format(form_serial=form_blank.serial), attrs)
+
+    def action_mop_form_sign(self, bundle, log):
+        mop = log.mop
+        form_signed = log.requisitionInstance
+        form_blank = form_signed.blank.requisition
+        # TODO: Create a new mop or not? Probably not since the mop entity does not change after signing the form
+        e_form_blank = self._create_form_blank_entity(bundle, form_blank)
+        act = bundle.activity('mopact:form/sign/{mop_id}/{instance_id}'.format(mop_id=mop.id,
+                                                                               instance_id=form_signed.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        bundle.used(act, e_form_blank)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        e_form_signed = bundle.entity(
+            'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
+                                                          instance_serial=form_signed.serial),
+            {'mop:timestamp': form_signed.createdAt,
+             'mop:data': form_signed.data}
+        )
+        bundle.wasGeneratedBy(e_form_signed, act)
+        bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act)
+
+    def _create_mail_entity(self, bundle, mail, attrs=None):
+        return bundle.entity(
+            'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id, unit=mail.unit.serial),
+            attrs
+        )
+
+    def action_mop_mail_compose_with_form(self, bundle, log):
+        # No need to log this action as there is no mail reference to describe the provenance!
+        pass
+
+    def action_mop_mail_send(self, bundle, log):
+        mop = log.mop
+        mail = log.mail
+
+        # The data accompany with the mail
+        e_data = None
+        if mail.subject == Mail.SUBJECT_REQUEST_FORM:
+            form_signed = mail.requisitionInstance
+            form_blank = form_signed.blank.requisition
+            e_data = bundle.entity(
+                'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
+                                                              instance_serial=form_signed.serial)
+            )
+        else:
+            # TODO Generate the data entity for other types of attachments
+            pass
+
+        act = bundle.activity('mopact:mail/send/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        if e_data:
+            bundle.used(act, e_data)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        e_mail = self._create_mail_entity(bundle, mail)
+        # TODO: Create a new mop or not? Probably not since the mop entity does not change after sending the mail
+        bundle.wasGeneratedBy(e_mail, act)
+        if e_data:
+            bundle.wasDerivedFrom(e_mail, e_data)
+
+    def action_mop_receive_mail_form(self, bundle, log):
+        mop = log.mop
+        mail = log.mail
+        previous_mail = mail.replyTo
+
+        # The data accompany with the mail
+        e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+        if mail.subject == Mail.SUBJECT_RECEIVE_FORM:
+            form_blank = mail.requisitionBlank.requisition
+            e_form = self._create_form_blank_entity(bundle, form_blank)
+            # TODO Do something with the form
+        else:
+            # TODO Check if there is any other subject that falls into this action
+            pass
+
+        act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        bundle.used(act, e_previous_mail)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        e_mail = self._create_mail_entity(bundle, mail)
+
+        bundle.wasGeneratedBy(e_mail, act)
+        bundle.wasDerivedFrom(e_mail, e_previous_mail)
+
+        self._create_new_mop_entity(bundle, log, act, {'mop:forms': e_form.get_identifier()})
+
+    def action_mop_view_mail(self, bundle, log):
+        pass
+
+
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
         ActionLog.ACTION_CRON_VIEW_INDEX:               _create_action_cron_view_function('index'),
@@ -322,9 +430,15 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_TUTORIAL_PROGRESS:         action_mop_tutorial_progress,
         ActionLog.ACTION_MOP_VIEW_INDEX:                _create_action_mop_view_function('index'),
         ActionLog.ACTION_MOP_VIEW_INBOX:                _create_action_mop_view_function('inbox'),
+        ActionLog.ACTION_MOP_VIEW_OUTBOX:               _create_action_mop_view_function('outbox'),
         ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS:         _create_action_mop_view_function('forms_blank'),
         ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED:         _create_action_mop_view_function('forms_signed'),
         ActionLog.ACTION_MOP_VIEW_GUIDEBOOK:            _create_action_mop_view_function('guidebook'),
+        ActionLog.ACTION_MOP_FORM_SIGN:                 action_mop_form_sign,
+        # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
+        ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM:         action_mop_receive_mail_form,
+        # ActionLog.ACTION_MOP_VIEW_MAIL:                 action_mop_view_mail,
     }
 
 

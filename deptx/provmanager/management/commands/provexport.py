@@ -21,6 +21,29 @@ class Command(BaseCommand):
                     dest='no_specialization',
                     default=False,
                     help='Do not generate specialization relations'),
+        make_option('-w', '--no-view',
+                    action='store_true',
+                    dest='no_view',
+                    default=False,
+                    help='Do not generate provenance for view actions'),
+        make_option('-o', '--offset',
+                    action='store',
+                    type='int',
+                    dest='offset',
+                    default=0,
+                    help='Start from the offset action log'),
+        make_option('-l', '--limit',
+                    action='store',
+                    type='int',
+                    dest='limit',
+                    default=None,
+                    help='Limit the number of action logs to convert'),
+        make_option('-i', '--log-ids',
+                    action='store',
+                    type='string',
+                    dest='ids',
+                    default=None,
+                    help='Only generating provenance for action whose ids are provided (comma separated, no space)'),
     )
     args = '<player_id>'
     help = 'Exporting the provenance for player IDs'
@@ -32,10 +55,14 @@ class Command(BaseCommand):
             except Player.DoesNotExist:
                 raise CommandError('Player "%s" does not exist' % player_id)
 
-            converter = ActionLogProvConverter(player, options['bundle'], not options['no_specialization'])
+            converter = ActionLogProvConverter(player, options['bundle'], not options['no_specialization'],
+                                               not options['no_view'])
 
             # Start the conversion
-            converter.convert()
+            ids = None
+            if options['ids']:
+                ids = map(int, options['ids'].split(','))
+            converter.convert(options['offset'], options['limit'], ids)
 
             if options['prov-json']:
                 self.stdout.write(converter.get_provjson())
