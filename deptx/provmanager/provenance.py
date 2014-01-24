@@ -46,6 +46,22 @@ def action_log_to_dict(action_log):
     return data
 
 
+def _create_action_mop_view_function(view):
+    def action_mop_view_function(self, bundle, log):
+        self._create_mop_view_action(bundle, log, view)
+
+    action_mop_view_function.__name__ = 'action_mop_view_' + view
+    return action_mop_view_function
+
+
+def _create_action_cron_view_function(view):
+    def action_cron_view_function(self, bundle, log):
+        self._create_cron_view_action(bundle, log, view)
+
+    action_cron_view_function.__name__ = 'action_cron_view_' + view
+    return action_cron_view_function
+
+
 class ActionLogProvConverter():
     def __init__(self, player,
                  generating_bundle=True,
@@ -180,12 +196,6 @@ class ActionLogProvConverter():
         g.wasGeneratedBy(ag_cron_logged_in, act)
         self.ag_cron_current = ag_cron_logged_in
 
-    def action_cron_view_index(self, bundle, log):
-        self._create_cron_view_action(bundle, log, 'index')
-
-    def action_cron_view_study(self, bundle, log):
-        self._create_cron_view_action(bundle, log, 'study')
-
     def create_mission_action(self, bundle, action, log):
         g = bundle
         mission = log.mission
@@ -248,6 +258,14 @@ class ActionLogProvConverter():
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
         return act
 
+    def _create_mop_view_action(self, bundle, log, view):
+        if self.including_view_actions:
+            g = bundle
+            act = g.activity('mopact:view_{view}/{log_id}'.format(view=view, log_id=log.id),
+                             log.createdAt, log.createdAt,
+                             {'cron:action_log_id': log.id})
+            g.wasAssociatedWith(act, self.ag_mop_current)
+
     def action_mop_created(self, bundle, log):
         g = bundle
         mop = log.mop
@@ -284,10 +302,14 @@ class ActionLogProvConverter():
 
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
-        ActionLog.ACTION_CRON_VIEW_STUDY:               action_cron_view_study,
+        ActionLog.ACTION_CRON_VIEW_INDEX:               _create_action_cron_view_function('index'),
+        ActionLog.ACTION_CRON_VIEW_PROFILE:             _create_action_cron_view_function('profile'),
+        ActionLog.ACTION_CRON_VIEW_ARCHIVE:             _create_action_cron_view_function('archive'),
+        ActionLog.ACTION_CRON_VIEW_STUDY:               _create_action_cron_view_function('study'),
+        ActionLog.ACTION_CRON_VIEW_MESSAGES:            _create_action_cron_view_function('messages'),
+        ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE:    _create_action_cron_view_function('messages_compose'),
         ActionLog.ACTION_CRON_ACTIVATED:                action_cron_activated,
         ActionLog.ACTION_CRON_LOGIN:                    action_cron_login,
-        ActionLog.ACTION_CRON_VIEW_INDEX:               action_cron_view_index,
         ActionLog.ACTION_CRON_VIEW_MISSION_INTRO:       action_cron_view_mission_intro,
         ActionLog.ACTION_CRON_VIEW_MISSION_BRIEFING:    action_cron_view_mission_briefing,
         ActionLog.ACTION_CRON_VIEW_MISSION_DEBRIEFING:  action_cron_view_mission_debriefing,
@@ -298,5 +320,11 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_LOGIN:                     action_mop_login,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_TUTORIAL:     action_mop_receive_mail_tutorial,
         ActionLog.ACTION_MOP_TUTORIAL_PROGRESS:         action_mop_tutorial_progress,
-
+        ActionLog.ACTION_MOP_VIEW_INDEX:                _create_action_mop_view_function('index'),
+        ActionLog.ACTION_MOP_VIEW_INBOX:                _create_action_mop_view_function('inbox'),
+        ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS:         _create_action_mop_view_function('forms_blank'),
+        ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED:         _create_action_mop_view_function('forms_signed'),
+        ActionLog.ACTION_MOP_VIEW_GUIDEBOOK:            _create_action_mop_view_function('guidebook'),
     }
+
+
