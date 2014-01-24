@@ -159,7 +159,11 @@ def mopmaker(request, missionInstance):
 
             return redirect('cron_mission_debriefing', missionInstance.mission.serial)
         else:
-            return render(request, 'cron/mopmaker.html', {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance})
+            if request.user.username == user_form.data['user-username']:
+                usedCronUsername = True
+            else:
+                usedCronUsername = False
+            return render(request, 'cron/mopmaker.html', {"mop_form": mop_form, "user_form": user_form, "user": request.user, 'name':request.user.username, 'missionInstance':missionInstance, 'usedCronUsername':usedCronUsername})
     
     else:
         mop_form = MopForm(prefix="mop")

@@ -26,10 +26,10 @@
 <tr><td>Marital Status:</td><td>{{mop_form.marital}}</td><td>{{mop_form.marital.errors}}</td></tr>
 </table>
 <hr/>
-<p>You also need to choose your account credentials in order to be able to log in to the intranet of the Ministry of Provenance. Our hackers will then add your account to the official MoP system by exploiting a backdoor in their employee registration software.</p>
+<p>You also need to choose your account credentials in order to be able to log in to the intranet of the Ministry of Provenance. Our hackers will then add your account to the official MoP system by exploiting a backdoor in their employee registration software.<br/>Important: Do not use your Cr0n agent identifier as the MoP username or anything else that could be easily traced back to you or Cr0n.</p>
 <hr/>
 <table>
-<tr><td>MoP User Name:</td><td>{{user_form.username}}</td><td>{{user_form.username.errors}}Letters, digits and @/./+/-/_ only.</td></tr>
+<tr><td>MoP User Name:</td><td>{{user_form.username}}</td><td>{% if usedCronUsername %}<span style="color:red">Do not use your Cr0n username for MoP. This would be a serious security risk.<br/></span>{% else %}{{user_form.username.errors}}{% endif %}Letters, digits and @/./+/-/_ only.</td></tr>
 <tr><td>Password:</td><td>{{user_form.password1}}</td><td>{{user_form.password1.errors}}</td></tr>
 <tr><td>Password Confirmation:</td><td>{{user_form.password2}}</td><td>{{user_form.password2.errors}}</td></tr>
 </table>	
