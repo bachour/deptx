@@ -2,13 +2,14 @@ from django.db.models import Q
 from django.db.models.fields.related import ForeignKey
 from prov.model import ProvBundle
 from mop.models import Mail
-from players.models import Mop
 from logger.models import ActionLog
 
 
 # All the prefixes used in the provenance export
+from players.models import Mop
+
 NAMESPACES = {
-    'player': 'http://www.cr0n.org/players/',
+    'user': 'http://www.cr0n.org/users/',
     'cron': 'http://www.cr0n.org/ns#',
     'app': 'http://www.cr0n.org/app/',
     'cronact': 'http://www.cr0n.org/activity/',
@@ -65,7 +66,7 @@ def _create_action_cron_view_function(view):
 
 
 class ActionLogProvConverter():
-    def __init__(self, player,
+    def __init__(self, user,
                  generating_bundle=True,
                  generating_specialization=True,
                  including_view_actions=True):
@@ -76,15 +77,15 @@ class ActionLogProvConverter():
         self.generating_mop_specialization = generating_specialization
 
         self.prov = ProvBundle(namespaces=NAMESPACES)
-        self.player = player
-        self.cron = player.cron
-        self.mop = Mop.objects.get(cron=self.cron)
+        self.user = user
+        self.cron = user.cron
+        self.mop = Mop.objects.get(cron=user.cron)
 
         g = self.prov
 
         # The main player agent
         # TODO: Decide which attributes to include: name, gender, age, town, country, createdAt
-        self.ag_player = g.agent('player:{player_id}'.format(player_id=player.id))
+        self.ag_player = g.agent('user:{user_id}'.format(user_id=user.id))
 
         # The Cron specific
         # TODO: Decide which attributes to include: activationCode, activated, email, cancelled, overSixteen, createdAt
@@ -119,7 +120,7 @@ class ActionLogProvConverter():
 
     def _convert_action_log(self, log):
         if log.action in ActionLogProvConverter._converters:
-            bundle = self.prov.bundle('b:{player_id}/{log_id}'.format(player_id=self.player.id, log_id=log.id))\
+            bundle = self.prov.bundle('b:{user_id}/{log_id}'.format(user_id=self.user.id, log_id=log.id))\
                 if self.generating_bundle else self.prov
 
             # TODO Surround by try/except block to fail gracefully should there is any exception during conversion
@@ -381,13 +382,19 @@ class ActionLogProvConverter():
         mop = log.mop
         mail = log.mail
         previous_mail = mail.replyTo
+        mop_attrs = {}
 
         # The data accompany with the mail
-        e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+        if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+
         if mail.subject == Mail.SUBJECT_RECEIVE_FORM:
             form_blank = mail.requisitionBlank.requisition
             e_form = self._create_form_blank_entity(bundle, form_blank)
-            # TODO Do something with the form
+            mop_attrs['mop:forms'] = e_form.get_identifier()
+        elif mail.subject == Mail.SUBJECT_REPORT_EVALUATION:
+            # TODO: Record change of trust value here
+            pass
         else:
             # TODO Check if there is any other subject that falls into this action
             pass
@@ -395,18 +402,34 @@ class ActionLogProvConverter():
         act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
-        bundle.used(act, e_previous_mail)
+        if previous_mail:
+            bundle.used(act, e_previous_mail)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
-        e_mail = self._create_mail_entity(bundle, mail)
+        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
-        bundle.wasDerivedFrom(e_mail, e_previous_mail)
+        if previous_mail:
+            bundle.wasDerivedFrom(e_mail, e_previous_mail)
 
-        self._create_new_mop_entity(bundle, log, act, {'mop:forms': e_form.get_identifier()})
+        self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
     def action_mop_view_mail(self, bundle, log):
-        pass
+        mop = log.mop
+        mail = log.mail
 
+        if mail is None:
+            # The reference to the mail was not recorded, nothing to do
+            return
+
+        e_mail = self._create_mail_entity(bundle, mail)
+
+        act = bundle.activity('mopact:mail/view/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        bundle.used(act, e_mail)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+
+        self._create_new_mop_entity(bundle, log, act, {'mop:mails_read': e_mail.get_identifier()})
 
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
@@ -433,12 +456,13 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_VIEW_OUTBOX:               _create_action_mop_view_function('outbox'),
         ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS:         _create_action_mop_view_function('forms_blank'),
         ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED:         _create_action_mop_view_function('forms_signed'),
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL:       _create_action_mop_view_function('documents_pool'),
         ActionLog.ACTION_MOP_VIEW_GUIDEBOOK:            _create_action_mop_view_function('guidebook'),
         ActionLog.ACTION_MOP_FORM_SIGN:                 action_mop_form_sign,
         # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
         ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM:         action_mop_receive_mail_form,
-        # ActionLog.ACTION_MOP_VIEW_MAIL:                 action_mop_view_mail,
+        ActionLog.ACTION_MOP_VIEW_MAIL:                 action_mop_view_mail,
     }
 
 

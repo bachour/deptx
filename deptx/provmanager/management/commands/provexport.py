@@ -1,7 +1,7 @@
 from optparse import make_option
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from provmanager.provenance import ActionLogProvConverter
-from players.models import Player
 
 
 class Command(BaseCommand):
@@ -49,13 +49,13 @@ class Command(BaseCommand):
     help = 'Exporting the provenance for player IDs'
 
     def handle(self, *args, **options):
-        for player_id in args:
+        for user_id in args:
             try:
-                player = Player.objects.get(pk=int(player_id))
-            except Player.DoesNotExist:
-                raise CommandError('Player "%s" does not exist' % player_id)
+                user = User.objects.get(pk=int(user_id))
+            except User.DoesNotExist:
+                raise CommandError('User "%s" does not exist' % user_id)
 
-            converter = ActionLogProvConverter(player, options['bundle'], not options['no_specialization'],
+            converter = ActionLogProvConverter(user, options['bundle'], not options['no_specialization'],
                                                not options['no_view'])
 
             # Start the conversion
