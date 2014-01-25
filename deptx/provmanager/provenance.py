@@ -14,7 +14,7 @@ NAMESPACES = {
     'app': 'http://www.cr0n.org/app/',
     'cronact': 'http://www.cr0n.org/activity/',
     'mission': 'http://www.cr0n.org/mission/',
-    'asset': 'http://www.cr0n.org/ns#asset',
+    'asset': 'http://www.cr0n.org/assets/',
     'log': 'http://www.cr0n.org/log/',
     'b': 'http://www.cr0n.org/bundles/',
     'cronuser': 'http://www.cr0n.org/user/',
@@ -339,6 +339,26 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_form_signed, act)
         bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act)
 
+    def _create_mop_document_entity(self, bundle, document_instance):
+        randomized_document = document_instance.randomizedDocument
+        mop_document = randomized_document.mopDocument
+        unit = mop_document.unit
+
+        # TODO Perhaps a separate bundle to contain the creation of these entity is needed
+        e_mop_document = bundle.entity(
+            'asset:mop_document/{unit_serial}/{document_id}'.format(
+                unit_serial=unit.serial, document_id=mop_document.id),
+            {'mop:documentName': mop_document.name, 'mop:clearanceLevel': mop_document.clearance}
+        )
+        e_randomized_document = bundle.entity(
+            'doc:{unit_serial}/{document_id}'.format(
+                unit_serial=unit.serial, document_id=randomized_document.id),
+            {'mop:serial': randomized_document.serial}
+        )
+        bundle.wasDerivedFrom(e_randomized_document, e_mop_document)
+        # Don't generate an entity for document_instance
+        return e_randomized_document
+
     def _create_mail_entity(self, bundle, mail, attrs=None):
         return bundle.entity(
             'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id, unit=mail.unit.serial),
@@ -413,6 +433,42 @@ class ActionLogProvConverter():
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
+    def action_mop_receive_mail_document(self, bundle, log):
+        # TODO: This action should be about app:mop generating document for the mop player
+        mop = log.mop
+        mail = log.mail
+        previous_mail = mail.replyTo
+        mop_attrs = {}
+
+        # The data accompany with the mail
+        if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+
+        if mail.subject == Mail.SUBJECT_RECEIVE_DOCUMENT:
+            document_instance = mail.mopDocumentInstance
+            e_document_instance = self._create_mop_document_entity(bundle, document_instance)
+            # TODO: Create an activity that generated e_document_instance
+            mop_attrs['mop:documents'] = e_document_instance.get_identifier()
+        else:
+            # TODO Check if there is any other subject that falls into this action
+            pass
+
+        act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        if previous_mail:
+            bundle.used(act, e_previous_mail)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
+
+        bundle.wasGeneratedBy(e_mail, act)
+        if previous_mail:
+            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+
+        bundle.wasDerivedFrom(e_mail, e_document_instance)
+
+        self._create_new_mop_entity(bundle, log, act, mop_attrs)
+
     def action_mop_view_mail(self, bundle, log):
         mop = log.mop
         mail = log.mail
@@ -462,6 +518,7 @@ class ActionLogProvConverter():
         # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
         ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM:         action_mop_receive_mail_form,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_DOCUMENT:     action_mop_receive_mail_document,
         ActionLog.ACTION_MOP_VIEW_MAIL:                 action_mop_view_mail,
     }
 
