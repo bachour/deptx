@@ -78,8 +78,8 @@ class ActionLogProvConverter():
 
         self.prov = ProvBundle(namespaces=NAMESPACES)
         self.user = user
-        self.cron = user.cron
-        self.mop = Mop.objects.get(cron=user.cron)
+        self.mop = Mop.objects.get(user=user)
+        self.cron = self.mop.cron
 
         g = self.prov
 
@@ -441,11 +441,11 @@ class ActionLogProvConverter():
         mop_attrs = {}
 
         # The data accompany with the mail
-        if previous_mail:
-            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
-
         if mail.subject == Mail.SUBJECT_RECEIVE_DOCUMENT:
             document_instance = mail.mopDocumentInstance
+            if document_instance is None or document_instance.randomizedDocument is None:
+                # TODO Raise an exception here
+                return
             e_document_instance = self._create_mop_document_entity(bundle, document_instance)
             # TODO: Create an activity that generated e_document_instance
             mop_attrs['mop:documents'] = e_document_instance.get_identifier()
@@ -457,6 +457,7 @@ class ActionLogProvConverter():
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
             bundle.used(act, e_previous_mail)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
@@ -513,6 +514,8 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS:         _create_action_mop_view_function('forms_blank'),
         ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED:         _create_action_mop_view_function('forms_signed'),
         ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL:       _create_action_mop_view_function('documents_pool'),
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER:     _create_action_mop_view_function('documents_drawer'),
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE:    _create_action_mop_view_function('documents_drawer'),
         ActionLog.ACTION_MOP_VIEW_GUIDEBOOK:            _create_action_mop_view_function('guidebook'),
         ActionLog.ACTION_MOP_FORM_SIGN:                 action_mop_form_sign,
         # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
