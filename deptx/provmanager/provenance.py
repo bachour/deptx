@@ -68,8 +68,8 @@ def _create_action_cron_view_function(view):
 class ActionLogProvConverter():
     def __init__(self, user,
                  generating_bundle=True,
-                 generating_specialization=True,
-                 including_view_actions=True):
+                 generating_specialization=False,
+                 including_view_actions=False):
         self.cache = {}
         self.generating_bundle = generating_bundle
         self.including_view_actions = including_view_actions
@@ -78,8 +78,8 @@ class ActionLogProvConverter():
 
         self.prov = ProvBundle(namespaces=NAMESPACES)
         self.user = user
-        self.mop = Mop.objects.get(user=user)
-        self.cron = self.mop.cron
+        self.cron = user.cron
+        self.mop = Mop.objects.get(cron=self.cron)
 
         g = self.prov
 

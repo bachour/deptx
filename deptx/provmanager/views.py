@@ -1,7 +1,10 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.http.response import HttpResponseNotFound
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
+from provmanager.provenance import ActionLogProvConverter
 
 from provmanager.wrapper import Api
 from provmanager.models import Provenance
@@ -23,10 +26,8 @@ import urllib2
 import json
 
 from graphml2prov import convert_graphml_string, validate
-import prov.model
 from logger.models import ProvLog, ActionLog
 from logger import logging
-from players.models import Cron
 from provmanager import provstore_settings
 
 
@@ -487,5 +488,25 @@ def prov_log_action(request):
             status = "error"
         json_data = json.dumps({"message":message, "status":status})            
         return HttpResponse(json_data, mimetype="application/json") 
-        
-  
+
+# provexport views
+@staff_member_required
+def provexport(request, user_id, ext):
+    user = get_object_or_404(User, pk=user_id)
+
+    try:
+        user.cron
+    except:
+        return HttpResponseNotFound()
+
+    converter = ActionLogProvConverter(user)
+
+    # Convert all log
+    converter.convert()
+
+    ext = ext.lower()
+    content, content_type =\
+        converter.get_provjson(), 'application/json' if ext == 'json' else\
+        (converter.get_provn(), 'text/provenance-notation')
+
+    return HttpResponse(content=content, content_type=content_type)

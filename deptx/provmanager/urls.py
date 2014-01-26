@@ -14,5 +14,6 @@ urlpatterns = patterns('',
      
      url(r'prov_check/', views.prov_check, name='provmanager_prov_check'),
      url(r'prov_log_action/', views.prov_log_action, name='provmanager_prov_log_action'),
-             
+
+     url(r'export/(?P<user_id>\d+).(?P<ext>provn|json)', views.provexport),
 )
