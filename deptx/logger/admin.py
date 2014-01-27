@@ -3,7 +3,7 @@ from logger.models import ProvLog, ActionLog
 
 class ActionLogAdmin(admin.ModelAdmin):
     list_filter = ('action', 'cron', 'mop', 'createdAt')
-    raw_id_fields = ('cron', 'mission', 'case', 'questionInstance', 'cronDocument', 'cronDocumentInstance', 'message', 'mop', 'mail', 'mopDocumentInstance', 'requisitionInstance')
+    raw_id_fields = ('cron', 'mission', 'case', 'questionInstance', 'cronDocument', 'cronDocumentInstance', 'message', 'mop', 'mail', 'mopDocumentInstance', 'requisitionInstance', 'requisitionBlank')
 
 
 class ProvLogAdmin(admin.ModelAdmin):
