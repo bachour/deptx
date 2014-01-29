@@ -4,6 +4,7 @@ from django.http.response import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
+from players.models import Cron
 from provmanager.provenance import ActionLogProvConverter
 
 from provmanager.wrapper import Api
@@ -496,7 +497,7 @@ def provexport(request, user_id, ext):
 
     try:
         user.cron
-    except:
+    except Cron.DoesNotExist:
         return HttpResponseNotFound()
 
     converter = ActionLogProvConverter(user)

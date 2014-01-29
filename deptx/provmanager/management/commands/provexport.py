@@ -44,6 +44,12 @@ class Command(BaseCommand):
                     dest='ids',
                     default=None,
                     help='Only generating provenance for action whose ids are provided (comma separated, no space)'),
+        make_option('-p', '--pdf',
+                    action='store',
+                    type='string',
+                    dest='pdf-filename',
+                    default=None,
+                    help='Only generating provenance for action whose ids are provided (comma separated, no space)'),
     )
     args = '<player_id>'
     help = 'Exporting the provenance for player IDs'
@@ -68,3 +74,8 @@ class Command(BaseCommand):
                 self.stdout.write(converter.get_provjson())
             else:
                 self.stdout.write(converter.get_provn())
+
+            if options['pdf-filename']:
+                from prov.model.graph import prov_to_dot
+                dot = prov_to_dot(converter.prov)
+                dot.write(options['pdf-filename'], None, 'pdf')
