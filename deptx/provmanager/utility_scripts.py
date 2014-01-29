@@ -295,9 +295,9 @@ def get_random_graph(graph):
 
 def get_sub_identifier_list(str, sub_id):
     while not str.startswith(sub_id):
-        str = str[str.index('{')+1:]
+        str = str[str.index('{')+1:].strip();
     
-    str = str[str.index('|')+1:str.index('}')]
+    str = str[str.index('|')+1:str.index('}')].strip();
     return str;
 
 def get_sub_identifier_value(str, consistent):
