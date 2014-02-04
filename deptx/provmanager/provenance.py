@@ -71,6 +71,7 @@ class ActionLogProvConverter():
                  generating_specialization=False,
                  including_view_actions=False):
         self.cache = {}
+        self.general_entities = {}
         self.generating_bundle = generating_bundle
         self.including_view_actions = including_view_actions
         self.generating_cron_specialization = generating_specialization
@@ -369,15 +370,25 @@ class ActionLogProvConverter():
             unit_serial=unit.serial, document_id=randomized_document.id, instance_id=document_instance.id
         )
         if e_document_instance_id not in self.cache:
-            self.cache[e_document_instance_id] = bundle.entity(e_document_instance_id, attrs)
+            # The instance that was created by the system
+            e_document_instance = bundle.entity(e_document_instance_id, attrs)
             bundle.wasDerivedFrom(e_document_instance_id, e_randomized_document_id)
+            self.general_entities[e_document_instance_id] = e_document_instance
+            # The instance currently using (by the caller function)
+            e_document_instance_id_spe = e_document_instance_id + '/' + str(log.id)
+            e_document_instance_spe = bundle.entity(e_document_instance_id_spe, attrs)
+            bundle.specialization(e_document_instance_spe, e_document_instance)
+            self.cache[e_document_instance_id] = e_document_instance_spe
+            self.general_entities[e_document_instance_spe] = e_document_instance
         elif attrs:
             # This is an update of an existing entity
-            e_document_instance_id_new = e_document_instance_id + '/' + str(log.id)
-            self.cache[e_document_instance_id] = bundle.entity(e_document_instance_id_new, attrs)
-            bundle.wasRevisionOf(e_document_instance_id_new, e_document_instance_id)
-        e_document_instance = self.cache[e_document_instance_id]
-        return e_document_instance
+            e_prev_document_instance = self.cache[e_document_instance_id]
+            e_document_instance_id_spe = e_document_instance_id + '/' + str(log.id)
+            e_document_instance_spe = bundle.entity(e_document_instance_id_spe, attrs)
+            bundle.wasRevisionOf(e_document_instance_id_spe, e_prev_document_instance)
+            self.cache[e_document_instance_id] = e_document_instance_spe
+            self.general_entities[e_document_instance_spe] = self.general_entities[e_document_instance_id]
+        return self.cache[e_document_instance_id]
 
     def _create_mail_entity(self, bundle, mail, attrs=None):
         e_mail_id = 'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id,
@@ -403,6 +414,17 @@ class ActionLogProvConverter():
                 'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
                                                               instance_serial=form_signed.serial)
             )
+        elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
+            form_signed = mail.requisitionInstance
+            form_blank = form_signed.blank.requisition
+            e_data = bundle.entity(
+                'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
+                                                              instance_serial=form_signed.serial)
+            )
+            if mail.mopDocumentInstance:
+                # Just getting the current entity
+                e_document_instance = self._create_mop_document_entity(log, bundle, mail.mopDocumentInstance)
+                bundle.wasDerivedFrom(e_data, e_document_instance)
         else:
             # TODO Generate the data entity for other types of attachments
             pass
@@ -467,9 +489,10 @@ class ActionLogProvConverter():
             if document_instance is None or document_instance.randomizedDocument is None:
                 # TODO Raise an exception here
                 return
-            e_document_instance = self._create_mop_document_entity(log, bundle, document_instance)
+            e_document_instance_spe = self._create_mop_document_entity(log, bundle, document_instance)
+            e_document_instance_gen = self.general_entities[e_document_instance_spe]
             # TODO: Create an activity that generated e_document_instance
-            mop_attrs['mop:documents'] = e_document_instance.get_identifier()
+            mop_attrs['mop:documents'] = e_document_instance_gen.get_identifier()
         else:
             # TODO Check if there is any other subject that falls into this action
             pass
@@ -487,7 +510,8 @@ class ActionLogProvConverter():
         if previous_mail:
             bundle.wasDerivedFrom(e_mail, e_previous_mail)
 
-        bundle.wasDerivedFrom(e_mail, e_document_instance)
+        bundle.wasDerivedFrom(e_mail, e_document_instance_gen)
+        bundle.wasDerivedFrom(e_document_instance_spe, e_mail)
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
@@ -500,12 +524,6 @@ class ActionLogProvConverter():
 
         # The data accompany with the mail
         if mail.subject == Mail.SUBJECT_REPORT_EVALUATION:
-            document_instance = mail.mopDocumentInstance
-            if document_instance is None or document_instance.randomizedDocument is None:
-                # TODO Raise an exception here
-                return
-            e_document_instance = self._create_mop_document_entity(log, bundle, document_instance)
-            # TODO: Create an activity that generated e_document_instance
             mop_attrs['mop:trustDelta'] = mail.trust
         else:
             # TODO Check if there is any other subject that falls into this action
@@ -523,8 +541,6 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_mail, act)
         if previous_mail:
             bundle.wasDerivedFrom(e_mail, e_previous_mail)
-
-        bundle.wasDerivedFrom(e_mail, e_document_instance)
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
@@ -554,16 +570,19 @@ class ActionLogProvConverter():
         if document is None:
             # The reference to the document was not recorded, nothing to do
             return
-
+        # TODO Reference to prov_log to see if this is just a simple view or the graph has been manipulated
         e_document = self._create_mop_document_entity(log, bundle, document, {'mop:provenanceCorrectness': correct})
 
-        act = bundle.activity('mopact:provenance/view/{mop_id}/{doc_id}'.format(mop_id=mop.id, doc_id=document.id),
+        act_id = 'mopact:provenance/view/{mop_id}/{doc_id}/{log_id}'.format(
+            mop_id=mop.id, doc_id=document.id, log_id=log.id
+        )
+        act = bundle.activity(act_id,
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         bundle.used(act, e_document)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
 
-        self._create_new_mop_entity(bundle, log, act, {'mop:documents': e_document.get_identifier()})
+        # self._create_new_mop_entity(bundle, log, act, {'mop:documents': e_document.get_identifier()})
 
     def action_mop_provenance_submit(self, bundle, log):
         mop = log.mop
@@ -577,7 +596,10 @@ class ActionLogProvConverter():
         # Hack to get the previous instance (i.e. before submission) by using an empty 'attrs' parameter
         e_document_prev = self._create_mop_document_entity(log, bundle, document)
 
-        act = bundle.activity('mopact:provenance/submit/{mop_id}/{doc_id}'.format(mop_id=mop.id, doc_id=document.id),
+        act_id = 'mopact:provenance/submit/{mop_id}/{doc_id}/{log_id}'.format(
+            mop_id=mop.id, doc_id=document.id, log_id=log.id
+        )
+        act = bundle.activity(act_id,
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         bundle.used(act, e_document_prev)
