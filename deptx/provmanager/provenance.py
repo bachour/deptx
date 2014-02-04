@@ -1,12 +1,12 @@
 from django.db.models import Q
 from django.db.models.fields.related import ForeignKey
 from prov.model import ProvBundle
+from players.models import Cron, Mop
 from mop.models import Mail
 from logger.models import ActionLog
 
 
 # All the prefixes used in the provenance export
-from players.models import Mop
 
 NAMESPACES = {
     'user': 'http://www.cr0n.org/users/',
@@ -78,8 +78,12 @@ class ActionLogProvConverter():
 
         self.prov = ProvBundle(namespaces=NAMESPACES)
         self.user = user
-        self.cron = user.cron
-        self.mop = Mop.objects.get(cron=self.cron)
+        try:
+            self.cron = user.cron
+            self.mop = Mop.objects.get(cron=self.cron)
+        except Cron.DoesNotExist:
+            self.mop = user.mop
+            self.cron = self.mop.cron
 
         g = self.prov
 
@@ -339,31 +343,48 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_form_signed, act)
         bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act)
 
-    def _create_mop_document_entity(self, bundle, document_instance):
+    def _create_mop_document_entity(self, log, bundle, document_instance, attrs=None):
         randomized_document = document_instance.randomizedDocument
         mop_document = randomized_document.mopDocument
         unit = mop_document.unit
 
         # TODO Perhaps a separate bundle to contain the creation of these entity is needed
-        e_mop_document = bundle.entity(
-            'asset:mop_document/{unit_serial}/{document_id}'.format(
-                unit_serial=unit.serial, document_id=mop_document.id),
-            {'mop:documentName': mop_document.name, 'mop:clearanceLevel': mop_document.clearance}
+        e_mop_document_id = 'asset:mop_document/{unit_serial}/{document_id}'.format(
+            unit_serial=unit.serial, document_id=mop_document.id
         )
-        e_randomized_document = bundle.entity(
-            'doc:{unit_serial}/{document_id}'.format(
-                unit_serial=unit.serial, document_id=randomized_document.id),
-            {'mop:serial': randomized_document.serial}
+        if e_mop_document_id not in self.cache:
+            self.cache[e_mop_document_id] = self.prov.entity(
+                e_mop_document_id,
+                {'mop:documentName': mop_document.name, 'mop:clearanceLevel': mop_document.clearance}
+            )
+        e_randomized_document_id = 'doc:{unit_serial}/{document_id}'.format(
+            unit_serial=unit.serial, document_id=randomized_document.id)
+        if e_randomized_document_id not in self.cache:
+            self.cache[e_randomized_document_id] = self.prov.entity(
+                e_randomized_document_id,
+                {'mop:serial': randomized_document.serial}
+            )
+            self.prov.wasDerivedFrom(e_randomized_document_id, e_mop_document_id)
+        e_document_instance_id = 'doc:{unit_serial}/{document_id}/{instance_id}'.format(
+            unit_serial=unit.serial, document_id=randomized_document.id, instance_id=document_instance.id
         )
-        bundle.wasDerivedFrom(e_randomized_document, e_mop_document)
-        # Don't generate an entity for document_instance
-        return e_randomized_document
+        if e_document_instance_id not in self.cache:
+            self.cache[e_document_instance_id] = bundle.entity(e_document_instance_id, attrs)
+            bundle.wasDerivedFrom(e_document_instance_id, e_randomized_document_id)
+        elif attrs:
+            # This is an update of an existing entity
+            e_document_instance_id_new = e_document_instance_id + '/' + str(log.id)
+            self.cache[e_document_instance_id] = bundle.entity(e_document_instance_id_new, attrs)
+            bundle.wasRevisionOf(e_document_instance_id_new, e_document_instance_id)
+        e_document_instance = self.cache[e_document_instance_id]
+        return e_document_instance
 
     def _create_mail_entity(self, bundle, mail, attrs=None):
-        return bundle.entity(
-            'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id, unit=mail.unit.serial),
-            attrs
-        )
+        e_mail_id = 'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id,
+                                                               unit=mail.unit.serial)
+        if e_mail_id not in self.cache:
+            self.cache[e_mail_id] = bundle.entity(e_mail_id, attrs)
+        return self.cache[e_mail_id]
 
     def action_mop_mail_compose_with_form(self, bundle, log):
         # No need to log this action as there is no mail reference to describe the provenance!
@@ -446,9 +467,46 @@ class ActionLogProvConverter():
             if document_instance is None or document_instance.randomizedDocument is None:
                 # TODO Raise an exception here
                 return
-            e_document_instance = self._create_mop_document_entity(bundle, document_instance)
+            e_document_instance = self._create_mop_document_entity(log, bundle, document_instance)
             # TODO: Create an activity that generated e_document_instance
             mop_attrs['mop:documents'] = e_document_instance.get_identifier()
+        else:
+            # TODO Check if there is any other subject that falls into this action
+            pass
+
+        act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+            bundle.used(act, e_previous_mail)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
+
+        bundle.wasGeneratedBy(e_mail, act)
+        if previous_mail:
+            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+
+        bundle.wasDerivedFrom(e_mail, e_document_instance)
+
+        self._create_new_mop_entity(bundle, log, act, mop_attrs)
+
+    def action_mop_receive_mail_report(self, bundle, log):
+        # TODO: This action should be about app:mop changing the trust level of the mop player
+        mop = log.mop
+        mail = log.mail
+        previous_mail = mail.replyTo
+        mop_attrs = {}
+
+        # The data accompany with the mail
+        if mail.subject == Mail.SUBJECT_REPORT_EVALUATION:
+            document_instance = mail.mopDocumentInstance
+            if document_instance is None or document_instance.randomizedDocument is None:
+                # TODO Raise an exception here
+                return
+            e_document_instance = self._create_mop_document_entity(log, bundle, document_instance)
+            # TODO: Create an activity that generated e_document_instance
+            mop_attrs['mop:trustDelta'] = mail.trust
         else:
             # TODO Check if there is any other subject that falls into this action
             pass
@@ -488,6 +546,47 @@ class ActionLogProvConverter():
 
         self._create_new_mop_entity(bundle, log, act, {'mop:mails_read': e_mail.get_identifier()})
 
+    def action_mop_view_provenance(self, bundle, log):
+        mop = log.mop
+        document = log.mopDocumentInstance
+        correct = log.mopDocumentInstanceCorrect
+
+        if document is None:
+            # The reference to the document was not recorded, nothing to do
+            return
+
+        e_document = self._create_mop_document_entity(log, bundle, document, {'mop:provenanceCorrectness': correct})
+
+        act = bundle.activity('mopact:provenance/view/{mop_id}/{doc_id}'.format(mop_id=mop.id, doc_id=document.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        bundle.used(act, e_document)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+
+        self._create_new_mop_entity(bundle, log, act, {'mop:documents': e_document.get_identifier()})
+
+    def action_mop_provenance_submit(self, bundle, log):
+        mop = log.mop
+        document = log.mopDocumentInstance
+        correct = log.mopDocumentInstanceCorrect
+
+        if document is None:
+            # The reference to the document was not recorded, nothing to do
+            return
+
+        # Hack to get the previous instance (i.e. before submission) by using an empty 'attrs' parameter
+        e_document_prev = self._create_mop_document_entity(log, bundle, document)
+
+        act = bundle.activity('mopact:provenance/submit/{mop_id}/{doc_id}'.format(mop_id=mop.id, doc_id=document.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        bundle.used(act, e_document_prev)
+        e_document = self._create_mop_document_entity(log, bundle, document, {'mop:provenanceCorrectness': correct})
+        bundle.wasGeneratedBy(e_document, act)
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+
+        self._create_new_mop_entity(bundle, log, act, {'mop:documents_submitted': e_document.get_identifier()})
+
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
         ActionLog.ACTION_CRON_VIEW_INDEX:               _create_action_cron_view_function('index'),
@@ -522,7 +621,10 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM:         action_mop_receive_mail_form,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_DOCUMENT:     action_mop_receive_mail_document,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_REPORT:       action_mop_receive_mail_report,
         ActionLog.ACTION_MOP_VIEW_MAIL:                 action_mop_view_mail,
+        ActionLog.ACTION_MOP_VIEW_PROVENANCE:           action_mop_view_provenance,
+        ActionLog.ACTION_MOP_PROVENANCE_SUBMIT:         action_mop_provenance_submit,
     }
 
 
