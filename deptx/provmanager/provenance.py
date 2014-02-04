@@ -320,8 +320,12 @@ class ActionLogProvConverter():
         self._create_mop_activity(bundle, log, 'progress_tutorial',
                                   mop_attrs={'cron:tutorialProgress': log.tutorialProgress})
 
-    def _create_form_blank_entity(self, bundle, form_blank, attrs=None):
-        return bundle.entity('form:{form_serial}'.format(form_serial=form_blank.serial), attrs)
+    def _create_form_blank_entity(self, bundle, form_blank):
+        e_form_blank = bundle.entity(
+            'form:{form_serial}'.format(form_serial=form_blank.serial),
+            {'prov:label': form_blank.name}
+        )
+        return e_form_blank
 
     def action_mop_form_sign(self, bundle, log):
         mop = log.mop
