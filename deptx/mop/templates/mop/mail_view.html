@@ -18,7 +18,7 @@
 			{{ mail.sentAt|date:"Y-m-d H:i" }}
 		{% endif %}</td></tr>
 {% if mail.bodyType %}
-	<tr><th>Message</th><td>{% include 'mop/mail/mail.html' %}</td></tr>
+	<tr><th>Message</th><td>{% if mail.id >= 29045 and mail.id <= 29168 %}<strong style="color:red;"><br/>The content of this message has been deleted by MOPAIN.<br/><br/></strong>{% else %}{% include 'mop/mail/mail.html' %}{% endif %}</td></tr>
 {% endif %}
 <tr><th>TRUST</th><td>{% if mail.trust %}{{mail.trust}}{% else %}none{% endif %}</td></tr>
 <tr><th>Form</th><td>{% if mail.requisitionInstance.blank %}{{ mail.requisitionInstance.blank.requisition.serial}}{% elif mail.requisitionBlank %}{{mail.requisitionBlank.requisition.serial}}{% else %} no form attached{% endif %}</td></tr>
