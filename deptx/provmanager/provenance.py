@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.db.models.fields.related import ForeignKey
 from prov.model import ProvBundle
 from players.models import Cron, Mop
-from mop.models import Mail
+from mop.models import Mail, PerformanceInstance
 from logger.models import ActionLog
 
 
@@ -66,12 +66,46 @@ def _create_action_cron_view_function(view):
 
 
 class ActionLogProvConverter():
+    VIEW_ACTIONS = {
+        ActionLog.ACTION_CRON_VIEW_INDEX,
+        ActionLog.ACTION_CRON_VIEW_PROFILE,
+        ActionLog.ACTION_CRON_VIEW_ARCHIVE,
+        ActionLog.ACTION_CRON_VIEW_MESSAGES,
+        ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE,
+        ActionLog.ACTION_MOP_VIEW_INDEX,
+        ActionLog.ACTION_MOP_VIEW_GUIDEBOOK,
+        ActionLog.ACTION_MOP_VIEW_PERFORMANCE,
+        ActionLog.ACTION_MOP_VIEW_COMPOSE,
+        ActionLog.ACTION_MOP_VIEW_EDIT,
+        ActionLog.ACTION_MOP_VIEW_INBOX,
+        ActionLog.ACTION_MOP_VIEW_OUTBOX,
+        ActionLog.ACTION_MOP_VIEW_DRAFT,
+        ActionLog.ACTION_MOP_VIEW_TRASH,
+        ActionLog.ACTION_MOP_VIEW_MAIL,
+        ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS,
+        ActionLog.ACTION_MOP_VIEW_FORMS_FILL,
+        ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED,
+        ActionLog.ACTION_MOP_VIEW_FORMS_ARCHIVE,
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL,
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER,
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE,
+    }
+    TRUST_MODIFYING_ACTIONS = {
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_ERROR,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_DOCUMENT,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_REPORT,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL
+    }
+
     def __init__(self, user,
                  generating_bundle=True,
                  generating_specialization=False,
                  including_view_actions=False):
         self.cache = {}
         self.general_entities = {}
+        self.trust = 0  # The current trust level of mop
+        self.trust_total = 0
         self.generating_bundle = generating_bundle
         self.including_view_actions = including_view_actions
         self.generating_cron_specialization = generating_specialization
@@ -99,8 +133,8 @@ class ActionLogProvConverter():
 
         # The Mop player
         # TODO: Check whether there is only one Mop per Cron
-        # TODO: Decide which attributes to include: hair, eyes, weight, firstname, dob, lastname, height, gender, active,
-        # serial, marital, createdAt
+        # TODO: Decide which attributes to include: hair, eyes, weight, firstname, dob, lastname, height, gender,
+        # active, serial, marital, createdAt
         self.ag_mop = g.agent('mopuser:{mop_id}'.format(mop_id=self.mop.id))
         g.specialization(self.ag_mop, self.ag_player)
         g.alternate(self.ag_mop, self.ag_cron)
@@ -110,12 +144,34 @@ class ActionLogProvConverter():
 
     def convert(self, offset=0, limit=None, ids=None):
         actions_logs = ActionLog.objects.filter(Q(cron=self.cron) | Q(mop=self.mop)).order_by('id')
-        if ids:
-            actions_logs = actions_logs.filter(id__in=ids)
-        if offset or limit:
-            actions_logs = actions_logs[offset:] if limit is None else actions_logs[offset:limit]
+        if limit is None:
+            limit = actions_logs.count()
+        count_offset = 0
+        count_converted = 0
         for log in actions_logs:
-            self._convert_action_log(log)
+            if not self.including_view_actions and log.action in self.VIEW_ACTIONS:
+                continue
+            if count_offset < offset:
+                # skipping this log, wait until the offset is reached
+                count_offset += 1
+            else:
+                if not ids or log.id in ids:
+                    self._convert_action_log(log)
+                    count_converted += 1
+                    if count_converted >= limit:
+                        break  # Stop at the limit
+
+            if log.action in self.TRUST_MODIFYING_ACTIONS:
+                self.update_trust(log)
+
+    def update_trust(self, log):
+        mail = log.mail
+        if mail and mail.trust:
+            self.trust += mail.trust
+        if log.action == ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE:
+            # Resetting the trust level
+            self.trust_total += self.trust
+            self.trust = 0
 
     def get_provn(self):
         return self.prov.get_provn()
@@ -487,31 +543,31 @@ class ActionLogProvConverter():
         previous_mail = mail.replyTo
         mop_attrs = {}
 
-        # The data accompany with the mail
-        if mail.subject == Mail.SUBJECT_RECEIVE_DOCUMENT:
-            document_instance = mail.mopDocumentInstance
-            if document_instance is None or document_instance.randomizedDocument is None:
-                # TODO Raise an exception here
-                return
-            e_document_instance_spe = self._create_mop_document_entity(log, bundle, document_instance)
-            e_document_instance_gen = self.general_entities[e_document_instance_spe]
-            # TODO: Create an activity that generated e_document_instance
-            mop_attrs['mop:documents'] = e_document_instance_gen.get_identifier()
-        else:
-            # TODO Check if there is any other subject that falls into this action
-            pass
+        if mail.subject != Mail.SUBJECT_RECEIVE_DOCUMENT:
+            raise Exception('Wrong mail type encountered: %s' % mail.get_subject_display())
 
-        act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+        if mail.trust:
+            mop_attrs['mop:trust'] = self.trust + mail.trust
+        document_instance = mail.mopDocumentInstance
+        if document_instance is None or document_instance.randomizedDocument is None:
+            # TODO Raise an exception here
+            return
+        e_document_instance_spe = self._create_mop_document_entity(log, bundle, document_instance)
+        e_document_instance_gen = self.general_entities[e_document_instance_spe]
+        # TODO: Create an activity that generated e_document_instance
+        mop_attrs['mop:documents'] = e_document_instance_gen.get_identifier()
+
+        act = bundle.activity('mopact:document/assign/{mop_id}/{doc_id}'.format(mop_id=mop.id,
+                                                                                doc_id=document_instance.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
-        if previous_mail:
-            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
-            bundle.used(act, e_previous_mail)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
         if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+            bundle.used(act, e_previous_mail)
             bundle.wasDerivedFrom(e_mail, e_previous_mail)
 
         bundle.wasDerivedFrom(e_mail, e_document_instance_gen)
@@ -520,31 +576,100 @@ class ActionLogProvConverter():
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
     def action_mop_receive_mail_report(self, bundle, log):
-        # TODO: This action should be about app:mop changing the trust level of the mop player
         mop = log.mop
         mail = log.mail
         previous_mail = mail.replyTo
         mop_attrs = {}
 
         # The data accompany with the mail
-        if mail.subject == Mail.SUBJECT_REPORT_EVALUATION:
-            mop_attrs['mop:trustDelta'] = mail.trust
-        else:
-            # TODO Check if there is any other subject that falls into this action
-            pass
+        if mail.subject != Mail.SUBJECT_REPORT_EVALUATION:
+            raise Exception('Wrong mail type encountered: %s' % mail.get_subject_display())
 
-        act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+        mop_attrs['mop:trust'] = self.trust + mail.trust
+        act = bundle.activity('mopact:performance/change/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
-        if previous_mail:
-            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
-            bundle.used(act, e_previous_mail)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
         if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+            bundle.used(act, e_previous_mail)
             bundle.wasDerivedFrom(e_mail, e_previous_mail)
+
+        self._create_new_mop_entity(bundle, log, act, mop_attrs)
+
+    def action_mop_receive_mail_error(self, bundle, log):
+        mop = log.mop
+        mail = log.mail
+        previous_mail = mail.replyTo
+        mop_attrs = {}
+
+        # The data accompany with the mail
+        if mail.subject != Mail.SUBJECT_ERROR:
+            raise Exception('Wrong mail type encountered: %s' % mail.get_subject_display())
+
+        mop_attrs['mop:trust'] = self.trust + mail.trust
+        act = bundle.activity('mopact:performance/change/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
+                              log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        # bundle.wasAssociatedWith(act, 'app:mop')
+        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
+
+        bundle.wasGeneratedBy(e_mail, act)
+        if previous_mail:
+            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+            bundle.used(act, e_previous_mail)
+            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+
+        self._create_new_mop_entity(bundle, log, act, mop_attrs)
+
+    def action_mop_receive_mail_performance(self, bundle, log):
+        mop = log.mop
+        mail = log.mail
+        performance = mail.performanceInstance
+        action = performance.get_type_display()
+        level = performance.get_result_display()
+        mop_attrs = {
+            'mop:trust': 0,
+            'mop:trust_total': self.trust_total + performance.trust,
+            'mop:credits': performance.credit
+        }
+        if performance.type != PerformanceInstance.TYPE_NEUTRAL:
+            # There is a change in clearance level
+            mop_attrs['mop:clearance'] = level
+
+        act_id = 'mopact:performance/{action}/{mop_id}/{log_id}'.format(action=action, mop_id=mop.id, log_id=mail.id)
+        act = bundle.activity(act_id, performance.createdAt, log.modifiedAt,
+                              {'cron:action_log_id': log.id, 'mop:reviewPeriod': performance.period.id})
+        # bundle.wasAssociatedWith(act, 'app:mop')
+        bundle.used(act, self.ag_mop_current)
+        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
+
+        bundle.wasGeneratedBy(e_mail, act)
+
+        self._create_new_mop_entity(bundle, log, act, mop_attrs)
+
+    def action_mop_receive_mail_manual(self, bundle, log):
+        mop = log.mop
+        mail = log.mail
+        mop_attrs = {}
+        if mail.trust:
+            mop_attrs['mop:trust'] = self.trust + mail.trust
+            act_id = 'mopact:performance/manual/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=mail.id)
+        else:
+            act_id = 'mopact:mail/manual/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=mail.id)
+
+        act = bundle.activity(act_id, log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        # bundle.wasAssociatedWith(act, 'app:mop')
+        if mail.trust:
+            bundle.used(act, self.ag_mop_current)
+
+        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
+
+        bundle.wasGeneratedBy(e_mail, act)
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
@@ -645,12 +770,13 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_FORM_SIGN:                 action_mop_form_sign,
         # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
         ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_ERROR:        action_mop_receive_mail_error,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM:         action_mop_receive_mail_form,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_DOCUMENT:     action_mop_receive_mail_document,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_REPORT:       action_mop_receive_mail_report,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE:  action_mop_receive_mail_performance,
+        ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL:       action_mop_receive_mail_manual,
         ActionLog.ACTION_MOP_VIEW_MAIL:                 action_mop_view_mail,
         ActionLog.ACTION_MOP_VIEW_PROVENANCE:           action_mop_view_provenance,
         ActionLog.ACTION_MOP_PROVENANCE_SUBMIT:         action_mop_provenance_submit,
     }
-
-

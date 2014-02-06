@@ -11,6 +11,7 @@ from django.template import Context, loader, Template
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from deptx.helpers import now
+from datetime import datetime
 
 class MopTracker(models.Model):
     
@@ -94,7 +95,11 @@ class PerformancePeriod(models.Model):
     def days(self):
         days = (self.reviewDate - self.startDate).days
         return days
-    
+
+    @property
+    def review_timestamp(self):
+        return datetime.combine(self.reviewDate, self.reviewTime)
+
     def trustForBlue(self):
         return "1-%s" % (getMinimumGreen(self.days)-1)
     def trustForGreen(self):
