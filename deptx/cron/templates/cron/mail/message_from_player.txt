@@ -1,4 +1,4 @@
-{{body}}
+{{body|safe}}
 
 -- 
 cr0nogram v1.45b

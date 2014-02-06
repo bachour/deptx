@@ -34,12 +34,16 @@ urlpatterns = patterns('',
     url(r'messages/$', views.messages, name='cron_messages'),
     url(r'messages/compose/', views.message_compose, name='cron_message_compose'),
     
+    url(r'chat/$', views.chat, name='cron_chat'),
+    url(r'chat/send/', views.chat_send, name='cron_chat_send'),
+    url(r'chat/sync/', views.chat_sync, name='cron_chat_sync'),
+    
     url(r'intelligence/cr0n-report-gc8.html', views.intelligence_report_gc8, name='cron_intelligence_report_gc8'),
     url(r'intelligence/inside-the-bunker.html', views.intelligence_bunker, name='cron_intelligence_bunker'),
     url(r'intelligence/mop-message.html', views.intelligence_mop_message, name='cron_intelligence_mop_message'),
     url(r'intelligence/dr-moreau.html', views.intelligence_dr_moreau, name='cron_intelligence_dr_moreau'),
     url(r'intelligence/inside-the-bunker/([-\w].+)', views.intelligence_bunker_image, name='cron_intelligence_bunker_image'),
-       
+    url(r'intelligence/jean-baker-message.html', views.intelligence_jean_baker_message, name='cron_intelligence_jean_baker_message'),
      
     url(r'profile/', views.profile, name='cron_profile'),
     url(r'hack/([-\w]+)', views.hack_document, name='cron_hack_document'),

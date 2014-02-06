@@ -1,0 +1,21 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+{% block content %}
+<!-- Cr0nogram Content Start-->
+
+<div align="center">
+  
+  <h2>A message by Jean Baker</h2>
+
+</div>
+
+<br/>
+<img src="{% static 'cron/images/jean_baker_message.jpg' %}" width="800px;" alt="Jean Baker Message"><br/><br/>
+<p>This message was sent around the MoP intranet from a MOPJUST account and got into our hands thanks to some of our agents. We assume it was sent by one Jean Baker. Who is she? What is she trying to tell whom with this message?</p>
+
+<br/>
+<br/>
+	<a class='inputbutton' href="{% url 'cron_index' %}">Back</a>
+	
+{% endblock %}
+

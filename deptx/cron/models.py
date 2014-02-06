@@ -198,3 +198,12 @@ class HelpMail(models.Model):
             fromto = "To"
         return "%s: %s - %s" % (fromto, self.cron.user.username, self.createdAt)
     
+class ChatMessage(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    message = models.CharField(max_length=256)
+    cron = models.ForeignKey(Cron)
+    
+    def __unicode__(self):
+        return "%s: %s" % (self.cron.user.username, self.message)

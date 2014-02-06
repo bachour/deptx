@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.http import Http404
 
@@ -16,9 +16,9 @@ from django.template import Context, Template, loader
 from players.forms import MopForm
 
 from assets.models import Case, Mission, CronDocument, CaseQuestion
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage
 from mop.models import Mail, MopDocumentInstance
-from cron.forms import HelpMailForm, ControlHelpMailForm
+from cron.forms import HelpMailForm, ControlHelpMailForm, ChatForm
 
 from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
@@ -27,8 +27,9 @@ from logger.models import ActionLog
 from logger import logging
 from copy import deepcopy
 from django.core.mail import EmailMessage, send_mass_mail
-
+from django.views.decorators.csrf import csrf_exempt
 import json
+from django.utils.html import escape
 
 try:
     from deptx.settings_production import DEFAULT_FROM_EMAIL
@@ -583,7 +584,53 @@ def intelligence_bunker_image(request, image_name):
     logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff=image_name)
     return render(request, 'cron/pages/bunker_image.html', {'image_url': image_url})
 
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def intelligence_jean_baker_message(request):
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_FLUFF, cron=request.user.cron, fluff='jean-baker-message.html')
+    return render(request, 'cron/pages/jean-baker-message.html', {})
 
+
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def chat(request):
+    chat_list = ChatMessage.objects.all()
+    latest = chat_list.latest('id')
+    #chat_list = ChatMessage.objects.filter(id__gt=latest.id-100)
+    form = ChatForm()
+    return render(request, 'cron/chat.html', {'chat_list': chat_list, 'form':form, 'latest':latest})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def chat_send(request):
+    data = False
+    if request.method == 'POST' and request.is_ajax():
+        chat = ChatMessage(cron=request.user.cron)
+        form = ChatForm(data=request.POST, instance=chat)
+        if form.is_valid():
+            chat = form.save()
+            data = json.dumps({'success':True})
+    return HttpResponse(data, mimetype='application/json')
+    
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+@csrf_exempt
+def chat_sync(request):
+    data = False
+    if request.method == 'POST' and request.is_ajax():
+        latest_id = request.POST.get('latest_id', None)
+        html = ""
+        if latest_id is not None:
+            chat_list = ChatMessage.objects.filter(id__gt=latest_id)
+            for chat in chat_list:
+                html += escape("%s: %s" % (chat.cron.user.username, chat.message)) + "<br/>"
+            try:
+                latest_id = chat_list.latest('id').id
+            except:
+                pass
+        data = json.dumps({'success':True, 'html':html, 'latest_id':latest_id})
+    return HttpResponse(data, mimetype='application/json')
 
 def getAllDocumentStates(cron, case):
     requiredDocuments = case.crondocument_set.all()
