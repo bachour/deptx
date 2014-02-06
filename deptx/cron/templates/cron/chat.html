@@ -1,0 +1,70 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block header %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script type="text/javascript">
+$( document ).ready(function() {
+    var frm = $('#chatform');
+    frm.submit(function () {
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'cron_chat_send' %}",
+            data: frm.serialize(),
+            success: function (data) {
+                $("#id_message").val('');
+            },
+            error: function(data) {
+
+            }
+        });
+        return false;
+   });
+});
+
+var latest_id = {{latest.id}};
+window.setInterval(function(){
+	$.ajax({
+            type: 'POST',
+            url: "{% url 'cron_chat_sync' %}",
+            data:
+            {
+		    		'latest_id': latest_id,
+	    	},
+            success: function (data) {
+            	if (data['html']!='') {
+                	$("#message_box").append(data['html']);
+                	latest_id = data['latest_id'];
+               		if($("#autoscroll").is(':checked')) {
+               			$("#message_box").scrollTop($("#message_box")[0].scrollHeight);
+               		};
+
+                };
+            },
+            error: function(data) {
+
+            }
+        });
+        return false;
+
+},5000);
+
+</script>
+{% endblock %}
+{% block content %}
+<h1>Chat</h1>
+<div id="message_box" style="color:#03c1e2;font-size:14px;line-height:150%;font-family:courier;width:360px;height:480px;overflow:auto;background-color:black;padding:10px;">
+{% if chat_list %}
+	{% for chat in chat_list %}
+		{{chat.cron.user.username}}: {{chat.message}}<br/>
+	{% endfor %}
+{% endif %}
+</div>
+
+<hr/>
+<form method="" action="" id="chatform">
+{% csrf_token %}
+{{form}}
+<br/>
+<input class="button" type="submit" value="Send" /></form><input id="autoscroll" type="checkbox" name="autoscroll" value="autoscroll" checked>activate autoscrolling<br/>
+{% endblock %}
