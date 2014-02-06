@@ -15,8 +15,8 @@ class ControlHelpMailForm(ModelForm):
         model = HelpMail
         fields = ['cron', 'body']
 
-class ChatForm(ModelForm):
-    class Meta:
-        model = ChatMessage
-        fields = ['message' ]
+# class ChatForm(ModelForm):
+#     class Meta:
+#         model = ChatMessage
+#         fields = ['message' ]
     
