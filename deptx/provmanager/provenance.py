@@ -255,6 +255,7 @@ class ActionLogProvConverter():
         g.wasGeneratedBy(ag_cron_active, act)
         g.wasRevisionOf(ag_cron_active, self.ag_cron_current, time=log.createdAt)
         g.specialization(ag_cron_active, self.ag_cron)
+        self.ag_cron = ag_cron_active
         self.ag_cron_current = ag_cron_active
 
     def action_cron_login(self, bundle, log):
@@ -266,9 +267,7 @@ class ActionLogProvConverter():
         g.wasAssociatedWith(act, self.ag_player)
 
         ag_cron_logged_in = g.agent('cronuser:{cron_id}/{log_id}'.format(cron_id=cron.id, log_id=log.id))
-        g.alternate(ag_cron_logged_in, self.ag_cron_current)
-        if self.generating_cron_specialization:
-            g.specialization(ag_cron_logged_in, self.ag_cron)
+        g.specialization(ag_cron_logged_in, self.ag_cron)
         g.wasGeneratedBy(ag_cron_logged_in, act)
         self.ag_cron_current = ag_cron_logged_in
 
@@ -367,7 +366,10 @@ class ActionLogProvConverter():
                          log.createdAt, log.createdAt,
                          {'cron:action_log_id': log.id})
         g.wasAssociatedWith(act, self.ag_player)
-        self._create_new_mop_entity(g, log, act)
+        ag_mop_new = bundle.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=self.mop.id, log_id=log.id))
+        g.specializationOf(ag_mop_new, self.ag_mop)
+        g.wasGeneratedBy(ag_mop_new, act)
+        self.ag_mop_current = ag_mop_new
 
     def action_mop_receive_mail_tutorial(self, bundle, log):
         self._create_mop_activity(bundle, log, 'receive_mail_tutorial')
@@ -376,33 +378,39 @@ class ActionLogProvConverter():
         self._create_mop_activity(bundle, log, 'progress_tutorial',
                                   mop_attrs={'cron:tutorialProgress': log.tutorialProgress})
 
-    def _create_form_blank_entity(self, bundle, form_blank):
-        e_form_blank = bundle.entity(
-            'form:{form_serial}'.format(form_serial=form_blank.serial),
-            {'prov:label': form_blank.name}
+    def _create_form_blank_entity(self, bundle, form_blank, user_id=None):
+        e_form_blank_id = 'form:{form_serial}'.format(form_serial=form_blank.serial)
+        if user_id:
+            e_form_blank_id += '/%d' % user_id
+        if e_form_blank_id not in self.cache:
+            self.cache[e_form_blank_id] = bundle.entity(e_form_blank_id, {'prov:label': form_blank.name})
+        return self.cache[e_form_blank_id]
+
+    def _create_form_signed_entity(self, bundle, form_signed, form_blank):
+        e_form_signed_id = 'form:{form_serial}/{instance_serial}'.format(
+            form_serial=form_blank.serial, instance_serial=form_signed.serial
         )
-        return e_form_blank
+        if e_form_signed_id not in self.cache:
+            self.cache[e_form_signed_id] = bundle.entity(
+                e_form_signed_id, {'mop:timestamp': form_signed.createdAt, 'mop:data': form_signed.data}
+            )
+        return self.cache[e_form_signed_id]
 
     def action_mop_form_sign(self, bundle, log):
         mop = log.mop
         form_signed = log.requisitionInstance
         form_blank = form_signed.blank.requisition
         # TODO: Create a new mop or not? Probably not since the mop entity does not change after signing the form
-        e_form_blank = self._create_form_blank_entity(bundle, form_blank)
+        e_form_blank = self._create_form_blank_entity(bundle, form_blank, mop.id)
         act = bundle.activity('mopact:form/sign/{mop_id}/{instance_id}'.format(mop_id=mop.id,
                                                                                instance_id=form_signed.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         bundle.used(act, e_form_blank)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
-        e_form_signed = bundle.entity(
-            'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
-                                                          instance_serial=form_signed.serial),
-            {'mop:timestamp': form_signed.createdAt,
-             'mop:data': form_signed.data}
-        )
+        e_form_signed = self._create_form_signed_entity(bundle, form_signed, form_blank)
         bundle.wasGeneratedBy(e_form_signed, act)
-        bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act)
+        bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act, other_attributes={'prov:type': 'mop:signForm'})
 
     def _create_mop_document_entity(self, log, bundle, document_instance, attrs=None):
         randomized_document = document_instance.randomizedDocument
@@ -470,21 +478,11 @@ class ActionLogProvConverter():
         if mail.subject == Mail.SUBJECT_REQUEST_FORM:
             form_signed = mail.requisitionInstance
             form_blank = form_signed.blank.requisition
-            e_data = bundle.entity(
-                'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
-                                                              instance_serial=form_signed.serial)
-            )
+            e_data = self._create_form_signed_entity(bundle, form_signed, form_blank)
         elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
             form_signed = mail.requisitionInstance
             form_blank = form_signed.blank.requisition
-            e_data = bundle.entity(
-                'form:{form_serial}/{instance_serial}'.format(form_serial=form_blank.serial,
-                                                              instance_serial=form_signed.serial)
-            )
-            if mail.mopDocumentInstance:
-                # Just getting the current entity
-                e_document_instance = self._create_mop_document_entity(log, bundle, mail.mopDocumentInstance)
-                bundle.wasDerivedFrom(e_data, e_document_instance)
+            e_data = self._create_form_signed_entity(bundle, form_signed, form_blank)
         else:
             # TODO Generate the data entity for other types of attachments
             pass
@@ -498,8 +496,13 @@ class ActionLogProvConverter():
         e_mail = self._create_mail_entity(bundle, mail)
         # TODO: Create a new mop or not? Probably not since the mop entity does not change after sending the mail
         bundle.wasGeneratedBy(e_mail, act)
+        if mail.mopDocumentInstance:
+            # Just getting the current entity
+            e_document_instance = self._create_mop_document_entity(log, bundle, mail.mopDocumentInstance)
+            bundle.wasDerivedFrom(e_mail, e_document_instance, other_attributes={'prov:type': 'mop:mailAttachment'})
+
         if e_data:
-            bundle.wasDerivedFrom(e_mail, e_data)
+            bundle.wasDerivedFrom(e_mail, e_data, act, other_attributes={'prov:type': 'mop:mailAttachment'})
 
     def action_mop_receive_mail_form(self, bundle, log):
         mop = log.mop
@@ -511,28 +514,27 @@ class ActionLogProvConverter():
         if previous_mail:
             e_previous_mail = self._create_mail_entity(bundle, previous_mail)
 
-        if mail.subject == Mail.SUBJECT_RECEIVE_FORM:
-            form_blank = mail.requisitionBlank.requisition
-            e_form = self._create_form_blank_entity(bundle, form_blank)
-            mop_attrs['mop:forms'] = e_form.get_identifier()
-        elif mail.subject == Mail.SUBJECT_REPORT_EVALUATION:
-            # TODO: Record change of trust value here
-            pass
-        else:
-            # TODO Check if there is any other subject that falls into this action
-            pass
+        if mail.subject != Mail.SUBJECT_RECEIVE_FORM:
+            raise Exception('Wrong mail type encountered: %s' % mail.get_subject_display())
+        form_blank = mail.requisitionBlank.requisition
+        e_form = self._create_form_blank_entity(bundle, form_blank)
+        e_form_instance = self._create_form_blank_entity(bundle, form_blank, mop.id)
+        mop_attrs['mop:forms'] = e_form.get_identifier()
 
-        act = bundle.activity('mopact:mail/receive/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
+        act = bundle.activity('mopact:form/assign/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         if previous_mail:
             bundle.used(act, e_previous_mail)
-        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        bundle.used(act, e_form)
+        bundle.wasGeneratedBy(e_form_instance, act)
+        bundle.specializationOf(e_form_instance, e_form)
+        # bundle.wasAssociatedWith(act, 'app:mop')
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
         if previous_mail:
-            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+            bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
