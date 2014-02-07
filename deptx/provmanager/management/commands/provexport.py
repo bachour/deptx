@@ -44,12 +44,18 @@ class Command(BaseCommand):
                     dest='ids',
                     default=None,
                     help='Only generating provenance for action whose ids are provided (comma separated, no space)'),
+        make_option('-d', '--dot',
+                    action='store',
+                    type='string',
+                    dest='dot-filename',
+                    default=None,
+                    help='Generating Graphviz DOT file'),
         make_option('-p', '--pdf',
                     action='store',
                     type='string',
                     dest='pdf-filename',
                     default=None,
-                    help='Only generating provenance for action whose ids are provided (comma separated, no space)'),
+                    help='Generating the PDF file (can take a long time for large graphs)'),
     )
     args = '<player_id>'
     help = 'Exporting the provenance for player IDs'
@@ -75,7 +81,10 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(converter.get_provn())
 
-            if options['pdf-filename']:
+            if options['pdf-filename'] or options['dot-filename']:
                 from prov.model.graph import prov_to_dot
                 dot = prov_to_dot(converter.prov)
-                dot.write(options['pdf-filename'], None, 'pdf')
+                if options['dot-filename']:
+                    dot.write(options['dot-filename'])
+                if options['pdf-filename']:
+                    dot.write(options['pdf-filename'], None, 'pdf')
