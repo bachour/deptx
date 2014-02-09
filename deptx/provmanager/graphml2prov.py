@@ -1,19 +1,19 @@
 #!/usr/local/bin/python2.7
 # encoding: utf-8
-'''
+"""
 converter -- GraphML to PROV extraction tool
 
 converter is a tool for extracting PROV annotations from a graphML file
 
 @author:     Trung Dong Huynh
 
-@copyright:  2013 University of Southampton, United Kingdom. All rights reserved.
+@copyright:  2014 University of Southampton, United Kingdom. All rights reserved.
 
 @license:    TBD
 
 @contact:    trungdong@donggiang.com
-@deffield    updated: 2013-10-15
-'''
+@deffield    updated: 2014-02-09
+"""
 
 
 import codecs
@@ -66,7 +66,7 @@ def logging_intercept(fn, level=logging.DEBUG):
 
 
 class CLIError(Exception):
-    '''Generic exception to raise and log different fatal errors.'''
+    """Generic exception to raise and log different fatal errors."""
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
         self.msg = "E: %s" % msg
@@ -96,7 +96,7 @@ GRAPH_ML_DATA = etree.QName(NS_URI_GRAPH_ML, 'data')
 
 NS_MOP = prov.model.Namespace('mop', 'http://mofp.net/ns#')
 CUSTOM_ATTRIBUTES = {
-    'Role': PROV['role'],
+    'role': PROV['role'],
     'date_of_birth': NS_MOP['birthdate'],
 }
 
@@ -185,7 +185,7 @@ def convert_attributes(element, attributes):
                     if str(attributes[key]).find('free') >= 0:
                         attr_name, attr_value = value.split(':', 1)
                         attr_name = convert_attribute_name(attr_name)
-                        attr_value = attr_value.strip();
+                        attr_value = attr_value.strip()
                         results[attr_name] = to_unicode_or_bust(attr_value) if attr_value else ""
                     else:
                         results[attributes[key]] = to_unicode_or_bust(value)
@@ -196,20 +196,27 @@ def convert_time(date, time):
     str_datetime = ' '.join((date, time))
     return datetime.datetime.strptime(str_datetime, '%d/%m/%Y %H:%M')
 
+
 def get_string_from_node(record):
-    source_str = "%s" % record
-    type = source_str.split('(', 1)[0]
-    return type + ':' + source_str.split(':', 1)[1].split(',', 1)[0]
+    source_str = unicode(record)
+    node_type = source_str.split('(', 1)[0]
+    return node_type + ':' + source_str.split(':', 1)[1].split(',', 1)[0]
+
 
 class GraphMLProvConverter(object):
     def __init__(self, root):
         self.root = root
+        self.identifiers = set()
+        self.node_attributes = {}
+        self.edge_attributes = {}
+        self.edge_type_key = None
+        self.node_shape_key = None
+        self.edge_shape_key = None
+        self.nodes = {}
+
         self.initialise_attributes()
 
         self.prov = prov.model.ProvBundle()
-        self.nodes = {}
-
-        self.identifiers = set()
 
         # Getting the graph element
         self.graph = self.root.find('g:graph', GRAPHML_PREFIXES)
@@ -222,11 +229,10 @@ class GraphMLProvConverter(object):
 
     def initialise_attributes(self):
         # Looking for data properties
-        self.node_attributes = {}
-        self.edge_attributes = {}
         for key in self.root.iter(GRAPH_ML_KEY):
             if 'attr.name' in key.attrib:
-                if key.attrib['attr.name'] == 'Type' and key.attrib['attr.type'] == 'int' and key.attrib['for'] == 'edge':
+                if key.attrib['attr.name'] == 'Type' and key.attrib['attr.type'] == 'int'\
+                        and key.attrib['for'] == 'edge':
                     self.edge_type_key = key.attrib['id']
                     continue  # Skip this special attribute
                 # Processing custom data attribute
@@ -286,9 +292,12 @@ class GraphMLProvConverter(object):
             # Trying to find a default relation
             try:
                 prov_type = PROV_DEFAULT_RELATION[(source_rec.get_type(), target_rec.get_type())]
-                logger.info('Cannot determine the PROV relation (%s) for edge %s between %s and %s, creating the default relation (%s) for this edge.' % (edge_type, edge_id, source_str, target_str, prov.model.PROV_N_MAP[prov_type]))
+                logger.info('Cannot determine the PROV relation (%s) for edge %s between %s and %s, '
+                            'creating the default relation (%s) for this edge.'
+                            % (edge_type, edge_id, source_str, target_str, prov.model.PROV_N_MAP[prov_type]))
             except KeyError:
-                logger.warn('Cannot determine the PROV relation (%s) for edge %s between %s and %s. Ignored this edge.' % (edge_type, edge_id, source_str, target_str))
+                logger.warn('Cannot determine the PROV relation (%s) for edge %s between %s and %s. '
+                            'Ignored this edge.' % (edge_type, edge_id, source_str, target_str))
                 return  # Stop processing
         else:
             prov_type = EDGE_PROV_CODE[edge_type]
@@ -299,7 +308,9 @@ class GraphMLProvConverter(object):
         try:
             PROV_RELATION_FUNCTION[prov_type](self.prov, source_rec, target_rec, other_attributes=attributes)
         except ProvException, e:
-            logger.warn("Cannot create relation for edge %s between %s and %s (type %s - %s). Ignored this edge.\n%s" % (edge_id, source_str, target_str, edge_type, prov.model.PROV_N_MAP[prov_type], repr(e)))
+            logger.warn("Cannot create relation for edge %s between %s and %s (type %s - %s). "
+                        "Ignored this edge.\n%s"
+                        % (edge_id, source_str, target_str, edge_type, prov.model.PROV_N_MAP[prov_type], repr(e)))
 
     def convert_entity(self, identifier, attributes):
         return self.prov.entity(identifier, other_attributes=attributes)
@@ -319,6 +330,7 @@ class GraphMLProvConverter(object):
 
 def validate(prov_document):
     provn = prov_document.get_provn()
+    provn = provn.encode('utf-8')  # converting the unicode string to UTF8
 
     headers = {'Content-Type': 'text/provenance-notation',
                'Content-Length': len(provn),
@@ -337,9 +349,9 @@ def validate(prov_document):
         xml_report = response.read()
 
         matches = set(re.findall('(?<=<ns2:)\w+', xml_report))
-        nonfails = set(['validationReport', 'success', 'successfulMerge', 'deposited'])
+        non_fails = {'validationReport', 'success', 'successfulMerge', 'deposited'}
 
-        result = matches - nonfails
+        result = matches - non_fails
 
         valid = len(result) == 0
 
@@ -350,6 +362,7 @@ def validate(prov_document):
             traceback.print_exc()
             print e
         logger.warn('Could not access the validation service.')
+        return False, None
 
 
 def convert_path(path, recursive=False):
@@ -373,7 +386,7 @@ def convert_xml_root(root):
 def convert_graphml_string(content):
     utf8_parser = etree.XMLParser(encoding='utf-8')
     s = content.encode('utf-8')
-    root =  etree.fromstring(s, parser=utf8_parser)
+    root = etree.fromstring(s, parser=utf8_parser)
     return convert_xml_root(root)
 
 
@@ -382,7 +395,7 @@ def convert_graphml_file(filepath):
     if ext == '.graphml':
         logger.info('Converting file %s...' % filepath)
         tree = etree.parse(filepath)
-        prov_doc = convert_xml_root(tree.getroot())
+        prov_doc, logs = convert_xml_root(tree.getroot())
         with codecs.open(root + '.provn', 'w', encoding='utf-8') as f:
             logger.debug('Writing to %s.provn' % root)
             provn = prov_doc.get_provn()
@@ -395,11 +408,15 @@ def convert_graphml_file(filepath):
         if valid:
             logger.info('The output PROV document is valid.')
         else:
-            logger.warn('The output PROV document is INVALID. Please check the validation report at %s' % validation_url)
+            if validation_url:
+                logger.warn('The output PROV document is INVALID. '
+                            'Please check the validation report at %s' % validation_url)
+            else:
+                logger.warn('The provenance document was not checked, error accessing the validation service.')
 
 
 def main(argv=None):  # IGNORE:C0111
-    '''Command line options.'''
+    """Command line options."""
 
     if argv is None:
         argv = sys.argv
@@ -414,7 +431,7 @@ def main(argv=None):  # IGNORE:C0111
     program_license = '''%s
 
   Created by Trung Dong Huynh on %s.
-  Copyright 2013 organization_name. All rights reserved.
+  Copyright 2014 University of Southampton. All rights reserved.
 
   Licensed under the Apache License 2.0
   http://www.apache.org/licenses/LICENSE-2.0
@@ -428,12 +445,21 @@ USAGE
     try:
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
-        parser.add_argument("-r", "--recursive", dest="recurse", action="store_true", help="recurse into subfolders [default: %(default)s]")
-        parser.add_argument("-v", "--verbose", dest="verbose", action="count", help="set verbosity level [default: %(default)s]")
-        parser.add_argument("-i", "--include", dest="include", help="only include paths matching this regex pattern. Note: exclude is given preference over include. [default: %(default)s]", metavar="RE")
-        parser.add_argument("-e", "--exclude", dest="exclude", help="exclude paths matching this regex pattern. [default: %(default)s]", metavar="RE")
+        parser.add_argument("-r", "--recursive", dest="recurse", action="store_true",
+                            help="recurse into subfolders [default: %(default)s]")
+        parser.add_argument("-v", "--verbose", dest="verbose", action="count",
+                            help="set verbosity level [default: %(default)s]")
+        parser.add_argument("-i", "--include", dest="include",
+                            help="only include paths matching this regex pattern. "
+                                 "Note: exclude is given preference over include. [default: %(default)s]",
+                            metavar="RE")
+        parser.add_argument("-e", "--exclude", dest="exclude",
+                            help="exclude paths matching this regex pattern. [default: %(default)s]",
+                            metavar="RE")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
-        parser.add_argument(dest="paths", help="paths to folder(s) with source file(s) [default: %(default)s]", metavar="path", nargs='+')
+        parser.add_argument(dest="paths",
+                            help="paths to folder(s) with source file(s) [default: %(default)s]",
+                            metavar="path", nargs='+')
 
         # Process arguments
         args = parser.parse_args()
@@ -464,7 +490,7 @@ USAGE
     except Exception, e:
         if DEBUG or TESTRUN:
             traceback.print_exc()
-            raise(e)
+            raise e
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
