@@ -293,7 +293,7 @@ class ActionLogProvConverter():
             {'cron:mission': 'mission:{mission_id}'.format(mission_id=mission.id),
              'cron:missionState': log.get_missionState_display()}
         )
-        g.wasDerivedFrom(ag_cron_new, e_mission_part)
+        g.wasDerivedFrom(ag_cron_new, e_mission_part, act, other_attributes={'prov:type': 'mop:seen'})
 
     def action_cron_view_mission_intro(self, bundle, log):
         self.create_mission_action(bundle, 'intro', log)
@@ -310,11 +310,12 @@ class ActionLogProvConverter():
     def action_cron_view_fluff(self, bundle, log):
         self._create_cron_activity(bundle, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
 
-    def _create_new_mop_entity(self, bundle, log, activity=None, mop_attrs=None):
+    def _create_new_mop_entity(self, bundle, log, activity=None, mop_attrs=None, derivation_type=None):
         ag_mop_new = bundle.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=self.mop.id, log_id=log.id), mop_attrs)
         if mop_attrs:
             # New attribute(s), this is a revision of the current mop
-            bundle.wasRevisionOf(ag_mop_new, self.ag_mop_current)
+            der_attrs = {'prov:type': derivation_type} if derivation_type else None
+            bundle.wasRevisionOf(ag_mop_new, self.ag_mop_current, activity, other_attributes=der_attrs)
         else:
             # No new attribute, this is an alternate of the current mop
             bundle.alternateOf(ag_mop_new, self.ag_mop_current)
@@ -372,7 +373,9 @@ class ActionLogProvConverter():
         self.ag_mop_current = ag_mop_new
 
     def action_mop_receive_mail_tutorial(self, bundle, log):
-        self._create_mop_activity(bundle, log, 'receive_mail_tutorial')
+        e_mail = self._create_mail_entity(bundle, log.mail)
+        act = self._create_mop_activity(bundle, log, 'receive_mail_tutorial')
+        bundle.used(act, e_mail)
 
     def action_mop_tutorial_progress(self, bundle, log):
         self._create_mop_activity(bundle, log, 'progress_tutorial',
@@ -412,7 +415,7 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_form_signed, act)
         bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act, other_attributes={'prov:type': 'mop:signForm'})
 
-    def _create_mop_document_entity(self, log, bundle, document_instance, attrs=None):
+    def _create_mop_document_entity(self, log, bundle, document_instance, activity=None, attrs=None):
         randomized_document = document_instance.randomizedDocument
         mop_document = randomized_document.mopDocument
         unit = mop_document.unit
@@ -440,7 +443,7 @@ class ActionLogProvConverter():
         if e_document_instance_id not in self.cache:
             # The instance that was created by the system
             e_document_instance = bundle.entity(e_document_instance_id, attrs)
-            bundle.wasDerivedFrom(e_document_instance_id, e_randomized_document_id)
+            bundle.wasDerivedFrom(e_document_instance_id, e_randomized_document_id, activity)
             self.general_entities[e_document_instance_id] = e_document_instance
             # The instance currently using (by the caller function)
             e_document_instance_id_spe = e_document_instance_id + '/' + str(log.id)
@@ -453,7 +456,7 @@ class ActionLogProvConverter():
             e_prev_document_instance = self.cache[e_document_instance_id]
             e_document_instance_id_spe = e_document_instance_id + '/' + str(log.id)
             e_document_instance_spe = bundle.entity(e_document_instance_id_spe, attrs)
-            bundle.wasRevisionOf(e_document_instance_id_spe, e_prev_document_instance)
+            bundle.wasRevisionOf(e_document_instance_id_spe, e_prev_document_instance, activity)
             self.cache[e_document_instance_id] = e_document_instance_spe
             self.general_entities[e_document_instance_spe] = self.general_entities[e_document_instance_id]
         return self.cache[e_document_instance_id]
@@ -570,10 +573,12 @@ class ActionLogProvConverter():
         if previous_mail:
             e_previous_mail = self._create_mail_entity(bundle, previous_mail)
             bundle.used(act, e_previous_mail)
-            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+            bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
-        bundle.wasDerivedFrom(e_mail, e_document_instance_gen)
-        bundle.wasDerivedFrom(e_document_instance_spe, e_mail)
+        bundle.wasDerivedFrom(e_mail, e_document_instance_gen, act,
+                              other_attributes={'prov:type': 'mop:mailAttachment'})
+        bundle.wasDerivedFrom(e_document_instance_spe, e_mail, act,
+                              other_attributes={'prov:type': 'mop:mailAttachment'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
@@ -598,7 +603,7 @@ class ActionLogProvConverter():
         if previous_mail:
             e_previous_mail = self._create_mail_entity(bundle, previous_mail)
             bundle.used(act, e_previous_mail)
-            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+            bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
@@ -623,7 +628,7 @@ class ActionLogProvConverter():
         if previous_mail:
             e_previous_mail = self._create_mail_entity(bundle, previous_mail)
             bundle.used(act, e_previous_mail)
-            bundle.wasDerivedFrom(e_mail, e_previous_mail)
+            bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
 
@@ -702,7 +707,8 @@ class ActionLogProvConverter():
             # The reference to the document was not recorded, nothing to do
             return
         # TODO Reference to prov_log to see if this is just a simple view or the graph has been manipulated
-        e_document = self._create_mop_document_entity(log, bundle, document, {'mop:provenanceCorrectness': correct})
+        # Just getting the document's current entity
+        e_document = self._create_mop_document_entity(log, bundle, document)
 
         act_id = 'mopact:provenance/view/{mop_id}/{doc_id}/{log_id}'.format(
             mop_id=mop.id, doc_id=document.id, log_id=log.id
@@ -734,7 +740,8 @@ class ActionLogProvConverter():
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         bundle.used(act, e_document_prev)
-        e_document = self._create_mop_document_entity(log, bundle, document, {'mop:provenanceCorrectness': correct})
+        e_document = self._create_mop_document_entity(log, bundle, document, act,
+                                                      {'mop:provenanceCorrectness': correct})
         bundle.wasGeneratedBy(e_document, act)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
 

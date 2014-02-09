@@ -83,8 +83,9 @@ class Command(BaseCommand):
 
             if options['pdf-filename'] or options['dot-filename']:
                 from prov.model.graph import prov_to_dot
-                dot = prov_to_dot(converter.prov)
                 if options['dot-filename']:
+                    dot = prov_to_dot(converter.prov, show_element_attributes=False, show_relation_attributes=False)
                     dot.write(options['dot-filename'])
                 if options['pdf-filename']:
+                    dot = prov_to_dot(converter.prov)
                     dot.write(options['pdf-filename'], None, 'pdf')
