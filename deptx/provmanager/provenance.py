@@ -1,6 +1,7 @@
+from uuid import uuid4
 from django.db.models import Q
 from django.db.models.fields.related import ForeignKey
-from prov.model import ProvBundle
+from prov.model import ProvBundle, PROV
 from players.models import Cron, Mop
 from mop.models import Mail, PerformanceInstance
 from logger.models import ActionLog
@@ -16,7 +17,6 @@ NAMESPACES = {
     'mission': 'http://www.cr0n.org/mission/',
     'asset': 'http://www.cr0n.org/assets/',
     'log': 'http://www.cr0n.org/log/',
-    'b': 'http://www.cr0n.org/bundles/',
     'cronuser': 'http://www.cr0n.org/user/',
     'mopuser': 'http://mofp.net/user/',
     'mopact': 'http://mofp.net/activity/',
@@ -102,6 +102,7 @@ class ActionLogProvConverter():
                  generating_bundle=True,
                  generating_specialization=False,
                  including_view_actions=False):
+        self.session_id = str(uuid4())
         self.cache = {}
         self.general_entities = {}
         self.trust = 0  # The current trust level of mop
@@ -112,6 +113,11 @@ class ActionLogProvConverter():
         self.generating_mop_specialization = generating_specialization
 
         self.prov = ProvBundle(namespaces=NAMESPACES)
+        if self.generating_bundle:
+            bundle_ns_uri = 'http://www.cr0n.org/provexport/{uuid}/'.format(uuid=self.session_id)
+            self.prov.add_namespace('b', bundle_ns_uri)
+            self.prov.agent('b:script')
+
         self.user = user
         try:
             self.cron = user.cron
@@ -190,6 +196,12 @@ class ActionLogProvConverter():
                 if bundle._records:
                     # Cache the bundle for this action log (mainly for debugging)
                     self.cache[log.id] = bundle
+                    # Attributing the bundle
+                    bundle_id = bundle.get_identifier()
+                    self.prov.entity(bundle_id, {'prov:type': PROV['Bundle']})
+                    e_log = self.prov.entity('log:{log_id}'.format(log_id=log.id), {'cron:timestamp': log.createdAt})
+                    self.prov.wasAttributedTo(bundle_id, 'app:provexport')
+                    self.prov.wasDerivedFrom(bundle_id, e_log, other_attributes={'prov:type': 'cron:provexport'})
                 else:
                     # Remove the empty bundle
                     # TODO Remove the hack below
