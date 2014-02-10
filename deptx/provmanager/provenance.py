@@ -747,6 +747,10 @@ class ActionLogProvConverter():
 
         self._create_new_mop_entity(bundle, log, act, {'mop:documents_submitted': e_document.get_identifier()})
 
+    def ignored_log(self, bundle, log):
+        # No provenance to be generated in this function
+        pass
+
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
         ActionLog.ACTION_CRON_VIEW_INDEX:               _create_action_cron_view_function('index'),
@@ -768,6 +772,9 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_RECEIVE_MAIL_TUTORIAL:     action_mop_receive_mail_tutorial,
         ActionLog.ACTION_MOP_TUTORIAL_PROGRESS:         action_mop_tutorial_progress,
         ActionLog.ACTION_MOP_VIEW_INDEX:                _create_action_mop_view_function('index'),
+        ActionLog.ACTION_MOP_VIEW_GUIDEBOOK:            _create_action_mop_view_function('guidebook'),
+        ActionLog.ACTION_MOP_VIEW_PERFORMANCE:          _create_action_mop_view_function('performance'),
+        ActionLog.ACTION_MOP_VIEW_COMPOSE:              ignored_log,
         ActionLog.ACTION_MOP_VIEW_INBOX:                _create_action_mop_view_function('inbox'),
         ActionLog.ACTION_MOP_VIEW_OUTBOX:               _create_action_mop_view_function('outbox'),
         ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS:         _create_action_mop_view_function('forms_blank'),
@@ -775,7 +782,6 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL:       _create_action_mop_view_function('documents_pool'),
         ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER:     _create_action_mop_view_function('documents_drawer'),
         ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE:    _create_action_mop_view_function('documents_drawer'),
-        ActionLog.ACTION_MOP_VIEW_GUIDEBOOK:            _create_action_mop_view_function('guidebook'),
         ActionLog.ACTION_MOP_FORM_SIGN:                 action_mop_form_sign,
         # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
         ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
