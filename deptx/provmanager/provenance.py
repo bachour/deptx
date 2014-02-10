@@ -59,7 +59,7 @@ def _create_action_mop_view_function(view):
 
 def _create_action_cron_view_function(view):
     def action_cron_view_function(self, bundle, log):
-        self._create_cron_view_action(bundle, log, view)
+        return self._create_cron_view_action(bundle, log, view)
 
     action_cron_view_function.__name__ = 'action_cron_view_' + view
     return action_cron_view_function
@@ -162,10 +162,10 @@ class ActionLogProvConverter():
                 count_offset += 1
             else:
                 if not ids or log.id in ids:
-                    self._convert_action_log(log)
-                    count_converted += 1
-                    if count_converted >= limit:
-                        break  # Stop at the limit
+                    if self._convert_action_log(log):
+                        count_converted += 1
+                        if count_converted >= limit:
+                            break  # Stop at the limit
 
             if log.action in self.TRUST_MODIFYING_ACTIONS:
                 self.update_trust(log)
@@ -191,9 +191,9 @@ class ActionLogProvConverter():
                 if self.generating_bundle else self.prov
 
             # TODO Surround by try/except block to fail gracefully should there is any exception during conversion
-            self._converters[log.action](self, bundle, log)
+            converted = self._converters[log.action](self, bundle, log)
             if self.generating_bundle:
-                if bundle._records:
+                if converted:
                     # Cache the bundle for this action log (mainly for debugging)
                     self.cache[log.id] = bundle
                     # Attributing the bundle
@@ -204,12 +204,13 @@ class ActionLogProvConverter():
                     self.prov.wasDerivedFrom(bundle_id, e_log, other_attributes={'prov:type': 'cron:provexport'})
                 else:
                     # Remove the empty bundle
-                    # TODO Remove the hack below
                     self.prov._records.remove(bundle)
                     del self.prov._bundles[bundle.get_identifier()]
+
+            return converted
         else:
             # TODO: Emit warnings for inconvertible logs
-            pass
+            return False
 
     def _create_new_cron_entity(self, bundle, log, activity=None, cron_attrs=None):
         ag_cron_new = bundle.agent('cronuser:{cron_id}/{log_id}'.format(cron_id=self.cron.id, log_id=log.id),
@@ -241,6 +242,9 @@ class ActionLogProvConverter():
                              log.createdAt, log.createdAt,
                              {'cron:action_log_id': log.id})
             g.wasAssociatedWith(act, self.ag_cron_current)
+            return True
+        else:
+            return False
 
     def action_cron_created(self, bundle, log):
         g = bundle
@@ -255,6 +259,7 @@ class ActionLogProvConverter():
         g.wasAssociatedWith(act, self.ag_player)
         g.agent('app:cron')
         g.wasAssociatedWith(act, 'app:cron')
+        return True
 
     def action_cron_activated(self, bundle, log):
         g = bundle
@@ -269,6 +274,7 @@ class ActionLogProvConverter():
         g.specialization(ag_cron_active, self.ag_cron)
         self.ag_cron = ag_cron_active
         self.ag_cron_current = ag_cron_active
+        return True
 
     def action_cron_login(self, bundle, log):
         g = bundle
@@ -282,6 +288,7 @@ class ActionLogProvConverter():
         g.specialization(ag_cron_logged_in, self.ag_cron)
         g.wasGeneratedBy(ag_cron_logged_in, act)
         self.ag_cron_current = ag_cron_logged_in
+        return True
 
     def create_mission_action(self, bundle, action, log):
         g = bundle
@@ -306,21 +313,22 @@ class ActionLogProvConverter():
              'cron:missionState': log.get_missionState_display()}
         )
         g.wasDerivedFrom(ag_cron_new, e_mission_part, act, other_attributes={'prov:type': 'mop:seen'})
+        return True
 
     def action_cron_view_mission_intro(self, bundle, log):
-        self.create_mission_action(bundle, 'intro', log)
+        return self.create_mission_action(bundle, 'intro', log)
 
     def action_cron_view_mission_briefing(self, bundle, log):
-        self.create_mission_action(bundle, 'briefing', log)
+        return self.create_mission_action(bundle, 'briefing', log)
 
     def action_cron_view_mission_debriefing(self, bundle, log):
-        self.create_mission_action(bundle, 'debriefing', log)
+        return self.create_mission_action(bundle, 'debriefing', log)
 
     def action_cron_view_mission_outro(self, bundle, log):
-        self.create_mission_action(bundle, 'outro', log)
+        return self.create_mission_action(bundle, 'outro', log)
 
     def action_cron_view_fluff(self, bundle, log):
-        self._create_cron_activity(bundle, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
+        return self._create_cron_activity(bundle, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
 
     def _create_new_mop_entity(self, bundle, log, activity=None, mop_attrs=None, derivation_type=None):
         ag_mop_new = bundle.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=self.mop.id, log_id=log.id), mop_attrs)
@@ -371,6 +379,7 @@ class ActionLogProvConverter():
             g.specialization(ag_cron_new, self.ag_cron)
         g.wasGeneratedBy(ag_cron_new, act)
         g.wasRevisionOf(ag_cron_new, self.ag_cron_current)
+        return True
 
     def action_mop_login(self, bundle, log):
         g = bundle
@@ -383,15 +392,18 @@ class ActionLogProvConverter():
         g.specializationOf(ag_mop_new, self.ag_mop)
         g.wasGeneratedBy(ag_mop_new, act)
         self.ag_mop_current = ag_mop_new
+        return True
 
     def action_mop_receive_mail_tutorial(self, bundle, log):
         e_mail = self._create_mail_entity(bundle, log.mail)
         act = self._create_mop_activity(bundle, log, 'receive_mail_tutorial')
         bundle.used(act, e_mail)
+        return True
 
     def action_mop_tutorial_progress(self, bundle, log):
         self._create_mop_activity(bundle, log, 'progress_tutorial',
                                   mop_attrs={'cron:tutorialProgress': log.tutorialProgress})
+        return True
 
     def _create_form_blank_entity(self, bundle, form_blank, user_id=None):
         e_form_blank_id = 'form:{form_serial}'.format(form_serial=form_blank.serial)
@@ -426,6 +438,7 @@ class ActionLogProvConverter():
         e_form_signed = self._create_form_signed_entity(bundle, form_signed, form_blank)
         bundle.wasGeneratedBy(e_form_signed, act)
         bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act, other_attributes={'prov:type': 'mop:signForm'})
+        return True
 
     def _create_mop_document_entity(self, log, bundle, document_instance, activity=None, attrs=None):
         randomized_document = document_instance.randomizedDocument
@@ -482,7 +495,7 @@ class ActionLogProvConverter():
 
     def action_mop_mail_compose_with_form(self, bundle, log):
         # No need to log this action as there is no mail reference to describe the provenance!
-        pass
+        return False
 
     def action_mop_mail_send(self, bundle, log):
         mop = log.mop
@@ -519,6 +532,8 @@ class ActionLogProvConverter():
         if e_data:
             bundle.wasDerivedFrom(e_mail, e_data, act, other_attributes={'prov:type': 'mop:mailAttachment'})
 
+        return True
+
     def action_mop_receive_mail_form(self, bundle, log):
         mop = log.mop
         mail = log.mail
@@ -552,6 +567,7 @@ class ActionLogProvConverter():
             bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return True
 
     def action_mop_receive_mail_document(self, bundle, log):
         # TODO: This action should be about app:mop generating document for the mop player
@@ -593,6 +609,7 @@ class ActionLogProvConverter():
                               other_attributes={'prov:type': 'mop:mailAttachment'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return True
 
     def action_mop_receive_mail_report(self, bundle, log):
         mop = log.mop
@@ -618,6 +635,7 @@ class ActionLogProvConverter():
             bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return True
 
     def action_mop_receive_mail_error(self, bundle, log):
         mop = log.mop
@@ -643,6 +661,7 @@ class ActionLogProvConverter():
             bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return True
 
     def action_mop_receive_mail_performance(self, bundle, log):
         mop = log.mop
@@ -669,6 +688,7 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_mail, act)
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return True
 
     def action_mop_receive_mail_manual(self, bundle, log):
         mop = log.mop
@@ -691,6 +711,7 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_mail, act)
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return True
 
     def action_mop_view_mail(self, bundle, log):
         mop = log.mop
@@ -709,6 +730,7 @@ class ActionLogProvConverter():
         bundle.wasAssociatedWith(act, self.ag_mop_current)
 
         self._create_new_mop_entity(bundle, log, act, {'mop:mails_read': e_mail.get_identifier()})
+        return True
 
     def action_mop_view_provenance(self, bundle, log):
         mop = log.mop
@@ -732,6 +754,7 @@ class ActionLogProvConverter():
         bundle.wasAssociatedWith(act, self.ag_mop_current)
 
         # self._create_new_mop_entity(bundle, log, act, {'mop:documents': e_document.get_identifier()})
+        return True
 
     def action_mop_provenance_submit(self, bundle, log):
         mop = log.mop
@@ -758,10 +781,11 @@ class ActionLogProvConverter():
         bundle.wasAssociatedWith(act, self.ag_mop_current)
 
         self._create_new_mop_entity(bundle, log, act, {'mop:documents_submitted': e_document.get_identifier()})
+        return True
 
     def ignored_log(self, bundle, log):
         # No provenance to be generated in this function
-        pass
+        return False
 
     _converters = {
         ActionLog.ACTION_CRON_CREATED:                  action_cron_created,
