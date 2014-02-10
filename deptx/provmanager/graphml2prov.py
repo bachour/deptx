@@ -145,6 +145,7 @@ PROV_DEFAULT_RELATION = {
     (prov.model.PROV_REC_ENTITY, prov.model.PROV_REC_AGENT): prov.model.PROV_REC_ATTRIBUTION,
     (prov.model.PROV_REC_ENTITY, prov.model.PROV_REC_ACTIVITY): prov.model.PROV_REC_GENERATION,
     (prov.model.PROV_REC_AGENT, prov.model.PROV_REC_AGENT): prov.model.PROV_REC_DELEGATION,
+    (prov.model.PROV_REC_AGENT, prov.model.PROV_REC_ACTIVITY): prov.model.PROV_REC_GENERATION,
     (prov.model.PROV_REC_ACTIVITY, prov.model.PROV_REC_ENTITY): prov.model.PROV_REC_USAGE,
     (prov.model.PROV_REC_ACTIVITY, prov.model.PROV_REC_AGENT): prov.model.PROV_REC_ASSOCIATION,
     (prov.model.PROV_REC_ACTIVITY, prov.model.PROV_REC_ACTIVITY): prov.model.PROV_REC_COMMUNICATION,
@@ -385,8 +386,7 @@ def convert_xml_root(root):
 
 def convert_graphml_string(content):
     utf8_parser = etree.XMLParser(encoding='utf-8')
-    s = content.encode('utf-8')
-    root = etree.fromstring(s, parser=utf8_parser)
+    root = etree.fromstring(content, parser=utf8_parser)
     return convert_xml_root(root)
 
 
