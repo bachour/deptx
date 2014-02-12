@@ -99,15 +99,16 @@ class ActionLogProvConverter():
     }
 
     def __init__(self, user,
-                 generating_bundle=True,
+                 generating_bundle=True, bundle_attribution=False,
                  generating_specialization=False,
-                 including_view_actions=False):
+                 including_view_actions=False,):
         self.session_id = str(uuid4())
         self.cache = {}
         self.general_entities = {}
         self.trust = 0  # The current trust level of mop
         self.trust_total = 0
         self.generating_bundle = generating_bundle
+        self.bundle_attribution = bundle_attribution
         self.including_view_actions = including_view_actions
         self.generating_cron_specialization = generating_specialization
         self.generating_mop_specialization = generating_specialization
@@ -196,12 +197,13 @@ class ActionLogProvConverter():
                 if converted:
                     # Cache the bundle for this action log (mainly for debugging)
                     self.cache[log.id] = bundle
-                    # Attributing the bundle
-                    bundle_id = bundle.get_identifier()
-                    self.prov.entity(bundle_id, {'prov:type': PROV['Bundle']})
-                    e_log = self.prov.entity('log:{log_id}'.format(log_id=log.id), {'cron:timestamp': log.createdAt})
-                    self.prov.wasAttributedTo(bundle_id, 'app:provexport')
-                    self.prov.wasDerivedFrom(bundle_id, e_log, other_attributes={'prov:type': 'cron:provexport'})
+                    if self.bundle_attribution:
+                        # Attributing the bundle
+                        bundle_id = bundle.get_identifier()
+                        self.prov.entity(bundle_id, {'prov:type': PROV['Bundle']})
+                        e_log = self.prov.entity('log:{log_id}'.format(log_id=log.id), {'cron:timestamp': log.createdAt})
+                        self.prov.wasAttributedTo(bundle_id, 'b:script')
+                        self.prov.wasDerivedFrom(bundle_id, e_log, other_attributes={'prov:type': 'cron:provexport'})
                 else:
                     # Remove the empty bundle
                     self.prov._records.remove(bundle)
@@ -330,6 +332,12 @@ class ActionLogProvConverter():
     def action_cron_view_fluff(self, bundle, log):
         return self._create_cron_activity(bundle, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
 
+    def _create_department_agent(self, unit):
+        ag_dept_id = 'dept:{department}'.format(department=unit.serial)
+        if ag_dept_id not in self.cache:
+            self.cache[ag_dept_id] = self.prov.agent(ag_dept_id, {'prov:label': unit.name})
+        return self.cache[ag_dept_id]
+
     def _create_new_mop_entity(self, bundle, log, activity=None, mop_attrs=None, derivation_type=None):
         ag_mop_new = bundle.agent('mopuser:{mop_id}/{log_id}'.format(mop_id=self.mop.id, log_id=log.id), mop_attrs)
         if mop_attrs:
@@ -438,6 +446,10 @@ class ActionLogProvConverter():
         e_form_signed = self._create_form_signed_entity(bundle, form_signed, form_blank)
         bundle.wasGeneratedBy(e_form_signed, act)
         bundle.wasDerivedFrom(e_form_signed, e_form_blank, activity=act, other_attributes={'prov:type': 'mop:signForm'})
+        if form_signed.data in self.cache:
+            e_data = self.cache[form_signed.data]
+            bundle.used(act, e_data)
+            bundle.wasDerivedFrom(e_form_signed, e_data, act, other_attributes={'prov:type': 'mop:mailAttachment'})
         return True
 
     def _create_mop_document_entity(self, log, bundle, document_instance, activity=None, attrs=None):
@@ -461,7 +473,8 @@ class ActionLogProvConverter():
                 e_randomized_document_id,
                 {'mop:serial': randomized_document.serial}
             )
-            self.prov.wasDerivedFrom(e_randomized_document_id, e_mop_document_id)
+            self.prov.wasDerivedFrom(e_randomized_document_id, e_mop_document_id,
+                                     other_attributes={'prov:type': 'mop:randomise'})
         e_document_instance_id = 'doc:{unit_serial}/{document_id}/{instance_id}'.format(
             unit_serial=unit.serial, document_id=randomized_document.id, instance_id=document_instance.id
         )
@@ -484,7 +497,10 @@ class ActionLogProvConverter():
             bundle.wasRevisionOf(e_document_instance_id_spe, e_prev_document_instance, activity)
             self.cache[e_document_instance_id] = e_document_instance_spe
             self.general_entities[e_document_instance_spe] = self.general_entities[e_document_instance_id]
-        return self.cache[e_document_instance_id]
+        e_document_instance = self.cache[e_document_instance_id]
+        # Cache this for usage in form signing
+        self.cache[document_instance.getDocumentSerial()] = e_document_instance
+        return e_document_instance
 
     def _create_mail_entity(self, bundle, mail, attrs=None):
         e_mail_id = 'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id,
@@ -503,17 +519,10 @@ class ActionLogProvConverter():
 
         # The data accompany with the mail
         e_data = None
-        if mail.subject == Mail.SUBJECT_REQUEST_FORM:
+        if mail.requisitionInstance:
             form_signed = mail.requisitionInstance
             form_blank = form_signed.blank.requisition
             e_data = self._create_form_signed_entity(bundle, form_signed, form_blank)
-        elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
-            form_signed = mail.requisitionInstance
-            form_blank = form_signed.blank.requisition
-            e_data = self._create_form_signed_entity(bundle, form_signed, form_blank)
-        else:
-            # TODO Generate the data entity for other types of attachments
-            pass
 
         act = bundle.activity('mopact:mail/send/{mop_id}/{mail_id}'.format(mop_id=mop.id, mail_id=mail.id),
                               log.createdAt, log.createdAt,
@@ -551,6 +560,7 @@ class ActionLogProvConverter():
         e_form_instance = self._create_form_blank_entity(bundle, form_blank, mop.id)
         mop_attrs['mop:forms'] = e_form.get_identifier()
 
+        ag_dept = self._create_department_agent(mail.unit)
         act = bundle.activity('mopact:form/assign/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
@@ -559,7 +569,7 @@ class ActionLogProvConverter():
         bundle.used(act, e_form)
         bundle.wasGeneratedBy(e_form_instance, act)
         bundle.specializationOf(e_form_instance, e_form)
-        # bundle.wasAssociatedWith(act, 'app:mop')
+        bundle.wasAssociatedWith(act, ag_dept)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
@@ -594,7 +604,9 @@ class ActionLogProvConverter():
                                                                                 doc_id=document_instance.id),
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
-        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        bundle.used(act, e_document_instance_gen)
+        ag_dept = self._create_department_agent(mail.unit)
+        bundle.wasAssociatedWith(act, ag_dept)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
@@ -611,56 +623,39 @@ class ActionLogProvConverter():
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
         return True
 
-    def action_mop_receive_mail_report(self, bundle, log):
+    def _create_trust_mail_activity(self, bundle, log, action):
         mop = log.mop
         mail = log.mail
-        previous_mail = mail.replyTo
-        mop_attrs = {}
-
-        # The data accompany with the mail
-        if mail.subject != Mail.SUBJECT_REPORT_EVALUATION:
-            raise Exception('Wrong mail type encountered: %s' % mail.get_subject_display())
-
-        mop_attrs['mop:trust'] = self.trust + mail.trust
-        act = bundle.activity('mopact:performance/change/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
-                              log.createdAt, log.createdAt,
-                              {'cron:action_log_id': log.id})
-        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        mop_attrs = {
+            'mop:trust': self.trust + mail.trust
+        }
+        ag_dept = self._create_department_agent(mail.unit)
+        act_id = 'mopact:performance/{action}/{mop_id}/{log_id}'.format(action=action, mop_id=mop.id, log_id=log.id)
+        act = bundle.activity(act_id, log.createdAt, log.createdAt, {'cron:action_log_id': log.id})
+        bundle.used(act, self.ag_mop_current)
+        bundle.wasAssociatedWith(act, ag_dept)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
-
         bundle.wasGeneratedBy(e_mail, act)
-        if previous_mail:
-            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
+
+        if mail.replyTo:
+            e_previous_mail = self._create_mail_entity(bundle, mail.replyTo)
             bundle.used(act, e_previous_mail)
             bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        return act
+
+    def action_mop_receive_mail_report(self, bundle, log):
+        if log.mail.subject != Mail.SUBJECT_REPORT_EVALUATION:
+            raise Exception('Wrong mail type encountered: %s' % log.mail.get_subject_display())
+
+        self._create_trust_mail_activity(bundle, log, 'update')
         return True
 
     def action_mop_receive_mail_error(self, bundle, log):
-        mop = log.mop
-        mail = log.mail
-        previous_mail = mail.replyTo
-        mop_attrs = {}
-
-        # The data accompany with the mail
-        if mail.subject != Mail.SUBJECT_ERROR:
-            raise Exception('Wrong mail type encountered: %s' % mail.get_subject_display())
-
-        mop_attrs['mop:trust'] = self.trust + mail.trust
-        act = bundle.activity('mopact:performance/change/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=log.id),
-                              log.createdAt, log.createdAt,
-                              {'cron:action_log_id': log.id})
-        # bundle.wasAssociatedWith(act, 'app:mop')
-        e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
-
-        bundle.wasGeneratedBy(e_mail, act)
-        if previous_mail:
-            e_previous_mail = self._create_mail_entity(bundle, previous_mail)
-            bundle.used(act, e_previous_mail)
-            bundle.wasDerivedFrom(e_mail, e_previous_mail, act, other_attributes={'prov:type': 'mop:replyTo'})
-
-        self._create_new_mop_entity(bundle, log, act, mop_attrs)
+        if log.mail.subject != Mail.SUBJECT_ERROR:
+            raise Exception('Wrong mail type encountered: %s' % log.mail.get_subject_display())
+        self._create_trust_mail_activity(bundle, log, 'penalty')
         return True
 
     def action_mop_receive_mail_performance(self, bundle, log):
@@ -678,11 +673,12 @@ class ActionLogProvConverter():
             # There is a change in clearance level
             mop_attrs['mop:clearance'] = level
 
+        ag_dept = self._create_department_agent(mail.unit)
         act_id = 'mopact:performance/{action}/{mop_id}/{log_id}'.format(action=action, mop_id=mop.id, log_id=mail.id)
         act = bundle.activity(act_id, performance.createdAt, log.modifiedAt,
                               {'cron:action_log_id': log.id, 'mop:reviewPeriod': performance.period.id})
-        # bundle.wasAssociatedWith(act, 'app:mop')
         bundle.used(act, self.ag_mop_current)
+        bundle.wasAssociatedWith(act, ag_dept)
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
 
         bundle.wasGeneratedBy(e_mail, act)
@@ -694,6 +690,7 @@ class ActionLogProvConverter():
         mop = log.mop
         mail = log.mail
         mop_attrs = {}
+        ag_dept = self._create_department_agent(mail.unit)
         if mail.trust:
             mop_attrs['mop:trust'] = self.trust + mail.trust
             act_id = 'mopact:performance/manual/{mop_id}/{log_id}'.format(mop_id=mop.id, log_id=mail.id)
@@ -702,12 +699,11 @@ class ActionLogProvConverter():
 
         act = bundle.activity(act_id, log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
-        # bundle.wasAssociatedWith(act, 'app:mop')
+        bundle.wasAssociatedWith(act, ag_dept)
         if mail.trust:
             bundle.used(act, self.ag_mop_current)
 
         e_mail = self._create_mail_entity(bundle, mail, {'mop:mail_subject': mail.get_subject_display()})
-
         bundle.wasGeneratedBy(e_mail, act)
 
         self._create_new_mop_entity(bundle, log, act, mop_attrs)
