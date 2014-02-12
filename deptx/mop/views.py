@@ -683,7 +683,7 @@ def control(request):
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
-    moptracker_list = MopTracker.objects.all().order_by('-trust', 'totalTrust')
+    moptracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
 
     for moptracker in moptracker_list:
         moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
