@@ -110,6 +110,7 @@ def get_inconsistencies(graph):
             continue
         for e in graph[c]: #individual elements
             for a in graph[c][e]:
+                #print c, e, a, "*" ,graph[c][e][a];
                 if graph[c][e][a][0] == '?':
                     if not criticals.has_key(graph[c][e][a]):
                         criticals[graph[c][e][a]] = []
@@ -280,10 +281,12 @@ def get_random_graph(graph):
             continue
         for e in graph[c]: #individual elements
             for a in graph[c][e]:
+                #print c, e, a, "*" ,graph[c][e][a];
                 if graph[c][e][a][0] == '$' or graph[c][e][a][0] == '&':
                     values = graph[c][e][a].split()
                     id = values[1]
                     graph[c][e][a] = identifiers[id].pop(0)
+                #print c, e, a, "*" ,graph[c][e][a];
                 if graph[c][e][a][0] == '#':
                     values = graph[c][e][a].split()
                     id = values[0][1:]
@@ -327,9 +330,10 @@ def duplicate_graph(graph):
     
 #RANDOM_FILES_PATH = '/Users/khaled/Dropbox/Dept.X/MEDIA/GRINDING/'
 #grph = json.load(open("/Users/khaled/Documents/amptest.json",'r'))
-#RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Documents\\grinding_script_tests\\random_files\\'
-#grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\grinding_script_tests\\orphan.json",'r'))
+#RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Dropbox\\Dept.X\\MEDIA\\GRINDING\\'
+#grph = json.load(open("C:\\Users\\kqb.CS\\Dropbox\\Dept.X\\MEDIA\\PROVENANCE\\test\\candy_test.json",'r'))
 
 #test_graph(grph,100)
 #gph = get_fancy_random_graph(grph)
 #print gph
+
