@@ -1080,21 +1080,26 @@ function showAttributes(node, position)
 			  });
 			  node.attribURL.setX(node.attribURL.getX() - node.attribURL.getWidth());
 			  node.attribURL.setY(node.attribURL.getY() - node.attribURL.getHeight());
+			  
+			  node.contentLabel = new Kinetic.Text({
+			        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
+			        y: Y + 25 + node.attribName.getHeight(),
+			        text: "(content)",
+			        fontSize: ATTRIBBOX_SMALL_FONT,
+			        fontFamily: ATTRIBBOX_FONT_FAMILY,
+			        fontStyle: ATTRIBBOX_FONT_STYLE,
+			        fill: ATTRIBBOX_FONT_FILL,
+			        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
+			        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
+			  });
 		  }
-		  node.contentLabel = new Kinetic.Text({
-		        x: node.attribImage.getX() + node.attribImage.getWidth() + 20,
-		        y: Y + 25 + node.attribName.getHeight(),
-		        text: "(content)",
-		        fontSize: ATTRIBBOX_SMALL_FONT,
-		        fontFamily: ATTRIBBOX_FONT_FAMILY,
-		        fontStyle: ATTRIBBOX_FONT_STYLE,
-		        fill: ATTRIBBOX_FONT_FILL,
-		        strokeEnabled: ATTRIBBOX_FONT_OUTLINE,
-		        stroke: ATTRIBBOX_FONT_OUTLINE_COLOUR
-		  });
-		  
+
 		  // current cumulative height of all components created so far
-		  var totalY = node.attribImage.getHeight() + Y + 20;
+		  var totalY;
+		  if (node.contentLabel)
+			  totalY = Math.max(node.attribImage.getHeight() + Y + 20, Y + node.attribName.getHeight() + node.contentLabel.getHeight() + 45);
+		  else
+			  totalY = Math.max(node.attribImage.getHeight() + Y + 20, Y + node.attribName.getHeight() + 20);
 		  
 		  //for each attribute this node has
 		  for (var i in node.attributes)
