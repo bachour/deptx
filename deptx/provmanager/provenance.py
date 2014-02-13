@@ -15,14 +15,16 @@ NAMESPACES = {
     'app': 'http://www.cr0n.org/app/',
     'cronact': 'http://www.cr0n.org/activity/',
     'mission': 'http://www.cr0n.org/mission/',
-    'asset': 'http://www.cr0n.org/assets/',
+    'asset': 'http://www.cr0n.org/asset/',
+    'case': 'http://www.cr0n.org/case/',
+    'crondoc': 'http://www.cr0n.org/document/',
     'log': 'http://www.cr0n.org/log/',
     'cronuser': 'http://www.cr0n.org/user/',
     'mopuser': 'http://mofp.net/user/',
     'mopact': 'http://mofp.net/activity/',
     'mopmail': 'http://mofp.net/mail/',
     'mop': 'http://mofp.net/ns#',
-    'dept': 'http://mofp.net/departments/',
+    'dept': 'http://mofp.net/department/',
     'form': 'http://mofp.net/forms/',
     'doc': 'http://mofp.net/documents/',
     'foaf': 'http://xmlns.com/foaf/0.1/',  # see http://xmlns.com/foaf/spec/
@@ -201,7 +203,8 @@ class ActionLogProvConverter():
                         # Attributing the bundle
                         bundle_id = bundle.get_identifier()
                         self.prov.entity(bundle_id, {'prov:type': PROV['Bundle']})
-                        e_log = self.prov.entity('log:{log_id}'.format(log_id=log.id), {'cron:timestamp': log.createdAt})
+                        e_log = self.prov.entity('log:{log_id}'.format(log_id=log.id),
+                                                 {'cron:timestamp': log.createdAt})
                         self.prov.wasAttributedTo(bundle_id, 'b:script')
                         self.prov.wasDerivedFrom(bundle_id, e_log, other_attributes={'prov:type': 'cron:provexport'})
                 else:
@@ -292,13 +295,19 @@ class ActionLogProvConverter():
         self.ag_cron_current = ag_cron_logged_in
         return True
 
-    def create_mission_action(self, bundle, action, log):
+    def _create_mission_entity(self, mission):
+        g = self.prov
+        e_mission_id = 'mission:{mission_id}'.format(mission_id=mission.id)
+        if e_mission_id not in self.cache:
+            self.cache[e_mission_id] = g.entity(e_mission_id, {'prov:label': mission.name})
+        return self.cache[e_mission_id]
+
+    def _create_mission_action(self, bundle, action, log):
         g = bundle
         mission = log.mission
-        e_mission = g.entity('mission:{mission_id}'.format(mission_id=mission.id),
-                             {'cron:mission': mission.name})
+        e_mission = self._create_mission_entity(mission)
         e_mission_part = g.entity(
-            'mission:{mission_id}/{action}'.format(mission_id=mission.id, action=action)
+            '{mission_id}/{action}'.format(mission_id=e_mission.get_identifier(), action=action)
         )
         g.hadMember(e_mission, e_mission_part)
         act = g.activity(
@@ -311,23 +320,89 @@ class ActionLogProvConverter():
         g.used(act, e_mission_part)
         ag_cron_new = self._create_new_cron_entity(
             g, log, act,
-            {'cron:mission': 'mission:{mission_id}'.format(mission_id=mission.id),
+            {'cron:mission': e_mission.get_identifier(),
              'cron:missionState': log.get_missionState_display()}
         )
-        g.wasDerivedFrom(ag_cron_new, e_mission_part, act, other_attributes={'prov:type': 'mop:seen'})
+        g.wasDerivedFrom(ag_cron_new, e_mission_part, act, other_attributes={'prov:type': 'cron:seen'})
         return True
 
     def action_cron_view_mission_intro(self, bundle, log):
-        return self.create_mission_action(bundle, 'intro', log)
+        return self._create_mission_action(bundle, 'intro', log)
 
     def action_cron_view_mission_briefing(self, bundle, log):
-        return self.create_mission_action(bundle, 'briefing', log)
+        return self._create_mission_action(bundle, 'briefing', log)
 
     def action_cron_view_mission_debriefing(self, bundle, log):
-        return self.create_mission_action(bundle, 'debriefing', log)
+        return self._create_mission_action(bundle, 'debriefing', log)
 
     def action_cron_view_mission_outro(self, bundle, log):
-        return self.create_mission_action(bundle, 'outro', log)
+        return self._create_mission_action(bundle, 'outro', log)
+
+    def _create_case_entity(self, case):
+        g = self.prov
+        e_case_id = 'case:{case_serial}'.format(case_serial=case.serial)
+        if e_case_id not in self.cache:
+            mission = case.mission
+            e_mission = self._create_mission_entity(mission)
+            e_case = g.entity(e_case_id, {'prov:label': case.name})
+            g.hadMember(e_mission, e_case)
+            self.cache[e_case_id] = e_case
+        return self.cache[e_case_id]
+
+    def _create_case_action(self, bundle, log, action):
+        cron = log.cron
+        case = log.case
+        e_case = self._create_case_entity(case)
+        e_case_part = bundle.entity(
+            '{case_id}/{action}'.format(case_id=e_case.get_identifier(), action=action)
+        )
+        self.prov.hadMember(e_case, e_case_part)
+        act = bundle.activity(
+            'cronact:view_case_{action}/{case_id}/{log_id}'.format(case_id=case.id, action=action, log_id=log.id),
+            log.createdAt, None,
+            {'cron:action_log_id': log.id}
+        )
+        bundle.wasAssociatedWith(act, self.ag_cron_current)
+        bundle.used(act, e_case_part)
+        ag_cron_new = self._create_new_cron_entity(
+            bundle, log, act,
+            {'cron:case': e_case.get_identifier(),
+             'cron:caseSolved': log.caseSolved}
+        )
+        bundle.wasDerivedFrom(ag_cron_new, e_case_part, act, other_attributes={'prov:type': 'cron:seen'})
+        return True
+
+    def action_cron_view_case_intro(self, bundle, log):
+        return self._create_case_action(bundle, log, 'intro')
+
+    def _create_cron_document_entity(self, cronDoc):
+        e_cronDoc_id = 'crondoc:{serial}'.format(serial=cronDoc.serial)
+        if e_cronDoc_id not in self.cache:
+            e_case = self._create_case_entity(cronDoc.case)
+            e_cronDoc = self.prov.entity(e_cronDoc_id, {'cron:clearance': cronDoc.clearance,
+                                                        'prov:label': cronDoc.name})
+            self.cache[e_cronDoc_id] = e_cronDoc
+            self.prov.hadMember(e_case, e_cronDoc)
+        return self.cache[e_cronDoc_id]
+
+    def action_cron_hack_document(self, bundle, log):
+        cronDoc = log.cronDocument
+        act_id = 'cronact:hack_document/{doc_id}/{log_id}'.format(doc_id=cronDoc.id, log_id=log.id)
+        act = bundle.activity(act_id, log.createdAt, log.modifiedAt,
+                              {'cron:action_log_id': log.id, 'cron:success': log.successfulHack})
+        if log.successfulHack:
+            mail = log.mail
+            cronDocInstance = log.cronDocumentInstance
+            e_cronDoc = self._create_cron_document_entity(cronDoc)
+            e_cronDocInst = bundle.entity('{cronDoc_id}/{instance_id}'.format(cronDoc_id=e_cronDoc.get_identifier(),
+                                                                              instance_id=cronDocInstance.id))
+            e_mail = self._create_mail_entity(bundle, mail, instance_id=log.id)
+            bundle.specializationOf(e_cronDocInst, e_cronDoc)
+            bundle.used(act, e_mail)
+            bundle.wasGeneratedBy(e_cronDocInst, act)
+            bundle.wasDerivedFrom(e_cronDocInst, e_mail, act, other_attributes={'prov:type': 'mop:mailAttachment'})
+            self._create_new_cron_entity(bundle, log, act, {'cron:documents': e_cronDoc.get_identifier})
+        return True
 
     def action_cron_view_fluff(self, bundle, log):
         return self._create_cron_activity(bundle, 'view_fluff', log.cron, log, {'cron:fluff': log.fluff})
@@ -452,6 +527,7 @@ class ActionLogProvConverter():
             bundle.wasDerivedFrom(e_form_signed, e_data, act, other_attributes={'prov:type': 'mop:mailAttachment'})
         return True
 
+    # TODO Swap the order of log and bundle below
     def _create_mop_document_entity(self, log, bundle, document_instance, activity=None, attrs=None):
         randomized_document = document_instance.randomizedDocument
         mop_document = randomized_document.mopDocument
@@ -502,15 +578,30 @@ class ActionLogProvConverter():
         self.cache[document_instance.getDocumentSerial()] = e_document_instance
         return e_document_instance
 
-    def _create_mail_entity(self, bundle, mail, attrs=None):
-        e_mail_id = 'mopmail:{unit}/{mop_id}/{mail_id}'.format(mop_id=mail.mop.id, mail_id=mail.id,
-                                                               unit=mail.unit.serial)
-        if e_mail_id not in self.cache:
-            self.cache[e_mail_id] = bundle.entity(e_mail_id, attrs)
-        return self.cache[e_mail_id]
+    def _create_mail_entity(self, bundle, mail, attrs=None, instance_id=None):
+        spe_link_needed = False
+        if mail not in self.cache:
+            sender = mail.unit.serial if mail.type == Mail.TYPE_RECEIVED else mail.mop_id
+            e_mail_id = 'mopmail:{sender}/{mail_id}'.format(sender=sender, mail_id=mail.id)
+            e_mail = bundle.entity(e_mail_id, attrs)
+            self.cache[e_mail_id] = e_mail
+            self.cache[mail] = e_mail
+            self.general_entities[mail] = e_mail
+            spe_link_needed = True
+
+        if instance_id is not None:
+            e_mail = self.general_entities[mail]
+            e_mail_instance = bundle.entity('{email_id}/{instance_id}'.format(email_id=e_mail.get_identifier(),
+                                                                              instance_id=instance_id))
+            if spe_link_needed:
+                bundle.specializationOf(e_mail_instance, e_mail)
+            self.cache[mail] = e_mail_instance
+
+        return self.cache[mail]
 
     def action_mop_mail_compose_with_form(self, bundle, log):
         # No need to log this action as there is no mail reference to describe the provenance!
+        # The form used here will be referenced when the mail is sent
         return False
 
     def action_mop_mail_send(self, bundle, log):
@@ -541,6 +632,24 @@ class ActionLogProvConverter():
         if e_data:
             bundle.wasDerivedFrom(e_mail, e_data, act, other_attributes={'prov:type': 'mop:mailAttachment'})
 
+        return True
+
+    def action_mop_mail_draft(self, bundle, log):
+        mop = log.mop
+        mail = log.mail
+
+        # TODO Probably need to find the previous action log that composed the email and create an activity for that
+        e_mail = self._create_mail_entity(bundle, mail)
+        act_id = 'mopact:mail/draft/{mop_id}/{mail_id}/{log_id}'.format(mop_id=mop.id, mail_id=mail.id, log_id=log.id)
+        act = bundle.activity(act_id, log.createdAt, log.createdAt,
+                              {'cron:action_log_id': log.id})
+        bundle.wasAssociatedWith(act, self.ag_mop_current)
+        bundle.used(act, e_mail)
+
+        e_mail_draft = bundle.entity('{email_id}/{log_id}'.format(email_id=e_mail.get_identifier(), log_id=log.id),
+                                     {'mop:mailInDraft': True})
+        bundle.wasGeneratedBy(e_mail_draft, act)
+        bundle.wasRevisionOf(e_mail_draft, e_mail, act)
         return True
 
     def action_mop_receive_mail_form(self, bundle, log):
@@ -793,11 +902,14 @@ class ActionLogProvConverter():
         ActionLog.ACTION_CRON_VIEW_MESSAGES_COMPOSE:    _create_action_cron_view_function('messages_compose'),
         ActionLog.ACTION_CRON_ACTIVATED:                action_cron_activated,
         ActionLog.ACTION_CRON_LOGIN:                    action_cron_login,
+        ActionLog.ACTION_CRON_VIEW_FLUFF:               action_cron_view_fluff,
         ActionLog.ACTION_CRON_VIEW_MISSION_INTRO:       action_cron_view_mission_intro,
         ActionLog.ACTION_CRON_VIEW_MISSION_BRIEFING:    action_cron_view_mission_briefing,
+        ActionLog.ACTION_CRON_VIEW_MISSION_CASES:       _create_action_cron_view_function('mission_cases'),
         ActionLog.ACTION_CRON_VIEW_MISSION_DEBRIEFING:  action_cron_view_mission_debriefing,
         ActionLog.ACTION_CRON_VIEW_MISSION_OUTRO:       action_cron_view_mission_outro,
-        ActionLog.ACTION_CRON_VIEW_FLUFF:               action_cron_view_fluff,
+        ActionLog.ACTION_CRON_VIEW_CASE_INTRO:          action_cron_view_case_intro,
+        ActionLog.ACTION_CRON_HACK_DOCUMENT:            action_cron_hack_document,
 
         ActionLog.ACTION_MOP_CREATED:                   action_mop_created,
         ActionLog.ACTION_MOP_LOGIN:                     action_mop_login,
@@ -809,14 +921,18 @@ class ActionLogProvConverter():
         ActionLog.ACTION_MOP_VIEW_COMPOSE:              ignored_log,
         ActionLog.ACTION_MOP_VIEW_INBOX:                _create_action_mop_view_function('inbox'),
         ActionLog.ACTION_MOP_VIEW_OUTBOX:               _create_action_mop_view_function('outbox'),
+        ActionLog.ACTION_MOP_VIEW_TRASH:                _create_action_mop_view_function('trash'),
+        ActionLog.ACTION_MOP_VIEW_DRAFT:                _create_action_mop_view_function('draft'),
         ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS:         _create_action_mop_view_function('forms_blank'),
+        ActionLog.ACTION_MOP_VIEW_FORMS_FILL:           _create_action_mop_view_function('forms_fill'),
         ActionLog.ACTION_MOP_VIEW_FORMS_SIGNED:         _create_action_mop_view_function('forms_signed'),
         ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL:       _create_action_mop_view_function('documents_pool'),
         ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER:     _create_action_mop_view_function('documents_drawer'),
-        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE:    _create_action_mop_view_function('documents_drawer'),
+        ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE:    _create_action_mop_view_function('documents_archive'),
         ActionLog.ACTION_MOP_FORM_SIGN:                 action_mop_form_sign,
-        # ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
+        ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM:    action_mop_mail_compose_with_form,
         ActionLog.ACTION_MOP_MAIL_SEND:                 action_mop_mail_send,
+        ActionLog.ACTION_MOP_MAIL_DRAFT:                action_mop_mail_draft,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_ERROR:        action_mop_receive_mail_error,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM:         action_mop_receive_mail_form,
         ActionLog.ACTION_MOP_RECEIVE_MAIL_DOCUMENT:     action_mop_receive_mail_document,
