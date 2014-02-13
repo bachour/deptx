@@ -527,8 +527,7 @@ class ActionLogProvConverter():
             bundle.wasDerivedFrom(e_form_signed, e_data, act, other_attributes={'prov:type': 'mop:mailAttachment'})
         return True
 
-    # TODO Swap the order of log and bundle below
-    def _create_mop_document_entity(self, log, bundle, document_instance, activity=None, attrs=None):
+    def _create_mop_document_entity(self, bundle, log, document_instance, activity=None, attrs=None):
         randomized_document = document_instance.randomizedDocument
         mop_document = randomized_document.mopDocument
         unit = mop_document.unit
@@ -626,7 +625,7 @@ class ActionLogProvConverter():
         bundle.wasGeneratedBy(e_mail, act)
         if mail.mopDocumentInstance:
             # Just getting the current entity
-            e_document_instance = self._create_mop_document_entity(log, bundle, mail.mopDocumentInstance)
+            e_document_instance = self._create_mop_document_entity(bundle, log, mail.mopDocumentInstance)
             bundle.wasDerivedFrom(e_mail, e_document_instance, other_attributes={'prov:type': 'mop:mailAttachment'})
 
         if e_data:
@@ -704,7 +703,7 @@ class ActionLogProvConverter():
         if document_instance is None or document_instance.randomizedDocument is None:
             # TODO Raise an exception here
             return
-        e_document_instance_spe = self._create_mop_document_entity(log, bundle, document_instance)
+        e_document_instance_spe = self._create_mop_document_entity(bundle, log, document_instance)
         e_document_instance_gen = self.general_entities[e_document_instance_spe]
         # TODO: Create an activity that generated e_document_instance
         mop_attrs['mop:documents'] = e_document_instance_gen.get_identifier()
@@ -847,7 +846,7 @@ class ActionLogProvConverter():
             return
         # TODO Reference to prov_log to see if this is just a simple view or the graph has been manipulated
         # Just getting the document's current entity
-        e_document = self._create_mop_document_entity(log, bundle, document)
+        e_document = self._create_mop_document_entity(bundle, log, document)
 
         act_id = 'mopact:provenance/view/{mop_id}/{doc_id}/{log_id}'.format(
             mop_id=mop.id, doc_id=document.id, log_id=log.id
@@ -871,7 +870,7 @@ class ActionLogProvConverter():
             return
 
         # Hack to get the previous instance (i.e. before submission) by using an empty 'attrs' parameter
-        e_document_prev = self._create_mop_document_entity(log, bundle, document)
+        e_document_prev = self._create_mop_document_entity(bundle, log, document)
 
         act_id = 'mopact:provenance/submit/{mop_id}/{doc_id}/{log_id}'.format(
             mop_id=mop.id, doc_id=document.id, log_id=log.id
@@ -880,7 +879,7 @@ class ActionLogProvConverter():
                               log.createdAt, log.createdAt,
                               {'cron:action_log_id': log.id})
         bundle.used(act, e_document_prev)
-        e_document = self._create_mop_document_entity(log, bundle, document, act,
+        e_document = self._create_mop_document_entity(bundle, log, document, act,
                                                       {'mop:provenanceCorrectness': correct})
         bundle.wasGeneratedBy(e_document, act)
         bundle.wasAssociatedWith(act, self.ag_mop_current)
