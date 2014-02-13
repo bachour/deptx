@@ -683,18 +683,18 @@ def control(request):
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
-    mop_list = Mop.objects.all().order_by('-mopTracker__trust', '-mopTracker__totalTrust')
+    moptracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
 
-    for mop in mop_list:
-        mop.availableDocs = len(getDocumentPoolForMop(mop))
-        mop.activeDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
-        mop.limboDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
-        mop.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
-        mop.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
-        mop.revokedDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
-        mop.hackedDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
+    for moptracker in moptracker_list:
+        moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
+        moptracker.activeDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
+        moptracker.limboDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
+        moptracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
+        moptracker.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
+        moptracker.revokedDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
+        moptracker.hackedDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
     
-    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
+    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'moptracker_list':moptracker_list})       
 
 @staff_member_required
 def control_randomize(request, mopDocument_id):

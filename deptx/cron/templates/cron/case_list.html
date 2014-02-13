@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>{{missionInstance.mission.name}}</h1>
+<h1>{% if finished and not unpublished %}<img src='{{MEDIA_URL}}content/solved.png'/ style='width:120px;'> {% endif %}{{missionInstance.mission.name}}</h1>
 {% if text %}
 	{{text}}
 {% endif %}
@@ -17,6 +17,7 @@
 	{% if unpublished %}
 		<p style="color:white"><strong>Great job so far! We are following some leads rights now and will inform you when we have more for you to do.</strong></p>
 	{% else %}
+		<p style="color:white"><strong>Mission {{missionInstance.mission.name}} is now complete.</strong></p><br/>
 		<a href="{% url 'cron_mission_debriefing' missionInstance.mission.serial %}">Proceed to Mission Debriefing</a>
 	{% endif %}
 {% endif %}
