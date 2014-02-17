@@ -1,7 +1,7 @@
 
 from players.models import Mop
 from mop.clearance import Clearance, convertTrustIntoClearance
-from mop.models import MopDocumentInstance, PerformanceInstance, Mail, PerformancePeriod
+from mop.models import MopDocumentInstance, PerformanceInstance, Mail, PerformancePeriod, MopTracker
 from assets.models import Unit
 from logger.models import ActionLog
 from logger import logging
@@ -30,8 +30,8 @@ def analyze_performance(simulation=False):
     #if not simulation:
     #    revokeDocuments()
        
-    mop_list = Mop.objects.all().order_by('mopTracker__trust')
-    output.append('MoPs under performance review: %d' % mop_list.count())
+    mopTracker_list = MopTracker.objects.all().order_by('trust')
+    output.append('MoPs under performance review: %d' % mopTracker_list.count())
     lastPeriod, thisPeriod, days = getPeriods()
     today = now().date()
 
@@ -46,22 +46,22 @@ def analyze_performance(simulation=False):
     else:
         output.append('Last review: %s, This review: %s, Days since last review: %s' % (lastPeriod.reviewDate, thisPeriod.reviewDate, days))
 
-    for mop in mop_list:    
-        performanceInstance, out = doPerformance(mop, thisPeriod, days)
+    for mopTracker in mopTracker_list:    
+        performanceInstance, out = doPerformance(mopTracker.mop, thisPeriod, days)
         output.append(out)
         if simulation:
             continue
         performanceInstance.save()
         
-        mop.mopTracker.clearance = performanceInstance.result
-        mop.mopTracker.totalTrust += mop.mopTracker.trust 
-        mop.mopTracker.trust = 0
-        mop.mopTracker.credit = performanceInstance.credit
-        mop.mopTracker.save()
+        mopTracker.clearance = performanceInstance.result
+        mopTracker.totalTrust += mopTracker.trust 
+        mopTracker.trust = 0
+        mopTracker.credit = performanceInstance.credit
+        mopTracker.save()
         
         unit = Unit.objects.filter(type=Unit.TYPE_ADMINISTRATIVE)[0]
         
-        mail = Mail(mop=mop, performanceInstance=performanceInstance, unit=unit, subject=Mail.SUBJECT_INFORMATION, type=Mail.TYPE_RECEIVED)
+        mail = Mail(mop=mopTracker.mop, performanceInstance=performanceInstance, unit=unit, subject=Mail.SUBJECT_INFORMATION, type=Mail.TYPE_RECEIVED)
         if performanceInstance.type == PerformanceInstance.TYPE_PROMOTION:
             mail.bodyType=Mail.BODY_PERFORMANCE_REPORT_PROMOTION
         elif performanceInstance.type == PerformanceInstance.TYPE_DEMOTION:
@@ -69,7 +69,7 @@ def analyze_performance(simulation=False):
         else:
             mail.bodyType=Mail.BODY_PERFORMANCE_REPORT_NEUTRAL 
         mail.save()
-        logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE, mop=mop, mail=mail)
+        logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE, mop=mopTracker.mop, mail=mail)
     if not simulation:
         thisPeriod.processed = True
         thisPeriod.reviewTime = now().time()
