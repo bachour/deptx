@@ -16,7 +16,7 @@ from players.forms import MopCheckForm, PasswordForm
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
@@ -575,7 +575,17 @@ def form_trashing(request, fullSerial):
 @user_passes_test(isMop, login_url='mop_login')
 def files(request):
     
-    file_list = StoryFile.objects.filter(published=True).filter(public=True)
+    file_list = StoryFile.objects.filter(published=True).order_by('timestamp')
+    for storyFile in file_list:
+        if storyFile.public is not True:
+            try:
+                storyFileInstance = StoryFileInstance.objects.get(mop=request.user.mop, storyFile=storyFile)
+                storyFile.accessible = True
+            except:
+                storyFile.accessible = False
+        else:
+            storyFile.accessible = True
+    
     # Handle file upload
     if request.method == 'POST':
         form = MopFileForm(request.POST, request.FILES)

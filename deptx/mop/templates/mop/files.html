@@ -7,7 +7,9 @@
 	<table>
 	<tr><th class="nobox"></th><th>File</th><th>Name</th></tr>
 	{% for file in file_list %}
-		<tr><td class="nobox"><a href="{% url 'mop_file_view' file.serial %}">view</a></td><td>{{file.serial}}</td><td>{{file.filename}}</td></tr>
+		{% if file.accessible %}
+			<tr><td class="nobox"><a href="{% url 'mop_file_view' file.serial %}">view</a></td><td>{{file.serial}}</td><td>{{file.filename}}</td></tr>
+		{% endif %}
 	{% endfor %}
 	</table>
 {% else %}

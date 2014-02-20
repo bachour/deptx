@@ -297,6 +297,14 @@ class MopDocument(AbstractDocument):
         return "Active: %s - %s - %s - %s" % (self.active, self.unit.serial, self.get_clearance_display(), self.provenance.name)
 
 class StoryFile(models.Model):
+    MEDIATYPE_PDF = 1
+    MEDIATYPE_IMAGE = 2
+    
+    CHOICES_MEDIATYPE = (
+        (MEDIATYPE_PDF, "pdf"),
+        (MEDIATYPE_IMAGE, "image"),
+    ) 
+    
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
@@ -305,6 +313,7 @@ class StoryFile(models.Model):
     timestamp = models.DateTimeField()
     published = models.BooleanField(default=False)
     public = models.BooleanField(default=False)
+    mediatype = models.IntegerField(default=MEDIATYPE_PDF, choices=CHOICES_MEDIATYPE)
     
     @property
     def filename(self):
