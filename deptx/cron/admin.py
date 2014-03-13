@@ -14,7 +14,7 @@ class HelpMailAdmin(admin.ModelAdmin):
     list_filter = ('cron', 'type', 'isRead', 'modifiedAt')
 
 class CaseQuestionInstanceAdmin(admin.ModelAdmin):
-    list_filter = ('cron', 'question', 'correct', 'failedAttempts', 'answer1', 'answer2', 'modifiedAt')
+    list_filter = ('cron', 'question__case', 'question', 'correct', 'submitted', 'isBad', 'failedAttempts', 'modifiedAt')
 
 admin.site.register(MissionInstance, MissionInstanceAdmin)
 admin.site.register(CaseInstance, CaseInstanceAdmin)
