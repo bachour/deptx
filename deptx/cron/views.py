@@ -830,7 +830,7 @@ def hq(request):
     mission_list = Mission.objects.all().order_by('rank')
     case_list = Case.objects.all().order_by('rank')
     
-    questionInstance_list = CaseQuestion.objects.filter(correct=True)
+    questionInstance_list = CaseQuestionInstance.objects.filter(correct=True)
     for qI in questionInstance_list:
         qI.submitted = True
         qI.save()
