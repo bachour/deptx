@@ -830,6 +830,12 @@ def hq(request):
     mission_list = Mission.objects.all().order_by('rank')
     case_list = Case.objects.all().order_by('rank')
     
+    questionInstance_list = CaseQuestion.objects.filter(correct=True)
+    for qI in questionInstance_list:
+        qI.submitted = True
+        qI.save()
+        
+    
     return render(request, 'cron/hq.html', {'mission_list':mission_list, 'case_list':case_list})
 
 @staff_member_required
