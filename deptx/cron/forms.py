@@ -1,7 +1,7 @@
 from django.forms import ModelForm
 from django import forms
 
-from models import HelpMail, ChatMessage
+from models import HelpMail, ChatMessage, RiddleAttempt
 from players.models import Cron
 
 class HelpMailForm(ModelForm):
@@ -19,4 +19,10 @@ class ChatForm(ModelForm):
     class Meta:
         model = ChatMessage
         fields = ['message' ]
+        
+class RiddleAttemptForm(ModelForm):
+    class Meta:
+        model = RiddleAttempt
+        fields = ['attempt']
+                    
     

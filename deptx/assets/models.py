@@ -204,15 +204,31 @@ class Case(models.Model):
 
 
 class CaseQuestion(models.Model):
+    
+    TYPE_MULTIPLE_CHOICE = 1
+    TYPE_OPEN = 2
+    TYPE_ESSAY = 3
+    TYPE_FILE = 4
+    
+    CHOICES_TYPE = (
+        (TYPE_MULTIPLE_CHOICE, 'multiple choice'),
+        (TYPE_OPEN, 'open question with answer checking'),
+        (TYPE_ESSAY, 'open question that is always correct'),
+        (TYPE_FILE, 'file upload that is always correct'),         
+    )
+    
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
     case = models.ForeignKey(Case)
+    rank = models.IntegerField(help_text="Questions with lower numbers will appear before questions with higher numbers")
+    questionType = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_MULTIPLE_CHOICE)
     question = models.TextField()
-    correct1 = models.TextField()
-    wrong1 = models.TextField()
-    correct2 = models.TextField(blank=True, null=True)
-    wrong2 = models.TextField(blank=True, null=True)
+    explanation = models.TextField(blank=True, null=True, help_text="In case the question needs further elaboration")
+    correct1 = models.TextField(blank=True, null=True, help_text="Add all correct answers here, one per line.")
+    wrong1 = models.TextField(blank=True, null=True, help_text="Add as many wrong answers here, one per line. Only needed for multiple choice")
+    correct2 = models.TextField(blank=True, null=True, help_text="Add all correct answers here (for a second part of a multiple choice), one per line.")
+    wrong2 = models.TextField(blank=True, null=True, help_text="Add as many wrong answers here, one per line. Only needed for multiple choice")
 
     
     def getList(self, wrong, correct):
@@ -254,19 +270,23 @@ class CaseQuestion(models.Model):
             return False
     
     def __unicode__(self):
-        return "%s - %s - %s - %s" % (self.case, self.question, self.correct1, self.correct2)
+        return "%s - %s - %s - %s" % (self.case, self.get_questionType_display(), self.rank, self.question)
         
         
 class AbstractDocument(models.Model):
     class meta:
         abstract = True
     
-    name = models.CharField(max_length=128)
-    unit = models.ForeignKey(Unit)
-    provenance = models.OneToOneField(Provenance, related_name="document")
-    guide = models.TextField(blank=True, null=True)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    
+    name = models.CharField(max_length=128)
+    unit = models.ForeignKey(Unit)
+    provenance = models.OneToOneField(Provenance, related_name="document", null=True, blank=True)
+    guide = models.TextField(blank=True, null=True)
+
+    content = models.TextField(blank=True, null=True, help_text="If provenance is empty, document will render the contents of this field.")
+    
 
 class CronDocument(AbstractDocument):
     case = models.ForeignKey(Case)
@@ -322,5 +342,16 @@ class StoryFile(models.Model):
     def __unicode__(self):
         return "%s (%s)" % (self.serial, self.filename)
          
+
+class Riddle(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
     
+    text = models.TextField()
+    solution = models.CharField(max_length=36)
+    rank = models.IntegerField()
+    cheat = models.TextField(blank=True, null=True)
+    
+    def __unicode__(self):
+        return "%s (%s - %s)" % (self.rank, self.text, self.solution)  
     

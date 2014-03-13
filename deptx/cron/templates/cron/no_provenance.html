@@ -1,0 +1,12 @@
+{% extends 'cron/base.html' %}
+
+{% block content %}
+
+<h1>{{ cronDocumentInstance.cronDocument.name }}</h1>
+
+{{cronDocumentInstance.cronDocument.content|safe}}
+
+<br/><br/>
+<a href="{% url 'cron_case_intro' mission.serial case.serial %}">Back to Case Overview</a>
+
+{% endblock %}

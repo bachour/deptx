@@ -1,5 +1,5 @@
 from django.contrib import admin
-from cron.models import MissionInstance, CaseInstance, CronDocumentInstance, HelpMail, CaseQuestionInstance, ChatMessage
+from cron.models import MissionInstance, CaseInstance, CronDocumentInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt, RiddleTracker
 
 class MissionInstanceAdmin(admin.ModelAdmin):
     list_filter = ('cron', 'mission', 'progress', 'modifiedAt')
@@ -22,3 +22,5 @@ admin.site.register(CronDocumentInstance, CronDocumentInstanceAdmin)
 admin.site.register(HelpMail, HelpMailAdmin)
 admin.site.register(CaseQuestionInstance, CaseQuestionInstanceAdmin)
 admin.site.register(ChatMessage)
+admin.site.register(RiddleAttempt)
+admin.site.register(RiddleTracker)
