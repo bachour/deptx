@@ -36,7 +36,7 @@ jQuery(document).ready(function() {
 					<a href="{% url 'cron_hq_case_report' case.id %}">Report</a>
 					<a href="{% url 'cron_hq_case_outro' case.id %}">Outro</a>
 					<br/>
-					{% for document in case.document.all %}
+					{% for document in case.crondocument.all %}
 						
 						{% if document.provenance %}
 							{{document}} <a href="{% url 'provmanager_view' document.provenance.id %}">(view provenance)</a>

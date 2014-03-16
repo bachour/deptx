@@ -799,7 +799,7 @@ def chat_sync(request):
     return HttpResponse(data, mimetype='application/json')
 
 def getAllDocumentStates(cron, case):
-    requiredDocuments = case.crondocument_set.all()
+    requiredDocuments = case.crondocument.all()
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
 
                 
@@ -871,7 +871,7 @@ def hq_case_intro(request, id):
     case = Case.objects.get(id=id)
     content = case.intro
     text = renderContent(content, request.user)
-    requiredDocuments = case.crondocument_set.all()
+    requiredDocuments = case.crondocument.all()
     return render(request, 'cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
