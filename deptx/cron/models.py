@@ -1,7 +1,8 @@
+import os.path
 from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron
-from assets.models import Mission, Case, CronDocument, CaseQuestion
+from assets.models import Mission, Case, CronDocument, CaseQuestion, Riddle
 from django.template import Context, loader
 from django.core.mail import EmailMessage, mail_admins
 
@@ -77,6 +78,35 @@ class CaseInstance(models.Model):
                 return False
         return True
     
+    def allQuestionsSubmitted(self):
+        question_list = CaseQuestion.objects.filter(case=self.case)
+        for question in question_list:
+            try:
+                questionInstance = CaseQuestionInstance.objects.get(question=question, cron=self.cron)
+            except CaseQuestionInstance.DoesNotExist:
+                return False
+            if not questionInstance.submitted:
+                return False
+        return True
+     
+    def hasEssayOrFileQuestions(self):
+        question_list = CaseQuestion.objects.filter(case=self.case).exclude(questionType=CaseQuestion.TYPE_MULTIPLE_CHOICE).exclude(questionType=CaseQuestion.TYPE_OPEN)
+        if question_list.count() > 0:
+            return True
+        else:
+            return False  
+    
+    def hasBadAnswer(self):
+        question_list = CaseQuestion.objects.filter(case=self.case)
+        for question in question_list:
+            try:
+                questionInstance = CaseQuestionInstance.objects.get(question=question, cron=self.cron)
+            except CaseQuestionInstance.DoesNotExist:
+                return False
+            if questionInstance.isBad:
+                return True
+        return False
+    
     def allDocumentsSolved(self):
         cronDocument_list = CronDocument.objects.filter(case=self.case)
         for cronDocument in cronDocument_list:
@@ -104,20 +134,32 @@ class CaseInstance(models.Model):
         return "%s (%s: %s)" % (self.cron.user.username, self.case.name, status)
 
 class CaseQuestionInstance(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
     cron = models.ForeignKey(Cron)
     question = models.ForeignKey(CaseQuestion)
     correct = models.BooleanField(default=False)
+    submitted = models.BooleanField(default=False)
+    isBad = models.BooleanField(default=False)
     failedAttempts = models.IntegerField(default=0)
     
     answer1 = models.CharField(max_length=256, blank=True, null=True)
     answer2 = models.CharField(max_length=256, blank=True, null=True)
+    answerLong = models.TextField(blank=True, null=True)
+
+    upload = models.FileField(upload_to='uploads/%Y/%m/%d', blank=True, null=True)
     
-    createdAt = CreationDateTimeField()
-    modifiedAt = ModificationDateTimeField()
+    @property
+    def filename(self):
+        return os.path.basename(self.upload.name)
     
     def increaseFailedAttempts(self):
         self.failedAttempts += 1
         self.save()
+    
+    def getCaseInstance(self):
+        return CaseInstance.objects.get(cron=self.cron, case=self.question.case)
     
     def __unicode__(self):
         return "%s - %s - %s - %s - %s" % (self.cron.user.username, self.question.case.serial, self.question.id, self.correct, self.failedAttempts)
@@ -207,3 +249,25 @@ class ChatMessage(models.Model):
     
     def __unicode__(self):
         return "%s: %s" % (self.cron.user.username, self.message)
+    
+class RiddleAttempt(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    riddle = models.ForeignKey(Riddle)
+    cron = models.ForeignKey(Cron)
+    attempt = models.CharField(max_length=36)
+    correct = models.BooleanField()
+    
+    def __unicode__(self):
+        return "%s: %s (%s)" % (self.cron.user.username, self.riddle, self.correct)
+
+class RiddleTracker(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    riddle = models.OneToOneField(Riddle, related_name="riddleTracker")
+    solved = models.BooleanField(default=False)
+    
+    def __unicode__(self):
+        return "%s (%s)" % (self.riddle, self.solved)

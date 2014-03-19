@@ -1,0 +1,109 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block header %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+{% if not allSolved %}
+window.setInterval(function(){
+	$.ajax({
+            type: 'POST',
+            url: "{% url 'cron_operation_waterdrill_sync' %}",
+            data:
+            {
+            	'riddle': {{currentRiddle.id}},
+            	{% if currentRiddle.riddleTracker.solved %}
+            		'solved': true
+            	{% else %}
+            		'solved': false
+            	{% endif %}
+	    	},
+            success: function (data) {
+            	if (data['reload']) {
+            		location.reload(true);
+            	}
+            	$("#minutes").html(data['minutes']);
+            	$("#seconds").html(data['seconds']);
+            },
+            error: function(data) {
+
+            }
+        });
+        return false;
+
+},5000);
+
+window.setInterval(function(){
+	minutes = $("#minutes").html();
+	seconds = $("#seconds").html();
+	seconds = seconds - 1;
+	if (seconds == -1) {
+		minutes = minutes - 1;
+		seconds = 59;
+		minutes = $("#minutes").html(minutes);
+	}
+	if (minutes < 0) {
+		location.reload(true);
+	};
+	$("#seconds").html(seconds);
+},1000);	
+{% endif %}
+
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+<h1>Operation: Water Drill</h1>
+<table style="border-spacing:0px 0px;">
+<tr><td style="padding:10px;">level</td>
+{% for riddle in riddle_list %}
+<td style="padding:10px;background-color:{% if riddle.riddleTracker.solved %}green{% elif riddle == currentRiddle %}yellow{% else %}red{% endif%}">{{riddle.rank}}</td>
+{% endfor %}
+</tr>
+</table>
+<br/>
+{% if not allSolved %}
+<p>Remaining time: <span id='minutes'>{{minutes}}</span> minutes and <span id='seconds'>{{seconds}}</span> seconds.</p>
+<br/>
+{% endif %}
+
+
+{% if allSolved %}
+<p style="color:white;">OH MY GOD WE ARE IN!!!!</p>
+{% else %}
+	{% if not currentRiddle.riddleTracker.solved %}
+		<table>
+		<tr><th>Level</th><td>{{currentRiddle.rank}}</td></tr>
+		<tr><th>Cypher</th><td>{{currentRiddle.text}}</td></tr>
+		<tr><th>Code</th><td>
+			<form method="POST" action="{% url 'cron_operation_waterdrill' %}" id="form">
+			{% csrf_token %}
+			{{riddleAttemptForm.attempt}}<br/>
+			<input class="button" type="submit" value="Send" />
+			</form>
+			</td>
+		</tr>
+		</table>
+	{% elif hasSolved %}
+	<p style="color:white;">Good work, agent! Now prepare yourself for the next level of the firewall.</p>
+	{% else %}
+	<p style="color:white;">Another agent has correctly entered the code for this level of the firewall.</p>
+	{% endif %}
+{% endif %}
+
+<br/><br/>
+{% for riddle in oldRiddle_list %}
+	{% if riddle.riddleTracker.solved %}
+		<table>
+		<tr><th>Level</th><td>{{riddle.rank}}</td></tr>
+		<tr><th>Cypher</th><td>{{riddle.text}}</td></tr>
+		<tr><th>Code</th><td>{{riddle.solution}}</td></tr>
+		</table>
+	{% endif %}
+{% endfor %}
+
+
+{% endblock %}

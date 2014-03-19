@@ -28,19 +28,19 @@
 		<h1>MoPs</h1>
 		<table>
 		<tr><th>MoP</th><th>Clearance</th><th>TRUST</th><th>Total TRUST</th><th>Available</th><th>Active</th><th>Reported<br/>Correct</th><th>Reported<br/>Incorrect</th><th>Revoked</th><th>Limbo</th><th>Hacked</th></tr>
-		{% for mop in mop_list %}
-		<tr style="text-align:center;color:{{mop.mopTracker.get_clearance_display}}">
-		<td>{{mop.user.username}}{% if mop.user.is_staff %} (staff){% endif %}</td>
-		<td>{{mop.mopTracker.get_clearance_display}}</td>
-		<td>{{mop.mopTracker.trust}}</td>
-		<td>{{mop.mopTracker.totalTrust}}</td>
-		<td>{{mop.availableDocs}}</td>
-		<td>{{mop.activeDocs}}</td>
-		<td>{{mop.reportedCorrectDocs}}</td>
-		<td>{{mop.reportedIncorrectDocs}}</td>
-		<td>{{mop.revokedDocs}}</td>
-		<td>{{mop.limboDocs}}</td>
-		<td>{{mop.hackedDocs}}</td>
+		{% for mopTracker in moptracker_list %}
+		<tr style="text-align:center;color:{{mopTracker.get_clearance_display}}">
+		<td>{{mopTracker.mop.user.username}}{% if mop.user.is_staff %} (staff){% endif %}</td>
+		<td>{{mopTracker.get_clearance_display}}</td>
+		<td>{{mopTracker.trust}}</td>
+		<td>{{mopTracker.totalTrust}}</td>
+		<td>{{mopTracker.availableDocs}}</td>
+		<td>{{mopTracker.activeDocs}}</td>
+		<td>{{mopTracker.reportedCorrectDocs}}</td>
+		<td>{{mopTracker.reportedIncorrectDocs}}</td>
+		<td>{{mopTracker.revokedDocs}}</td>
+		<td>{{mopTracker.limboDocs}}</td>
+		<td>{{mopTracker.hackedDocs}}</td>
 		</tr>
 		{% endfor %}
 		</table>

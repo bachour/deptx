@@ -12,7 +12,7 @@
 {% if form %}
 	<form action="{% url 'mop_control_mail' %}" method="post">{% csrf_token %}
 	<p>Personal data: {% verbatim %}{{mop.firstname}}, {{mop.lastname}}, {{mop.dob}}, ...{% endverbatim %}</p>
-	<p>Signatures: {% verbatim %} {% include 'mop/mail/sig_sandy.txt' %}, ...{% endverbatim %}
+	<p>Signatures: {% verbatim %} {% include 'mop/mail/sig_sandy.txt' %}, {% include 'mop/mail/sig_christopher.txt' %}, ...{% endverbatim %}
 	<table>
 	{{form.as_table}}
 	</table>

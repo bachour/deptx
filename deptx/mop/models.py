@@ -1,7 +1,7 @@
 from django.db import models
 
 from players.models import Mop
-from assets.models import Unit, Requisition, CronDocument, MopDocument
+from assets.models import Unit, Requisition, CronDocument, MopDocument, StoryFile
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
 from mop.clearance import Clearance, getMinimumGreen, getMinimumYellow, getMinimumOrange, getMinimumRed
@@ -310,6 +310,16 @@ class MopFile(models.Model):
     
     def __unicode__(self):
         return "%s %s" % (self.mop.user.username, self.data.name)
+
+class StoryFileInstance(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    mop = models.ForeignKey(Mop)
+    storyFile = models.ForeignKey(StoryFile)
+    
+    def __unicode__(self):
+        return "%s %s" % (self.mop.user.username, self.storyFile.serial)
 
 class Mail(models.Model):
     TYPE_RECEIVED = 0

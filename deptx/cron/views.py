@@ -15,10 +15,10 @@ from django.template import Context, Template, loader
 
 from players.forms import MopForm
 
-from assets.models import Case, Mission, CronDocument, CaseQuestion
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage
+from assets.models import Case, Mission, CronDocument, CaseQuestion, Riddle
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt, RiddleTracker
 from mop.models import Mail, MopDocumentInstance
-from cron.forms import HelpMailForm, ControlHelpMailForm, ChatForm
+from cron.forms import HelpMailForm, ControlHelpMailForm, ChatForm, RiddleAttemptForm
 
 from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
@@ -30,6 +30,8 @@ from django.core.mail import EmailMessage, send_mass_mail
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils.html import escape
+import time
+
 
 try:
     from deptx.settings_production import DEFAULT_FROM_EMAIL
@@ -437,7 +439,7 @@ def case_report(request, mission_serial, case_serial):
         return
     
     if caseInstance.allDocumentsSolved():
-        question_list = CaseQuestion.objects.filter(case=case)
+        question_list = CaseQuestion.objects.filter(case=case).order_by('rank')
         for question in question_list:
             questionInstance = CaseQuestionInstance.objects.get_or_create(cron=request.user.cron, question=question)
             
@@ -449,19 +451,56 @@ def case_report(request, mission_serial, case_serial):
             hasGuessed = True
             for questionInstance in questionInstance_list:
                 if not questionInstance.correct:
-                    questionInstance.answer1 = request.POST.get('%s_answer1' % questionInstance.question.id, None)
-                    questionInstance.answer2 = request.POST.get('%s_answer2' % questionInstance.question.id, None)
-                    questionInstance.correct = questionInstance.question.isAllCorrect(questionInstance.answer1, questionInstance.answer2)
-                    if not questionInstance.correct:
-                        questionInstance.increaseFailedAttempts()
-                    questionInstance.save()
-                    
-                    data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answer1':questionInstance.answer1, 'answer2':questionInstance.answer2})
+                    if questionInstance.question.questionType == CaseQuestion.TYPE_MULTIPLE_CHOICE:
+                        questionInstance.answer1 = request.POST.get('%s_answer1' % questionInstance.question.id, None)
+                        questionInstance.answer2 = request.POST.get('%s_answer2' % questionInstance.question.id, None)
+                        if questionInstance.question.isAllCorrect(questionInstance.answer1, questionInstance.answer2):
+                            questionInstance.correct = True
+                            questionInstance.submitted = True
+                        else:
+                            questionInstance.increaseFailedAttempts()
+                        questionInstance.save()
+                        data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answer1':questionInstance.answer1, 'answer2':questionInstance.answer2})
+                    elif questionInstance.question.questionType == CaseQuestion.TYPE_OPEN:
+                        questionInstance.answer1 = request.POST.get('%s_answer1' % questionInstance.question.id, None)
+                        if questionInstance.question.isCorrect1(questionInstance.answer1):
+                            questionInstance.correct = True
+                            questionInstance.submitted = True
+                        else:
+                            questionInstance.increaseFailedAttempts()
+                        questionInstance.save()
+                        data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answer1':questionInstance.answer1})
+                    elif questionInstance.question.questionType == CaseQuestion.TYPE_ESSAY:
+                        questionInstance.answerLong = request.POST.get('%s_answerLong' % questionInstance.question.id, None)
+                        if len(questionInstance.answerLong) > 140:
+                            questionInstance.submitted = True
+                        else:
+                            questionInstance.increaseFailedAttempts()
+                        questionInstance.save()
+                        data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answerLong':questionInstance.answerLong})
+                    elif questionInstance.question.questionType == CaseQuestion.TYPE_FILE:
+                        try:
+                            upload = request.FILES['%s_upload' % questionInstance.question.id]
+                        except:
+                            upload = None 
+                        if not upload == None:
+                            questionInstance.upload = upload
+                            questionInstance.submitted = True
+                        elif not questionInstance.upload == None:
+                            questionInstance.submitted = True
+                        else:
+                            questionInstance.increaseFailedAttempts()
+                        questionInstance.save()
+                        try:
+                            filename = questionInstance.filename
+                        except:
+                            filename = None
+                        data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'upload':filename})
+                            
                     logging.log_action(ActionLog.ACTION_CRON_REPORT_SUBMIT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved(), questionInstance=questionInstance, questionInstanceCorrect=questionInstance.correct, data=data)
         else:
             hasGuessed = False
-            
-    
+
         logging.log_action(ActionLog.ACTION_CRON_VIEW_CASE_REPORT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved())
         return render(request, 'cron/case_report.html', {'text':text, 'questionInstance_list':questionInstance_list, 'mission':mission, 'case':case, 'hasGuessed':hasGuessed, 'caseInstance':caseInstance})
     else:
@@ -500,12 +539,30 @@ def provenance(request, mission_serial, case_serial, document_serial):
     case = Case.objects.get(serial=case_serial)
     cronDocument = CronDocument.objects.get(serial=document_serial)
     cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
-    
+
     logging.log_action(ActionLog.ACTION_CRON_VIEW_PROVENANCE, cron=request.user.cron, cronDocumentInstance=cronDocumentInstance, cronDocumentInstanceCorrect=cronDocumentInstance.solved)
     logging.log_prov(action=ProvLog.ACTION_OPEN, cronDocumentInstance=cronDocumentInstance)
     
     return render(request, 'cron/provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance })
     
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+#TODO: Has user access to case and document?
+def no_provenance(request, mission_serial, case_serial, document_serial):
+    
+    mission = Mission.objects.get(serial=mission_serial)
+    case = Case.objects.get(serial=case_serial)
+    cronDocument = CronDocument.objects.get(serial=document_serial)
+    cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
+    cronDocumentInstance.solved = True
+    cronDocumentInstance.save()
+
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_NO_PROVENANCE, cron=request.user.cron, cronDocumentInstance=cronDocumentInstance)
+    
+    return render(request, 'cron/no_provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance })
+
+
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -552,6 +609,115 @@ def messages(request):
     logging.log_action(ActionLog.ACTION_CRON_VIEW_MESSAGES, cron=request.user.cron)
     return render(request, 'cron/messages.html', {"message_list": message_list})
 
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def operation_waterdrill(request):
+    riddle_list = Riddle.objects.all().order_by('rank')
+ 
+    currentRiddle = get_current_riddle()
+    if currentRiddle is None:
+        for riddle in riddle_list:
+            if not riddle == currentRiddle:
+                if not riddle.riddleTracker.solved:
+                    riddle.riddleTracker.solved = True
+                    riddle.riddleTracker.save()
+        allSolved = True
+        return render(request, 'cron/operation_waterdrill.html', {"allSolved":allSolved, "oldRiddle_list": riddle_list, "riddle_list": riddle_list})
+    else:
+        oldRiddle_list = Riddle.objects.filter(rank__lte=currentRiddle.rank).order_by('-rank')
+        print currentRiddle
+        for riddle in oldRiddle_list:
+            if not riddle == currentRiddle:
+                if not riddle.riddleTracker.solved:
+                    riddle.riddleTracker.solved = True
+                    riddle.riddleTracker.save()
+    
+        solvedRiddle_list = Riddle.objects.filter(riddleTracker__solved=True)
+        if riddle_list.count() == solvedRiddle_list.count():
+            allSolved = True
+        else:
+            allSolved = False
+                
+        riddleTracker = RiddleTracker.objects.get_or_create(riddle=currentRiddle)
+        
+        if request.method == 'POST':
+            riddleAttempt = RiddleAttempt(riddle=currentRiddle, cron=request.user.cron)
+            form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
+            if form.is_valid():
+                riddleAttempt = form.save()
+                if riddleAttempt.attempt == riddleAttempt.riddle.solution:
+                    riddleAttempt.correct = True
+                    riddleAttempt.save()
+                    riddleTracker = riddleAttempt.riddle.riddleTracker
+                    if riddleTracker.solved == False:
+                        riddleTracker.solved = True
+                        riddleTracker.save()
+        
+        correctRiddleAttempts = RiddleAttempt.objects.filter(riddle=currentRiddle).filter(cron=request.user.cron).filter(correct=True).count()
+        if correctRiddleAttempts > 0:
+            hasSolved = True
+        else:
+            hasSolved = False
+        
+        riddleAttemptForm = RiddleAttemptForm()
+        minutes, seconds = remaining_time()
+        return render(request, 'cron/operation_waterdrill.html', {"minutes":minutes, "seconds":seconds, "allSolved":allSolved, "oldRiddle_list": oldRiddle_list, "hasSolved": hasSolved, "riddle_list": riddle_list, "currentRiddle": currentRiddle, "riddleAttemptForm":riddleAttemptForm})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def operation_waterdrill_send(request):
+    data = False
+    if request.method == 'POST' and request.is_ajax():
+        riddle = get_current_riddle()
+        riddleAttempt = RiddleAttempt(riddle=riddle, cron=request.user.cron)
+        form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
+        print form
+        if form.is_valid():
+            riddleAttempt = form.save()
+            if riddleAttempt.attempt == riddleAttempt.riddle.solution:
+                riddleAttempt.correct = True
+                riddleAttempt.save()
+                riddleTracker = riddleAttempt.riddle.riddleTracker
+                if riddleTracker.solved == False:
+                    riddleTracker.solved = True
+                    riddleTracker.cron = request.user.cron
+                    riddleTracker.save()
+            data = json.dumps({'correct':riddleAttempt.correct})
+    return HttpResponse(data, mimetype='application/json')
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+@csrf_exempt
+def operation_waterdrill_sync(request):
+    forceReload = False
+    if request.method == 'POST' and request.is_ajax():
+        riddle_id = request.POST.get('riddle', None)
+        solved = json.loads(request.POST.get('solved', False))
+        oldRiddle = Riddle.objects.get(id=riddle_id)
+        currentRiddle = get_current_riddle()
+        if currentRiddle is None:
+            forceReload = True
+        elif not oldRiddle.id == currentRiddle.id:
+            forceReload = True
+        else:
+            if not solved:
+                if currentRiddle.riddleTracker.solved:
+                    forceReload = True
+    minutes, seconds = remaining_time()
+    data = json.dumps({'reload':forceReload, 'minutes':minutes, 'seconds':seconds})
+    return HttpResponse(data, mimetype='application/json')
+
+def get_current_riddle():
+    hour = int(time.strftime("%H")) - 12
+    try:
+        return Riddle.objects.all().order_by('rank')[hour]
+    except:
+        return None
+
+def remaining_time():
+    minutes = 60 - int(time.strftime("%M"))
+    seconds = 60 - int(time.strftime("%S"))
+    return minutes, seconds
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -633,7 +799,7 @@ def chat_sync(request):
     return HttpResponse(data, mimetype='application/json')
 
 def getAllDocumentStates(cron, case):
-    requiredDocuments = case.crondocument_set.all()
+    requiredDocuments = case.crondocument.all()
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
 
                 
@@ -663,7 +829,6 @@ def getAllDocumentStates(cron, case):
 def hq(request):
     mission_list = Mission.objects.all().order_by('rank')
     case_list = Case.objects.all().order_by('rank')
-    
     return render(request, 'cron/hq.html', {'mission_list':mission_list, 'case_list':case_list})
 
 @staff_member_required
@@ -706,7 +871,7 @@ def hq_case_intro(request, id):
     case = Case.objects.get(id=id)
     content = case.intro
     text = renderContent(content, request.user)
-    requiredDocuments = case.crondocument_set.all()
+    requiredDocuments = case.crondocument.all()
     return render(request, 'cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required

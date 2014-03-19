@@ -16,7 +16,7 @@ from players.forms import MopCheckForm, PasswordForm
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
@@ -575,7 +575,17 @@ def form_trashing(request, fullSerial):
 @user_passes_test(isMop, login_url='mop_login')
 def files(request):
     
-    file_list = StoryFile.objects.filter(published=True).filter(public=True)
+    file_list = StoryFile.objects.filter(published=True).order_by('timestamp')
+    for storyFile in file_list:
+        if storyFile.public is not True:
+            try:
+                storyFileInstance = StoryFileInstance.objects.get(mop=request.user.mop, storyFile=storyFile)
+                storyFile.accessible = True
+            except:
+                storyFile.accessible = False
+        else:
+            storyFile.accessible = True
+    
     # Handle file upload
     if request.method == 'POST':
         form = MopFileForm(request.POST, request.FILES)
@@ -683,18 +693,18 @@ def control(request):
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
-    mop_list = Mop.objects.all().order_by('-mopTracker__trust', '-mopTracker__totalTrust')
+    moptracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
 
-    for mop in mop_list:
-        mop.availableDocs = len(getDocumentPoolForMop(mop))
-        mop.activeDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
-        mop.limboDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
-        mop.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
-        mop.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
-        mop.revokedDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
-        mop.hackedDocs = MopDocumentInstance.objects.filter(mop=mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
+    for moptracker in moptracker_list:
+        moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
+        moptracker.activeDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
+        moptracker.limboDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
+        moptracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
+        moptracker.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
+        moptracker.revokedDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
+        moptracker.hackedDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
     
-    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mop_list':mop_list})       
+    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'moptracker_list':moptracker_list})       
 
 @staff_member_required
 def control_randomize(request, mopDocument_id):
