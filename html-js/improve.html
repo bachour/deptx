@@ -65,21 +65,39 @@
     	var AJAX_MODE = "cron";
     	var DEBUG = true;
     	var URL_MEDIA = "file:///C:/Users/kqb.CS/Dropbox/Dept.X/MEDIA/";
-    	var FIRST_TIME = true;
+    	var FIRST_TIME = false;
 		var ARROW_URL_1 = "improve/arrow1.png";
 		var ARROW_URL_2 = "improve/arrow2.png";
 		var MAGNIFY_URL = "improve/magnify.png";
 		var IS_TEST = true;
 		var INACTIVE = true;
 		var GUIDE_HTML = "";
+		var URL_GET_STATE = "";
     </script>
     <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.5.4.min.js"></script>
     <script src="C:/Users/kqb.CS/Dropbox/Dept.X/MEDIA/improve/mopKss.js"></script>
     <script src="../deptx/provmanager/static/provmanager/imPROVe.js"></script>
     <script src="../deptx/provmanager/static/provmanager/jquery-ui-git.js"></script>
     <script>
-    $.getJSON("https://dl.dropboxusercontent.com/u/17451725/PROV_Blood-1Kclean.json", function(json) {
-    //	$.getJSON("https://dl.dropboxusercontent.com/u/17451725/GRIND_speeding1.json", function(json) {
+    function get(name){
+    	   if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
+    	      return decodeURIComponent(name[1]);
+    	}
+    
+    if (get('doc'))
+    	filename= get('doc');
+    else
+    	filename = "PROV_Blood-1Kclean";
+    
+    if (get('user'))
+    {
+    	user = get('user');
+    	URL_GET_STATE = "https://dl.dropboxusercontent.com/u/17451725/" + user + ".json"
+    	IS_TEST = false
+    }
+    
+        $.getJSON("https://dl.dropboxusercontent.com/u/17451725/" + filename + ".json", function(json) {
+        //	$.getJSON("https://dl.dropboxusercontent.com/u/17451725/GRIND_speeding1.json", function(json) {
     	   loadJSONProv(json);
     	   loadImages(initStage);
     	 });

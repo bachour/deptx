@@ -1355,9 +1355,12 @@ function toggleAttributeSelection(shape, setup)
 			{
 				setTextHighlight(shape, false, false);
 			}
-			clickSound.play();
+			
 			if (!setup)
+			{
 				logClick(selectedNodes[i].id, selectedAttributes[i], false, i);
+				clickSound.play();
+			}
 			selectedAttributes[i] = null;
 			return;
 		}
@@ -1397,8 +1400,10 @@ function toggleAttributeSelection(shape, setup)
 						setTextHighlight(shape, true, false);
 					}
 					if (!setup)
+					{
 						logClick(selectedNodes[i].id, j, true,i);
-					clickSound.play();
+						clickSound.play();
+					}
 					return;
 				}
 	// do nothing is shape does not match any selectable object
