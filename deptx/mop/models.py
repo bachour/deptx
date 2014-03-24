@@ -466,6 +466,7 @@ class Mail(models.Model):
     trust = models.IntegerField(blank=True, null=True)
     bodyType = models.IntegerField(choices=CHOICES_BODY_TYPE, blank=True, null=True)
     replyTo = models.ForeignKey('self', blank=True, null=True)
+    needsReply = models.BooleanField(default=False)
         
     requisitionBlank = models.ForeignKey(RequisitionBlank, null=True, blank=True)
     requisitionInstance = models.ForeignKey(RequisitionInstance, null=True, blank=True)

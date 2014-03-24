@@ -1,0 +1,16 @@
+<h1>Outstanding replies to Cr0n player emails</h1>
+
+<h2>Important: When clicking 'write reply' the message is automatically set as 'replied to', even if then no actual reply is written or sent.</h2>
+<table>
+<tr><th></th><th>Cr0n</th><th>Message</th><th>Time</th><th></th></tr>
+{% for mail in helpMail_list %}
+	<tr>
+		<td><a href="{% url 'cron_hq_mail_noreply' mail.id %}">no reply needed</a></td>
+		<td style="white-space:nowrap;border:1px solid black;">{{mail.cron.user.username}}</td>
+		<td style="border:1px solid black;">{{mail.body}}</td>
+		<td style="white-space:nowrap;border:1px solid black;">{{mail.createdAt}}</td>
+		<td><a href="{% url 'cron_hq_mail_reply' mail.id %}">write reply</a></td>
+	</tr>
+
+{% endfor %}
+</table>

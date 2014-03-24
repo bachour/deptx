@@ -221,10 +221,12 @@ class HelpMail(models.Model):
     body = models.TextField()
     isReply = models.BooleanField(default=False)
     isRead = models.BooleanField(default=True)
+    needsReply = models.BooleanField(default=False)
     
     def save(self, *args, **kwargs):
         if not self.pk:
             if self.type == self.TYPE_FROM_PLAYER:
+                self.needsReply = True
                 subject = "[cr0n] %s: Field Communication" % (self.cron.user.username)
                 email_tpl = loader.get_template('cron/mail/message_from_player.txt')
                 c = Context({'body':self.body})

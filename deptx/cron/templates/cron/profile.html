@@ -1,6 +1,23 @@
 {% extends 'cron/base.html' %}
 {% load staticfiles %}
 
+{% block header %}
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+  jQuery(".content").hide();
+  //toggle the componenet with class msg_body
+  jQuery(".heading").click(function()
+  {
+    jQuery(this).next(".content").slideToggle(500);
+  });
+});
+</script>
+
+{% endblock %}
+
 {% block content %}
 <h1>Cron Data</h1>
 <table>
@@ -48,5 +65,13 @@
 	</table><br/>
 	{% endfor %}
 {% endif %}
-
+<hr/>
+<h1>Resignation</h1>
+<p>If you no longer want to fight against the Ministry of Provenance, you are free leave Cr0n at any time.</p>
+<br/><a class="heading">Yes, I no longer want to help Cr0n.</a>
+<div class='content'>
+<form action="{% url 'cron_terminate' %}" method="post">{% csrf_token %}
+<input style="color:red;" class="button" type="submit" value="Terminate Agent Status" name="terminate" />
+</form>
+<div>
 {% endblock %}

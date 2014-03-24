@@ -13,4 +13,9 @@ urlpatterns = patterns('',
     url(r'c/(\d+)/report', views.hq_case_report, name='cron_hq_case_report'),
     url(r'c/(\d+)/outro', views.hq_case_outro, name='cron_hq_case_outro'),
     url(r'mail/$', views.hq_mail, name='cron_hq_mail'),
+    url(r'mail/outstanding', views.hq_mail_outstanding, name='cron_hq_mail_outstanding'),
+    url(r'mail/noreply/(\d+)/$', views.hq_mail_noreply, name='cron_hq_mail_noreply'),
+    url(r'mail/reply/(\d+)/$', views.hq_mail_reply, name='cron_hq_mail_reply'),
+    url(r'answers/$', views.hq_answers, name='cron_hq_answers'),
+    
 )

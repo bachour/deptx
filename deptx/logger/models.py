@@ -3,7 +3,7 @@ from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron, Mop
 from assets.models import Mission, Case, Requisition, CronDocument, StoryFile
-from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail, CaseQuestionInstance
+from cron.models import CronDocumentInstance, MissionInstance, CaseInstance, HelpMail, CaseQuestionInstance, RiddleAttempt
 from mop.models import MopDocumentInstance, Mail, MopTracker, RequisitionInstance, RequisitionBlank, MopFile
     
 class ActionLog(models.Model):
@@ -37,6 +37,10 @@ class ActionLog(models.Model):
     ACTION_CRON_HACK_DOCUMENT = 42
     ACTION_CRON_MESSAGE_RECEIVE = 43
     ACTION_CRON_REPORT_SUBMIT = 44
+    ACTION_CRON_TERMINATE = 45
+    
+    ACTION_CRON_VIEW_WATERDRILL = 50
+    ACTION_CRON_HACK_WATERDRILL = 51
 
     
     ACTION_MOP_CREATED = 100
@@ -117,6 +121,9 @@ class ActionLog(models.Model):
         (ACTION_CRON_HACK_DOCUMENT, "ACTION_CRON_HACK_DOCUMENT"),
         (ACTION_CRON_MESSAGE_RECEIVE, "ACTION_CRON_MESSAGE_RECEIVE"),
         (ACTION_CRON_REPORT_SUBMIT, "ACTION_CRON_REPORT_SUBMIT"),
+        (ACTION_CRON_TERMINATE, "ACTION_CRON_TERMINATE"),
+        (ACTION_CRON_VIEW_WATERDRILL, "ACTION_CRON_VIEW_WATERDRILL"),
+        (ACTION_CRON_HACK_WATERDRILL, "ACTION_CRON_HACK_WATERDRILL"),
         (ACTION_MOP_CREATED, "ACTION_MOP_CREATED"),
         (ACTION_MOP_LOGIN, "ACTION_MOP_LOGIN"),
         (ACTION_MOP_LOGOUT, "ACTION_MOP_LOGOUT"),
@@ -180,6 +187,7 @@ class ActionLog(models.Model):
     cronDocumentInstanceCorrect = models.NullBooleanField(blank=True, null=True)
     message = models.ForeignKey(HelpMail, blank=True, null=True)
     successfulHack = models.NullBooleanField(blank=True, null=True)
+    riddleAttempt = models.ForeignKey(RiddleAttempt, blank=True, null=True)
     
     mop = models.ForeignKey(Mop, blank=True, null=True)
     mail = models.ForeignKey(Mail, blank=True, null=True)

@@ -350,6 +350,7 @@ class Riddle(models.Model):
     text = models.TextField()
     solution = models.CharField(max_length=36)
     rank = models.IntegerField()
+    secondsForAutosolve = models.IntegerField(default=120)
     cheat = models.TextField(blank=True, null=True)
     
     def __unicode__(self):

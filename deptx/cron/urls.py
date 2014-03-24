@@ -36,7 +36,7 @@ urlpatterns = patterns('',
     url(r'messages/compose/', views.message_compose, name='cron_message_compose'),
     
     url(r'operation/waterdrill/$', views.operation_waterdrill, name='cron_operation_waterdrill'),
-    url(r'operation/waterdrill/send/', views.operation_waterdrill_send, name='cron_operation_waterdrill_send'),
+#    url(r'operation/waterdrill/send/', views.operation_waterdrill_send, name='cron_operation_waterdrill_send'),
     url(r'operation/waterdrill/sync/', views.operation_waterdrill_sync, name='cron_operation_waterdrill_sync'),
     
     url(r'chat/$', views.chat, name='cron_chat'),
@@ -50,7 +50,9 @@ urlpatterns = patterns('',
     url(r'intelligence/inside-the-bunker/([-\w].+)', views.intelligence_bunker_image, name='cron_intelligence_bunker_image'),
     url(r'intelligence/jean-baker-message.html', views.intelligence_jean_baker_message, name='cron_intelligence_jean_baker_message'),
      
-    url(r'profile/', views.profile, name='cron_profile'),
+    url(r'profile/$', views.profile, name='cron_profile'),
+    url(r'termination', views.terminate, name='cron_terminate'),
+    
     url(r'hack/([-\w]+)', views.hack_document, name='cron_hack_document'),
 
 )

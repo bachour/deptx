@@ -3,6 +3,8 @@
 <div class="main">
 	<div class="content">
 		<h1>MoP Control Centre</h1>
+		<a href="{% url 'mop_control_mail' %}">send mopmail</a><br/>
+		<a href="{% url 'mop_control_mail_outstanding' %}">view outstanding mopmail</a><br/><br/>
 			{% for out in output %}
 				{{out}}<br/>
 			{% endfor %}
@@ -14,7 +16,6 @@
 			<tr><td>{{mail.mop.user.username}}</td><td>{{mail.id}}</td><td>{{mail.get_subject_display}}</td><td>{{mail.sentAt}}</td></tr>
 		{% endfor %}
 		</table>
-		<a href="{% url 'mop_control_mail' %}">send mopmail</a><br/><br/>
 		<input class="button" type="submit" value="process mail" name="mail" /><br/>
 		<h1>Available Document Templates</h1>
 		<table>
