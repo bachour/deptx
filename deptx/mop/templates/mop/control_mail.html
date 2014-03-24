@@ -20,7 +20,7 @@ function set_it() {
 	document.getElementById("id_body").value += "\n\n\{\% include \'mop\/mail\/sig_geoffrey.txt\' \%\}";
 	alert('Set unit to MOPADM\nSet Subject to "Information"\nAdded Geoffrey\'s signature')
 }
-function set_it() {
+function set_special() {
 	document.getElementById("id_unit").value = 8;
 	document.getElementById("id_subject").value = 212;
 	document.getElementById("id_body").value += "\n\n\{\% include \'mop\/mail\/sig_cassandra.txt\' \%\}";
@@ -53,7 +53,7 @@ function set_it() {
 	<span style="color:blue;text-decoration:underline;" onclick='set_sandy()'>I am Sandy.</span><br/>
 	<span style="color:blue;text-decoration:underline;" onclick='set_mopain()'>I am that guy from MOPAIN.</span><br/>
 	<span style="color:blue;text-decoration:underline;" onclick='set_it()'>I am that guy from IT.</span><br/>
-	<span style="color:blue;text-decoration:underline;" onclick='set_it()'>I am that girl from the Special Request Department.</span><br/><br/>
+	<span style="color:blue;text-decoration:underline;" onclick='set_special()'>I am that girl from the Special Request Department.</span><br/><br/>
 	<input class="button" type="submit" value="preview mail" name="preview" /><br/>
 	{% if mail %}
 		<input class="button" type="submit" value="send mail" name="send" /><br/>
