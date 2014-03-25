@@ -7,7 +7,7 @@ try:
     from deptx.settings_production import MEDIA_ROOT
 except:
     from deptx.settings import MEDIA_ROOT
-
+ 
 RANDOM_FILES_PATH = MEDIA_ROOT + "GRINDING/"
 
 # takes a json for a graph with randomizable content, randomizes all values in the graph, randomly chooses one set
@@ -127,6 +127,7 @@ def get_inconsistencies(graph):
 # returns a random line from file that is not found in the list not_in
 # returns None if no such line exists
 def get_random_from_file(file, not_in):
+    remove_line = False
     afile = open(file, 'U')
     lines = []
     
@@ -136,9 +137,31 @@ def get_random_from_file(file, not_in):
         line = filter(lambda x: x in string.printable, line).strip()
         if line in not_in or len(line) < 1:
             continue
+        if line == '*':
+            remove_line = True
+            continue
         lines.append(line)
-           
-    return lines[random.randint(0, len(lines)-1)].strip()
+        
+    afile.close()
+    
+    used_line = lines[random.randint(0, len(lines)-1)].strip()
+    print used_line
+    
+    if remove_line:
+        main_file = open(file,'w')
+        used_file = open(file+".used",'a')
+    
+        main_file.write('*\n')
+        for line in lines:
+            if line.strip() == used_line:
+                used_file.write(line + "\n")
+            else:
+                main_file.write(line + "\n")
+                
+        main_file.close()
+        used_file.close()
+        
+    return used_line 
 
 # test graphs
 def test_graph(grph, trials):
@@ -330,10 +353,10 @@ def duplicate_graph(graph):
     
 #RANDOM_FILES_PATH = '/Users/khaled/Dropbox/Dept.X/MEDIA/GRINDING/'
 #grph = json.load(open("/Users/khaled/Documents/amptest.json",'r'))
-#RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Dropbox\\Dept.X\\MEDIA\\GRINDING\\'
-#grph = json.load(open("C:\\Users\\kqb.CS\\Dropbox\\Dept.X\\MEDIA\\PROVENANCE\\test\\candy_test.json",'r'))
-
-#test_graph(grph,100)
-#gph = get_fancy_random_graph(grph)
-#print gph
+# RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Documents\\'
+# grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\fancy_random_graph_test.json",'r'))
+# 
+# #test_graph(grph,100)
+# gph = get_random_graph(grph)
+# print gph
 
