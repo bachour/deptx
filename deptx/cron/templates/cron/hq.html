@@ -17,7 +17,9 @@ jQuery(document).ready(function() {
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'cron_hq_mail' %}">send message</a>
+<a href="{% url 'cron_hq_mail' %}">send message</a><br/>
+<a href="{% url 'cron_hq_mail_outstanding' %}">view outstanding messages</a><br/>
+<a href="{% url 'cron_hq_answers' %}">view answers</a>
 <ul>
 {% for mission in mission_list %}
 	<h1>{{mission.rank}} - {{mission.name}} ({% if mission.isPublished %}<span style="color:green">PUBLISHED</span>{% else %}<span style="color:red">unpublished</span>{% endif %})</h1>

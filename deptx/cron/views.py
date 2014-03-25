@@ -451,6 +451,7 @@ def case_report(request, mission_serial, case_serial):
             hasGuessed = True
             for questionInstance in questionInstance_list:
                 if not questionInstance.correct:
+                    makeLog = True
                     if questionInstance.question.questionType == CaseQuestion.TYPE_MULTIPLE_CHOICE:
                         questionInstance.answer1 = request.POST.get('%s_answer1' % questionInstance.question.id, None)
                         questionInstance.answer2 = request.POST.get('%s_answer2' % questionInstance.question.id, None)
@@ -471,13 +472,24 @@ def case_report(request, mission_serial, case_serial):
                         questionInstance.save()
                         data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answer1':questionInstance.answer1})
                     elif questionInstance.question.questionType == CaseQuestion.TYPE_ESSAY:
-                        questionInstance.answerLong = request.POST.get('%s_answerLong' % questionInstance.question.id, None)
-                        if len(questionInstance.answerLong) > 140:
-                            questionInstance.submitted = True
+                        answerLong = request.POST.get('%s_answerLong' % questionInstance.question.id, None)
+                        if not questionInstance.answerLong == answerLong:
+                            questionInstance.answerLong = answerLong
+                            if len(questionInstance.answerLong) > 140:
+                                questionInstance.submitted = True
+                                subject = "[cr0n] %s: Report Answer Submitted" % (questionInstance.cron.user.username)
+                                email_tpl = loader.get_template('cron/mail/message_from_player.txt')
+                                body = "%s \n\n%s" % (questionInstance.question.question, questionInstance.answerLong)
+                                c = Context({'body':body})
+                                email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+                                email.send(fail_silently=False)
+                            else:
+                                questionInstance.submitted = False
+                                questionInstance.increaseFailedAttempts()
+                            questionInstance.save()
+                            data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answerLong':questionInstance.answerLong})
                         else:
-                            questionInstance.increaseFailedAttempts()
-                        questionInstance.save()
-                        data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'answerLong':questionInstance.answerLong})
+                            makeLog = False
                     elif questionInstance.question.questionType == CaseQuestion.TYPE_FILE:
                         try:
                             upload = request.FILES['%s_upload' % questionInstance.question.id]
@@ -486,8 +498,14 @@ def case_report(request, mission_serial, case_serial):
                         if not upload == None:
                             questionInstance.upload = upload
                             questionInstance.submitted = True
-                        elif not questionInstance.upload == None:
+                            subject = "[cr0n] %s: Report Answer Submitted" % (questionInstance.cron.user.username)
+                            email_tpl = loader.get_template('cron/mail/message_from_player.txt')
+                            c = Context({'body':questionInstance.filename})
+                            email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+                            email.send(fail_silently=False)
+                        elif not questionInstance.filename == "":
                             questionInstance.submitted = True
+                            makeLog = False
                         else:
                             questionInstance.increaseFailedAttempts()
                         questionInstance.save()
@@ -496,8 +514,8 @@ def case_report(request, mission_serial, case_serial):
                         except:
                             filename = None
                         data = json.dumps({'correct':questionInstance.correct, 'failedAttempts':questionInstance.failedAttempts, 'upload':filename})
-                            
-                    logging.log_action(ActionLog.ACTION_CRON_REPORT_SUBMIT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved(), questionInstance=questionInstance, questionInstanceCorrect=questionInstance.correct, data=data)
+                    if makeLog:        
+                        logging.log_action(ActionLog.ACTION_CRON_REPORT_SUBMIT, cron=request.user.cron, case=case, caseSolved=caseInstance.isSolved(), caseDocumentsSolved=caseInstance.allDocumentsSolved(), caseQuestionsSolved=caseInstance.allQuestionsSolved(), questionInstance=questionInstance, questionInstanceCorrect=questionInstance.correct, data=data)
         else:
             hasGuessed = False
 
@@ -611,34 +629,53 @@ def messages(request):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
+def terminate(request):
+    cron = request.user.cron
+    cron.cancelled = True
+    cron.save()
+    logout(request)
+    logging.log_action(ActionLog.ACTION_CRON_TERMINATE, cron=cron)
+    return render(request, 'cron/termination.html', {"cron": cron})
+
+
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
 def operation_waterdrill(request):
-    riddle_list = Riddle.objects.all().order_by('rank')
- 
+    falseAttempt = None
     currentRiddle = get_current_riddle()
+    
+    riddle_list = Riddle.objects.all().order_by('rank')
+    for riddle in riddle_list:
+        riddleTracker, created = RiddleTracker.objects.get_or_create(riddle=riddle)
+        if created and riddleTracker.riddle.rank < currentRiddle.rank and not riddleTracker.solved:
+            riddleTracker.solved = True
+            riddleTracker.save()
+     
+    allSolved = False
+    
     if currentRiddle is None:
-        for riddle in riddle_list:
-            if not riddle == currentRiddle:
-                if not riddle.riddleTracker.solved:
-                    riddle.riddleTracker.solved = True
-                    riddle.riddleTracker.save()
+#         for riddle in riddle_list:
+#             if not riddle == currentRiddle:
+#                 if not riddle.riddleTracker.solved:
+#                     riddle.riddleTracker.solved = True
+#                     riddle.riddleTracker.save()
         allSolved = True
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_WATERDRILL, cron=request.user.cron)
         return render(request, 'cron/operation_waterdrill.html', {"allSolved":allSolved, "oldRiddle_list": riddle_list, "riddle_list": riddle_list})
     else:
-        oldRiddle_list = Riddle.objects.filter(rank__lte=currentRiddle.rank).order_by('-rank')
-        print currentRiddle
+        oldRiddle_list = Riddle.objects.filter(rank__lt=currentRiddle.rank).order_by('-rank')
         for riddle in oldRiddle_list:
-            if not riddle == currentRiddle:
-                if not riddle.riddleTracker.solved:
-                    riddle.riddleTracker.solved = True
-                    riddle.riddleTracker.save()
+            if not riddle.riddleTracker.solved:
+                riddle.riddleTracker.solved = True
+                riddle.riddleTracker.save()
     
-        solvedRiddle_list = Riddle.objects.filter(riddleTracker__solved=True)
-        if riddle_list.count() == solvedRiddle_list.count():
-            allSolved = True
-        else:
-            allSolved = False
+#         solvedRiddle_list = Riddle.objects.filter(riddleTracker__solved=True)
+#         if riddle_list.count() == solvedRiddle_list.count():
+#             allSolved = True
+#         else:
+#             allSolved = False        
                 
-        riddleTracker = RiddleTracker.objects.get_or_create(riddle=currentRiddle)
         
         if request.method == 'POST':
             riddleAttempt = RiddleAttempt(riddle=currentRiddle, cron=request.user.cron)
@@ -652,6 +689,9 @@ def operation_waterdrill(request):
                     if riddleTracker.solved == False:
                         riddleTracker.solved = True
                         riddleTracker.save()
+                else:
+                    falseAttempt = riddleAttempt.attempt
+                logging.log_action(ActionLog.ACTION_CRON_HACK_WATERDRILL, cron=request.user.cron, riddleAttempt=riddleAttempt)
         
         correctRiddleAttempts = RiddleAttempt.objects.filter(riddle=currentRiddle).filter(cron=request.user.cron).filter(correct=True).count()
         if correctRiddleAttempts > 0:
@@ -661,29 +701,32 @@ def operation_waterdrill(request):
         
         riddleAttemptForm = RiddleAttemptForm()
         minutes, seconds = remaining_time()
-        return render(request, 'cron/operation_waterdrill.html', {"minutes":minutes, "seconds":seconds, "allSolved":allSolved, "oldRiddle_list": oldRiddle_list, "hasSolved": hasSolved, "riddle_list": riddle_list, "currentRiddle": currentRiddle, "riddleAttemptForm":riddleAttemptForm})
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_WATERDRILL, cron=request.user.cron)
+        return render(request, 'cron/operation_waterdrill.html', {"minutes":minutes, "seconds":seconds, "allSolved":allSolved, "hasSolved": hasSolved, "falseAttempt":falseAttempt, "riddle_list": riddle_list, "oldRiddle_list": oldRiddle_list, "currentRiddle": currentRiddle, "riddleAttemptForm":riddleAttemptForm})
 
-@login_required(login_url='cron_login')
-@user_passes_test(isCron, login_url='cron_login')
-def operation_waterdrill_send(request):
-    data = False
-    if request.method == 'POST' and request.is_ajax():
-        riddle = get_current_riddle()
-        riddleAttempt = RiddleAttempt(riddle=riddle, cron=request.user.cron)
-        form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
-        print form
-        if form.is_valid():
-            riddleAttempt = form.save()
-            if riddleAttempt.attempt == riddleAttempt.riddle.solution:
-                riddleAttempt.correct = True
-                riddleAttempt.save()
-                riddleTracker = riddleAttempt.riddle.riddleTracker
-                if riddleTracker.solved == False:
-                    riddleTracker.solved = True
-                    riddleTracker.cron = request.user.cron
-                    riddleTracker.save()
-            data = json.dumps({'correct':riddleAttempt.correct})
-    return HttpResponse(data, mimetype='application/json')
+# @login_required(login_url='cron_login')
+# @user_passes_test(isCron, login_url='cron_login')
+# def operation_waterdrill_send(request):
+#     data = False
+#     print "hoho"
+#     if request.method == 'POST' and request.is_ajax():
+#         riddle = get_current_riddle()
+#         riddleAttempt = RiddleAttempt(riddle=riddle, cron=request.user.cron)
+#         form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
+#         if form.is_valid():
+#             riddleAttempt = form.save()
+#             if riddleAttempt.attempt == riddleAttempt.riddle.solution:
+#                 riddleAttempt.correct = True
+#                 riddleAttempt.save()
+#                 riddleTracker = riddleAttempt.riddle.riddleTracker
+#                 if riddleTracker.solved == False:
+#                     riddleTracker.solved = True
+#                     riddleTracker.cron = request.user.cron
+#                     riddleTracker.save()
+#             data = json.dumps({'correct':riddleAttempt.correct})
+#             print data
+#             logging.log_action(ActionLog.ACTION_CRON_HACK_WATERDRILL, cron=request.user.cron, riddleAttempt=riddleAttempt)
+#     return HttpResponse(data, mimetype='application/json')
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -704,11 +747,15 @@ def operation_waterdrill_sync(request):
                 if currentRiddle.riddleTracker.solved:
                     forceReload = True
     minutes, seconds = remaining_time()
+    if currentRiddle.riddleTracker.solved == False and (minutes * 60 + seconds) < currentRiddle.secondsForAutosolve:
+        currentRiddle.riddleTracker.solved = True
+        currentRiddle.riddleTracker.save()
+        forceReload = True
     data = json.dumps({'reload':forceReload, 'minutes':minutes, 'seconds':seconds})
     return HttpResponse(data, mimetype='application/json')
 
 def get_current_riddle():
-    hour = int(time.strftime("%H")) - 12
+    hour = int(time.strftime("%H")) + 6
     try:
         return Riddle.objects.all().order_by('rank')[hour]
     except:
@@ -890,7 +937,31 @@ def hq_case_outro(request, id):
     return render(request, 'cron/case_outro.html', {'text':text, 'mission':case.mission, 'case':case })
 
 @staff_member_required
-def hq_mail(request):
+def hq_answers(request):
+    caseQuestionInstance_list = CaseQuestionInstance.objects.filter(submitted=True).exclude(question__questionType=CaseQuestion.TYPE_MULTIPLE_CHOICE).exclude(question__questionType=CaseQuestion.TYPE_OPEN).order_by('-modifiedAt')
+    return render(request, 'cron/hq_answers.html', {'caseQuestionInstance_list':caseQuestionInstance_list })
+
+@staff_member_required
+def hq_mail_outstanding(request):
+    helpMail_list = HelpMail.objects.filter(needsReply=True)
+    return render(request, 'cron/hq_mail_outstanding.html', {'helpMail_list':helpMail_list })
+
+@staff_member_required
+def hq_mail_noreply(request, id):
+    helpMail = HelpMail.objects.get(id=id)
+    helpMail.needsReply = False
+    helpMail.save()
+    return HttpResponseRedirect(reverse('cron_hq_mail_outstanding'))
+
+@staff_member_required
+def hq_mail_reply(request, id):
+    helpMail = HelpMail.objects.get(id=id)
+    helpMail.needsReply = False
+    helpMail.save()
+    return hq_mail(request, helpMail.cron)
+
+@staff_member_required
+def hq_mail(request, cron=None):
     if request.method == 'POST':
         form = ControlHelpMailForm(request.POST)
         if form.is_valid():
@@ -957,6 +1028,6 @@ def hq_mail(request):
         else:
             return render(request, 'cron/hq_mail.html', {'form':form})
     else:
-        form = ControlHelpMailForm()
+        form = ControlHelpMailForm(initial={'cron':cron})
     return render(request, 'cron/hq_mail.html', {'form':form})
 

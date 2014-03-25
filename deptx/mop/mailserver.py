@@ -56,7 +56,7 @@ def analyze_mail():
 
 def check_mail(mail):
         if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
-            subject = "[MoP] %s: Help Request" % (mail.mop.user.username)
+            subject = "[MoP] %s: Help Request (Cron: %s)" % (mail.mop.user.username, mail.mop.cron.user.username)
             email_tpl = loader.get_template('mop/mail/message_from_player.txt')
             c = Context({'body':mail.requisitionInstance.data})
             email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
@@ -64,6 +64,7 @@ def check_mail(mail):
             mail.unit = mail.requisitionInstance.blank.requisition.unit
             mail.subject = Mail.SUBJECT_HELP
             mail.processed = True
+            mail.needsReply = True
             mail.save()
             return
         

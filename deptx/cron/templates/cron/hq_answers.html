@@ -1,0 +1,15 @@
+<h1>Answers to Report Questions</h1>
+
+<table>
+<tr><th>Mission</th><th>Case</th><th>Question</th><th>Cr0n</th><th>Answer</th></tr>
+{% for caseQuestionInstance in caseQuestionInstance_list %}
+	<tr>
+		<td style="white-space:nowrap;border:1px solid black;">{{caseQuestionInstance.question.case.mission.name}}</td>
+		<td style="white-space:nowrap;border:1px solid black;">{{caseQuestionInstance.question.case.name}}</td>
+		<td style="border:1px solid black;">{{caseQuestionInstance.question.question}}</td>
+		<td style="white-space:nowrap;border:1px solid black;">{{caseQuestionInstance.cron}}</td>
+		<td style="border:1px solid black;">{{caseQuestionInstance.answerLong}}{% if caseQuestionInstance.filename %} <a href="{{MEDIA_URL}}{{caseQuestionInstance.upload}}">{{caseQuestionInstance.filename}}</a>{% endif %}</td>
+	</tr>
+
+{% endfor %}
+</table>

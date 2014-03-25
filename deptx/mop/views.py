@@ -696,7 +696,7 @@ def control(request):
     moptracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
 
     for moptracker in moptracker_list:
-        moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
+        #moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
         moptracker.activeDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
         moptracker.limboDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
         moptracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
@@ -713,7 +713,26 @@ def control_randomize(request, mopDocument_id):
     return HttpResponseRedirect(reverse('mop_control'))
 
 @staff_member_required
-def control_mail(request):
+def control_mail_outstanding(request):
+    mail_list = Mail.objects.filter(needsReply=True)
+    return render(request, 'mop/control_mail_outstanding.html', {'mail_list':mail_list })
+
+@staff_member_required
+def control_mail_noreply(request, id):
+    mail = Mail.objects.get(id=id)
+    mail.needsReply = False
+    mail.save()
+    return HttpResponseRedirect(reverse('mop_control_mail_outstanding'))
+
+@staff_member_required
+def control_mail_reply(request, id):
+    mail = Mail.objects.get(id=id)
+    mail.needsReply = False
+    mail.save()
+    return control_mail(request, mail.mop)
+
+@staff_member_required
+def control_mail(request, mop=None):
     if request.method == 'POST':
         form = ControlMailForm(request.POST)
         if form.is_valid():
@@ -756,7 +775,7 @@ def control_mail(request):
         else:
             return render(request, 'mop/control_mail.html', {'form':form})
     else:
-        form = ControlMailForm()
+        form = ControlMailForm(initial={'mop':mop})
     return render(request, 'mop/control_mail.html', {'form':form})
 
 def save_manual_mail(mail):

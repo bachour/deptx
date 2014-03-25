@@ -9,3 +9,5 @@ http://www.cr0n.org
 cr0nogram v1.45b
 
 This is an automated message. Please do not reply to this email.
+
+You can terminate your allegiance to Cr0n at any time by visiting your profile.

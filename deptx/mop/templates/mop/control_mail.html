@@ -1,5 +1,34 @@
 {% load staticfiles %}
 
+<head>
+<script type="text/javascript">
+function set_sandy() {
+	document.getElementById("id_unit").value = 10;
+	document.getElementById("id_subject").value = 214;
+	document.getElementById("id_body").value += "\n\n\{\% include \'mop\/mail\/sig_sandy.txt\' \%\}";
+	alert('Set unit to MOPCOR\nSet Subject to "Help"\nAdded Sandy\'s signature')
+}
+function set_mopain() {
+	document.getElementById("id_unit").value = 14;
+	document.getElementById("id_subject").value = 212;
+	document.getElementById("id_body").value += "\n\n\{\% include \'mop\/mail\/sig_christopher.txt\' \%\}";
+	alert('Set unit to MOPAIN\nSet Subject to "Information"\nAdded Christopher\'s signature')
+}
+function set_it() {
+	document.getElementById("id_unit").value = 8;
+	document.getElementById("id_subject").value = 212;
+	document.getElementById("id_body").value += "\n\n\{\% include \'mop\/mail\/sig_geoffrey.txt\' \%\}";
+	alert('Set unit to MOPADM\nSet Subject to "Information"\nAdded Geoffrey\'s signature')
+}
+function set_special() {
+	document.getElementById("id_unit").value = 8;
+	document.getElementById("id_subject").value = 212;
+	document.getElementById("id_body").value += "\n\n\{\% include \'mop\/mail\/sig_cassandra.txt\' \%\}";
+	alert('Set unit to MOPADM\nSet Subject to "Information"\nAdded Cassandra\'s signature')
+}
+</script>
+</head>
+
 {% if mail %}
 	{% include 'mop/mail_view.html' %}
 {% endif %}
@@ -9,13 +38,22 @@
 	<div class="main">
 		<div class="content">
 <h1>MoP Mail Centre</h1>
+<a href="{% url 'mop_control_mail_outstanding' %}">view outstanding mopmail</a><br/>
 {% if form %}
 	<form action="{% url 'mop_control_mail' %}" method="post">{% csrf_token %}
 	<p>Personal data: {% verbatim %}{{mop.firstname}}, {{mop.lastname}}, {{mop.dob}}, ...{% endverbatim %}</p>
-	<p>Signatures: {% verbatim %} {% include 'mop/mail/sig_sandy.txt' %}, {% include 'mop/mail/sig_christopher.txt' %}, ...{% endverbatim %}
+	<p>Signatures:<br/>
+	{% verbatim %} {% include 'mop/mail/sig_sandy.txt' %}{% endverbatim %}<br/>
+	{% verbatim %}{% include 'mop/mail/sig_christopher.txt' %}{% endverbatim %}<br/>
+	{% verbatim %}{% include 'mop/mail/sig_geoffrey.txt' %}{% endverbatim %}<br/>
+	{% verbatim %}{% include 'mop/mail/sig_cassandra.txt' %}{% endverbatim %}
 	<table>
 	{{form.as_table}}
 	</table>
+	<span style="color:blue;text-decoration:underline;" onclick='set_sandy()'>I am Sandy.</span><br/>
+	<span style="color:blue;text-decoration:underline;" onclick='set_mopain()'>I am that guy from MOPAIN.</span><br/>
+	<span style="color:blue;text-decoration:underline;" onclick='set_it()'>I am that guy from IT.</span><br/>
+	<span style="color:blue;text-decoration:underline;" onclick='set_special()'>I am that girl from the Special Request Department.</span><br/><br/>
 	<input class="button" type="submit" value="preview mail" name="preview" /><br/>
 	{% if mail %}
 		<input class="button" type="submit" value="send mail" name="send" /><br/>
