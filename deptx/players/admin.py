@@ -2,7 +2,7 @@ from django.contrib import admin
 from players.models import Player, Cron, Mop
 
 class CronAdmin(admin.ModelAdmin):
-    list_filter = ('email',)
+    list_filter = ('cancelled', 'email')
 
 admin.site.register(Player)
 admin.site.register(Cron, CronAdmin)
