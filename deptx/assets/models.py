@@ -225,11 +225,12 @@ class CaseQuestion(models.Model):
     questionType = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_MULTIPLE_CHOICE)
     question = models.TextField()
     explanation = models.TextField(blank=True, null=True, help_text="In case the question needs further elaboration")
+    datepicker = models.BooleanField(default=False, help_text="Format: 2014-01-31 (year-month-day)")
     correct1 = models.TextField(blank=True, null=True, help_text="Add all correct answers here, one per line.")
     wrong1 = models.TextField(blank=True, null=True, help_text="Add as many wrong answers here, one per line. Only needed for multiple choice")
     correct2 = models.TextField(blank=True, null=True, help_text="Add all correct answers here (for a second part of a multiple choice), one per line.")
     wrong2 = models.TextField(blank=True, null=True, help_text="Add as many wrong answers here, one per line. Only needed for multiple choice")
-
+    
     
     def getList(self, wrong, correct):
         wrong_list = list(wrong.splitlines())

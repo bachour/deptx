@@ -1,5 +1,17 @@
 {% extends 'cron/base.html' %}
 {% load staticfiles %}
+
+{% block header %}
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script>
+	$(function() {
+		$( ".datepicker" ).datepicker({ dateFormat: "yy-mm-dd", changeMonth: true, changeYear:true, yearRange: "-100:+0" });
+	});
+</script>
+{% endblock %}
+
 {% block content %}
 
 <h1>{{ case.name }} - Report</h1>
@@ -80,7 +92,7 @@
 					</select>
 				{% endif %}
 			{% elif questionInstance.question.questionType == questionInstance.question.TYPE_OPEN %}
-				<input name="{{questionInstance.question.id}}_answer1" type="text" style="font-size:16px;" value="{% if questionInstance.answer1 %}{{questionInstance.answer1}}{% endif %}"/>
+				<input name="{{questionInstance.question.id}}_answer1" {% if questionInstance.question.datepicker %}class="datepicker" {% endif %}type="text" style="font-size:16px;" value="{% if questionInstance.answer1 %}{{questionInstance.answer1}}{% endif %}"/>
 			{% elif questionInstance.question.questionType == questionInstance.question.TYPE_ESSAY %}
 				<textarea name="{{questionInstance.question.id}}_answerLong" style="width:400px; height:100px;font-size:16px;">{% if questionInstance.answerLong %}{{questionInstance.answerLong}}{% endif %}</textarea>
 			{% elif questionInstance.question.questionType == questionInstance.question.TYPE_FILE %}
