@@ -246,9 +246,10 @@ class CaseQuestion(models.Model):
             else:
                 return False
         else:
+            guess = simplify(guess)
             correct_list = list(correct.splitlines())
             for correct in correct_list:
-                if guess == correct:
+                if guess == simplify(correct):
                     return True
             return False
 
@@ -272,7 +273,11 @@ class CaseQuestion(models.Model):
     
     def __unicode__(self):
         return "%s - %s - %s - %s" % (self.case, self.get_questionType_display(), self.rank, self.question)
-        
+
+def simplify(weird):
+    low = weird.lower()
+    simple = ''.join(e for e in low if e.isalnum())
+    return simple        
         
 class AbstractDocument(models.Model):
     class meta:
