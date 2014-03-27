@@ -8,6 +8,7 @@ http://www.cr0n.org
 -- 
 cr0nogram v1.57c
 
+If you no longer want to receive these messages, you can terminate your allegiance to Cr0n from your profile or by following this link: http://www.cr0n.org{% url 'cron_terminate_remote' cron.activationCode %}
+
 This is an automated message. Please do not reply to this email.
 
-You can terminate your allegiance to Cr0n at any time by visiting your profile or following this link: http://www.cr0n.org{% url 'cron_terminate_remote' cron.activationCode %}
