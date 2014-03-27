@@ -575,10 +575,11 @@ def no_provenance(request, mission_serial, case_serial, document_serial):
     cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
     cronDocumentInstance.solved = True
     cronDocumentInstance.save()
+    caseInstance = CaseInstance.objects.get(cron=request.user.cron, case=case)
 
     logging.log_action(ActionLog.ACTION_CRON_VIEW_NO_PROVENANCE, cron=request.user.cron, cronDocumentInstance=cronDocumentInstance)
     
-    return render(request, 'cron/no_provenance.html', {"user": request.user, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance })
+    return render(request, 'cron/no_provenance.html', {"user": request.user, 'caseInstance': caseInstance, 'mission':mission, 'case':case, "cronDocumentInstance": cronDocumentInstance })
 
 
 

@@ -7,6 +7,9 @@
 {{cronDocumentInstance.cronDocument.content|safe}}
 
 <br/><br/>
+{% if caseInstance.allDocumentsSolved %}
+	<a href="{% url 'cron_case_report' mission.serial case.serial %}">Continue to Report</a><br/>
+{% endif %}
 <a href="{% url 'cron_case_intro' mission.serial case.serial %}">Back to Case Overview</a>
 
 {% endblock %}
