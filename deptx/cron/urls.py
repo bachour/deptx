@@ -51,7 +51,8 @@ urlpatterns = patterns('',
     url(r'intelligence/jean-baker-message.html', views.intelligence_jean_baker_message, name='cron_intelligence_jean_baker_message'),
      
     url(r'profile/$', views.profile, name='cron_profile'),
-    url(r'termination', views.terminate, name='cron_terminate'),
+    url(r'termination/$', views.terminate, name='cron_terminate'),
+    url(r'termination/([-\w].+)', views.terminate_remote, name='cron_terminate_remote'),
     
     url(r'hack/([-\w]+)', views.hack_document, name='cron_hack_document'),
 

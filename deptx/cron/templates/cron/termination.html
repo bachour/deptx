@@ -1,11 +1,39 @@
 {% extends 'cron/base.html' %}
 
+{% block header %}
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+  jQuery(".content").hide();
+  //toggle the componenet with class msg_body
+  jQuery(".heading").click(function()
+  {
+    jQuery(this).next(".content").slideToggle(500);
+  });
+});
+</script>
+
+{% endblock %}
+
 {% block content %}
 
-<h1>Agent Status Terminated</h1>
-Agent {{cron.user.username}}, your agent status has been revoked. You are no longer a member of Cr0n.<br/>
-<br/>
-<br/>
-The Ministry of Provenance will prevail.
+{% if terminated %}
+	<h1>Agent Status Terminated</h1>
+	Agent {{cron.user.username}}, you are no longer a member of Cr0n.<br/>
+	<br/>
+	<span style="color:red;">The Ministry of Provenance will prevail.</span>
+{% else %}
+	<h1>Resignation</h1>
+	<p>Agent {{cron.user.username}}, if you no longer want to fight against the Ministry of Provenance, you are free leave Cr0n at any time.</p>
+	<br/><a class="heading">Yes, I no longer want to fight for Cr0n.</a>
+	<div class='content'>
+	<form action="{% url 'cron_terminate_remote' cron.activationCode %}" method="post">{% csrf_token %}
+	<input style="color:red;" class="button" type="submit" value="Terminate Agent Status Permanently" name="terminate" />
+	</form>
+	<div>
+{% endif %}
+
 
 {% endblock %}

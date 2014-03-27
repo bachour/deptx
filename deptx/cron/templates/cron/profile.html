@@ -71,7 +71,7 @@ jQuery(document).ready(function() {
 <br/><a class="heading">Yes, I no longer want to help Cr0n.</a>
 <div class='content'>
 <form action="{% url 'cron_terminate' %}" method="post">{% csrf_token %}
-<input style="color:red;" class="button" type="submit" value="Terminate Agent Status" name="terminate" />
+<input style="color:red;" class="button" type="submit" value="Terminate Agent Status Permanently" name="terminate" />
 </form>
 <div>
 {% endblock %}

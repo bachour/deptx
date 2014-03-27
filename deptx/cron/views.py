@@ -636,9 +636,21 @@ def terminate(request):
     cron.save()
     logout(request)
     logging.log_action(ActionLog.ACTION_CRON_TERMINATE, cron=cron)
-    return render(request, 'cron/termination.html', {"cron": cron})
+    return render(request, 'cron/termination.html', {"cron": cron, "terminated":True})
 
-
+def terminate_remote(request, serial):
+    cron = Cron.objects.get(activationCode=serial)
+    if request.method == 'POST':
+        cron.cancelled = True
+        cron.save()
+        try:
+            logout(request)
+        except:
+            pass
+        logging.log_action(ActionLog.ACTION_CRON_TERMINATE, cron=cron)
+        return render(request, 'cron/termination.html', {"cron": cron, "terminated":True})
+    else:
+        return render(request, 'cron/termination.html', {"cron": cron})
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
