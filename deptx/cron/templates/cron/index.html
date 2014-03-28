@@ -11,7 +11,7 @@
 <br>
 <br>
 <h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}">{{missionInstance.mission.name}}</a>{% else %}There are no active missions currently.{% endif %}</h1>
-
+<h1>Special operation: </br><a href="{% url 'cron_operation_cluster_mine' %}">Cluster Mine</a></h1>
 
 <h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
 <h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
