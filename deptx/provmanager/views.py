@@ -35,9 +35,18 @@ API = Api(api_location=provstore_settings.api_location, api_username=api_usernam
 @staff_member_required    
 def index(request):
     
-    provenance_list = Provenance.objects.all().order_by("type", "-modifiedAt")
+    provenance_list = Provenance.objects.exclude(type=Provenance.TYPE_MOP_INSTANCE).order_by("type", "-modifiedAt")
     
     return render(request, 'provmanager/index.html', {'provenance_list':provenance_list, 'PROVSTORE_URL':provstore_settings.api_documents})
+
+@staff_member_required    
+def index_instances(request):
+    
+    provenance_list = Provenance.objects.filter(type=Provenance.TYPE_MOP_INSTANCE).order_by("type", "-modifiedAt")
+    
+    return render(request, 'provmanager/index.html', {'provenance_list':provenance_list, 'PROVSTORE_URL':provstore_settings.api_documents})
+
+
 
 @staff_member_required
 def view(request, id):

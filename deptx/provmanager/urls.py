@@ -4,6 +4,7 @@ from provmanager import views
 
 urlpatterns = patterns('',
     url(r'^$', views.index, name='provmanager_index'),
+    url(r'instances/$', views.index_instances, name='provmanager_index_instances'),
      url(r'view/(\d+)/$', views.view, name='provmanager_view'),
      url(r'view/(\d+)/randomize', views.view_randomize, name='provmanager_view_randomize'),
      url(r'convert/(\d+)', views.convert, name='provmanager_convert'),

@@ -11,8 +11,11 @@ td { border:2px black solid; padding:4px;}
 </head>
 <body>
 <h1>PROVmanager</h1>
-<a href="{% url 'provmanager_create' %}">create new provenance</a>
-<br/><br/>
+<a href="{% url 'provmanager_create' %}">create new provenance</a><br/>
+<br/>
+<a href="{% url 'provmanager_index' %}">view cron provenances and templates</a><br/>
+<a href="{% url 'provmanager_index_instances' %}">view mop instances</a><br/>
+<br/>
 Assigned Provenances have the following colors:<br/>
 <span style="background-color:#9bb6d4">CRON</span> <span style="background-color:#729e52">MOP_TEMPLATE</span> <span style="background-color:#cfd681">MOP_INSTANCE</span>
 <table>
