@@ -4,7 +4,7 @@ from django_extensions.db.fields import CreationDateTimeField, ModificationDateT
 from provmanager.models import Provenance
 
 from deptx import friendly_id
-from deptx.helpers import random_chars
+from deptx.helpers import random_chars, now
 from mop.clearance import Clearance
 from django.core.exceptions import ValidationError
 
@@ -347,12 +347,40 @@ class StoryFile(models.Model):
     
     def __unicode__(self):
         return "%s (%s)" % (self.serial, self.filename)
-         
+
+class Operation(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    name = models.CharField(max_length=128)
+    serial = models.CharField(max_length=32)
+    startTime = models.DateTimeField()
+    stopTime = models.DateTimeField()
+    
+    @property
+    def hasStarted(self):
+        return now() > self.startTime
+    
+    @property
+    def hasStopped(self):
+        return now() < self.startTime    
+    
+    @property
+    def secondsToStart(self):
+        difference = self.startTime - now()
+        days = difference.days
+        seconds = difference.seconds
+        totalSeconds = seconds + (days * 24 * 60 * 60) 
+        return totalSeconds
+    
+    def __unicode__(self):
+        return "%s" % (self.name)     
 
 class Riddle(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    operation = models.ForeignKey(Operation)
     text = models.TextField()
     solution = models.CharField(max_length=36)
     rank = models.IntegerField()

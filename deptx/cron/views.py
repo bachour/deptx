@@ -15,7 +15,7 @@ from django.template import Context, Template, loader
 
 from players.forms import MopForm
 
-from assets.models import Case, Mission, CronDocument, CaseQuestion, Riddle
+from assets.models import Case, Mission, CronDocument, CaseQuestion, Riddle, Operation
 from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt, RiddleTracker
 from mop.models import Mail, MopDocumentInstance
 from cron.forms import HelpMailForm, ControlHelpMailForm, ChatForm, RiddleAttemptForm
@@ -654,7 +654,16 @@ def terminate_remote(request, serial):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
+def operation_cluster_mine(request):
+    operation = Operation.objects.get(serial='cluster-mine')
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
+    return render(request, 'cron/operation_cluster_mine.html', {"operation":operation})
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
 def operation_waterdrill(request):
+    operation = Operation.objects.get(serial='cluster-mine')
+    
     falseAttempt = None
     currentRiddle = get_current_riddle()
     
@@ -674,7 +683,7 @@ def operation_waterdrill(request):
 #                     riddle.riddleTracker.solved = True
 #                     riddle.riddleTracker.save()
         allSolved = True
-        logging.log_action(ActionLog.ACTION_CRON_VIEW_WATERDRILL, cron=request.user.cron)
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
         return render(request, 'cron/operation_waterdrill.html', {"allSolved":allSolved, "oldRiddle_list": riddle_list, "riddle_list": riddle_list})
     else:
         oldRiddle_list = Riddle.objects.filter(rank__lt=currentRiddle.rank).order_by('-rank')
@@ -704,7 +713,7 @@ def operation_waterdrill(request):
                         riddleTracker.save()
                 else:
                     falseAttempt = riddleAttempt.attempt
-                logging.log_action(ActionLog.ACTION_CRON_HACK_WATERDRILL, cron=request.user.cron, riddleAttempt=riddleAttempt)
+                logging.log_action(ActionLog.ACTION_CRON_HACK_OPERATION, cron=request.user.cron, operation=operation, riddleAttempt=riddleAttempt)
         
         correctRiddleAttempts = RiddleAttempt.objects.filter(riddle=currentRiddle).filter(cron=request.user.cron).filter(correct=True).count()
         if correctRiddleAttempts > 0:
@@ -714,7 +723,7 @@ def operation_waterdrill(request):
         
         riddleAttemptForm = RiddleAttemptForm()
         minutes, seconds = remaining_time()
-        logging.log_action(ActionLog.ACTION_CRON_VIEW_WATERDRILL, cron=request.user.cron)
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
         return render(request, 'cron/operation_waterdrill.html', {"minutes":minutes, "seconds":seconds, "allSolved":allSolved, "hasSolved": hasSolved, "falseAttempt":falseAttempt, "riddle_list": riddle_list, "oldRiddle_list": oldRiddle_list, "currentRiddle": currentRiddle, "riddleAttemptForm":riddleAttemptForm})
 
 # @login_required(login_url='cron_login')
@@ -767,8 +776,9 @@ def operation_waterdrill_sync(request):
     data = json.dumps({'reload':forceReload, 'minutes':minutes, 'seconds':seconds})
     return HttpResponse(data, mimetype='application/json')
 
+
 def get_current_riddle():
-    hour = int(time.strftime("%H")) + 6
+    hour = int(time.strftime("%H")) - 11
     try:
         return Riddle.objects.all().order_by('rank')[hour]
     except:

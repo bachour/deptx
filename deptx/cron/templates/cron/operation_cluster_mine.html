@@ -1,0 +1,46 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block header %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+
+
+var totalSeconds = {{operation.secondsToStart}};
+
+function updateTimer(){
+	totalSeconds -= 1;
+	var hours = Math.floor(totalSeconds / 3600);
+	var minutes = Math.floor( (totalSeconds - (hours * 3600)) / 60);
+	var seconds = totalSeconds - (hours * 3600) - (minutes * 60);
+	
+	if (hours   < 10) {hours   = "0"+hours;}
+    if (minutes < 10) {minutes = "0"+minutes;}
+    if (seconds < 10) {seconds = "0"+seconds;}
+	
+	timer = hours + " hours " + minutes + " minutes " + seconds + " seconds";
+	
+	$("#timer").html(timer);
+
+}
+
+window.setInterval(function(){updateTimer()},1000);	
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+<h1>Operation: {{operation.name}}</h1>
+
+{% if not operation.hasStarted %}
+	Projected start of operation: {{operation.startTime|date:" Y-m-d H:i"}}<br/>
+	Projected end of operation: {{operation.stopTime|date:" Y-m-d H:i"}}<br/>
+	Time until start: <span id="timer"></span><br/>
+	<br/>
+	<span style="color:white">Be prepared.</span>
+{% endif %}
+
+
+{% endblock %}
