@@ -354,16 +354,17 @@ class Operation(models.Model):
     
     name = models.CharField(max_length=128)
     serial = models.CharField(max_length=32)
+    instruction = models.TextField()
     startTime = models.DateTimeField()
     stopTime = models.DateTimeField()
     
     @property
     def hasStarted(self):
         return now() > self.startTime
-    
+            
     @property
     def hasStopped(self):
-        return now() < self.startTime    
+        return now() > self.stopTime    
     
     @property
     def secondsToStart(self):
@@ -383,9 +384,13 @@ class Riddle(models.Model):
     operation = models.ForeignKey(Operation)
     text = models.TextField()
     solution = models.CharField(max_length=36)
+    server = models.CharField(max_length=16)
+    script = models.CharField(max_length=16)
+    scriptContent = models.CharField(max_length=256)
     rank = models.IntegerField()
     secondsForAutosolve = models.IntegerField(default=120)
     cheat = models.TextField(blank=True, null=True)
+    solved = models.BooleanField(default=False)
     
     def __unicode__(self):
         return "%s (%s - %s)" % (self.rank, self.text, self.solution)  

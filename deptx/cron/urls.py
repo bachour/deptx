@@ -36,9 +36,8 @@ urlpatterns = patterns('',
     url(r'messages/compose/', views.message_compose, name='cron_message_compose'),
     
     url(r'operation/cluster-mine/$', views.operation_cluster_mine, name='cron_operation_cluster_mine'),
-    url(r'operation/waterdrill/$', views.operation_waterdrill, name='cron_operation_waterdrill'),
-#    url(r'operation/waterdrill/send/', views.operation_waterdrill_send, name='cron_operation_waterdrill_send'),
-    url(r'operation/waterdrill/sync/', views.operation_waterdrill_sync, name='cron_operation_waterdrill_sync'),
+    url(r'operation/cluster-mine/sync/$', views.operation_cluster_mine_sync, name='cron_operation_cluster_mine_sync'),
+
     
     url(r'chat/$', views.chat, name='cron_chat'),
     url(r'chat/send/', views.chat_send, name='cron_chat_send'),

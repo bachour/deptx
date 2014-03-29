@@ -26,6 +26,7 @@ function texttype(targetDiv, text, intervalStart, intervalRange, callback){
 				setTimeout(function(){
 					window.textTyper[textTyperID].type(++i);
 					document.getElementById("pipe"+textTyperID).style.visibility = '';
+					document.getElementById(targetDiv).scrollTop = document.getElementById(targetDiv).scrollHeight;
 				},interval);
 			}
 			else{

@@ -263,13 +263,3 @@ class RiddleAttempt(models.Model):
     
     def __unicode__(self):
         return "%s: %s (%s)" % (self.cron.user.username, self.riddle, self.correct)
-
-class RiddleTracker(models.Model):
-    createdAt = CreationDateTimeField()
-    modifiedAt = ModificationDateTimeField()
-    
-    riddle = models.OneToOneField(Riddle, related_name="riddleTracker")
-    solved = models.BooleanField(default=False)
-    
-    def __unicode__(self):
-        return "%s (%s)" % (self.riddle, self.solved)

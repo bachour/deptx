@@ -24,5 +24,3 @@ class RiddleAttemptForm(ModelForm):
     class Meta:
         model = RiddleAttempt
         fields = ['attempt']
-                    
-    

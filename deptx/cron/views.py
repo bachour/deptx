@@ -16,12 +16,13 @@ from django.template import Context, Template, loader
 from players.forms import MopForm
 
 from assets.models import Case, Mission, CronDocument, CaseQuestion, Riddle, Operation
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt, RiddleTracker
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt
 from mop.models import Mail, MopDocumentInstance
 from cron.forms import HelpMailForm, ControlHelpMailForm, ChatForm, RiddleAttemptForm
 
 from logger.models import ProvLog
 from deptx.settings import MEDIA_URL, STATIC_URL
+from deptx.helpers import now
 
 from logger.models import ActionLog
 from logger import logging
@@ -655,9 +656,103 @@ def terminate_remote(request, serial):
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def operation_cluster_mine(request):
-    operation = Operation.objects.get(serial='cluster-mine')
+    currentRiddle = None
+    riddleAttemptForm = None
+    remainingSeconds = None
+    output = None
+    
+    operation, riddle_list = get_cluster_mine_basics()
+    
+    #output_tpl = loader.get_template('cron/operation_cluster_mine_hacking.txt')
+    #c = Context({})
+    #output = output_tpl.render(c).replace("\n", "\\n")
+    
+    if operation.hasStarted:
+        currentRiddle = get_current_riddle(operation, riddle_list)  
+        remainingSeconds = get_seconds_til_next_hour()
+        
+        if request.method == 'POST':
+            riddleAttempt = RiddleAttempt(riddle=currentRiddle, cron=request.user.cron)
+            form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
+            currentRiddleAttempt_list = RiddleAttempt.objects.filter(cron=request.user.cron).filter(riddle=currentRiddle).filter(correct=True)
+            if form.is_valid() and currentRiddleAttempt_list.count() < 1:
+                riddleAttempt = form.save()
+                if riddleAttempt.attempt == riddleAttempt.riddle.solution:
+                    riddleAttempt.correct = True
+                    riddleAttempt.save()
+                    correct = True
+                    if riddleAttempt.riddle.solved == False:
+                        riddleAttempt.riddle.solved = True
+                        riddleAttempt.riddle.save()
+                else:
+                    correct = False
+                output_tpl = loader.get_template('cron/operation_cluster_mine_submit.txt')
+                c = Context({"attempt":riddleAttempt.attempt, "riddle":currentRiddle, "correct":correct, "cron":request.user.cron})
+                output = output_tpl.render(c).replace("\n", "\\n")
+                logging.log_action(ActionLog.ACTION_CRON_SUBMIT_OPERATION, cron=request.user.cron, operation=operation, riddleAttempt=riddleAttempt)         
+        
+        for riddle in riddle_list:
+            riddle.hasSolved = False
+            riddleAttempt_list = RiddleAttempt.objects.filter(cron=request.user.cron).filter(riddle=riddle).filter(correct=True)
+            if riddleAttempt_list.count() > 0:
+                riddle.hasSolved = True
+            
+            if not riddle.solved:
+                if riddle.rank < currentRiddle.rank:
+                    riddle.solved = True
+                    riddle.save()
+                elif riddle.rank == currentRiddle.rank:
+                    if remainingSeconds <= riddle.secondsForAutosolve:
+                        currentRiddle.solved = True
+                        riddle.solved = True
+                        riddle.save()
+            
+        currentRiddleAttempt_list = RiddleAttempt.objects.filter(cron=request.user.cron).filter(riddle=currentRiddle).filter(correct=True)
+        if currentRiddleAttempt_list.count() > 0:
+                currentRiddle.hasSolved = True
+        riddleAttemptForm = RiddleAttemptForm()
+
     logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
-    return render(request, 'cron/operation_cluster_mine.html', {"operation":operation})
+    return render(request, 'cron/operation_cluster_mine.html', {"output":output, "remainingSeconds":remainingSeconds, "operation":operation, "riddleAttemptForm":riddleAttemptForm, "riddle_list":riddle_list, "currentRiddle":currentRiddle})
+
+def get_cluster_mine_basics():
+    operation = Operation.objects.get(serial='cluster-mine')
+    riddle_list = Riddle.objects.filter(operation=operation).order_by('rank')
+    return operation, riddle_list
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+@csrf_exempt
+def operation_cluster_mine_sync(request):
+    if request.method == 'POST' and request.is_ajax():
+        operation, riddle_list = get_cluster_mine_basics()
+        currentRiddle = get_current_riddle(operation, riddle_list)
+        remainingSeconds = get_seconds_til_next_hour()
+        if currentRiddle.solved:
+            forceReload = True
+        elif remainingSeconds <= currentRiddle.secondsForAutosolve:
+            currentRiddle.solved = True
+            currentRiddle.save()
+            forceReload = True
+        else:
+            forceReload = False
+        data = json.dumps({'reload':forceReload})
+        return HttpResponse(data, mimetype='application/json')
+
+
+def get_current_riddle(operation, riddle_list):
+    elapsedTime = now() - operation.startTime
+    elapsedSeconds = elapsedTime.seconds
+    elapsedHours = elapsedSeconds / 3600
+    currentRiddle = riddle_list[elapsedHours]
+    return currentRiddle
+
+def get_seconds_til_next_hour():
+    currentTime = now()
+    minutes = currentTime.minute
+    seconds = currentTime.second
+    remainingSeconds = (60 - minutes) * 60 - seconds
+    return remainingSeconds 
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -777,12 +872,7 @@ def operation_waterdrill_sync(request):
     return HttpResponse(data, mimetype='application/json')
 
 
-def get_current_riddle():
-    hour = int(time.strftime("%H")) - 11
-    try:
-        return Riddle.objects.all().order_by('rank')[hour]
-    except:
-        return None
+
 
 def remaining_time():
     minutes = 60 - int(time.strftime("%M"))

@@ -2,36 +2,121 @@
 {% load staticfiles %}
 
 {% block header %}
+<style media="screen" type="text/css">
+pre {
+white-space: pre-wrap;       /* css-3 */
+ white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+ white-space: -pre-wrap;      /* Opera 4-6 */
+ white-space: -o-pre-wrap;    /* Opera 7 */
+ word-wrap: break-word;
+ 
+ width:640px;
+ height:240px;
+ overflow:scroll;
+ background-color:black;
+ color:#0e0;
+ padding:10px;
+ border:4px double #0e0;
+ }
+ 
+
+</style> 
+ 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="{% static "cron/js/texttype.js" %}"></script>
 <script type="text/javascript">
 
 
+{% if not operation.hasStarted %}
+	var totalSeconds = {{operation.secondsToStart}};
+{% else %}
+	var totalSeconds = {{remainingSeconds}};
+{% endif %}
 
-var totalSeconds = {{operation.secondsToStart}};
+{% if not operation.hasStopped %}
 
-function updateTimer(){
-	totalSeconds -= 1;
-	var hours = Math.floor(totalSeconds / 3600);
-	var minutes = Math.floor( (totalSeconds - (hours * 3600)) / 60);
-	var seconds = totalSeconds - (hours * 3600) - (minutes * 60);
+	function updateTimer(){
+		totalSeconds -= 1;
+		if (totalSeconds <= 0) {
+			location.reload(true);
+		}
+		var hours = Math.floor(totalSeconds / 3600);
+		var minutes = Math.floor( (totalSeconds - (hours * 3600)) / 60);
+		var seconds = totalSeconds - (hours * 3600) - (minutes * 60);
+		
+		if (hours   < 10) {hours   = "0"+hours;}
+	    if (minutes < 10) {minutes = "0"+minutes;}
+	    if (seconds < 10) {seconds = "0"+seconds;}
+
+		{% if not operation.hasStarted %}
+			var timer = hours + " hours " + minutes + " minutes " + seconds + " seconds";
+		{% else %}
+			var timer = minutes + " minutes " + seconds + " seconds";
+		{% endif %}		
+		$("#timer").html(timer);
 	
-	if (hours   < 10) {hours   = "0"+hours;}
-    if (minutes < 10) {minutes = "0"+minutes;}
-    if (seconds < 10) {seconds = "0"+seconds;}
+	}
 	
-	timer = hours + " hours " + minutes + " minutes " + seconds + " seconds";
+	window.setInterval(function(){updateTimer()},1000);	
+
+{% endif %}
+
+{% if operation.hasStarted and not operation.hasStopped and not currentRiddle.solved %}
+	window.setInterval(function(){
+		$.ajax({
+	            type: 'POST',
+	            url: "{% url 'cron_operation_cluster_mine_sync' %}",
+	            data:
+	            {
+		    	},
+	            success: function (data) {
+	            	if (data['reload']==true) {
+	            		location.reload(true);
+	            	}
+	            	//totalSeconds = data['remainingSeconds'];
+
+	            },
+	            error: function(data) {
 	
-	$("#timer").html(timer);
+	            }
+	        });
+	        return false;
+	
+	},5000);
 
-}
 
-window.setInterval(function(){updateTimer()},1000);	
+{% endif %}
+
+
+
+{% if output %}
+	$(document).ready(function() {	
+		$( "#textDiv" ).fadeIn( "slow", function() {
+			texttype("textDiv", "{{output}}", 100, 100, function() {
+				$( "#textDiv" ).fadeOut( "slow", function() {
+		    		$( "#operation_content" ).fadeIn( "slow", function() {
+		    			//animation complete
+		    		});
+		  		});
+			});
+		});
+	});
+{% endif %}
+
+
+{% if currentRiddle.rank == 24 and currentRiddle.hasSolved %}
+	function launch_trojan() {
+		texttype("textDiv", "{{output}}", 100, 100, function() {});
+	};
+	<a class="button" style="text-align:center;width:50%;" onClick="launch_trojan();">launch trojan</a><br/>
+{% endif %}
 
 </script>
 
 {% endblock %}
 
 {% block content %}
+
 <h1>Operation: {{operation.name}}</h1>
 
 {% if not operation.hasStarted %}
@@ -40,7 +125,74 @@ window.setInterval(function(){updateTimer()},1000);
 	Time until start: <span id="timer"></span><br/>
 	<br/>
 	<span style="color:white">Be prepared.</span>
+{% else %}
+	<h2>MoP cyber security bypass procedure</h2>
+	<br/>
+	{% if output %}
+		<pre id="textDiv" style="display:none;"></pre><br/>
+		<div id="operation_content" style="display:none;">
+	{% else %}
+		<div id="operation_content">
+	{% endif %}
+	
+	
+	
+		<table style="border-spacing:0px 0px;table-layout:fixed;width:100%;text-align:center;">
+		<tr>
+			{% for riddle in riddle_list %}
+			<td style="color:black;padding:5px;{% if riddle.hasSolved %}background-color:#097504;{% elif riddle.solved %}background-color:#ffde00;{% else %}background-color:#ce0000;{% endif %}{% if riddle == currentRiddle %}border:2px solid white;{% endif %}">
+				{{riddle.rank}}
+				</td>
+			{% endfor %}
+		</tr>
+		</table>
+		<br/>
+		
+		{% if not currentRiddle.hasSolved %}
+			{% if currentRiddle.solved %}
+				<p style="color:white;">Another agent has entered the correct code.<br/><br/></p>
+			{% endif %}
+			<table style="text-align:center;">
+			<tr><th>Remaining time</th><td><span id='timer'></span></td></tr>
+			<tr><th>Active level</th><td>{{currentRiddle.rank}}</td></tr>
+			<form method="POST" action="{% url 'cron_operation_cluster_mine' %}" id="form">{% csrf_token %}
+			<tr><th>Key</th><td>{{currentRiddle.text}}</td></tr>
+			<tr><th>Code</th><td>{{riddleAttemptForm.attempt}}</td></tr>
+			<tr><th></th><td><input class="button" type="submit" value="submit code" /></td></tr>
+			</table>
+			</form>
+		{% else %}
+			<p><span style="color:white;">Great work, agent!</span><br/>
+				Time until next level MoP security firewall will be attacked: <span id='timer'></span>
+			</p>
+		{% endif %}
+		
+		<br/>
+		<table style="text-align:center">
+		<tr><th>Level</th><th>Key</th><th>Code (mark to reveal)</th></tr>
+		{% for riddle in riddle_list %}
+			{% if riddle.rank < currentRiddle.rank or riddle.rank == currentRiddle.rank and riddle.hasSolved %}
+			<tr>
+				<td style="color:black;{% if riddle.hasSolved %}background-color:#097504;{% else %}background-color:#ffde00;{% endif %}">{{riddle.rank}}</td>
+				<td>{{riddle.text}}</td>
+				<td style="background-color:black;{% if not riddle.hasSolved %}color:black;{% endif %}">{{riddle.solution}}<span></td>
+			</tr>
+			{% endif %}
+		{% endfor %}
+		</table>
+		
+		<br/>
+		<table>
+		<tr><td style="background-color:#097504;width:20px;"></td><td>solved by you</td></tr>
+		<tr><td style="background-color:#ffde00;width:20px;"></td><td>solved by another agent</td></tr>
+		<tr><td style="background-color:#ce0000;width:20px;"></td><td>not solved</td></tr>
+		</table>
+		<br/>
+		<p>{{operation.instruction|safe}}</p> 
+		</p>
+	</div>
+	
+	
 {% endif %}
-
 
 {% endblock %}
