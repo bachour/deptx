@@ -2,7 +2,7 @@ import os.path
 from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from players.models import Cron
-from assets.models import Mission, Case, CronDocument, CaseQuestion, Riddle
+from assets.models import Mission, Case, CronDocument, CaseQuestion, Riddle, Operation
 from django.template import Context, loader
 from django.core.mail import EmailMessage, mail_admins
 
@@ -251,6 +251,17 @@ class ChatMessage(models.Model):
     
     def __unicode__(self):
         return "%s: %s" % (self.cron.user.username, self.message)
+
+class OperationTracker(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    cron = models.ForeignKey(Cron)
+    operation = models.ForeignKey(Operation)
+    hasInfiltrated = models.BooleanField(default=False)
+    
+    def __unicode__(self):
+        return "%s %s" % (self.cron.user.username, self.hasInfiltrated)
     
 class RiddleAttempt(models.Model):
     createdAt = CreationDateTimeField()
