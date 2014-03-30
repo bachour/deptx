@@ -16,10 +16,13 @@ class HelpMailAdmin(admin.ModelAdmin):
 class CaseQuestionInstanceAdmin(admin.ModelAdmin):
     list_filter = ('cron', 'question__case', 'question', 'correct', 'submitted', 'isBad', 'failedAttempts', 'modifiedAt')
 
+class RiddleAttemptAdmin(admin.ModelAdmin):
+    list_filter = ('correct', 'riddle__rank', 'attempt', 'cron')
+
 admin.site.register(MissionInstance, MissionInstanceAdmin)
 admin.site.register(CaseInstance, CaseInstanceAdmin)
 admin.site.register(CronDocumentInstance, CronDocumentInstanceAdmin)
 admin.site.register(HelpMail, HelpMailAdmin)
 admin.site.register(CaseQuestionInstance, CaseQuestionInstanceAdmin)
 admin.site.register(ChatMessage)
-admin.site.register(RiddleAttempt)
+admin.site.register(RiddleAttempt, RiddleAttemptAdmin)
