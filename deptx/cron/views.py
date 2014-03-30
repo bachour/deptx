@@ -720,35 +720,23 @@ def get_cluster_mine_basics():
     riddle_list = Riddle.objects.filter(operation=operation).order_by('rank')
     return operation, riddle_list
 
-@login_required(login_url='cron_login')
-@user_passes_test(isCron, login_url='cron_login')
 @csrf_exempt
 def operation_cluster_mine_sync(request):
     data = None
-    if request.method == 'POST' and request.is_ajax():
-        print "1"
-        operation, riddle_list = get_cluster_mine_basics()
-        print "2"
-        currentRiddle = get_current_riddle(operation, riddle_list)
-        print "3"
-        remainingSeconds = get_seconds_til_next_hour()
-        print "4"
-        if currentRiddle.solved:
-            print "5"
-            forceReload = True
-        elif remainingSeconds <= currentRiddle.secondsForAutosolve:
-            print "6"
-            currentRiddle.solved = True
-            print "7"
-            currentRiddle.save()
-            print "8"
-            forceReload = True
-        else:
-            print "9"
-            forceReload = False
-        print "10"
-        data = json.dumps({'reload':forceReload})
-    print "11"
+    if not request.user == None and request.user.is_active and isCron(request.user):
+        if request.method == 'POST' and request.is_ajax():
+            operation, riddle_list = get_cluster_mine_basics()
+            currentRiddle = get_current_riddle(operation, riddle_list)
+            remainingSeconds = get_seconds_til_next_hour()
+            if currentRiddle.solved:
+                forceReload = True
+            elif remainingSeconds <= currentRiddle.secondsForAutosolve:
+                currentRiddle.solved = True
+                currentRiddle.save()
+                forceReload = True
+            else:
+                forceReload = False
+            data = json.dumps({'reload':forceReload})
     return HttpResponse(data, mimetype='application/json')
 
 
