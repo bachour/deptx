@@ -724,6 +724,7 @@ def get_cluster_mine_basics():
 @user_passes_test(isCron, login_url='cron_login')
 @csrf_exempt
 def operation_cluster_mine_sync(request):
+    data = None
     if request.method == 'POST' and request.is_ajax():
         operation, riddle_list = get_cluster_mine_basics()
         currentRiddle = get_current_riddle(operation, riddle_list)
@@ -737,7 +738,7 @@ def operation_cluster_mine_sync(request):
         else:
             forceReload = False
         data = json.dumps({'reload':forceReload})
-        return HttpResponse(data, mimetype='application/json')
+    return HttpResponse(data, mimetype='application/json')
 
 
 def get_current_riddle(operation, riddle_list):
