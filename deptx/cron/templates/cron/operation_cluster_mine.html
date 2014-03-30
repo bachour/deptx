@@ -178,7 +178,7 @@ white-space: pre-wrap;       /* css-3 */
 				<table style="width:100%">
 				<tr><td style="white-space:nowrap;"><h3>Remaining time:</h3></td><td><h3><span id='timer'></span></h3></td></tr>
 				<tr><td><h3>Active level:</h3></td><td><h3>{{currentRiddle.rank}}</h3></td></tr>
-				<tr><td><h3>Key:</h3></td><td><div style="word-wrap:break-word;max-width:600px;">{{currentRiddle.text}}</div></td></tr>
+				<tr><td><h3>Key:</h3></td><td><div style="word-wrap:break-word;width:600px;">{{currentRiddle.text}}</div></td></tr>
 				<form method="POST" action="{% url 'cron_operation_cluster_mine' %}" id="form">{% csrf_token %}
 				<tr><td><h3>Code:</h3></td><td>{{riddleAttemptForm.attempt}}</td></tr>
 				<tr><td></td><td><input class="button" type="submit" value="submit code" /></td></tr>
