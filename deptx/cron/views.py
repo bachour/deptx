@@ -726,18 +726,29 @@ def get_cluster_mine_basics():
 def operation_cluster_mine_sync(request):
     data = None
     if request.method == 'POST' and request.is_ajax():
+        print "1"
         operation, riddle_list = get_cluster_mine_basics()
+        print "2"
         currentRiddle = get_current_riddle(operation, riddle_list)
+        print "3"
         remainingSeconds = get_seconds_til_next_hour()
+        print "4"
         if currentRiddle.solved:
+            print "5"
             forceReload = True
         elif remainingSeconds <= currentRiddle.secondsForAutosolve:
+            print "6"
             currentRiddle.solved = True
+            print "7"
             currentRiddle.save()
+            print "8"
             forceReload = True
         else:
+            print "9"
             forceReload = False
+        print "10"
         data = json.dumps({'reload':forceReload})
+    print "11"
     return HttpResponse(data, mimetype='application/json')
 
 
