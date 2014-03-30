@@ -29,12 +29,15 @@
 </table>
 <h2>Current rating</h2>
 <table>
-<tr><th>TRUST<br/>(total)</th><th>TRUST<br/>(current)</th><th>Credits</th><th>Clearance<br/>Level</th></tr>
+<tr><th>TRUST<br/>(total)</th><th>TRUST<br/>(current)</th><th>Credits</th><th>Clearance<br/>Level</th>{% if user.mop.mopTracker.hasSpecialStatus %}<th>Special<br/>Status</th>{% endif %}</tr>
 <tr style="text-align:center">
 <td>{{user.mop.mopTracker.totalTrust}}</td>
 <td>{{user.mop.mopTracker.trust}}</td>
 <td>{{user.mop.mopTracker.credit}}</td>
 <td><img class="minibadge" src="{{user.mop.mopTracker.getBadgeUrl}}" /></td>
+{% if user.mop.mopTracker.hasSpecialStatus %}
+	<td><img class="minibadge" src="{{MEDIA_URL}}orchid-badge/orchid-white.png" /></td>
+{% endif %}
 </tr>
 </table>
 <h2>Past Performance Reviews</h2>

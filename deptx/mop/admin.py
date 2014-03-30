@@ -21,7 +21,7 @@ class MopDocumentInstanceAdmin(admin.ModelAdmin):
     list_filter = ('mop', 'status', 'randomizedDocument__mopDocument', 'modified', 'correct', 'modifiedAt')
 
 class MopTrackerAdmin(admin.ModelAdmin):
-    list_filter = ('trust', 'clearance', 'tutorial', 'tutorialProvErrors', 'modifiedAt', 'fileUploadAllowed')
+    list_filter = ('trust', 'clearance', 'tutorial', 'tutorialProvErrors', 'modifiedAt', 'fileUploadAllowed', 'specialStatusAllowed')
 
 admin.site.register(Mail, MailAdmin)
 admin.site.register(RequisitionInstance, RequisitionInstanceAdmin)

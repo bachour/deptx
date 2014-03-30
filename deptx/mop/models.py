@@ -11,6 +11,7 @@ from django.template import Context, loader, Template
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from deptx.helpers import now
+from deptx.settings import STATIC_URL
 
 class MopTracker(models.Model):
     
@@ -32,9 +33,7 @@ class MopTracker(models.Model):
         (TUTORIAL_5_SENT_CONCLUSION, 'TUTORIAL_5_SENT_CONCLUSION'),
         (TUTORIAL_6_DONE, 'TUTORIAL_6_DONE'),
     )
-    
-    
-    
+
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
@@ -47,16 +46,29 @@ class MopTracker(models.Model):
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
     
     fileUploadAllowed = models.BooleanField(default=False)
+    specialStatusAllowed = models.BooleanField(default=False, help_text="Special Status is only active when Citizen Helper also has Red Clearance level (or above)")
     
     tutorial = models.IntegerField(choices=CHOICES_TUTORIAL, default=TUTORIAL_0_START)
     tutorialProvErrors = models.IntegerField(default=0)
     
-    
+    @property
+    def hasSpecialStatus(self):
+        if self.clearance >= Clearance.CLEARANCE_RED and self.specialStatusAllowed:
+            return True
+        else:
+            return False
+        
     def getCssUrl(self):
-        return Clearance(self.clearance).getCssUrl()
+        if self.hasSpecialStatus:
+            return STATIC_URL + 'mop/mop_color_white.css'
+        else:
+            return Clearance(self.clearance).getCssUrl()
     
     def getMailUrl(self):
-        return Clearance(self.clearance).getMailUrl()
+        if self.hasSpecialStatus:
+            return STATIC_URL + 'mop/mail_white.png'
+        else:
+            return Clearance(self.clearance).getMailUrl()
     
     def getBadgeUrl(self):
         return Clearance(self.clearance).getBadgeUrl()
