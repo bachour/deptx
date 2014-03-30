@@ -262,4 +262,4 @@ class RiddleAttempt(models.Model):
     correct = models.BooleanField()
     
     def __unicode__(self):
-        return "%s: riddle %s - correct: %s - attempt: %s - (%s)" % (self.cron.user.username, self.riddle.rank, self.attempt, self.correct, self.modifiedAt)
+        return "%s: riddle %s - correct: %s - attempt: %s - (%s)" % (self.cron.user.username, self.riddle.rank, self.correct, self.attempt, self.modifiedAt)
