@@ -393,5 +393,5 @@ class Riddle(models.Model):
     solved = models.BooleanField(default=False)
     
     def __unicode__(self):
-        return "%s (%s - %s)" % (self.rank, self.text, self.solution)  
+        return "%s - %s) (%s)" % (self.rank, self.solution, self.solved)  
     

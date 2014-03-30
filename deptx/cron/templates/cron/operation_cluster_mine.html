@@ -26,6 +26,11 @@ white-space: pre-wrap;       /* css-3 */
 <script src="{% static "cron/js/texttype.js" %}"></script>
 <script type="text/javascript">
 
+{% if output %}
+	var mayReload = false;
+{% else %}
+	var mayReload = true;
+{% endif %}
 
 {% if not operation.hasStarted %}
 	var totalSeconds = {{operation.secondsToStart}};
@@ -37,7 +42,7 @@ white-space: pre-wrap;       /* css-3 */
 
 	function updateTimer(){
 		totalSeconds -= 1;
-		if (totalSeconds <= 0) {
+		if (totalSeconds <= 0 && mayReload == true) {
 			location.reload(true);
 		}
 		var hours = Math.floor(totalSeconds / 3600);
@@ -95,7 +100,7 @@ white-space: pre-wrap;       /* css-3 */
 			texttype("textDiv", "{{output}}", 100, 100, function() {
 				$( "#textDiv" ).fadeOut( "slow", function() {
 		    		$( "#operation_content" ).fadeIn( "slow", function() {
-		    			//animation complete
+		    			mayReload = true;
 		    		});
 		  		});
 			});
@@ -150,44 +155,48 @@ white-space: pre-wrap;       /* css-3 */
 		
 		{% if not currentRiddle.hasSolved %}
 			{% if currentRiddle.solved %}
-				<p style="color:white;">Another agent has entered the correct code.<br/><br/></p>
+				<p>Another agent has entered the correct code.<br/><br/></p>
 			{% endif %}
-			<table style="text-align:center;">
-			<tr><th>Remaining time</th><td><span id='timer'></span></td></tr>
-			<tr><th>Active level</th><td>{{currentRiddle.rank}}</td></tr>
+			<table style="width:100%">
+			<tr><td style="white-space:nowrap;"><h3>Remaining time:</h3></td><td><h3><span id='timer'></span></h3></td></tr>
+			<tr><td><h3>Active level:</h3></td><td><h3>{{currentRiddle.rank}}</h3></td></tr>
+			<tr><td><h3>Key:</h3></td><td><div style="word-wrap:break-word;max-width:100%;">{{currentRiddle.text}}</div></td></tr>
 			<form method="POST" action="{% url 'cron_operation_cluster_mine' %}" id="form">{% csrf_token %}
-			<tr><th>Key</th><td>{{currentRiddle.text}}</td></tr>
-			<tr><th>Code</th><td>{{riddleAttemptForm.attempt}}</td></tr>
-			<tr><th></th><td><input class="button" type="submit" value="submit code" /></td></tr>
+			<tr><td><h3>Code:</h3></td><td>{{riddleAttemptForm.attempt}}</td></tr>
+			<tr><td></td><td><input class="button" type="submit" value="submit code" /></td></tr>
 			</table>
 			</form>
+
 		{% else %}
 			<p><span style="color:white;">Great work, agent!</span><br/>
-				Time until next level MoP security firewall will be attacked: <span id='timer'></span>
+				Time until next security level: <span id='timer'></span>
 			</p>
 		{% endif %}
 		
 		<br/>
-		<table style="text-align:center">
-		<tr><th>Level</th><th>Key</th><th>Code (mark to reveal)</th></tr>
-		{% for riddle in riddle_list %}
-			{% if riddle.rank < currentRiddle.rank or riddle.rank == currentRiddle.rank and riddle.hasSolved %}
-			<tr>
-				<td style="color:black;{% if riddle.hasSolved %}background-color:#097504;{% else %}background-color:#ffde00;{% endif %}">{{riddle.rank}}</td>
-				<td>{{riddle.text}}</td>
-				<td style="background-color:black;{% if not riddle.hasSolved %}color:black;{% endif %}">{{riddle.solution}}<span></td>
-			</tr>
-			{% endif %}
-		{% endfor %}
-		</table>
+		{% if currentRiddle.rank > 1 or currentRiddle.hasSolved %}
+			<table style="text-align:center;width:100%;">
+			<tr><th>Level</th><th>Key</th><th>Code (mark to reveal)</th></tr>
+			{% for riddle in riddle_list %}
+				{% if riddle.rank < currentRiddle.rank or riddle.rank == currentRiddle.rank and riddle.hasSolved %}
+				<tr>
+					<td style="color:black;vertical-align:middle;{% if riddle.hasSolved %}background-color:#097504;{% else %}background-color:#ffde00;{% endif %}">{{riddle.rank}}</td>
+					<td><div style="text-align:left;word-wrap:break-word;max-width:600px;;">{{riddle.text}}</div></td>
+					<td style="white-space:nowrap;background-color:black;vertical-align:middle;{% if not riddle.hasSolved %}color:black;{% endif %}">{{riddle.solution}}<span></td>
+				</tr>
+				{% endif %}
+			{% endfor %}
+			</table>
+		{% endif %}
 		
 		<br/>
 		<table>
-		<tr><td style="background-color:#097504;width:20px;"></td><td>solved by you</td></tr>
-		<tr><td style="background-color:#ffde00;width:20px;"></td><td>solved by another agent</td></tr>
-		<tr><td style="background-color:#ce0000;width:20px;"></td><td>not solved</td></tr>
+		<tr><td style="background-color:#097504;width:20px;"></td><td>deciphered by you</td></tr>
+		<tr><td style="background-color:#ffde00;width:20px;"></td><td>deciphered by another agent</td></tr>
+		<tr><td style="background-color:#ce0000;width:20px;"></td><td>not yet deciphered</td></tr>
 		</table>
 		<br/>
+		<h3>Briefing</h3>
 		<p>{{operation.instruction|safe}}</p> 
 		</p>
 	</div>

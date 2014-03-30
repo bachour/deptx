@@ -677,7 +677,7 @@ def operation_cluster_mine(request):
             currentRiddleAttempt_list = RiddleAttempt.objects.filter(cron=request.user.cron).filter(riddle=currentRiddle).filter(correct=True)
             if form.is_valid() and currentRiddleAttempt_list.count() < 1:
                 riddleAttempt = form.save()
-                if riddleAttempt.attempt == riddleAttempt.riddle.solution:
+                if riddleAttempt.attempt.lower() == riddleAttempt.riddle.solution.lower():
                     riddleAttempt.correct = True
                     riddleAttempt.save()
                     correct = True
