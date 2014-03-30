@@ -16,7 +16,7 @@ from django.template import Context, Template, loader
 from players.forms import MopForm
 
 from assets.models import Case, Mission, CronDocument, CaseQuestion, Riddle, Operation
-from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt
+from cron.models import CaseInstance, CronDocumentInstance, MissionInstance, HelpMail, CaseQuestionInstance, ChatMessage, RiddleAttempt, OperationTracker
 from mop.models import Mail, MopDocumentInstance
 from cron.forms import HelpMailForm, ControlHelpMailForm, ChatForm, RiddleAttemptForm
 
@@ -661,11 +661,10 @@ def operation_cluster_mine(request):
     remainingSeconds = None
     output = None
     
+    
     operation, riddle_list = get_cluster_mine_basics()
     
-    #output_tpl = loader.get_template('cron/operation_cluster_mine_hacking.txt')
-    #c = Context({})
-    #output = output_tpl.render(c).replace("\n", "\\n")
+    operationTracker, created = OperationTracker.objects.get_or_create(cron=request.user.cron, operation=operation)
     
     if operation.hasStarted:
         currentRiddle = get_current_riddle(operation, riddle_list)  
@@ -713,12 +712,26 @@ def operation_cluster_mine(request):
         riddleAttemptForm = RiddleAttemptForm()
 
     logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
-    return render(request, 'cron/operation_cluster_mine.html', {"output":output, "remainingSeconds":remainingSeconds, "operation":operation, "riddleAttemptForm":riddleAttemptForm, "riddle_list":riddle_list, "currentRiddle":currentRiddle})
+    return render(request, 'cron/operation_cluster_mine.html', {"operationTracker":operationTracker, "output":output, "remainingSeconds":remainingSeconds, "operation":operation, "riddleAttemptForm":riddleAttemptForm, "riddle_list":riddle_list, "currentRiddle":currentRiddle})
 
 def get_cluster_mine_basics():
     operation = Operation.objects.get(serial='cluster-mine')
     riddle_list = Riddle.objects.filter(operation=operation).order_by('rank')
     return operation, riddle_list
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
+def operation_cluster_mine_infiltration(request):
+    operation = Operation.objects.get(serial='cluster-mine')
+    operationTracker, created = OperationTracker.objects.get_or_create(cron=request.user.cron, operation=operation)
+    if not operationTracker.hasInfiltrated:
+        operationTracker.hasInfiltrated = True
+        operationTracker.save()
+    output_tpl = loader.get_template('cron/operation_cluster_mine_infiltration.txt')
+    c = Context({})
+    output = output_tpl.render(c)#.replace("\n", "\\n")
+    logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION_INFILTRATE, cron=request.user.cron, operation=operation)
+    return render(request, 'cron/operation_cluster_mine_infiltration.html', {"operation":operation, "output":output})
 
 @csrf_exempt
 def operation_cluster_mine_sync(request):
@@ -754,72 +767,72 @@ def get_seconds_til_next_hour():
     remainingSeconds = (60 - minutes) * 60 - seconds
     return remainingSeconds 
 
-@login_required(login_url='cron_login')
-@user_passes_test(isCron, login_url='cron_login')
-def operation_waterdrill(request):
-    operation = Operation.objects.get(serial='cluster-mine')
-    
-    falseAttempt = None
-    currentRiddle = get_current_riddle()
-    
-    riddle_list = Riddle.objects.all().order_by('rank')
-    for riddle in riddle_list:
-        riddleTracker, created = RiddleTracker.objects.get_or_create(riddle=riddle)
-        if created and riddleTracker.riddle.rank < currentRiddle.rank and not riddleTracker.solved:
-            riddleTracker.solved = True
-            riddleTracker.save()
-     
-    allSolved = False
-    
-    if currentRiddle is None:
-#         for riddle in riddle_list:
-#             if not riddle == currentRiddle:
-#                 if not riddle.riddleTracker.solved:
-#                     riddle.riddleTracker.solved = True
-#                     riddle.riddleTracker.save()
-        allSolved = True
-        logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
-        return render(request, 'cron/operation_waterdrill.html', {"allSolved":allSolved, "oldRiddle_list": riddle_list, "riddle_list": riddle_list})
-    else:
-        oldRiddle_list = Riddle.objects.filter(rank__lt=currentRiddle.rank).order_by('-rank')
-        for riddle in oldRiddle_list:
-            if not riddle.riddleTracker.solved:
-                riddle.riddleTracker.solved = True
-                riddle.riddleTracker.save()
-    
-#         solvedRiddle_list = Riddle.objects.filter(riddleTracker__solved=True)
-#         if riddle_list.count() == solvedRiddle_list.count():
-#             allSolved = True
+# @login_required(login_url='cron_login')
+# @user_passes_test(isCron, login_url='cron_login')
+# def operation_waterdrill(request):
+#     operation = Operation.objects.get(serial='cluster-mine')
+#     
+#     falseAttempt = None
+#     currentRiddle = get_current_riddle()
+#     
+#     riddle_list = Riddle.objects.all().order_by('rank')
+#     for riddle in riddle_list:
+#         riddleTracker, created = RiddleTracker.objects.get_or_create(riddle=riddle)
+#         if created and riddleTracker.riddle.rank < currentRiddle.rank and not riddleTracker.solved:
+#             riddleTracker.solved = True
+#             riddleTracker.save()
+#      
+#     allSolved = False
+#     
+#     if currentRiddle is None:
+# #         for riddle in riddle_list:
+# #             if not riddle == currentRiddle:
+# #                 if not riddle.riddleTracker.solved:
+# #                     riddle.riddleTracker.solved = True
+# #                     riddle.riddleTracker.save()
+#         allSolved = True
+#         logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
+#         return render(request, 'cron/operation_waterdrill.html', {"allSolved":allSolved, "oldRiddle_list": riddle_list, "riddle_list": riddle_list})
+#     else:
+#         oldRiddle_list = Riddle.objects.filter(rank__lt=currentRiddle.rank).order_by('-rank')
+#         for riddle in oldRiddle_list:
+#             if not riddle.riddleTracker.solved:
+#                 riddle.riddleTracker.solved = True
+#                 riddle.riddleTracker.save()
+#     
+# #         solvedRiddle_list = Riddle.objects.filter(riddleTracker__solved=True)
+# #         if riddle_list.count() == solvedRiddle_list.count():
+# #             allSolved = True
+# #         else:
+# #             allSolved = False        
+#                 
+#         
+#         if request.method == 'POST':
+#             riddleAttempt = RiddleAttempt(riddle=currentRiddle, cron=request.user.cron)
+#             form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
+#             if form.is_valid():
+#                 riddleAttempt = form.save()
+#                 if riddleAttempt.attempt == riddleAttempt.riddle.solution:
+#                     riddleAttempt.correct = True
+#                     riddleAttempt.save()
+#                     riddleTracker = riddleAttempt.riddle.riddleTracker
+#                     if riddleTracker.solved == False:
+#                         riddleTracker.solved = True
+#                         riddleTracker.save()
+#                 else:
+#                     falseAttempt = riddleAttempt.attempt
+#                 logging.log_action(ActionLog.ACTION_CRON_HACK_OPERATION, cron=request.user.cron, operation=operation, riddleAttempt=riddleAttempt)
+#         
+#         correctRiddleAttempts = RiddleAttempt.objects.filter(riddle=currentRiddle).filter(cron=request.user.cron).filter(correct=True).count()
+#         if correctRiddleAttempts > 0:
+#             hasSolved = True
 #         else:
-#             allSolved = False        
-                
-        
-        if request.method == 'POST':
-            riddleAttempt = RiddleAttempt(riddle=currentRiddle, cron=request.user.cron)
-            form = RiddleAttemptForm(data=request.POST, instance=riddleAttempt)
-            if form.is_valid():
-                riddleAttempt = form.save()
-                if riddleAttempt.attempt == riddleAttempt.riddle.solution:
-                    riddleAttempt.correct = True
-                    riddleAttempt.save()
-                    riddleTracker = riddleAttempt.riddle.riddleTracker
-                    if riddleTracker.solved == False:
-                        riddleTracker.solved = True
-                        riddleTracker.save()
-                else:
-                    falseAttempt = riddleAttempt.attempt
-                logging.log_action(ActionLog.ACTION_CRON_HACK_OPERATION, cron=request.user.cron, operation=operation, riddleAttempt=riddleAttempt)
-        
-        correctRiddleAttempts = RiddleAttempt.objects.filter(riddle=currentRiddle).filter(cron=request.user.cron).filter(correct=True).count()
-        if correctRiddleAttempts > 0:
-            hasSolved = True
-        else:
-            hasSolved = False
-        
-        riddleAttemptForm = RiddleAttemptForm()
-        minutes, seconds = remaining_time()
-        logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
-        return render(request, 'cron/operation_waterdrill.html', {"minutes":minutes, "seconds":seconds, "allSolved":allSolved, "hasSolved": hasSolved, "falseAttempt":falseAttempt, "riddle_list": riddle_list, "oldRiddle_list": oldRiddle_list, "currentRiddle": currentRiddle, "riddleAttemptForm":riddleAttemptForm})
+#             hasSolved = False
+#         
+#         riddleAttemptForm = RiddleAttemptForm()
+#         minutes, seconds = remaining_time()
+#         logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION, cron=request.user.cron, operation=operation)
+#         return render(request, 'cron/operation_waterdrill.html', {"minutes":minutes, "seconds":seconds, "allSolved":allSolved, "hasSolved": hasSolved, "falseAttempt":falseAttempt, "riddle_list": riddle_list, "oldRiddle_list": oldRiddle_list, "currentRiddle": currentRiddle, "riddleAttemptForm":riddleAttemptForm})
 
 # @login_required(login_url='cron_login')
 # @user_passes_test(isCron, login_url='cron_login')
@@ -845,31 +858,31 @@ def operation_waterdrill(request):
 #             logging.log_action(ActionLog.ACTION_CRON_HACK_WATERDRILL, cron=request.user.cron, riddleAttempt=riddleAttempt)
 #     return HttpResponse(data, mimetype='application/json')
 
-@login_required(login_url='cron_login')
-@user_passes_test(isCron, login_url='cron_login')
-@csrf_exempt
-def operation_waterdrill_sync(request):
-    forceReload = False
-    if request.method == 'POST' and request.is_ajax():
-        riddle_id = request.POST.get('riddle', None)
-        solved = json.loads(request.POST.get('solved', False))
-        oldRiddle = Riddle.objects.get(id=riddle_id)
-        currentRiddle = get_current_riddle()
-        if currentRiddle is None:
-            forceReload = True
-        elif not oldRiddle.id == currentRiddle.id:
-            forceReload = True
-        else:
-            if not solved:
-                if currentRiddle.riddleTracker.solved:
-                    forceReload = True
-    minutes, seconds = remaining_time()
-    if currentRiddle.riddleTracker.solved == False and (minutes * 60 + seconds) < currentRiddle.secondsForAutosolve:
-        currentRiddle.riddleTracker.solved = True
-        currentRiddle.riddleTracker.save()
-        forceReload = True
-    data = json.dumps({'reload':forceReload, 'minutes':minutes, 'seconds':seconds})
-    return HttpResponse(data, mimetype='application/json')
+# @login_required(login_url='cron_login')
+# @user_passes_test(isCron, login_url='cron_login')
+# @csrf_exempt
+# def operation_waterdrill_sync(request):
+#     forceReload = False
+#     if request.method == 'POST' and request.is_ajax():
+#         riddle_id = request.POST.get('riddle', None)
+#         solved = json.loads(request.POST.get('solved', False))
+#         oldRiddle = Riddle.objects.get(id=riddle_id)
+#         currentRiddle = get_current_riddle()
+#         if currentRiddle is None:
+#             forceReload = True
+#         elif not oldRiddle.id == currentRiddle.id:
+#             forceReload = True
+#         else:
+#             if not solved:
+#                 if currentRiddle.riddleTracker.solved:
+#                     forceReload = True
+#     minutes, seconds = remaining_time()
+#     if currentRiddle.riddleTracker.solved == False and (minutes * 60 + seconds) < currentRiddle.secondsForAutosolve:
+#         currentRiddle.riddleTracker.solved = True
+#         currentRiddle.riddleTracker.save()
+#         forceReload = True
+#     data = json.dumps({'reload':forceReload, 'minutes':minutes, 'seconds':seconds})
+#     return HttpResponse(data, mimetype='application/json')
 
 
 

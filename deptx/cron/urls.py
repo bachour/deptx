@@ -36,6 +36,7 @@ urlpatterns = patterns('',
     url(r'messages/compose/', views.message_compose, name='cron_message_compose'),
     
     url(r'operation/cluster-mine/$', views.operation_cluster_mine, name='cron_operation_cluster_mine'),
+    url(r'operation/cluster-mine/infiltration/$', views.operation_cluster_mine_infiltration, name='cron_operation_cluster_mine_infiltration'),
     url(r'operation/cluster-mine/sync/$', views.operation_cluster_mine_sync, name='cron_operation_cluster_mine_sync'),
 
     

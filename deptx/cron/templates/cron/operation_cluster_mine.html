@@ -112,14 +112,6 @@ white-space: pre-wrap;       /* css-3 */
 	});
 {% endif %}
 
-
-{% if currentRiddle.rank == 24 and currentRiddle.hasSolved %}
-	function launch_trojan() {
-		texttype("textDiv", "{{output}}", 100, 100, function() {});
-	};
-	<a class="button" style="text-align:center;width:50%;" onClick="launch_trojan();">launch trojan</a><br/>
-{% endif %}
-
 </script>
 
 {% endblock %}
@@ -150,7 +142,7 @@ white-space: pre-wrap;       /* css-3 */
 		<table style="border-spacing:0px 0px;table-layout:fixed;width:100%;text-align:center;">
 		<tr>
 			{% for riddle in riddle_list %}
-			<td style="color:black;padding:5px;{% if riddle.hasSolved %}background-color:#097504;{% elif riddle.solved %}background-color:#ffde00;{% else %}background-color:#ce0000;{% endif %}{% if riddle == currentRiddle %}border:2px solid white;{% endif %}">
+			<td style="color:black;padding:5px;{% if riddle.hasSolved %}background-color:#097504;{% elif riddle.solved or operation.hasStopped %}background-color:#ffde00;{% else %}background-color:#ce0000;{% endif %}{% if riddle == currentRiddle and not operation.hasStopped %}border:2px solid white;{% endif %}">
 				{{riddle.rank}}
 				</td>
 			{% endfor %}
@@ -158,24 +150,46 @@ white-space: pre-wrap;       /* css-3 */
 		</table>
 		<br/>
 		
-		{% if not currentRiddle.hasSolved %}
-			{% if currentRiddle.solved %}
-				<p>Another agent has entered the correct code.<br/><br/></p>
+		{% if operation.hasClosed or operation.hasStopped or currentRiddle.rank == 24 and currentRiddle.hasSolved %}
+			{% if operation.hasClosed %}
+				<p>Operation Cluster Mine is over. Thanks to the joint efforts of our agents it was possible to infiltrate an important MoP server.
+				</p>
+			{% elif operation.hasStopped %}
+				<p>By entering all 24 access codes correctly and in time, we can now infiltrate the target MoP server.
+				</p>
+			{% elif currentRiddle.rank == 24 and currentRiddle.hasSolved %}
+				<p><span style="color:white;">Excellent job, agent! This was the last necessary code.</span><br/>
+					By entering all 24 access codes correctly and in time, we can now infiltrate the target MoP server.
+				</p>
 			{% endif %}
-			<table style="width:100%">
-			<tr><td style="white-space:nowrap;"><h3>Remaining time:</h3></td><td><h3><span id='timer'></span></h3></td></tr>
-			<tr><td><h3>Active level:</h3></td><td><h3>{{currentRiddle.rank}}</h3></td></tr>
-			<tr><td><h3>Key:</h3></td><td><div style="word-wrap:break-word;max-width:100%;">{{currentRiddle.text}}</div></td></tr>
-			<form method="POST" action="{% url 'cron_operation_cluster_mine' %}" id="form">{% csrf_token %}
-			<tr><td><h3>Code:</h3></td><td>{{riddleAttemptForm.attempt}}</td></tr>
-			<tr><td></td><td><input class="button" type="submit" value="submit code" /></td></tr>
-			</table>
-			</form>
-
+			<br/>
+			<div style="width:200px;text-align:center;"><a class="button" href="{% url 'cron_operation_cluster_mine_infiltration' %}">
+			{% if operationTracker.hasInfiltrated or operation.hasClosed %}
+				view infiltration
+			{% else %}
+				start infiltration
+			{% endif %}
+			</a></div>
 		{% else %}
-			<p><span style="color:white;">Great work, agent!</span><br/>
-				Time until next security level: <span id='timer'></span>
-			</p>
+			{% if not currentRiddle.hasSolved %}
+				{% if currentRiddle.solved %}
+					<p>Another agent has entered the correct code.<br/><br/></p>
+				{% endif %}
+				<table style="width:100%">
+				<tr><td style="white-space:nowrap;"><h3>Remaining time:</h3></td><td><h3><span id='timer'></span></h3></td></tr>
+				<tr><td><h3>Active level:</h3></td><td><h3>{{currentRiddle.rank}}</h3></td></tr>
+				<tr><td><h3>Key:</h3></td><td><div style="word-wrap:break-word;max-width:600px;">{{currentRiddle.text}}</div></td></tr>
+				<form method="POST" action="{% url 'cron_operation_cluster_mine' %}" id="form">{% csrf_token %}
+				<tr><td><h3>Code:</h3></td><td>{{riddleAttemptForm.attempt}}</td></tr>
+				<tr><td></td><td><input class="button" type="submit" value="submit code" /></td></tr>
+				</table>
+				</form>
+	
+			{% else %}
+				<p><span style="color:white;">Great work, agent!</span><br/>
+					Time until next security level: <span id='timer'></span>
+				</p>
+			{% endif %}
 		{% endif %}
 		
 		<br/>
@@ -183,7 +197,7 @@ white-space: pre-wrap;       /* css-3 */
 			<table style="text-align:center;width:100%;">
 			<tr><th>Level</th><th>Key</th><th>Code (mark to reveal)</th></tr>
 			{% for riddle in riddle_list %}
-				{% if riddle.rank < currentRiddle.rank or riddle.rank == currentRiddle.rank and riddle.hasSolved %}
+				{% if operation.hasStopped or riddle.rank < currentRiddle.rank or riddle.rank == currentRiddle.rank and riddle.hasSolved %}
 				<tr>
 					<td style="color:black;vertical-align:middle;{% if riddle.hasSolved %}background-color:#097504;{% else %}background-color:#ffde00;{% endif %}">{{riddle.rank}}</td>
 					<td><div style="text-align:left;word-wrap:break-word;max-width:600px;;">{{riddle.text}}</div></td>
@@ -202,6 +216,7 @@ white-space: pre-wrap;       /* css-3 */
 		</table>
 		<br/>
 		<h3>Briefing</h3>
+		{% if operation.hasStopped %}<span style="color:white;">Note: This part of the operation has already concluded.</span><br/>{% endif %}
 		<p>{{operation.instruction|safe}}</p> 
 		</p>
 	</div>

@@ -1,0 +1,49 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block header %}
+<style media="screen" type="text/css">
+pre {
+white-space: pre-wrap;       /* css-3 */
+ white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+ white-space: -pre-wrap;      /* Opera 4-6 */
+ white-space: -o-pre-wrap;    /* Opera 7 */
+ word-wrap: break-word;
+ 
+ width:640px;
+ height:240px;
+ overflow:scroll;
+ background-color:black;
+ color:#0e0;
+ padding:10px;
+ border:4px double #0e0;
+ }
+ 
+
+</style> 
+ 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="{% static "cron/js/texttype.js" %}"></script>
+<script type="text/javascript">
+
+$(document).ready(function() {	
+	texttype("textDiv", "{{output|escapejs}}", 100, 100, function() {
+	});
+});
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Operation: {{operation.name}}</h1>
+
+<h2>MoP HoH infiltration</h2>
+<br/>
+<pre id="textDiv"></pre><br/>
+<br/>
+<span style="color:white;">Report your findings to Cr0n!</span><br/><br/>
+<a href="{% url 'cron_operation_cluster_mine' %}">Back to operation overview</a>
+
+{% endblock %}
