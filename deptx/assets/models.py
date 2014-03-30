@@ -357,6 +357,7 @@ class Operation(models.Model):
     instruction = models.TextField()
     startTime = models.DateTimeField()
     stopTime = models.DateTimeField()
+    closeTime = models.DateTimeField()
     
     @property
     def hasStarted(self):
@@ -364,7 +365,11 @@ class Operation(models.Model):
             
     @property
     def hasStopped(self):
-        return now() > self.stopTime    
+        return now() > self.stopTime
+    
+    @property
+    def hasClosed(self):
+        return now() > self.closeTime    
     
     @property
     def secondsToStart(self):
@@ -373,7 +378,7 @@ class Operation(models.Model):
         seconds = difference.seconds
         totalSeconds = seconds + (days * 24 * 60 * 60) 
         return totalSeconds
-    
+
     def __unicode__(self):
         return "%s" % (self.name)     
 
