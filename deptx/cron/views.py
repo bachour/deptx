@@ -722,7 +722,7 @@ def get_cluster_mine_basics():
 
 @csrf_exempt
 def operation_cluster_mine_sync(request):
-    data = None
+    data = json.dumps({'connectionError':True})
     if not request.user == None and request.user.is_active and isCron(request.user):
         if request.method == 'POST' and request.is_ajax():
             operation, riddle_list = get_cluster_mine_basics()

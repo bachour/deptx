@@ -78,6 +78,10 @@ white-space: pre-wrap;       /* css-3 */
 	            	if (data['reload']==true) {
 	            		location.reload(true);
 	            	}
+	            	if (data['connectionError']==true) {
+	            		$("#connectionError").html("There was an error connecting to the Cr0n server. Please reload page.<br/><br/>");
+	            	}
+
 	            	//totalSeconds = data['remainingSeconds'];
 
 	            },
@@ -138,6 +142,7 @@ white-space: pre-wrap;       /* css-3 */
 		<div id="operation_content" style="display:none;">
 	{% else %}
 		<div id="operation_content">
+		<div id="connectionError" style="color:red;"></div>
 	{% endif %}
 	
 	
