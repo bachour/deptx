@@ -723,15 +723,21 @@ def get_cluster_mine_basics():
 @user_passes_test(isCron, login_url='cron_login')
 def operation_cluster_mine_infiltration(request):
     operation = Operation.objects.get(serial='cluster-mine')
-    operationTracker, created = OperationTracker.objects.get_or_create(cron=request.user.cron, operation=operation)
-    if not operationTracker.hasInfiltrated:
-        operationTracker.hasInfiltrated = True
-        operationTracker.save()
-    output_tpl = loader.get_template('cron/operation_cluster_mine_infiltration.txt')
-    c = Context({})
-    output = output_tpl.render(c)#.replace("\n", "\\n")
-    logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION_INFILTRATE, cron=request.user.cron, operation=operation)
-    return render(request, 'cron/operation_cluster_mine_infiltration.html', {"operation":operation, "output":output})
+    
+    riddleAttempt_list = RiddleAttempt.objects.filter(riddle__operation=operation, cron=request.user.cron).filter(correct=True).filter(riddle__rank=24)
+    
+    if operation.hasStopped or riddleAttempt_list.count() >= 1: 
+        operationTracker, created = OperationTracker.objects.get_or_create(cron=request.user.cron, operation=operation)
+        if not operationTracker.hasInfiltrated:
+            operationTracker.hasInfiltrated = True
+            operationTracker.save()
+        output_tpl = loader.get_template('cron/operation_cluster_mine_infiltration.txt')
+        c = Context({})
+        output = output_tpl.render(c)#.replace("\n", "\\n")
+        logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION_INFILTRATE, cron=request.user.cron, operation=operation)
+        return render(request, 'cron/operation_cluster_mine_infiltration.html', {"operation":operation, "output":output})
+    else:
+        raise Http404
 
 @csrf_exempt
 def operation_cluster_mine_sync(request):
