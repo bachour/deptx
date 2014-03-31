@@ -19,7 +19,7 @@ except:
 
 DELAY_SHORT = 0 * 60
 DELAY_MEDIUM = 1 * 60
-DELAY_LONG = 12 * 60 
+DELAY_LONG = 3 * 60 
 
 def delayedEnough(mail, delay):
     if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
