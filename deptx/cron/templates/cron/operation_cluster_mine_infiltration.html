@@ -11,7 +11,9 @@ white-space: pre-wrap;       /* css-3 */
  word-wrap: break-word;
  
  width:640px;
+ {% if not operation.hasClosed and firstLook %}
  height:240px;
+ {% endif %};
  overflow:scroll;
  background-color:black;
  color:#0e0;
@@ -26,10 +28,12 @@ white-space: pre-wrap;       /* css-3 */
 <script src="{% static "cron/js/texttype.js" %}"></script>
 <script type="text/javascript">
 
-$(document).ready(function() {	
-	texttype("textDiv", "{{output|escapejs}}", 100, 100, function() {
+{% if not operation.hasClosed and firstLook %}
+	$(document).ready(function() {	
+		texttype("textDiv", "{{output|escapejs}}", 100, 100, function() {
+		});
 	});
-});
+{% endif %}
 
 </script>
 
@@ -41,7 +45,13 @@ $(document).ready(function() {
 
 <h2>MoP HoH infiltration</h2>
 <br/>
-<pre id="textDiv"></pre><br/>
+{% if operation.hasClosed or not firstLook %}
+This is a dump of the infiltration attempt.<br/><br/>
+<pre id="textDiv">{{output}}</pre>
+{% else %}
+<pre id="textDiv"></pre>
+{% endif %}
+<br/>
 <br/>
 <span style="color:white;">Report your findings to Cr0n!</span><br/><br/>
 <a href="{% url 'cron_operation_cluster_mine' %}">Back to operation overview</a>

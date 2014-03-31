@@ -722,20 +722,21 @@ def get_cluster_mine_basics():
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
 def operation_cluster_mine_infiltration(request):
+    firstLook = False
     operation = Operation.objects.get(serial='cluster-mine')
     
     riddleAttempt_list = RiddleAttempt.objects.filter(riddle__operation=operation, cron=request.user.cron).filter(correct=True).filter(riddle__rank=24)
-    
     if operation.hasStopped or riddleAttempt_list.count() >= 1: 
         operationTracker, created = OperationTracker.objects.get_or_create(cron=request.user.cron, operation=operation)
         if not operationTracker.hasInfiltrated:
+            firstLook = True
             operationTracker.hasInfiltrated = True
             operationTracker.save()
         output_tpl = loader.get_template('cron/operation_cluster_mine_infiltration.txt')
         c = Context({})
         output = output_tpl.render(c)#.replace("\n", "\\n")
         logging.log_action(ActionLog.ACTION_CRON_VIEW_OPERATION_INFILTRATE, cron=request.user.cron, operation=operation)
-        return render(request, 'cron/operation_cluster_mine_infiltration.html', {"operation":operation, "output":output})
+        return render(request, 'cron/operation_cluster_mine_infiltration.html', {"operation":operation, "output":output, "firstLook":firstLook})
     else:
         raise Http404
 
