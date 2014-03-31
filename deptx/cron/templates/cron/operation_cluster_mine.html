@@ -193,7 +193,7 @@ white-space: pre-wrap;       /* css-3 */
 		{% endif %}
 		
 		<br/>
-		{% if currentRiddle.rank > 1 or currentRiddle.hasSolved %}
+		{% if currentRiddle.rank > 1 or currentRiddle.hasSolved or operation.hasStopped %}
 			<table style="text-align:center;width:100%;">
 			<tr><th>Level</th><th>Key</th><th>Code (mark to reveal)</th></tr>
 			{% for riddle in riddle_list %}
