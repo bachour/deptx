@@ -100,6 +100,18 @@ a.internal, a.internal:hover {
 	border:none;
 }
 
+a.light, a.light:hover {
+	color:inherit;
+	background-color:inherit;
+	border:none;
+	text-decoration:underline;
+}
+
+a.light:hover {
+	text-decoration:none;
+}
+
+
 div.logo {
 	text-align:right;
 }

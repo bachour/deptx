@@ -26,7 +26,7 @@
 			<td class="nobox"><a class="button" href="{% url 'mop_index' %}"><input class="button" type="submit" value="control centre" /></a></td>
 			<td class="nobox">Citizen Helper: {{user.mop.firstname}} {{user.mop.lastname}}<br/>Identifier: {{user.mop.serial}}<br/>TRUST: {{user.mop.mopTracker.trust}}<br/>Credits: {{user.mop.mopTracker.credit}}</td>
 			<td class="nobox"><a class="button" href="{% url 'mop_logout' %}"><input class="button" type="submit" value="logout" /></a></td> 
-			<td class="nobox"><img id='mailimage' width='30px' src="{{user.mop.mopTracker.getMailUrl}}" style="visibility:{% if user.mop.mopTracker.unreadEmails == 0 or user.mop.mopTracker.hasCheckedInbox %}hidden{% else %}visible{% endif %};vertical-align:middle"> <span id="checkmail" />{{ user.mop.mopTracker.unreadEmails }} unread message(s)</span></td>
+			<td class="nobox"><img id='mailimage' width='30px' src="{{user.mop.mopTracker.getMailUrl}}" style="visibility:{% if user.mop.mopTracker.unreadEmails == 0 or user.mop.mopTracker.hasCheckedInbox %}hidden{% else %}visible{% endif %};vertical-align:middle"> <a class="light" href="{% url 'mop_mail_inbox' %}"><span id="checkmail" />{{ user.mop.mopTracker.unreadEmails }} unread message(s)</span></a></td>
 			<td class="nobox"><div id="spinner" style="-webkit-transform:scale(.35);"></div></td>
 		</tr>
 		</table>

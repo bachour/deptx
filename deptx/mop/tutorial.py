@@ -10,6 +10,9 @@ def getUnitComm():
 def createMail(bodyType, mop):
     mopco = getUnitComm()
     mail = Mail(bodyType=bodyType, mop=mop, unit=mopco, subject=Mail.SUBJECT_HELP, type=Mail.TYPE_RECEIVED, processed=True)
+    #if mail.bodyType == Mail.BODY_TUTORIAL_5_CONCLUSION:
+    #    mail.trust = 50
+    #    mail.mop.mopTracker.addTrust(mail.trust)
     mail.save()
     logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_TUTORIAL, mop=mop, mail=mail)
 

@@ -4,6 +4,7 @@
 
 <h1>Performance Report</h1>
 <p>Shortcut: <a href="{% url 'mop_rules' %}">guidebook</a></p>
+
 <h2>Next Performance Review, {{nextPeriod.reviewDate}}</h2>
 <table>
 <tr>
@@ -27,9 +28,16 @@
 	<td>{{nextPeriod.trustForRed|safe}} TRUST</td>
 </tr>
 </table>
-<h2>Current rating</h2>
+
+<h2>Current status</h2>
 <table>
-<tr><th>TRUST<br/>(total)</th><th>TRUST<br/>(current)</th><th>Credits</th><th>Clearance<br/>Level</th>{% if user.mop.mopTracker.hasSpecialStatus %}<th>Special<br/>Status</th>{% endif %}</tr>
+<tr>
+	<th>TRUST<br/>(total)</th>
+	<th>TRUST<br/>(current)</th>
+	<th>Credits</th>
+	<th>Clearance<br/>Level</th>
+	{% if user.mop.mopTracker.hasSpecialStatus %}<th>Special<br/>Status</th>{% endif %}
+	</tr>
 <tr style="text-align:center">
 <td>{{user.mop.mopTracker.totalTrust}}</td>
 <td>{{user.mop.mopTracker.trust}}</td>
@@ -40,14 +48,15 @@
 {% endif %}
 </tr>
 </table>
+
 <h2>Past Performance Reviews</h2>
 {% if mop_performanceInstance_list %}
 	<table>
-	<tr><th>Review Date</th><th>Rank</th><th>TRUST</th><th>Credits</th><th>Rating</th><th>Resulting<br/>Clearance</th></tr>
+	<tr><th>Review Date</th><th>TRUST</th><th>Credits</th><th>Rating</th><th>Resulting<br/>Clearance</th>
+	</tr>
 	{% for performanceInstance in mop_performanceInstance_list %}
 		<tr style="text-align:center;">
 		<td>{{performanceInstance.period.reviewDate}}</td>
-		<td>{{performanceInstance.rank}}</td>
 		<td>{{performanceInstance.trust}}</td>
 		<td>{{performanceInstance.credit}}</td>
 		<td><img class="ministar" src="{{performanceInstance.getPerformanceBadgeUrl}}" /></td>
@@ -58,45 +67,7 @@
 {% else %}
 You have not been reviewed yet.
 {% endif %}
-{% if lastPeriod_performanceInstance_list %}
-	<h2>Performance Review Ranking, {{lastPeriod.reviewDate}}</h2>
-	<table>
-		<tr>
-			<th>Review Date</th>
-			<th>Start Date</th>
-			<th>Length</th>
-			<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-blue.png"/></th>
-			<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-green.png"/></th>
-			<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-yellow.png"/></th>
-			<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-orange.png"/></th>
-			<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-red.png"/></th>
-		</tr>
-		<tr style="text-align:center;">
-			<td>{{lastPeriod.reviewDate}}</td>
-			<td>{{lastPeriod.startDate}}</td>
-			<td>{{lastPeriod.days}} days</td>
-			<td>{{lastPeriod.trustForBlue}} TRUST</td>
-			<td>{{lastPeriod.trustForGreen}} TRUST</td>
-			<td>{{lastPeriod.trustForYellow}} TRUST</td>
-			<td>{{lastPeriod.trustForOrange}} TRUST</td>
-			<td>{{lastPeriod.trustForRed|safe}} TRUST</td>
-		</tr>
-	</table>
-	<table>
-	<tr><th>Rank</th><th>ORCHID</th><th>TRUST</th><th>Rating</th><th>Resulting<br/>Clearance</th></tr>
-	{% for performanceInstance in lastPeriod_performanceInstance_list %}
-		{% if performanceInstance.rank <= 10 or user.mop == performanceInstance.mop %}
-			<tr style="text-align:center;{% if user.mop == performanceInstance.mop %}background-color:#999;{% endif %}">
-			<td>{{performanceInstance.rank}}.</td>
-			<td>{{performanceInstance.mop.firstname}} {{performanceInstance.mop.lastname}}</td>
-			<td>{{performanceInstance.trust}}</td>
-			<td><img class="ministar" src="{{performanceInstance.getPerformanceBadgeUrl}}" /></td>
-			<td><img class="minibadge" src="{{performanceInstance.getResultBadgeUrl}}" /></td>
-			</tr>
-		{% endif %}
-	{% endfor %}
-	</table>
-{% endif %}
+
 {% endblock %}
 
 {% block help %}

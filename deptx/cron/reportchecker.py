@@ -5,13 +5,18 @@ def analyze_reports():
     questionInstance_list = CaseQuestionInstance.objects.filter(correct=False).filter(submitted=True).exclude(question__questionType=CaseQuestion.TYPE_MULTIPLE_CHOICE).exclude(question__questionType=CaseQuestion.TYPE_OPEN)
     caseInstance_list = []
     for questionInstance in questionInstance_list:
-        if questionInstance.isBad:
-            questionInstance.isBad = False
-            questionInstance.submitted = False
+        #make sure we only check questions, when the report is complete
+        if questionInstance.getCaseInstance().allQuestionsSubmitted():
+            if questionInstance.isBad:
+                questionInstance.isBad = False
+                questionInstance.submitted = False
+            else:
+                questionInstance.correct = True
+            questionInstance.save()
+            caseInstance_list.append(questionInstance.getCaseInstance())
         else:
-            questionInstance.correct = True
-        questionInstance.save()
-        caseInstance_list.append(questionInstance.getCaseInstance())
+            print "skipped %s" % (questionInstance.cron.user.username)
+    
     caseInstance_list = list(set(caseInstance_list))
     for caseInstance in caseInstance_list:
         # we know that a case that had a bad answer now has an unsubmitted answer

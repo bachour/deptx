@@ -11,7 +11,7 @@
 </script>
 
 <h1>Infiltration Account</h1>
-<p>{{missionInstance.mission.activity}}</p>
+<p>{{missionInstance.mission.activity|safe}}</p>
 <form action="{% url 'cron_mission_cases' missionInstance.mission.serial %}" method="post">{% csrf_token %}
 <hr/>
 <table>

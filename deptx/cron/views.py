@@ -476,7 +476,7 @@ def case_report(request, mission_serial, case_serial):
                         answerLong = request.POST.get('%s_answerLong' % questionInstance.question.id, None)
                         if not questionInstance.answerLong == answerLong:
                             questionInstance.answerLong = answerLong
-                            if len(questionInstance.answerLong) > 140:
+                            if len(questionInstance.answerLong) > 24:
                                 questionInstance.submitted = True
                                 subject = "[cr0n] %s: Report Answer Submitted" % (questionInstance.cron.user.username)
                                 email_tpl = loader.get_template('cron/mail/message_from_player.txt')

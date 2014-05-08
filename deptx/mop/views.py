@@ -132,12 +132,11 @@ def rules(request):
 @user_passes_test(isMop, login_url='mop_login')
 def performance(request):
     lastPeriod, nextPeriod, days = performer.getPeriods()
-    
-    lastPeriod_performanceInstance_list = PerformanceInstance.objects.filter(period=lastPeriod).order_by('-trust')
+
     mop_performanceInstance_list = PerformanceInstance.objects.filter(mop=request.user.mop).order_by('-period__reviewDate')
     
     logging.log_action(ActionLog.ACTION_MOP_VIEW_PERFORMANCE, mop=request.user.mop)
-    return render(request, 'mop/performance.html', {'lastPeriod_performanceInstance_list':lastPeriod_performanceInstance_list, 'mop_performanceInstance_list':mop_performanceInstance_list, 'lastPeriod':lastPeriod, 'nextPeriod':nextPeriod})
+    return render(request, 'mop/performance.html', {'mop_performanceInstance_list':mop_performanceInstance_list, 'lastPeriod':lastPeriod, 'nextPeriod':nextPeriod})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
