@@ -46,7 +46,7 @@
 {% endfor %}
 </table>
 
-{% if not cronDocument_list.allAvailable and not caseInstance.isSolved %}
+{% if not cronDocument_list.allAvailable and not caseInstance.allDocumentsSolved %}
 <p>In order to acquire missing documents: 
 <ol> 
 <li> Login to the Ministry of Provenance  <a target="_blank" href="http://www.mofp.net">Intranet</a>.</li>
@@ -58,7 +58,7 @@
 Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>
 <br/>
 {% endif %}
-{% if not cronDocument_list.allMissing and not caseInstance.isSolved %}
+{% if not cronDocument_list.allMissing and not caseInstance.allDocumentsSolved %}
 	<p>If the document contains provenance data, you can now use our own Provenance Viewing tool to inspect provenance documents. Your mission is to examine the document and highlight any inconsistencies in the attributes of the node:</p>
 	<ol>
 	<li>Click the "inspect" link above.</li>
@@ -72,7 +72,7 @@ Our hackers will access your MoP Draft folder to retrieve the document and bypas
 {% endif %}
 <br/>
 {% if caseInstance.allDocumentsSolved %}
-	<p>This case is ready for reporting! Great job!</p>
+	<p><strong style="color:white;">This case is ready for reporting! Great job!</strong></p>
 	<br/>
 	<p><a href="{% url 'cron_case_report' mission.serial case.serial %}">Continue to Report</a></p>
 {% elif caseInstance.isSolved %}
