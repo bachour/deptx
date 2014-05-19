@@ -15,16 +15,27 @@
 		{% endfor %}
 	{% endif %}
 	<table>
-	<tr><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Published</th></tr>
+	<tr><th class="nobox"></th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Published</th></tr>
 	{% for randomizedDocument in randomizedDocument_list %}
 		{% if randomizedDocument.exists %}
 		{% else %}
 			<tr>
+			{% if randomizedDocument.requiredRequisition %}
+				<td class="nobox" style="text-align:center;"><a href="{% url 'mop_forms_fill' randomizedDocument.requiredRequisition.requisition.serial randomizedDocument.serial %}">request</a></td>
+			{% else %}
+				<td class="nobox" style="text-align:center;">form missing</td>
+			{% endif %}
 			<td>{{randomizedDocument.mopDocument.unit.serial}}</td>
-			<td>{{randomizedDocument.mopDocument.name}}</td>
+			<td style="white-space:nowrap;">
+				{% if request.user.mop.mopTracker.clearance >= randomizedDocument.mopDocument.clearance %}
+					{{randomizedDocument.mopDocument.name}}
+				{% else %}
+					********
+				{% endif %}
+			</td>
 			<td style="white-space:nowrap;">{{randomizedDocument.serial}}</td>
 			<td><img class="minibadge" src="{{randomizedDocument.getBadgeUrl}}"/></td>
-			<td>{{randomizedDocument.createdAt|date:"Y-m-d"}}</td>
+			<td style="white-space:nowrap;">{{randomizedDocument.createdAt|date:"Y-m-d"}}</td>
 			</tr>
 		{% endif %}
 	{% endfor %}

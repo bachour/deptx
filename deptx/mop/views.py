@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 
 from django.http import HttpResponseRedirect, HttpResponse
+from django.http import Http404
+
 from django.core.urlresolvers import reverse
 
 from django.contrib import auth
@@ -21,9 +23,6 @@ from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFil
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
 from copy import deepcopy
-
-
-from mop import performer
 
 from django.views.decorators.csrf import csrf_exempt
 from mop.mailserver import analyze_mail, getUnprocessedMails
@@ -67,11 +66,13 @@ def index(request):
         
         request.user.mop.mopTracker.unreadEmails = inbox_unread
         request.user.mop.mopTracker.save()
+
+        helpForm = Requisition.objects.filter(category=Requisition.CATEGORY_HELP)[0]
         
         logging.log_action(ActionLog.ACTION_MOP_VIEW_INDEX, mop=request.user.mop)
         
         #lastPeriod, nextPeriod, days = performer.getPeriods()
-        context = {'user': request.user, 'inbox_unread': inbox_unread, 'hide':hide}
+        context = {'user': request.user, 'inbox_unread': inbox_unread, 'hide':hide, 'helpForm':helpForm}
         #           , 'nextPeriod':nextPeriod}
 
         return render(request, 'mop/index.html', context)
@@ -147,16 +148,23 @@ def documents_pool(request):
         randomizedDocument_list_all = getDocumentPoolForMop(request.user.mop)
     
     randomizedDocument_list = paginate(request, randomizedDocument_list_all)
+    for document in randomizedDocument_list:
+        try:
+            document.requiredRequisition = RequisitionBlank.objects.filter(mop=request.user.mop, requisition__unit=document.unit, requisition__category=Requisition.CATEGORY_DOCUMENT)[0]
+        except:
+            document.requiredRequisition = None
  
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_POOL, mop=request.user.mop)
     return render(request, 'mop/documents_pool.html', {"randomizedDocument_list": randomizedDocument_list})
 
 def getDocumentPoolForMop(mop):
-        all_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=mop.mopTracker.clearance)
+        #all_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=mop.mopTracker.clearance)
+        all_list = RandomizedDocument.objects.filter(active=True)
         public_list = all_list.filter(mop__isnull=True)
         personal_list = all_list.filter(mop=mop)
         unsorted_randomizedDocument_list = public_list | personal_list
-        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-mopDocument__clearance', '-createdAt')
+        #randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-mopDocument__clearance', '-createdAt')
+        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-createdAt')
         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mop)
         
         cleaned_list = []
@@ -177,6 +185,12 @@ def getDocumentPoolForMop(mop):
 def documents(request):
     mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE)
     mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
+    for documentInstance in mopDocumentInstance_list:
+        try:
+            documentInstance.requiredRequisition = RequisitionBlank.objects.filter(mop=request.user.mop, requisition__unit=documentInstance.randomizedDocument.mopDocument.unit, requisition__category=Requisition.CATEGORY_SUBMISSION)[0]
+        except:
+            documentInstance.requiredRequisition = None
+        print documentInstance.requiredRequisition
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER, mop=request.user.mop)
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
@@ -343,14 +357,14 @@ def mail_deleting(request, serial):
     return redirect('mop_mail_trash')
 
 
-@login_required(login_url='mop_login')
-@user_passes_test(isMop, login_url='mop_login')
-def mail_compose_with_form(request, fullSerial):
-    return mail_compose(request, fullSerial)
+# @login_required(login_url='mop_login')
+# @user_passes_test(isMop, login_url='mop_login')
+# def mail_compose_with_form(request, fullSerial):
+#     return mail_compose(request, fullSerial)
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def mail_compose(request, fullSerial=None):
+def mail_compose(request, fullSerial=None, documentSerial=None):
     #TODO Mail needs a sentAt / savedAt value so that trashing email does not change its date
     if request.method == 'POST':
         mail = Mail(mop=request.user.mop, type=Mail.TYPE_SENT)
@@ -403,8 +417,19 @@ def mail_compose(request, fullSerial=None):
                         subject = Mail.SUBJECT_SUBMIT_DOCUMENT
                     elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
                         subject = Mail.SUBJECT_REQUEST_HELP
-                    form = MailForm(initial={'requisitionInstance': requisitionInstance, 'unit': requisitionInstance.blank.requisition.unit, 'subject':subject})
-                    logging.log_action(ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM, mop=request.user.mop, requisitionInstance=requisitionInstance)
+                    
+                    if documentSerial is not None:
+                        try:
+                            mopDocumentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, status=MopDocumentInstance.STATUS_ACTIVE, randomizedDocument__serial=documentSerial)
+                        except:
+                            try:
+                                mopDocumentInstance = MopDocumentInstance.objects.get(mop=request.user.mop, status=MopDocumentInstance.STATUS_ACTIVE, cronDocument__serial=documentSerial)
+                            except:
+                                mopDocumentInstance = None
+                    else:
+                        mopDocumentInstance = None
+                    form = MailForm(initial={'requisitionInstance': requisitionInstance, 'unit': requisitionInstance.blank.requisition.unit, 'subject':subject, 'mopDocumentInstance':mopDocumentInstance})
+                    logging.log_action(ActionLog.ACTION_MOP_MAIL_COMPOSE_WITH_FORM, mop=request.user.mop, requisitionInstance=requisitionInstance, mopDocumentInstance=mopDocumentInstance)
                     withForm = True
                     break
         form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
@@ -516,18 +541,22 @@ def forms_blank(request):
                 break
         if not requisition.acquired:
             requisition_list.allAcquired = False
-    
+    try:
+        requiredRequisition = Requisition.objects.filter(category=Requisition.CATEGORY_FORM)[0]
+    except:
+        requiredRequisition = None
     logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_BLANKS, mop=request.user.mop)
-    return render(request, 'mop/forms_blank.html', {"blank_list": blank_list, "requisition_list":requisition_list})
+    return render(request, 'mop/forms_blank.html', {"blank_list": blank_list, "requisition_list":requisition_list, "requiredRequisition":requiredRequisition})
+
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
-def form_fill(request, reqBlank_serial):
+def form_fill(request, reqBlank_serial, data=None):
     #TODO check if user has rights to access the requisition in the first place
     try:
         reqBlank = RequisitionBlank.objects.get(mop=request.user.mop, requisition__serial=reqBlank_serial)
     except RequisitionBlank.DoesNotExist:
-        reqBlank=None
+        raise Http404
         
     if request.method == 'POST':
         requisitionInstance = RequisitionInstance(blank=reqBlank)
@@ -537,7 +566,7 @@ def form_fill(request, reqBlank_serial):
             logging.log_action(ActionLog.ACTION_MOP_FORM_SIGN, mop=request.user.mop, requisitionInstance=requisitionInstance)
             return redirect('mop_forms_signed')
     else:
-        form = RequisitionInstanceForm()
+        form = RequisitionInstanceForm(initial={'data': data})
         logging.log_action(ActionLog.ACTION_MOP_VIEW_FORMS_FILL, mop=request.user.mop, requisitionBlank=reqBlank)
         return render(request, 'mop/forms_fill.html', {"reqBlank": reqBlank, "form": form})
 

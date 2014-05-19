@@ -19,9 +19,15 @@
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
 		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
-		<td>{{mopDocumentInstance.getTrustFinal}}</td>
+		<td style="text-align:center;">{% if mopDocumentInstance.getTrustFinal > 0 %}+{% endif %}{{mopDocumentInstance.getTrustFinal}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
-		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
+		<td>
+		{% if request.user.mop.mopTracker.clearance >= randomizedDocument.mopDocument.clearance %}
+			{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}
+		{% else %}
+			********
+		{% endif %}
+		</td>
 		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
 		<td>{{mopDocumentInstance.modifiedAt|date:"Y-m-d"}}</td>

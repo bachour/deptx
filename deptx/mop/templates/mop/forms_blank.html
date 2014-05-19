@@ -25,10 +25,14 @@ No blank forms available.
 You have aquired all forms from the Unit of Administration.
 {% else %}
 <table>
-<tr><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
+<tr><th class="nobox"></th><th>Unit</th><th>Form</th><th>Type</th><th>Identifier</th></tr>
 {% for req in requisition_list %}
 	{% if not req.acquired %}
-		<tr><td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td style="white-space:nowrap;">{{req.serial}}</td></tr>
+		<tr>
+		{% if requiredRequisition %}
+			<td class="nobox" style="white-space:nowrap;"><a href="{% url 'mop_forms_fill' requiredRequisition.serial req.serial %}">request</a></td>
+		{% endif %}
+		<td>{{req.unit.serial}}</td><td>{{req.name}}</td><td>{{req.get_category_display}}</td><td style="white-space:nowrap;">{{req.serial}}</td></tr>
 	{% endif %}
 {% endfor %}
 </table>

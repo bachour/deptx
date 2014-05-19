@@ -19,12 +19,26 @@
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
 		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
-		<td>{{mopDocumentInstance.modified|yesno:'please submit, needs processing'}}</td>
+		{% if mopDocumentInstance.modified %}
+			{% if mopDocumentInstance.requiredRequisition and mopDocumentInstance.modified %}
+				<td style="text-align:center;">please <a href="{% url 'mop_forms_fill' mopDocumentInstance.requiredRequisition.requisition.serial mopDocumentInstance.getDocumentSerial %}">submit</a></td>
+			{% else %}
+				<td style="text-align:center;">form missing</td>
+			{% endif %}
+		{% else %}
+				<td style="text-align:center;">please process</td>
+			{% endif %}
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
-		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
+		<td style="white-space:nowrap;">
+		{% if request.user.mop.mopTracker.clearance >= randomizedDocument.mopDocument.clearance %}
+			{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}
+		{% else %}
+			********
+		{% endif %}
+		</td>
 		<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-		<td>{{mopDocumentInstance.createdAt|date:"Y-m-d"}}</td>
+		<td style="white-space:nowrap;">{{mopDocumentInstance.createdAt|date:"Y-m-d"}}</td>
 		</tr>
 	{% endfor %}
 	</table>
