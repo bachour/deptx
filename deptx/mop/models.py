@@ -189,6 +189,11 @@ class RandomizedDocument(models.Model):
     def unit(self):
         return self.mopDocument.unit
     
+    @property
+    def age(self):
+        age = now() - self.createdAt
+        return int(age.total_seconds() // 3600)
+    
     def getBadgeUrl(self):
         return Clearance(self.mopDocument.clearance).getBadgeUrl()
     

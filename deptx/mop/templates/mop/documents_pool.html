@@ -20,22 +20,23 @@
 		{% if randomizedDocument.exists %}
 		{% else %}
 			<tr>
-			{% if randomizedDocument.requiredRequisition %}
+			{% if request.user.mop.mopTracker.clearance < randomizedDocument.mopDocument.clearance %}
+				<td class="nobox" style="text-align:center;">insufficient clearance</td>
+			{% elif randomizedDocument.requiredRequisition %}
 				<td class="nobox" style="text-align:center;"><a href="{% url 'mop_forms_fill' randomizedDocument.requiredRequisition.requisition.serial randomizedDocument.serial %}">request</a></td>
 			{% else %}
 				<td class="nobox" style="text-align:center;">form missing</td>
 			{% endif %}
 			<td>{{randomizedDocument.mopDocument.unit.serial}}</td>
-			<td style="white-space:nowrap;">
 				{% if request.user.mop.mopTracker.clearance >= randomizedDocument.mopDocument.clearance %}
-					{{randomizedDocument.mopDocument.name}}
+					<td style="white-space:nowrap;">{{randomizedDocument.mopDocument.name}}</td>
 				{% else %}
-					********
+					<td style="text-align:center">********</td>
 				{% endif %}
 			</td>
 			<td style="white-space:nowrap;">{{randomizedDocument.serial}}</td>
 			<td><img class="minibadge" src="{{randomizedDocument.getBadgeUrl}}"/></td>
-			<td style="white-space:nowrap;">{{randomizedDocument.createdAt|date:"Y-m-d"}}</td>
+			<td style="white-space:nowrap;">-{{randomizedDocument.age}}hour(s)</td>
 			</tr>
 		{% endif %}
 	{% endfor %}

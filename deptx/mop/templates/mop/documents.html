@@ -15,30 +15,32 @@
 		{% endfor %}
 	{% endif %}
 	<table>
-	<tr><th class="nobox"></th><th>Status</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Assigned</th></tr>
+	<tr><th>Submit</th><th>Process</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th></tr>
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
-		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
-		{% if mopDocumentInstance.modified %}
+		{% if request.user.mop.mopTracker.clearance < mopDocumentInstance.getClearance %}
+				<td class="nobox" style="text-align:center;" colspan=2>insufficient clearance</td>
+		{% elif mopDocumentInstance.modified %}
 			{% if mopDocumentInstance.requiredRequisition and mopDocumentInstance.modified %}
-				<td style="text-align:center;">please <a href="{% url 'mop_forms_fill' mopDocumentInstance.requiredRequisition.requisition.serial mopDocumentInstance.getDocumentSerial %}">submit</a></td>
+				<td class="nobox" style="text-align:center;"><a href="{% url 'mop_forms_fill' mopDocumentInstance.requiredRequisition.requisition.serial mopDocumentInstance.getDocumentSerial %}">submit</a></td>
+				<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
 			{% else %}
-				<td style="text-align:center;">form missing</td>
+				<td class="nobox" style="text-align:center;">form missing</td>
+				<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
 			{% endif %}
 		{% else %}
-				<td style="text-align:center;">please process</td>
-			{% endif %}
-		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
-		<td style="white-space:nowrap;">
-		{% if request.user.mop.mopTracker.clearance >= randomizedDocument.mopDocument.clearance %}
-			{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}
-		{% else %}
-			********
+			<td class="nobox" style="text-align:center">N/A</td>
+			<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">process</a></td>
 		{% endif %}
-		</td>
+		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
+		
+		{% if request.user.mop.mopTracker.clearance >= mopDocumentInstance.getClearance %}
+			<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.mopDocument.name}}{{mopDocumentInstance.cronDocument.name}}</td>
+		{% else %}
+			<td style="text-align:center">********</td>
+		{% endif %}
 		<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-		<td style="white-space:nowrap;">{{mopDocumentInstance.createdAt|date:"Y-m-d"}}</td>
 		</tr>
 	{% endfor %}
 	</table>
