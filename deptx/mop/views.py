@@ -11,14 +11,14 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-#from mop import documentcreator, performer_2
+from mop import documentcreator, performer_2
 from players.models import Mop
 from players.forms import MopCheckForm, PasswordForm
 
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, TrustInstance, StoryFileInstance
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance#, TrustInstance 
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
