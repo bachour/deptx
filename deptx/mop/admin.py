@@ -21,7 +21,7 @@ class RequisitionBlankAdmin(admin.ModelAdmin):
     list_filter = ('mop', 'requisition', 'requisition__type', 'requisition__unit', 'createdAt')
 
 class MopDocumentInstanceAdmin(admin.ModelAdmin):
-    list_filter = ('mop', 'status', 'randomizedDocument__mopDocument', 'modified', 'correct', 'randomizedDocument__active', 'modifiedAt')
+    list_filter = ('mop', 'status', 'randomizedDocument__mopDocument', 'modified', 'correct', 'status', 'randomizedDocument__active', 'modifiedAt')
     raw_id_fields = ('mop', 'randomizedDocument')
 
 class MopTrackerAdmin(admin.ModelAdmin):
