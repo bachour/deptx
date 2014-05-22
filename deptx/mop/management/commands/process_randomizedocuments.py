@@ -7,4 +7,4 @@ class Command(NoArgsCommand):
     help = "Automated Daily Document Creator"
     def handle_noargs(self, **options):
         #remove_old_documents()
-        #create_documents()
+        create_documents()
