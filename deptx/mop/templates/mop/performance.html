@@ -1,78 +1,59 @@
 {% extends 'mop/base.html' %}
+{% load humanize %}
 
 {% block content %}
 
 <h1>Performance Report</h1>
 <p>Shortcut: <a href="{% url 'mop_rules' %}">guidebook</a></p>
 
-<h2>Next Performance Review, {{nextPeriod.reviewDate}}</h2>
 <table>
 <tr>
-	<th>Next review</th>
-	<th>Last review</th>
-	<th>Length</th>
-	<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-blue.png"/></th>
-	<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-green.png"/></th>
-	<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-yellow.png"/></th>
-	<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-orange.png"/></th>
-	<th><img class="ministar" src="{{MEDIA_URL}}orchid-badge/performance-red.png"/></th>
+<th>Citizen Helper</th>
+<th>Identifier</th>
+<th>Clearance</th>
+{% if user.mop.mopTracker.hasSpecialStatus %}<th>Special<br/>Status</th>{% endif %}
+<th>Trust</th>
+{% if user.mop.mopTracker.nextLevelAt %}<th>Promotion at</th>{% endif %}
+<th>Credits</th>
 </tr>
 <tr style="text-align:center;">
-	<td><strong style="color:red;">{{nextPeriod.reviewDate}}</strong></td>
-	<td>{{nextPeriod.startDate}}</td>
-	<td>{{nextPeriod.days}} days</td>
-	<td>{{nextPeriod.trustForBlue}} TRUST</td>
-	<td>{{nextPeriod.trustForGreen}} TRUST</td>
-	<td>{{nextPeriod.trustForYellow}} TRUST</td>
-	<td>{{nextPeriod.trustForOrange}} TRUST</td>
-	<td>{{nextPeriod.trustForRed|safe}} TRUST</td>
-</tr>
-</table>
-
-<h2>Current status</h2>
-<table>
-<tr>
-	<th>TRUST<br/>(total)</th>
-	<th>TRUST<br/>(current)</th>
-	<th>Credits</th>
-	<th>Clearance<br/>Level</th>
-	{% if user.mop.mopTracker.hasSpecialStatus %}<th>Special<br/>Status</th>{% endif %}
-	</tr>
-<tr style="text-align:center">
-<td>{{user.mop.mopTracker.totalTrust}}</td>
-<td>{{user.mop.mopTracker.trust}}</td>
-<td>{{user.mop.mopTracker.credit}}</td>
+<td>{{user.mop.firstname}} {{user.mop.lastname}}</td>
+<td>{{user.mop.serial}}</td>
 <td><img class="minibadge" src="{{user.mop.mopTracker.getBadgeUrl}}" /></td>
 {% if user.mop.mopTracker.hasSpecialStatus %}
 	<td><img class="minibadge" src="{{MEDIA_URL}}orchid-badge/orchid-white.png" /></td>
 {% endif %}
+<td>{{user.mop.mopTracker.totalTrust|intcomma}}</td>
+{% if user.mop.mopTracker.nextLevelAt %}<td>{{user.mop.mopTracker.nextLevelAt|intcomma}}</td>{% endif %}
+<td>{{user.mop.mopTracker.trust|intcomma}}</td>
 </tr>
 </table>
 
-<h2>Past Performance Reviews</h2>
-{% if mop_performanceInstance_list %}
+<h2>Past Performance Records</h2>
+{% if trustInstance_list %}
 	<table>
-	<tr><th>Review Date</th><th>TRUST</th><th>Credits</th><th>Rating</th><th>Resulting<br/>Clearance</th>
-	</tr>
-	{% for performanceInstance in mop_performanceInstance_list %}
+	<tr><th>Date</th><th>TRUST</th><th>Credits:</th><th>Clearance</th></tr>
+	{% for trustInstance in trustInstance_list %}
 		<tr style="text-align:center;">
-		<td>{{performanceInstance.period.reviewDate}}</td>
-		<td>{{performanceInstance.trust}}</td>
-		<td>{{performanceInstance.credit}}</td>
-		<td><img class="ministar" src="{{performanceInstance.getPerformanceBadgeUrl}}" /></td>
-		<td><img class="minibadge" src="{{performanceInstance.getResultBadgeUrl}}" /></td>
+		<td>{{trustInstance.createdAt|date:"Y-m-d"}}</td>
+		<td>{{trustInstance.totalTrust|intcomma}}</td>
+		<td>{{trustInstance.oldTrust|intcomma}} => {{trustInstance.newTrust|intcomma}}</td>
+		<td><img class="minibadge" src="{{trustInstance.getBadgeUrl}}" /></td>
+		{% if trustInstance.specialStatus %}
+			<td><img class="minibadge" src="{{MEDIA_URL}}orchid-badge/orchid-white.png" /></td>
+		{% endif %}
 		</tr>
 	{% endfor %}
 	</table>
 {% else %}
-You have not been reviewed yet.
+<p>You do not yet have any archived performance records. Performance records are created every night.</p>
 {% endif %}
 
 {% endblock %}
 
 {% block help %}
 <p>
-This should give you a good overview of the TRUST you have gained while working for the Ministry of Provenance. Your TRUST for every new performance period is reset to 0 to encourage a constant level of occupation. The more Trust you earn the more access to documents you will get. Remember: After an unsatisfactory performance period you can also lose clearance again.
+This should give you a good overview of the TRUST you have gained while working for the Ministry of Provenance.
 </p>
 {% endblock %}
 

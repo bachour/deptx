@@ -11,14 +11,14 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-from mop import documentcreator#, performer_2
+from mop import documentcreator, performer_2
 from players.models import Mop
 from players.forms import MopCheckForm, PasswordForm
 
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance#, TrustInstance 
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance, TrustInstance 
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
@@ -106,14 +106,14 @@ def login(request):
                 
                 return HttpResponseRedirect(reverse('mop_index'))
             else:
-                return render(request, 'mop/login.html', {'form' : form, 'wrong':True})
+                return render(request, 'mop/login_maintenance.html', {'form' : form, 'wrong':True})
             
         else:
-            return render(request, 'mop/login.html', {'form' : form})
+            return render(request, 'mop/login_maintenance.html', {'form' : form})
         
     else:
         form =  AuthenticationForm()
-        return render(request, 'mop/login.html', {'form' : form})
+        return render(request, 'mop/login_maintenance.html', {'form' : form})
 
 def logout_view(request):
     if not request.user == None and request.user.is_active and isMop(request.user):
@@ -177,12 +177,14 @@ def getDocumentPoolForMop(mop):
         cleaned_list = []
         
         for randomizedDocument in randomizedDocument_list:
-            exists = False
-            for mopDocumentInstance in mopDocumentInstance_list:
-                if mopDocumentInstance.randomizedDocument == randomizedDocument:
-                    exists = True
-            if not exists:
+            if not MopDocumentInstance.objects.filter(mop=mop, randomizedDocument=randomizedDocument).exists():
                 cleaned_list.append(randomizedDocument)
+#             exists = False
+#             for mopDocumentInstance in mopDocumentInstance_list:
+#                 if mopDocumentInstance.randomizedDocument == randomizedDocument:
+#                     exists = True
+#             if not exists:
+#                 cleaned_list.append(randomizedDocument)
 
         return cleaned_list
 
@@ -729,23 +731,81 @@ def control(request):
             output = documentcreator.create_documents()
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
+        elif 'create basic trust instances' in request.POST:
+            createBasicTrustInstances()
     mail_list = getUnprocessedMails().order_by('sentAt')
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
-    moptracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
+    mopTracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
 
-    for moptracker in moptracker_list:
-        #moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
-        moptracker.activeDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
-        moptracker.limboDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
-        moptracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
-        moptracker.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
-        moptracker.revokedDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
-        moptracker.hackedDocs = MopDocumentInstance.objects.filter(mop=moptracker.mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
-    
-    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'moptracker_list':moptracker_list})       
+#     for mopTracker in mopTracker_list:
+#         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
+#         newTrust = 0
+#         for mopDocumentInstance in mopDocumentInstance_list:
+#             newTrust += mopDocumentInstance.getTrustFinal()
+#         mopTracker.newTrust = newTrust
+#         mailTrust = 0
+#         mail_list = Mail.objects.filter(mop=mopTracker.mop).filter(bodyType=Mail.BODY_MANUAL)
+#         for mail in mail_list:
+#             if mail.trust:
+#                 mailTrust += mail.trust
+#         mopTracker.mailTrust = mailTrust
+#         #moptracker.availableDocs = len(getDocumentPoolForMop(moptracker.mop))
+#         mopTracker.mailErrors = Mail.objects.filter(mop=mopTracker.mop).filter(subject=Mail.SUBJECT_ERROR).count
+#         mopTracker.activeDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
+#         mopTracker.activeActiveDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=True).count
+#         mopTracker.limboDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
+#         mopTracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
+#         mopTracker.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
+#         mopTracker.revokedDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
+#         mopTracker.hackedDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
+#      
+    return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mopTracker_list':mopTracker_list})       
+
+def createBasicTrustInstances():
+    mopTracker_list = MopTracker.objects.all()
+    for mopTracker in mopTracker_list:
+        print mopTracker.id
+        trustInstance = TrustInstance(mop=mopTracker.mop)
+            
+        trustInstance.oldClearance = mopTracker.clearance
+        trustInstance.newClearance = mopTracker.clearance
+        trustInstance.oldTrust = mopTracker.trust
+        trustInstance.newTrust = mopTracker.trust
+        trustInstance.totalTrust = mopTracker.totalTrust
+        trustInstance.specialStatus = mopTracker.hasSpecialStatus
+        trustInstance.save()
+        
+        mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
+        newDeal = 0
+        for mopDocumentInstance in mopDocumentInstance_list:
+            newDeal += mopDocumentInstance.getTrustFinal()
+        mailTrust = 0
+        mail_list = Mail.objects.filter(mop=mopTracker.mop).filter(bodyType=Mail.BODY_MANUAL)
+        for mail in mail_list:
+            if mail.trust:
+                mailTrust += mail.trust
+        
+        mailErrors = Mail.objects.filter(mop=mopTracker.mop).filter(subject=Mail.SUBJECT_ERROR).count()
+        
+        newTrustInstance = TrustInstance(mop=mopTracker.mop)
+        newTrustInstance.oldClearance = mopTracker.clearance
+        newTrustInstance.oldTrust = mopTracker.trust
+
+        mopTracker.totalTrust = newDeal + mailTrust - mailErrors
+        mopTracker.credits = 0
+        mopTracker.save()
+        mopTracker.check_for_promotion()
+                
+        newTrustInstance.newClearance = mopTracker.clearance
+        newTrustInstance.newTrust = mopTracker.trust
+        newTrustInstance.totalTrust = mopTracker.totalTrust
+        newTrustInstance.specialStatus = mopTracker.hasSpecialStatus
+        newTrustInstance.save()
+        
+
 
 @staff_member_required
 def control_randomize(request, mopDocument_id):

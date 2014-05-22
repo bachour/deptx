@@ -15,11 +15,11 @@
 	{% endif %}
 
 	<table>
-	<tr><th class="nobox"></th><th>TRUST</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Reported</th></tr>
+	<tr><th class="nobox"></th><th>Result</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Reported</th></tr>
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
 		<tr>
 		<td class="nobox"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
-		<td style="text-align:center;">{% if mopDocumentInstance.getTrustFinal > 0 %}+{% endif %}{{mopDocumentInstance.getTrustFinal}}</td>
+		<td style="text-align:center;"><span style="font-size:32px;">{% if mopDocumentInstance.correct %}+{% else %}-{% endif %}</span></td>
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
 		<td>
 		{% if request.user.mop.mopTracker.clearance >= randomizedDocument.mopDocument.clearance %}
@@ -30,7 +30,7 @@
 		</td>
 		<td>{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 		<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-		<td>{{mopDocumentInstance.modifiedAt|date:"Y-m-d"}}</td>
+		<td style="text-align:center;">{% if mopDocumentInstance.status == mopDocumentInstance.STATUS_REVOKED %}revoked{% else %}{{mopDocumentInstance.modifiedAt|date:"Y-m-d"}}{% endif %}</td>
 		</tr>
 	{% endfor %}
 	</table>

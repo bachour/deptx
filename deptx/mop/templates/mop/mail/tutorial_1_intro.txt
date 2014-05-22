@@ -2,39 +2,37 @@ Welcome to the Ministry of Provenance!
 
 I'm Sandy and I'll be teaching you about how to be a productive member in the ORCHID scheme! Isn't this exciting!
 
-First you must learn about forms. At MoP, we LOVE forms! With time you'll learn to love them too!
+The Ministry is all about Provenance! And you will do Provenance work as well. Isn't that awesome?
 
-There's tons of departments in the Ministry. All are run differently, but they all have one thing in common: Yes, you guessed it! Forms! Our motto is "There's no inFORMation without a FORM!"
+Here is a quick reminder of what Provenance actually is, just sit back and enjoy!
 
-There are forms for requesting documents and forms for submitting reports. There's even a form for requesting forms! How cool is that?
+<iframe width="560" height="315" src="//www.youtube.com/embed/FSbQ4iisXTc" frameborder="0" allowfullscreen></iframe>
 
-So let's start there! We'll request a new blank form from {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}". 
+Now about your actual work. You will look at Provenance records and check them for us. This is a very important task, and we are so happy that you have become an ORCHID Citizen Helper! Thanks! :D
 
-Our {{tutorialData.form_requisition.unit.name}} is the department that is responsible for handing out all forms, even those for other departments. I'm hoping to one day be transfered there! Then I'll really be working with forms all day!
+The different departments of the Ministry all produce Provenance records. In order to access these records, you need to request them - with a form - from the responsible department.
 
-We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents from a specific department. To get this form follow these simple steps:
+However, in order to do so, you need the correct form! At MoP, we LOVE forms! With time you'll learn to love them too!
 
-1.	Go to the "Blank Forms" page from the "Control Centre" (I suggest you open that in a new window or tab so you can come back to these steps easily).
-2.	Select "{{tutorialData.form_requisition.name}}" by clicking the "fill in" button next to it.
-3.	You need to insert the form ID for the form you want to request. You can normally lookup the necessary form ID in the table at the bottom of the "Blank Forms" page. 
-4.  For now, enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field.
-6.	Attach your digital signature by clicking the "Sign Form" button.
-7.  This takes you to the "Signed Forms" page where you can see all the forms you signed. Currently there's only one.
-8.	Now that you've filled in and signed your form, click the "mail" button next to the newly signed form - this will take you to the "Compose" page and automatically attach the form to the message.
-9.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
-10.	Select "Requesting form" as the subject.
-11.	Click "Send".
-12.	Go back to your Inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}. It might take a couple of minutes to process some emails. This one shouldn't take more than one or two.
 
-Phew! Now wasn't that fun! :)
+Let's start and get you a new form: "{{tutorialData.document_requisition.name}}".
+
+1.	Go to the "Blank Forms" page from the "Control Centre" (I suggest you open it in a new window or tab so you can come back to these steps easily).
+
+2. At the top you can see two forms. The first one is used to request new forms. The second one allows you to contact me or another member of {{tutorialData.mopco.serial}}.
+
+3. At the bottom you see a list with forms that you still need to acquire. Let's get the {{tutorialData.document_requisition.unit.name}} form! That form is used to request Provenance records from {{tutorialData.document_requisition.unit.serial}}. Just press the "request" button next to it - that's a shortcut!
+
+4. You are now on a new page, filling in the form for requesting a new form. Everything is already prepared for you - just press "sign" to add your digital signature.
+
+5. This brings you to all the forms that you have signed but not yet used. Press the "mail" button next to your form.
+
+6. Now you are composing an email to MOPADM. Our email client is intelligent and so has already pre-filled the interface based on the form that you are sending. Leave everything as it is and press "send message". And *swhoooosh* the form request is on the way.
 
 If you followed these steps correctly, you should receive an email from the {{tutorialData.form_requisition.unit.name}} informing you that you have access to the new form. How exciting!
 
 You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps. 
 
-While you wait, why not watch this informative video about what provenance is and why it's awesome!
-
-<iframe width="560" height="315" src="//www.youtube.com/embed/FSbQ4iisXTc" frameborder="0" allowfullscreen></iframe>
 
 Best of luck!
 

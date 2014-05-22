@@ -15,10 +15,10 @@
 		{% endfor %}
 	{% endif %}
 	<table>
-	<tr><th class="nobox"></th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th><th>Published</th></tr>
+	<tr><th class="nobox"></th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th>{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_6_DONE %}<th>Expires in</th>{% endif %}</tr>
 	{% for randomizedDocument in randomizedDocument_list %}
 		{% if randomizedDocument.exists %}
-		{% else %}
+		{% elif randomizedDocument.age >= 0 %}
 			<tr>
 			{% if request.user.mop.mopTracker.clearance < randomizedDocument.mopDocument.clearance %}
 				<td class="nobox" style="text-align:center;">insufficient clearance</td>
@@ -36,7 +36,7 @@
 			</td>
 			<td style="white-space:nowrap;">{{randomizedDocument.serial}}</td>
 			<td><img class="minibadge" src="{{randomizedDocument.getBadgeUrl}}"/></td>
-			<td style="white-space:nowrap;">-{{randomizedDocument.age}}hour(s)</td>
+			{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_6_DONE %}<td style="text-align:center;white-space:nowrap;">{% if randomizedDocument.age >= 0 %}{{randomizedDocument.age}}min{% else %}expired{% endif %}</td>{% endif %}
 			</tr>
 		{% endif %}
 	{% endfor %}

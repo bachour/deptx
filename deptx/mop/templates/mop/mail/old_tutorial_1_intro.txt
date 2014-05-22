@@ -1,0 +1,43 @@
+Welcome to the Ministry of Provenance!
+
+I'm Sandy and I'll be teaching you about how to be a productive member in the ORCHID scheme! Isn't this exciting!
+
+First you must learn about forms. At MoP, we LOVE forms! With time you'll learn to love them too!
+
+There's tons of departments in the Ministry. All are run differently, but they all have one thing in common: Yes, you guessed it! Forms! Our motto is "There's no inFORMation without a FORM!"
+
+There are forms for requesting documents and forms for submitting reports. There's even a form for requesting forms! How cool is that?
+
+So let's start there! We'll request a new blank form from {{tutorialData.form_requisition.unit.name}} ({{tutorialData.form_requisition.unit.serial}}) by filling in a "{{tutorialData.form_requisition.name}}". 
+
+Our {{tutorialData.form_requisition.unit.name}} is the department that is responsible for handing out all forms, even those for other departments. I'm hoping to one day be transfered there! Then I'll really be working with forms all day!
+
+We're gonna try to obtain form "{{tutorialData.document_requisition.name}}". This is the form you will need to access documents from a specific department. To get this form follow these simple steps:
+
+1.	Go to the "Blank Forms" page from the "Control Centre" (I suggest you open that in a new window or tab so you can come back to these steps easily).
+2.	Select "{{tutorialData.form_requisition.name}}" by clicking the "fill in" button next to it.
+3.	You need to insert the form ID for the form you want to request. You can normally lookup the necessary form ID in the table at the bottom of the "Blank Forms" page. 
+4.  For now, enter this form ID: {{tutorialData.document_requisition.serial}} in the Data field.
+6.	Attach your digital signature by clicking the "Sign Form" button.
+7.  This takes you to the "Signed Forms" page where you can see all the forms you signed. Currently there's only one.
+8.	Now that you've filled in and signed your form, click the "mail" button next to the newly signed form - this will take you to the "Compose" page and automatically attach the form to the message.
+9.	Select {{tutorialData.form_requisition.unit.serial}} as the recipient.
+10.	Select "Requesting form" as the subject.
+11.	Click "Send".
+12.	Go back to your Inbox and wait for a response from {{tutorialData.form_requisition.unit.serial}}. It might take a couple of minutes to process some emails. This one shouldn't take more than one or two.
+
+Phew! Now wasn't that fun! :)
+
+If you followed these steps correctly, you should receive an email from the {{tutorialData.form_requisition.unit.name}} informing you that you have access to the new form. How exciting!
+
+You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps. 
+
+While you wait, why not watch this informative video about what provenance is and why it's awesome!
+
+<iframe width="560" height="315" src="//www.youtube.com/embed/FSbQ4iisXTc" frameborder="0" allowfullscreen></iframe>
+
+Best of luck!
+
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

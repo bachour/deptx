@@ -4,8 +4,8 @@
 	{% else %}
 		<p>Citizen Helper {{mail.mop.firstname}} {{mail.mop.lastname}},</p>
 		{{ mail.generateBody|linebreaks }}
-		{% if mail.trust and not mail.bodyType == mail.BODY_TUTORIAL_5_CONCLUSION%}
-			<p>Your TRUST has been adjusted accordingly ({{mail.trust}}).</p>
+		{% if mail.trust and not mail.bodyType == mail.BODY_TUTORIAL_5_CONCLUSION %}
+			<p>Your {% if mail.bodyType == mail.BODY_ASSIGNING_DOCUMENT %}Credits{% else %}TRUST and Credits{% endif %} have been adjusted accordingly ({% if mail.trust > 0 %}+{% endif %}{{mail.trust}}).</p>
 		{% endif %}
 	{% endif %}
 	<p>

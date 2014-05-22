@@ -4,7 +4,7 @@ from players.models import Mop
 from assets.models import Unit, Requisition, CronDocument, MopDocument, StoryFile
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from provmanager.models import Provenance
-from mop.clearance import Clearance, getMinimumGreen, getMinimumYellow, getMinimumOrange, getMinimumRed
+from mop.clearance import Clearance, getMinimumGreen, getMinimumYellow, getMinimumOrange, getMinimumRed, get_next_level_at, proposed_clearance
 import deptx.friendly_id as friendly_id
 import re
 from django.template import Context, loader, Template
@@ -12,6 +12,10 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from deptx.helpers import now
 from deptx.settings import STATIC_URL
+import json
+from datetime import timedelta
+
+expirationMinutes = 20
 
 class MopTracker(models.Model):
     
@@ -57,6 +61,10 @@ class MopTracker(models.Model):
             return True
         else:
             return False
+    
+    @property
+    def nextLevelAt(self):
+        return get_next_level_at(self.clearance)
         
     def getCssUrl(self):
         if self.hasSpecialStatus:
@@ -73,10 +81,27 @@ class MopTracker(models.Model):
     def getBadgeUrl(self):
         return Clearance(self.clearance).getBadgeUrl()
     
-    def addTrust(self, trust):
+    def addTrust(self, trust, forTotal):
         self.trust += trust
+        if forTotal:
+            self.totalTrust += trust
+            self.check_for_promotion()
         self.save()
     
+    def check_for_promotion(self):
+        proposedClearance = proposed_clearance(self.totalTrust)
+        if self.clearance < proposedClearance:
+            self.clearance = proposedClearance
+            self.save()
+            promotion_email(self.mop, Mail.BODY_PERFORMANCE_PROMOTION)
+    
+    def check_for_demotion(self):
+        proposedClearance = proposed_clearance(self.totalTrust)
+        if self.clearance > proposedClearance:
+            self.clearance = proposedClearance
+            self.save()
+            promotion_email(self.mop, Mail.BODY_PERFORMANCE_DEMOTION)
+       
     def isTutorial(self):
         if self.tutorial == self.TUTORIAL_6_DONE:
             return False
@@ -85,6 +110,24 @@ class MopTracker(models.Model):
     
     def __unicode__(self):
         return "%s %s %s" % (self.mop.user.username, self.trust, self.get_clearance_display())
+
+class TrustInstance(models.Model):
+    createdAt = CreationDateTimeField()
+    modifiedAt = ModificationDateTimeField()
+    
+    mop = models.ForeignKey(Mop)
+    oldTrust = models.IntegerField(default=0)
+    newTrust = models.IntegerField(default=0)
+    totalTrust = models.IntegerField(default=0)
+    oldClearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
+    newClearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_ALL, default=Clearance.CLEARANCE_BLUE)
+    specialStatus = models.BooleanField(default=False)
+    
+    def getBadgeUrl(self):
+        return Clearance(self.newClearance).getBadgeUrl()
+        
+    def __unicode__(self):
+        return "%s (%s)" % (self.mop.user.username, self.oldTrust)
 
 
 class PerformancePeriod(models.Model):
@@ -192,7 +235,8 @@ class RandomizedDocument(models.Model):
     @property
     def age(self):
         age = now() - self.createdAt
-        return int(age.total_seconds() // 3600)
+        return expirationMinutes - int(age.total_seconds() // 60)
+   
     
     def getBadgeUrl(self):
         return Clearance(self.mopDocument.clearance).getBadgeUrl()
@@ -281,7 +325,7 @@ class MopDocumentInstance(models.Model):
             return self.randomizedDocument.serial
         else:
             return self.cronDocument.serial
-
+    
     def __unicode__(self):
         return "%s" % (self.getDocumentSerial())
         
@@ -368,6 +412,7 @@ class Mail(models.Model):
         
     SUBJECT_RECEIVE_FORM = 201
     SUBJECT_RECEIVE_DOCUMENT = 203
+    SUBJECT_REVOKE_DOCUMENT = 204
     
     SUBJECT_ERROR = 211
     SUBJECT_INFORMATION = 212
@@ -388,6 +433,7 @@ class Mail(models.Model):
     CHOICES_SUBJECT_RECEIVING = (
         (SUBJECT_RECEIVE_FORM, "Assigning Form"),
         (SUBJECT_RECEIVE_DOCUMENT, "Assigning Document"),
+        (SUBJECT_REVOKE_DOCUMENT, "Revoking Document"),
         (SUBJECT_ERROR, "Error"),
         (SUBJECT_INFORMATION, "Information"),
         (SUBJECT_REPORT_EVALUATION, "Evaluation Result"),
@@ -421,13 +467,19 @@ class Mail(models.Model):
     
     BODY_ASSIGNING_FORM = 100
     BODY_ASSIGNING_DOCUMENT = 101
+    BODY_REVOKING_DOCUMENT = 102
     
     BODY_REPORT_FAIL = 110
     BODY_REPORT_SUCCESS = 111
     
+    #OLD REPORTS
     BODY_PERFORMANCE_REPORT_PROMOTION = 120
     BODY_PERFORMANCE_REPORT_DEMOTION = 121
     BODY_PERFORMANCE_REPORT_NEUTRAL = 122
+    
+    #NEW PROMOTIONS
+    BODY_PERFORMANCE_PROMOTION = 123
+    BODY_PERFORMANCE_DEMOTION = 124
     
     BODY_TUTORIAL_1_INTRO = 210
     BODY_TUTORIAL_2_DOCUMENT_REQUEST = 220
@@ -455,12 +507,15 @@ class Mail(models.Model):
         (BODY_ERROR_EXISTING_DOCUMENT, 'BODY_ERROR_EXISTING_DOCUMENT'),
         (BODY_ERROR_LACKING_TRUST, 'BODY_ERROR_LACKING_TRUST'),
         (BODY_ASSIGNING_FORM, 'BODY_ASSIGNING_FORM'),
-        (BODY_ASSIGNING_DOCUMENT, 'BODY_ASSIGNING_DOCUMENT'), 
+        (BODY_ASSIGNING_DOCUMENT, 'BODY_ASSIGNING_DOCUMENT'),
+        (BODY_REVOKING_DOCUMENT, 'BODY_REVOKING_DOCUMENT'), 
         (BODY_REPORT_FAIL, 'BODY_REPORT_FAIL'),
         (BODY_REPORT_SUCCESS, 'BODY_REPORT_SUCCESS'),
         (BODY_PERFORMANCE_REPORT_PROMOTION, 'BODY_PERFORMANCE_REPORT_PROMOTION'),
         (BODY_PERFORMANCE_REPORT_DEMOTION, 'BODY_PERFORMANCE_REPORT_DEMOTION'),
         (BODY_PERFORMANCE_REPORT_NEUTRAL, 'BODY_PERFORMANCE_REPORT_NEUTRAL'),
+        (BODY_PERFORMANCE_PROMOTION, 'BODY_PROMOTION'),
+        (BODY_PERFORMANCE_DEMOTION, 'BODY_DEOMOTION'),
         (BODY_TUTORIAL_1_INTRO, 'BODY_TUTORIAL_1_INTRO'),
         (BODY_TUTORIAL_2_DOCUMENT_REQUEST, 'BODY_TUTORIAL_2_DOCUMENT_REQUEST'),
         (BODY_TUTORIAL_3_TASK_COMPLETION, 'BODY_TUTORIAL_3_TASK_COMPLETION'),
@@ -540,6 +595,9 @@ class Mail(models.Model):
             text = self.unit.mail_assigning_form
         elif self.bodyType == self.BODY_ASSIGNING_DOCUMENT:
             text = self.unit.mail_assigning_document
+        elif self.bodyType == self.BODY_REVOKING_DOCUMENT:
+            text = self.unit.mail_revoking_document
+            data = self.mopDocumentInstance.getDocumentSerial()
         elif self.bodyType == self.BODY_REPORT_FAIL:
             text = self.unit.mail_report_fail
         elif self.bodyType == self.BODY_REPORT_SUCCESS:
@@ -553,14 +611,18 @@ class Mail(models.Model):
         elif self.bodyType == self.BODY_PERFORMANCE_REPORT_NEUTRAL:
             template = loader.get_template('mop/mail/performance_report_neutral.txt')
             data = self.performanceInstance
+        elif self.bodyType == self.BODY_PERFORMANCE_PROMOTION:
+            template = loader.get_template('mop/mail/promotion.txt')
+        elif self.bodyType == self.BODY_PERFORMANCE_DEMOTION:
+            template = loader.get_template('mop/mail/demotion.txt')
         elif self.bodyType == self.BODY_TUTORIAL_1_INTRO:
             template = loader.get_template('mop/mail/tutorial_1_intro.txt')
-            tutorialData['document_requisition'] = Requisition.objects.get(type=Requisition.TYPE_TUTORIAL)
+            tutorialData['document_requisition'] = Requisition.objects.get(type=Requisition.TYPE_TUTORIAL_REQUEST)
             tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL, category=Requisition.CATEGORY_FORM)
         elif self.bodyType == self.BODY_TUTORIAL_2_DOCUMENT_REQUEST:
             template = loader.get_template('mop/mail/tutorial_2_document_request.txt')
             tutorialData['document'] = RandomizedDocument.objects.get(isTutorial=True)
-            tutorialData['requisition'] = Requisition.objects.get(type=Requisition.TYPE_TUTORIAL)
+            tutorialData['requisition'] = Requisition.objects.get(type=Requisition.TYPE_TUTORIAL_REQUEST)
         elif self.bodyType == self.BODY_TUTORIAL_3_TASK_COMPLETION:
             template = loader.get_template('mop/mail/tutorial_3_task_completion.txt')
         elif self.bodyType == self.BODY_TUTORIAL_4a_INCORRECT_MODIFICATION:
@@ -633,3 +695,16 @@ class Mail(models.Model):
         return "%s - %s - %s - %s (%s)" % (sender_receiver, subject, self.trust, state, self.sentAt)
 
 
+def promotion_email(mop, bodyType):
+    mail = Mail()
+    mail.unit = Unit.objects.filter(type=Unit.TYPE_ADMINISTRATIVE)[0]
+    mail.subject = Mail.SUBJECT_INFORMATION
+    mail.bodyType = bodyType
+    mail.type = Mail.TYPE_RECEIVED
+    mail.processed = True
+    mail.mop = mop
+    mail.save()
+    from logger.models import ActionLog
+    from logger import logging
+    data = json.dumps({'totalTrust':mop.mopTracker.totalTrust, 'newClearance':mop.mopTracker.clearance})
+    logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE, mop=mop, mail=mail, data=data)  

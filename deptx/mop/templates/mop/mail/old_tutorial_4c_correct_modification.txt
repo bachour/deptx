@@ -1,0 +1,33 @@
+OMG You did it! Well done! I'm so impressed! You did it in way fewer tries than me! You pointed out the inconsistency and now {{tutorialData.document.mopDocument.unit.serial}} clerks will be able to fix it and make sure our archive is error-free!
+
+But first you must submit this document back to {{tutorialData.document.mopDocument.unit.serial}}, otherwise your work on this document cannot be logged.
+
+Which is great because we get to play with forms again!! I'm tingling with excitement at the idea. You need to do two things: first you need to acquire the correct form to submit the document. Then you need to actually submit the document.
+
+To submit the document you will first need to acquire a new form. This form is needed to submit {{tutorialData.document.mopDocument.unit.serial}} documents. I will leave it to you to figure out which form that is, and to acquire it. 
+
+Here's what you need to do:
+1.  Find out what form you need, and what the ID of that form is. The form should be one that is used for submitting documents to {{tutorialData.document.mopDocument.unit.serial}} (the one you already have is for requesting documents).	
+2.  Acquire the blank {{tutorialData.document.mopDocument.unit.serial}}'s document submission form by submitting a "{{tutorialData.form_requisition.name}}" to {{tutorialData.form_requisition.unit.serial}} like you did in the first part of this tutorial.
+3.	Once you have acquired this form, come back here to and proceed to Step 4.
+<br/>
+4.  Go to the "Blank Forms" page and fill in the new form with the document ID for the document you want to submit. You can find this document ID in the Document Drawer. Sign the form.
+5.	From the "Signed Forms" page, click the "mail" button next to the newly signed form.
+6.	Select {{tutorialData.document.mopDocument.unit.serial}} as the recipient.
+7.	Select "Submitting document" as the subject.
+8.	Now, next to "Attach Document", select the document you just modified as the document to send.
+9.	Click "Send".
+10.	Wait for a response from {{tutorialData.document.mopDocument.unit.serial}}.
+
+I don't know about you but I'm very excited about what happens next! 
+
+If you followed these steps correctly, you should receive an email from {{tutorialData.document.mopDocument.unit.serial}} informing you that you have successfully submitted the report.
+This step usually takes the longest because someone at the receiving document will have to check whether or not you correctly identified the inconsistencies (though in this case you and I both know you did it perfectly ;) ).
+
+You will also receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
+
+Best of luck!
+
+Kind regards,
+
+{% include 'mop/mail/sig_sandy.txt' %}

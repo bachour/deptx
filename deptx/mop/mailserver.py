@@ -12,6 +12,7 @@ from logger.models import ActionLog
 from logger import logging 
 from mop.models import MopTracker
 
+
 try:
     from deptx.settings_production import TO_ALL
 except:
@@ -196,7 +197,10 @@ def check_mail(mail):
             newMail.save()
             
             if newMail.trust is not None:
-                mail.mop.mopTracker.addTrust(newMail.trust)
+                forTotal = True
+                if newMail.subject == Mail.SUBJECT_RECEIVE_DOCUMENT:
+                    forTotal = False
+                mail.mop.mopTracker.addTrust(newMail.trust, forTotal)
                 
             if newMail.subject == Mail.SUBJECT_ERROR:
                 logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_ERROR, mop=mail.mop, mail=newMail)
@@ -239,7 +243,7 @@ def hasEnoughTrust(mop, cronDocument, randomizedDocument):
     trustCost = Clearance(document.clearance).getTrustRequested()
     if trustCost == 0:
         return True
-    elif mop.mopTracker.trust + mop.mopTracker.credit + trustCost >=0:
+    elif mop.mopTracker.trust + trustCost >=0:
         return True
     else:
         return False
@@ -348,4 +352,7 @@ def prepareMail(mail):
     newMail.processed = True
     newMail.replyTo = mail
     return newMail
+
+
+
     

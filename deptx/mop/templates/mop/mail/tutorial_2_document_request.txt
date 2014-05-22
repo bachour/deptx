@@ -9,17 +9,17 @@ The document pool page shows all documents that are currently available for you 
 In order to work on the document, you first need to request access to it. You can do this by submitting the {{tutorialData.requisition.name}} form you acquired in the first step. Here's how to do it:
 
 1.	Go to the "Document Pool" page from the "Control Centre".
+
 2.  You will see that {{tutorialData.requisition.unit.serial}} is currently offering a document: checking the provenance related to a "{{tutorialData.document.mopDocument.name}}".
-3.  Copy the Document ID of that document.
-4.	Go to the "Blank Forms" page.
-5.	Select the "{{tutorialData.requisition.name}}" form whose ID is {{tutorialData.requisition.serial}}.
-6.	Enter the Document ID in the "Data" field.
-7.	Sign the form.
-8.	Click "mail" from the "Signed forms" page.
-9.	Select {{tutorialData.requisition.unit.serial}} as the recipient.
-10.	Select "Requesting document" as the subject.
-11.	Click Send.
-12.	Wait for a response from {{tutorialData.requisition.unit.serial}}.
+
+3. Next to it there is a "request" button. This button appears because you already possess the necessary form! Now press the button.
+
+4. This brings you to the form, and the document identifier has already been pre-filled! Now isn't that easy? Notice that you are filling in the form that you had just requested previously! And, like last time, please sign the form.
+
+5. Oh, we are back to where all your signed forms are. We need to mail it to {{tutorialData.requisition.unit.serial}}! Just press the "mail" button.
+
+6. Again, the mail has been configured for you automatically. All that is left to do is to send the mail on its way. :)
+
 
 Are we having the best time or what?
 
