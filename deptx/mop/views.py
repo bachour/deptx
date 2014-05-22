@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-from mop import documentcreator, performer_2
+#from mop import documentcreator, performer_2
 from players.models import Mop
 from players.forms import MopCheckForm, PasswordForm
 
