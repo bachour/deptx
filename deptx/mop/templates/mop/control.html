@@ -1,6 +1,6 @@
 {% load staticfiles %}
 
-<div class="main">
+<div class="main" style="background-color:#eee">
 	<div class="content">
 		<h1>MoP Control Centre</h1>
 		<a href="{% url 'mop_control_mail' %}">send mopmail</a><br/>
@@ -27,7 +27,7 @@
 		<input class="button" type="submit" value="remove old documents" name="remove old documents" /><br/>
 		<input class="button" type="submit" value="create daily documents" name="create daily documents" /><br/>
 		<h1>MoPs</h1>
-		<input class="button" type="submit" value="create basic trust instances" name="create basic trust instances" /><br/>
+		<input class="button" type="submit" value="next step" name="next step" /><br/>
 		<table>
 		<tr><th>MoP</th><th>Clearance</th><th>TRUST</th><th>Total TRUST</th><th>New Deal</th><th>Mail-Trust</th><th>Mail-Errors</th><th>Active</th><th>ActiveActive</th><th>Reported<br/>Correct</th><th>Reported<br/>Incorrect</th><th>Revoked</th><th>Limbo</th><th>Hacked</th></tr>
 		{% for mopTracker in mopTracker_list %}

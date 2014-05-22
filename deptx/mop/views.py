@@ -205,7 +205,7 @@ def documents(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents_archive(request):
-    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_LIMBO).exclude(status=MopDocumentInstance.STATUS_HACKED).order_by('-modifiedAt')
+    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).exclude(status=MopDocumentInstance.STATUS_ACTIVE).exclude(status=MopDocumentInstance.STATUS_LIMBO).exclude(status=MopDocumentInstance.STATUS_HACKED).exclude(status=MopDocumentInstance.STATUS_IGNORE).order_by('-modifiedAt')
     mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
@@ -731,14 +731,14 @@ def control(request):
             output = documentcreator.create_documents()
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
-        elif 'create basic trust instances' in request.POST:
-            createBasicTrustInstances()
+        elif 'next step' in request.POST:
+            step_2()
     mail_list = getUnprocessedMails().order_by('sentAt')
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
-    mopTracker_list = MopTracker.objects.all().order_by('-trust', '-totalTrust')
+    mopTracker_list = MopTracker.objects.all().order_by('-totalTrust', 'trust')
 
 #     for mopTracker in mopTracker_list:
 #         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
@@ -764,47 +764,56 @@ def control(request):
 #      
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mopTracker_list':mopTracker_list})       
 
-def createBasicTrustInstances():
-    mopTracker_list = MopTracker.objects.all()
-    for mopTracker in mopTracker_list:
-        print mopTracker.id
-        trustInstance = TrustInstance(mop=mopTracker.mop)
-            
-        trustInstance.oldClearance = mopTracker.clearance
-        trustInstance.newClearance = mopTracker.clearance
-        trustInstance.oldTrust = mopTracker.trust
-        trustInstance.newTrust = mopTracker.trust
-        trustInstance.totalTrust = mopTracker.totalTrust
-        trustInstance.specialStatus = mopTracker.hasSpecialStatus
-        trustInstance.save()
-        
-        mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
-        newDeal = 0
-        for mopDocumentInstance in mopDocumentInstance_list:
-            newDeal += mopDocumentInstance.getTrustFinal()
-        mailTrust = 0
-        mail_list = Mail.objects.filter(mop=mopTracker.mop).filter(bodyType=Mail.BODY_MANUAL)
-        for mail in mail_list:
-            if mail.trust:
-                mailTrust += mail.trust
-        
-        mailErrors = Mail.objects.filter(mop=mopTracker.mop).filter(subject=Mail.SUBJECT_ERROR).count()
-        
-        newTrustInstance = TrustInstance(mop=mopTracker.mop)
-        newTrustInstance.oldClearance = mopTracker.clearance
-        newTrustInstance.oldTrust = mopTracker.trust
+def step_2():
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=False).exclude(randomizedDocument__isTutorial=True).order_by("mop")
+    for mopDocumentInstance in mopDocumentInstance_list:
+        print "%s %s" % (mopDocumentInstance.mop, mopDocumentInstance.randomizedDocument.id)
+        mopDocumentInstance.status = MopDocumentInstance.STATUS_IGNORE
+        mopDocumentInstance.save()
 
-        mopTracker.totalTrust = newDeal + mailTrust - mailErrors
-        mopTracker.credits = 0
-        mopTracker.save()
-        mopTracker.check_for_promotion()
-                
-        newTrustInstance.newClearance = mopTracker.clearance
-        newTrustInstance.newTrust = mopTracker.trust
-        newTrustInstance.totalTrust = mopTracker.totalTrust
-        newTrustInstance.specialStatus = mopTracker.hasSpecialStatus
-        newTrustInstance.save()
-        
+
+# def step_1():
+#     # copying the old trust and making it new
+#     mopTracker_list = MopTracker.objects.all()
+#     for mopTracker in mopTracker_list:
+#         print mopTracker.id
+#         trustInstance = TrustInstance(mop=mopTracker.mop)
+#             
+#         trustInstance.oldClearance = mopTracker.clearance
+#         trustInstance.newClearance = mopTracker.clearance
+#         trustInstance.oldTrust = mopTracker.trust
+#         trustInstance.newTrust = mopTracker.trust
+#         trustInstance.totalTrust = mopTracker.totalTrust
+#         trustInstance.specialStatus = mopTracker.hasSpecialStatus
+#         trustInstance.save()
+#         
+#         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
+#         newDeal = 0
+#         for mopDocumentInstance in mopDocumentInstance_list:
+#             newDeal += mopDocumentInstance.getTrustFinal()
+#         mailTrust = 0
+#         mail_list = Mail.objects.filter(mop=mopTracker.mop).filter(bodyType=Mail.BODY_MANUAL)
+#         for mail in mail_list:
+#             if mail.trust:
+#                 mailTrust += mail.trust
+#         
+#         mailErrors = Mail.objects.filter(mop=mopTracker.mop).filter(subject=Mail.SUBJECT_ERROR).count()
+#         
+#         newTrustInstance = TrustInstance(mop=mopTracker.mop)
+#         newTrustInstance.oldClearance = mopTracker.clearance
+#         newTrustInstance.oldTrust = mopTracker.trust
+# 
+#         mopTracker.totalTrust = newDeal + mailTrust - mailErrors
+#         mopTracker.credits = 0
+#         mopTracker.save()
+#         mopTracker.check_for_promotion()
+#                 
+#         newTrustInstance.newClearance = mopTracker.clearance
+#         newTrustInstance.newTrust = mopTracker.trust
+#         newTrustInstance.totalTrust = mopTracker.totalTrust
+#         newTrustInstance.specialStatus = mopTracker.hasSpecialStatus
+#         newTrustInstance.save()
+#         
 
 
 @staff_member_required

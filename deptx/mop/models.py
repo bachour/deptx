@@ -267,6 +267,7 @@ class MopDocumentInstance(models.Model):
     STATUS_REPORTED = 2
     STATUS_REVOKED = 3
     STATUS_HACKED = 4
+    STATUS_IGNORE = 5
      
     CHOICES_STATUS = (
         (STATUS_ACTIVE, "active"),
@@ -274,6 +275,7 @@ class MopDocumentInstance(models.Model):
         (STATUS_REPORTED, "reported"),
         (STATUS_REVOKED, "revoked"),
         (STATUS_HACKED, "hacked"),
+        (STATUS_IGNORE, "ignore"),
     )
     
     TYPE_MOP = 0
