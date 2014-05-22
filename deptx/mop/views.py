@@ -727,12 +727,13 @@ def control(request):
             output = performer_2.analyze_performance(simulation=True)
         elif 'process performance' in request.POST:
             output = performer_2.analyze_performance()
-        elif 'create daily documents' in request.POST:
+        elif 'create document' in request.POST:
             output = documentcreator.create_documents()
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
         elif 'next step' in request.POST:
-            step_2()
+            pass
+            #step_2()
     mail_list = getUnprocessedMails().order_by('sentAt')
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
@@ -764,12 +765,12 @@ def control(request):
 #      
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mopTracker_list':mopTracker_list})       
 
-def step_2():
-    mopDocumentInstance_list = MopDocumentInstance.objects.filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=False).exclude(randomizedDocument__isTutorial=True).order_by("mop")
-    for mopDocumentInstance in mopDocumentInstance_list:
-        print "%s %s" % (mopDocumentInstance.mop, mopDocumentInstance.randomizedDocument.id)
-        mopDocumentInstance.status = MopDocumentInstance.STATUS_IGNORE
-        mopDocumentInstance.save()
+# def step_2():
+#     mopDocumentInstance_list = MopDocumentInstance.objects.filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=False).exclude(randomizedDocument__isTutorial=True).order_by("mop")
+#     for mopDocumentInstance in mopDocumentInstance_list:
+#         print "%s %s" % (mopDocumentInstance.mop, mopDocumentInstance.randomizedDocument.id)
+#         mopDocumentInstance.status = MopDocumentInstance.STATUS_IGNORE
+#         mopDocumentInstance.save()
 
 
 # def step_1():

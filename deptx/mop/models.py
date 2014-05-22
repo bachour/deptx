@@ -15,8 +15,6 @@ from deptx.settings import STATIC_URL
 import json
 from datetime import timedelta
 
-expirationMinutes = 20
-
 class MopTracker(models.Model):
     
     TUTORIAL_0_START = 0
@@ -220,6 +218,8 @@ class RandomizedDocument(models.Model):
     active = models.BooleanField(default=True)
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
+    appearAt = models.DateTimeField(blank=True, null=True)
+    dueAt = models.DateTimeField(blank=True, null=True)
     
     def __unicode__(self):
         if self.active == True:
@@ -233,10 +233,30 @@ class RandomizedDocument(models.Model):
         return self.mopDocument.unit
     
     @property
-    def age(self):
-        age = now() - self.createdAt
-        return expirationMinutes - int(age.total_seconds() // 60)
-   
+    def hasTimeLeft(self):
+        if self.isTutorial:
+            return True
+        try:
+            if self.dueAt > now():
+                return True
+            else:
+                return False
+        except:
+            return True
+        
+    
+    @property
+    def hasAppeared(self):
+        if self.isTutorial:
+            return True
+        try:
+            if self.appearAt <= now():
+                return True
+            else:
+                return False
+        except:
+            return True
+        
     
     def getBadgeUrl(self):
         return Clearance(self.mopDocument.clearance).getBadgeUrl()

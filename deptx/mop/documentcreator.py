@@ -1,4 +1,4 @@
-from mop.models import RandomizedDocument, MopDocumentInstance, expirationMinutes, Mail
+from mop.models import RandomizedDocument, MopDocumentInstance, Mail
 from assets.models import MopDocument
 from provmanager.views import randomize_document
 from mop.clearance import Clearance
@@ -9,9 +9,8 @@ from random import randrange
 def remove_old_documents():
     output = []
     randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
-    old = now() - timedelta(minutes=expirationMinutes)
     for randomizedDocument in randomizedDocument_list:
-        if randomizedDocument.createdAt < old:
+        if randomizedDocument.timeLeft and randomizedDocument.timeLeft < now():
             randomizedDocument.active = False
             randomizedDocument.save()
             output.append(randomizedDocument.serial)
@@ -87,7 +86,11 @@ def create_random_from_list(mopDocument_list):
         return None
 
 def create_single_document(mopDocument):
-    return randomize_document(mopDocument).serial
+    randomizedDocument = randomize_document(mopDocument)
+    randomizedDocument.appearAt = now()
+    randomizedDocument.dueAt = now() + timedelta(days=2)
+    randomizedDocument.save()
+    return randomizedDocument.serial
     
 
     

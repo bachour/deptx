@@ -1,5 +1,5 @@
 {% extends 'mop/base.html' %}
-
+{% load humanize %}
 {% block content %}
 
 <h1>Document Drawer</h1>
@@ -15,9 +15,9 @@
 		{% endfor %}
 	{% endif %}
 	<table>
-	<tr><th>Submit</th><th>Process</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th>{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_6_DONE %}<th>Expires in</th>{% endif %}</tr>
+	<tr><th>Submit</th><th>Process</th><th>Unit</th><th>Name</th><th>Identification Code</th><th>Level</th>{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_6_DONE %}<th>Due</th>{% endif %}</tr>
 	{% for mopDocumentInstance in mopDocumentInstance_list %}
-		{% if mopDocumentInstance.randomizedDocument.age >= 0 or mopDocumentInstance.cronDocument %}
+		{% if mopDocumentInstance.randomizedDocument.hasTimeLeft or mopDocumentInstance.cronDocument %}
 			<tr>
 			{% if request.user.mop.mopTracker.clearance < mopDocumentInstance.getClearance %}
 					<td class="nobox" style="text-align:center;" colspan=2>insufficient clearance</td>
@@ -42,7 +42,7 @@
 			{% endif %}
 			<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 			<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-			<td style="text-align:center">{% if mopDocumentInstance.randomizedDocument.age >= 0 %}{{mopDocumentInstance.randomizedDocument.age}}min{% elif mopDocumentInstance.cronDocument %}N/A{% else %}expired{% endif %}</td>
+			<td style="text-align:center">{% if mopDocumentInstance.randomizedDocument.dueAt %}{{mopDocumentInstance.randomizedDocument.dueAt|naturaltime}}{% elif mopDocumentInstance.cronDocument %}N/A{% else %}N/A{% endif %}</td>
 			</tr>
 		{% endif %}
 	{% endfor %}
