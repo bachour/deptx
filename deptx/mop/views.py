@@ -11,14 +11,14 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-from mop import documentcreator, performer
+from mop import documentcreator, performer_2
 from players.models import Mop
 from players.forms import MopCheckForm, PasswordForm
 
 from django.contrib.auth.forms import UserCreationForm
 
 from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
-from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance
+from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, TrustInstance, StoryFileInstance
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 import json
@@ -39,7 +39,7 @@ except:
     TO_ALL = ["1@localhost.com", "2@localhost.com"]
 
 def isMop(user):
-    if user:
+    if user and user.is_staff:
         for mop in Mop.objects.filter(user=user):
             if mop.active:
                 return True
@@ -129,15 +129,22 @@ def rules(request):
     logging.log_action(ActionLog.ACTION_MOP_VIEW_GUIDEBOOK, mop=request.user.mop)
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
+# @login_required(login_url='mop_login')
+# @user_passes_test(isMop, login_url='mop_login')
+# def performance(request):
+#     lastPeriod, nextPeriod, days = performer.getPeriods()
+# 
+#     mop_performanceInstance_list = PerformanceInstance.objects.filter(mop=request.user.mop).order_by('-period__reviewDate')
+#     
+#     logging.log_action(ActionLog.ACTION_MOP_VIEW_PERFORMANCE, mop=request.user.mop)
+#     return render(request, 'mop/performance.html', {'mop_performanceInstance_list':mop_performanceInstance_list, 'lastPeriod':lastPeriod, 'nextPeriod':nextPeriod})
+
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def performance(request):
-    lastPeriod, nextPeriod, days = performer.getPeriods()
-
-    mop_performanceInstance_list = PerformanceInstance.objects.filter(mop=request.user.mop).order_by('-period__reviewDate')
-    
+    trustInstance_list = TrustInstance.objects.filter(mop=request.user.mop).order_by('-createdAt')
     logging.log_action(ActionLog.ACTION_MOP_VIEW_PERFORMANCE, mop=request.user.mop)
-    return render(request, 'mop/performance.html', {'mop_performanceInstance_list':mop_performanceInstance_list, 'lastPeriod':lastPeriod, 'nextPeriod':nextPeriod})
+    return render(request, 'mop/performance.html', {'trustInstance_list':trustInstance_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -190,7 +197,6 @@ def documents(request):
             documentInstance.requiredRequisition = RequisitionBlank.objects.filter(mop=request.user.mop, requisition__unit=documentInstance.randomizedDocument.mopDocument.unit, requisition__category=Requisition.CATEGORY_SUBMISSION)[0]
         except:
             documentInstance.requiredRequisition = None
-        print documentInstance.requiredRequisition
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_DRAWER, mop=request.user.mop)
     return render(request, 'mop/documents.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
@@ -248,7 +254,7 @@ def provenance(request, serial):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_inbox(request):
-    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_RECEIVED).order_by('-sentAt')
     mail_list = paginate(request, mail_list_all)
     
     try:
@@ -266,7 +272,7 @@ def mail_inbox(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_outbox(request):
-    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_SENT).order_by('-sentAt')
     mail_list = paginate(request, mail_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_OUTBOX, mop=request.user.mop)
     return render(request, 'mop/mail_outbox.html', {"mail_list": mail_list})
@@ -274,7 +280,7 @@ def mail_outbox(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_draft(request):
-    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_NORMAL).filter(type=Mail.TYPE_DRAFT).order_by('-sentAt')
     mail_list = paginate(request, mail_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DRAFT, mop=request.user.mop)
     return render(request, 'mop/mail_draft.html', {"mail_list": mail_list})
@@ -282,7 +288,7 @@ def mail_draft(request):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def mail_trash(request):
-    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-createdAt')
+    mail_list_all = Mail.objects.filter(mop=request.user.mop).filter(state=Mail.STATE_TRASHED).order_by('-sentAt')
     mail_list = paginate(request, mail_list_all)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_TRASH, mop=request.user.mop)
     return render(request, 'mop/mail_trash.html', {"mail_list": mail_list})
@@ -531,7 +537,14 @@ def forms_blank(request):
             
     blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__serial')            
     
-    requisition_list = Requisition.objects.all().order_by('serial')
+    if request.user.mop.mopTracker.tutorial <= MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE:
+        requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_REQUEST).order_by('serial')
+    elif request.user.mop.mopTracker.tutorial <= MopTracker.TUTORIAL_6_DONE:
+        requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_SUBMIT).order_by('serial')
+    else:
+        requisition_list = Requisition.objects.all().order_by('serial')
+    
+    
     requisition_list.allAcquired = True
     for requisition in requisition_list:
         requisition.acquired = False
@@ -709,11 +722,11 @@ def control(request):
         if 'mail' in request.POST:
             output = analyze_mail()
         elif 'simulate performance' in request.POST:
-            output = performer.analyze_performance(simulation=True)
+            output = performer_2.analyze_performance(simulation=True)
         elif 'process performance' in request.POST:
-            output = performer.analyze_performance()
+            output = performer_2.analyze_performance()
         elif 'create daily documents' in request.POST:
-            output = documentcreator.create_daily_documents()
+            output = documentcreator.create_documents()
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
     mail_list = getUnprocessedMails().order_by('sentAt')
@@ -810,5 +823,5 @@ def save_manual_mail(mail):
     mail.save()
     logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL, mop=mail.mop, mail=mail)
     if not mail.trust is None:
-        mail.mop.mopTracker.addTrust(mail.trust)
+        mail.mop.mopTracker.addTrust(mail.trust, True)
     
