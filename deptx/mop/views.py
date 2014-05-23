@@ -40,7 +40,7 @@ except:
     TO_ALL = ["1@localhost.com", "2@localhost.com"]
 
 def isMop(user):
-    if user and user.is_staff:
+    if user:
         for mop in Mop.objects.filter(user=user):
             if mop.active:
                 return True
@@ -107,14 +107,14 @@ def login(request):
                 
                 return HttpResponseRedirect(reverse('mop_index'))
             else:
-                return render(request, 'mop/login_maintenance.html', {'form' : form, 'wrong':True})
+                return render(request, 'mop/login.html', {'form' : form, 'wrong':True})
             
         else:
-            return render(request, 'mop/login_maintenance.html', {'form' : form})
+            return render(request, 'mop/login.html', {'form' : form})
         
     else:
         form =  AuthenticationForm()
-        return render(request, 'mop/login_maintenance.html', {'form' : form})
+        return render(request, 'mop/login.html', {'form' : form})
 
 def logout_view(request):
     if not request.user == None and request.user.is_active and isMop(request.user):
