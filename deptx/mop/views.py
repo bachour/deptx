@@ -167,12 +167,12 @@ def documents_pool(request):
 
 def getDocumentPoolForMop(mop):
         #all_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=mop.mopTracker.clearance)
-        all_list = RandomizedDocument.objects.filter(active=True)
+        all_list = RandomizedDocument.objects.filter(active=True).filter(mopDocument__clearance__lte=mop.mopTracker.clearance)
         public_list = all_list.filter(mop__isnull=True)
         personal_list = all_list.filter(mop=mop)
         unsorted_randomizedDocument_list = public_list | personal_list
         #randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-mopDocument__clearance', '-createdAt')
-        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-createdAt')
+        randomizedDocument_list = unsorted_randomizedDocument_list.order_by('-mopDocument__clearance', '-dueAt')
         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mop)
         
         cleaned_list = []
@@ -193,7 +193,7 @@ def getDocumentPoolForMop(mop):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE)
+    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-randomizedDocument__dueAt')
     mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
     for documentInstance in mopDocumentInstance_list:
         try:
@@ -733,7 +733,7 @@ def control(request):
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
         elif 'next step' in request.POST:
-            step_3()
+            step_4()
     mail_list = getUnprocessedMails().order_by('sentAt')
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
@@ -770,12 +770,15 @@ def control(request):
 #      
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mopTracker_list':mopTracker_list})       
 
-def step_3():
-    randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
-    for randomizedDocument in randomizedDocument_list:
-            randomizedDocument.dueAt = None
-            randomizedDocument.active = False
-            randomizedDocument.save()
+def step_4():
+    pass
+
+# def step_3():
+#     randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
+#     for randomizedDocument in randomizedDocument_list:
+#             randomizedDocument.dueAt = None
+#             randomizedDocument.active = False
+#             randomizedDocument.save()
 
 # def step_2():
 #     mopDocumentInstance_list = MopDocumentInstance.objects.filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=False).exclude(randomizedDocument__isTutorial=True).order_by("mop")
