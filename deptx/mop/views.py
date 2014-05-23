@@ -17,6 +17,7 @@ from players.forms import MopCheckForm, PasswordForm
 
 from django.contrib.auth.forms import UserCreationForm
 
+from mop.clearance import Clearance
 from assets.models import Requisition, Unit, CronDocument, MopDocument, StoryFile
 from mop.models import Mail, RequisitionInstance, RequisitionBlank, MopDocumentInstance, RandomizedDocument, MopTracker, PerformancePeriod, PerformanceInstance, MopFile, StoryFileInstance, TrustInstance 
 from mop.forms import MailForm, RequisitionInstanceForm, ControlMailForm, MopFileForm
@@ -30,7 +31,7 @@ import tutorial
 from deptx.helpers import now
 from logger import logging
 from logger.models import ProvLog, ActionLog
-
+from datetime import timedelta
 from django.template import Context, Template, loader
 from django.core.mail import EmailMessage
 try:
@@ -732,8 +733,7 @@ def control(request):
         elif 'remove old documents' in request.POST:
             output = documentcreator.remove_old_documents()
         elif 'next step' in request.POST:
-            pass
-            #step_2()
+            step_3()
     mail_list = getUnprocessedMails().order_by('sentAt')
     mopDocument_list = MopDocument.objects.all()
     for mopDocument in mopDocument_list:
@@ -741,7 +741,7 @@ def control(request):
     
     mopTracker_list = MopTracker.objects.all().order_by('-totalTrust', 'trust')
 
-#     for mopTracker in mopTracker_list:
+    for mopTracker in mopTracker_list:
 #         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
 #         newTrust = 0
 #         for mopDocumentInstance in mopDocumentInstance_list:
@@ -758,12 +758,24 @@ def control(request):
 #         mopTracker.activeDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
 #         mopTracker.activeActiveDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=True).count
 #         mopTracker.limboDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
-#         mopTracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
-#         mopTracker.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
+        mopTracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
+        mopTracker.reportedCorrectDocsBlue = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_BLUE).count
+        mopTracker.reportedCorrectDocsGreen = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_GREEN).count
+        mopTracker.reportedCorrectDocsYellow = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_YELLOW).count
+        mopTracker.reportedCorrectDocsOrange = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_ORANGE).count
+        mopTracker.reportedCorrectDocsRed = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_RED).count
+        mopTracker.reportedIncorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=False).count
 #         mopTracker.revokedDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REVOKED).count
 #         mopTracker.hackedDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_HACKED).count
 #      
     return render(request, 'mop/control.html', {'output':output, 'mail_list':mail_list, 'mopDocument_list':mopDocument_list, 'mopTracker_list':mopTracker_list})       
+
+def step_3():
+    randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
+    for randomizedDocument in randomizedDocument_list:
+        if not randomizedDocument.dueAt:
+            randomizedDocument.dueAt = now() + timedelta(days=3)
+            randomizedDocument.save()
 
 # def step_2():
 #     mopDocumentInstance_list = MopDocumentInstance.objects.filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=False).exclude(randomizedDocument__isTutorial=True).order_by("mop")
