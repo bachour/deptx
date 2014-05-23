@@ -3,7 +3,7 @@ You chose the wrong attributes again! I'd say you're not very good at this, but 
 Anyway! Perhaps you're looking at the wrong places. The attributes you are selecting must be in different nodes and must be different even though they should be identical.
 
 Have you tried asking these questions?
-- Is the name of the person in the agent node is the same as the name of the person on the speeding ticket?
+- Is the name of the person in the agent node the same as the name of the person on the speeding ticket?
 - Is the registration number on the speed capture activity node the same as the registration number on the speeding ticket?
 - Is the speed recorded in the speeding activity the same as the speed recorded on the speeding ticket?
 - Do the dates on the nodes make sense? Is the ticket issued on the same day or after the incident?

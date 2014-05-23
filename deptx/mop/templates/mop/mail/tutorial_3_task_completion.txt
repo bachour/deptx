@@ -2,7 +2,7 @@ Fantastic! You have successfully acquired your first provenance record! I can fe
 
 This particular record that you have now is a very simple one: it shows the provenance of a speeding ticket. Who got it, when and why.
 
-Let's do a quick recap how provenance works. You have already seen this video during your recruitment, but let's refresh our memories anyways!
+Let's do a quick recap how provenance works. You have already seen this video during your recruitment, but let's refresh our memory anyways!
 
 <iframe width="560" height="315" src="//www.youtube.com/embed/O13PK0YyH8A" frameborder="0" allowfullscreen></iframe>
 
@@ -20,7 +20,7 @@ Here's what you need to do:
 
 5.	Clicking a node will allow you to examine it by giving you more information about the node attributes in one of the two attribute panes on the right. 
 
-6.	Examine the three nodes.
+6.	Examine the three nodes. Try to understand what the relationship between the nodes are.
 
 7.	You can only view two nodes at a time, so to look at the third, you must first remove one of the other two by clicking on the node again.
 
@@ -33,6 +33,8 @@ Here's what you need to do:
 11.	Click the "Save" button at the bottom right.
 
 If you're having difficulty understanding the graph, have a look at the "What is a Provenance Record?" section of the "Guidebook" that is now available to you. It's explained there in a way that even I was able to understand!
+
+Pro tip: If the relationship between the nodes is unclear, you can always hover the mouse over the arrows and an explanation of the relationship will appear at the top. 
 
 If you followed these steps correctly, you will receive another email from the {{tutorialData.mopco.name}} explaining the next steps.
 

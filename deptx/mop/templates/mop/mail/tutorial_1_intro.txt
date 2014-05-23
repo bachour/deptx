@@ -19,7 +19,7 @@ Let's start and get you a new form: "{{tutorialData.document_requisition.name}}"
 
 1.	Go to the "Blank Forms" page from the "Control Centre" (I suggest you open it in a new window or tab so you can come back to these steps easily).
 
-2. At the top you can see two forms. The first one is used to request new forms. The second one allows you to contact me or another member of {{tutorialData.mopco.serial}}.
+2. At the top you can see two forms. The first one is used to request new forms. The second one allows you to contact me or another member of {{tutorialData.mopco.serial}} if you have any questions.
 
 3. At the bottom you see a list with forms that you still need to acquire. Let's get the {{tutorialData.document_requisition.unit.name}} form! That form is used to request Provenance records from {{tutorialData.document_requisition.unit.serial}}. Just press the "request" button next to it - that's a shortcut!
 

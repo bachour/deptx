@@ -4,7 +4,9 @@ Congratulations! You successfully checked the provenance of your first MoP docum
 
 That's the end of your orientation. You now know all there is to know about working for MoP. Forms, documents, provenance graphs! All the works! I'm so proud!
 
-You can now go back to the control centre and start working on more documents to improve your TRUST! There are a few things you should keep in mind:
+You can now go back to the control centre and start working on more documents to improve your TRUST! I bet there's plenty of work to be done there.
+
+ There are a few things you should keep in mind:
 
 1.	When you save a document you're working on, you will NOT be notified whether or not it is correct until you send it to the department. The department will then process it and inform you of the outcome.
 
@@ -19,7 +21,6 @@ If you return to the document pool you will see all the documents MoP department
 If you have any questions or problems, just drop us a message using the "Ask Mop For Help" form (now available to you in the Blank Forms page) and someone from {{tutorialData.mopco.serial}} will be in touch with you as soon as possible.
 
 It is also a good idea to study the Guidebook thoroughly! :) It's not as fun as filling out forms, but it's certainly very helpful.
-
 
 Best of luck!
 
