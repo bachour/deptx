@@ -773,8 +773,8 @@ def control(request):
 def step_3():
     randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
     for randomizedDocument in randomizedDocument_list:
-        if not randomizedDocument.dueAt:
-            randomizedDocument.dueAt = now() + timedelta(days=3)
+            randomizedDocument.dueAt = None
+            randomizedDocument.active = False
             randomizedDocument.save()
 
 # def step_2():

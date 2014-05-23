@@ -10,7 +10,7 @@ def remove_old_documents():
     output = []
     randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
     for randomizedDocument in randomizedDocument_list:
-        if randomizedDocument.timeLeft and randomizedDocument.timeLeft < now():
+        if randomizedDocument.dueAt and randomizedDocument.dueAt < now():
             randomizedDocument.active = False
             randomizedDocument.save()
             output.append(randomizedDocument.serial)
