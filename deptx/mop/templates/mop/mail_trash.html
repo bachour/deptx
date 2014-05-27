@@ -26,7 +26,7 @@
 			{{ mail.sentAt|date:"Y-m-d H:i" }}
 		{% endif %}
 	</td>
-	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_untrashing' mail.serial %}">untrash</a></td>
+	<td class="nobox"><a style="font-weight:normal" href="{% url 'mop_mail_untrashing' mail.serial %}">restore</a></td>
 	</tr>
 {% endfor %}
 </table>
