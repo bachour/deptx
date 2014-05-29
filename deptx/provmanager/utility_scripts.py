@@ -186,6 +186,9 @@ def get_random_graph(graph):
     duplicate_count = 0
     triplicate_count = 0
     
+    #prune optional nodes first
+    graph = get_random_structure(graph)
+    
     #first collect all identifiers and assign random values to them from their respective source files
     for c in graph: #node class
         if c == 'prefix':
@@ -337,6 +340,57 @@ def get_random_from_string(str):
     list = str.split(';')
     return list[random.randint(0,len(list)-1)].strip()
 
+# randomize structure
+def get_random_structure(grph):
+    graph = duplicate_graph(grph)
+    
+    optional_nodes = []
+    
+    done = False
+    
+    while not done:
+        done = True
+        for c in graph: #node class
+            if c == 'prefix':
+                continue
+            for e in graph[c]: #individual elements
+                for a in graph[c][e]:
+                    if a == "mop:optional" and graph[c][e][a] == "Yes":
+                        x = random.random()
+                        #print x
+                        if x < 0.5:
+                            del graph[c][e][a]
+                            done = False
+                        else:
+                            optional_nodes.append(e)
+                            del graph[c][e]
+                            done = False
+                    if not done:
+                        break
+                if not done:
+                    break
+            if not done:
+                break
+        
+    done = False    
+    while not done:
+        done = True
+        for c in graph: #node class
+            if c == 'prefix':
+                continue
+            for e in graph[c]: #individual elements
+                for a in graph[c][e]:
+                    if graph[c][e][a] in optional_nodes:
+                        del graph[c][e]
+                        done = False
+                        break
+                if not done:
+                    break
+            if not done:
+                break
+    return graph
+    
+
 # function to duplicate graph
 def duplicate_graph(graph):
     d_graph = {}
@@ -354,9 +408,9 @@ def duplicate_graph(graph):
 #RANDOM_FILES_PATH = '/Users/khaled/Dropbox/Dept.X/MEDIA/GRINDING/'
 #grph = json.load(open("/Users/khaled/Documents/amptest.json",'r'))
 # RANDOM_FILES_PATH = 'C:\\Users\\kqb.CS\\Documents\\'
-# grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\fancy_random_graph_test.json",'r'))
+#grph = json.load(open("C:\\Users\\kqb.CS\\Documents\\orphan.json",'r'))
 # 
-# #test_graph(grph,100)
-# gph = get_random_graph(grph)
+#test_graph(grph,100)
+#print get_random_structure(grph)
 # print gph
 
