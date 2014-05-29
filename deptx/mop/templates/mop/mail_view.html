@@ -1,7 +1,8 @@
 {% extends 'mop/base.html' %}
 
 {% block content %}
-<p>Shortcut:
+<table style="width:100%">
+<tr><td class="nobox">Shortcut:
 {% if mail.type == mail.TYPE_RECEIVED and mail.state == mail.STATE_NORMAL %}
 <a href="{% url 'mop_mail_inbox' %}">inbox</a>
 {% elif mail.type == mail.TYPE_SENT and mail.state == mail.STATE_NORMAL %}
@@ -9,6 +10,14 @@
 {% elif mail.state == mail.STATE_TRASHED %}
 <a href="{% url 'mop_mail_trash' %}">trash</a>
 {% endif %}
+</td>
+<td class="nobox" style="text-align:right;">
+{% if mail.state == mail.STATE_NORMAL %}<a style="font-weight:normal" href="{% url 'mop_mail_trashing' mail.serial %}">delete</a>
+{% elif mail.state == mail.STATE_TRASHED %}<a style="font-weight:normal" href="{% url 'mop_mail_untrashing' mail.serial %}">restore</a>
+{% endif %}
+</td>
+</tr>
+</table>
 <table>
 <tr><th>Subject</th><td>{{ mail.get_subject_display }}</td></tr>
 <tr><th>Unit</th><td>{% if mail.unit %}{{ mail.unit.name }}{% else %}MAILER.DEMON{% endif %}</td></tr>

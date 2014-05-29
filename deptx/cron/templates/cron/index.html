@@ -11,7 +11,7 @@
 <br>
 <br>
 <h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}">{{missionInstance.mission.name}}</a>{% else %}There are no active missions currently.{% endif %}</h1>
-<h1>Special operation: </br><a href="{% url 'cron_operation_cluster_mine' %}">Cluster Mine</a></h1>
+
 
 <h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
 <h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
@@ -49,6 +49,12 @@
             Cr0n Intelligence </h4>
             <br>
             <div align="center"></div>
+            <div class="block-4">
+              <figure class="box-border"><img width="290px" src="{% static 'cron/images/cluster-mine.jpg' %}" alt="Jean Baker Message"></figure>
+              <h5><a href="{% url 'cron_operation_cluster_mine' %}">Operation Cluster Mine</a></h5>
+              <p>A hacking attempt at a MoP server has been concluded succesfully.</p>
+              <br>
+            </div>
             <div class="block-4">
               <figure class="box-border"><img width="290px" src="{% static 'cron/images/jean_baker_message_sm.jpg' %}" alt="Jean Baker Message"></figure>
               <h5><a href="{% url 'cron_intelligence_jean_baker_message'%}">A MoP message</a></h5>
