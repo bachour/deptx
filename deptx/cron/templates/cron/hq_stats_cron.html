@@ -1,0 +1,22 @@
+<tr>
+	<td>
+		{{cron.user.username}}
+	</td>
+	{% for date_log_list in cron.log_list %}
+		<td class="{{date_log_list.0.2}}">
+			{% for thing in date_log_list %}
+				{% for log_list in thing %}
+					{% if not forloop.last %}
+						{% if log_list %}{{log_list}}{% else %}-{% endif %}{% if forloop.first %}<br/>{% endif %}
+					{% endif %}	
+				{% endfor %}
+				{% comment %}
+					{% for log in log_list %}
+						{{log.get_action_display}}<br/>
+					{% endfor %}
+				{% endcomment %}		
+			{% endfor %}
+		</td>
+	{% endfor %}
+</tr>
+

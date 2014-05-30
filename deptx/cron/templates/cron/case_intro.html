@@ -14,7 +14,7 @@
 		<th>identification number</th>
 		<th>unit</th>
 		<th>level</th>
-		<th>TRUST</th>
+		<th>Credits</th>
 	</tr>
 {% for cronDocument in cronDocument_list %}
 	<tr style='vertical-align:middle' {% if not cronDocument.available %}class='missing'{% endif %}>
@@ -37,7 +37,7 @@
 			<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>
 		{% endif %}
 		</td>
-		<td>{{cronDocument.name}}</td>
+		<td>{% if not cronDocument.available %}??????{% else %}{{cronDocument.name}}{% endif %}</td>
 		<td>{{cronDocument.serial}}</td>
 		<td>{{cronDocument.unit.serial}}</td>
 		<td><img style="width:32px;" src="{{cronDocument.getBadgeUrl}}" /></td>
@@ -50,7 +50,7 @@
 <p>In order to acquire missing documents: 
 <ol> 
 <li> Login to the Ministry of Provenance  <a target="_blank" href="http://www.mofp.net">Intranet</a>.</li>
-<li> Request the document following their standard procedures. Make sure you have gained enough TRUST before doing so - your own clearance level does not matter when requesting documents, only when viewing them at MoP.</li>
+<li> Request the document following their standard procedures. Make sure you have gained enough Credits to be able to request the document. Your own clearance level <span style="color:white;">does not</span> matter when requesting documents, only when viewing them at MoP. You can request UV documents even when you have just started out.</li>
 <li> Then, compose a message and attach the document to it, but do NOT send it. </li>
 <li> Instead save it as a draft. </li>
 <li> When you have done so, return here and click the "Hack MoP Account" above.</li>

@@ -17,5 +17,7 @@ urlpatterns = patterns('',
     url(r'mail/noreply/(\d+)/$', views.hq_mail_noreply, name='cron_hq_mail_noreply'),
     url(r'mail/reply/(\d+)/$', views.hq_mail_reply, name='cron_hq_mail_reply'),
     url(r'answers/$', views.hq_answers, name='cron_hq_answers'),
+    url(r'stats/$', views.hq_stats, name='cron_hq_stats'),
+    url(r'stats/(\d+)/$', views.hq_stats_cron, name='cron_hq_stats_cron'),
     
 )

@@ -1,0 +1,79 @@
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+<style>
+table {
+	border-collapse:collapse;
+}
+td {
+	border:1px solid black;
+	text-align:center;
+	padding:4px;
+}
+td.cm {
+	background-color:#fc6;
+}
+td.c {
+	background-color:#c9f;
+}
+td.m {
+	background-color:#9cf;
+}
+</style>
+
+</head>
+<body>
+<button onClick="grabIt()">Grab it!</button>
+<table>
+<tr><th>Cron</th>
+	{% for date in date_list %}
+		<th>{{date}}</th>
+	{% endfor %}
+</tr>
+	{% for cron in cron_list %}
+	<tr>
+		<td><a href="{% url 'cron_hq_stats_cron' cron.id %}">{{cron.user.username}}</a></td>
+	</tr>
+	{% endfor %}
+
+</table>
+
+
+<script type="text/javascript">
+
+function grabIt() {
+	glorz = $("a").first();
+	if (glorz.length > 0) {
+	  $.ajax({
+		    type: 'POST',
+		    url: glorz.attr('href'),
+		    //context: this,
+		    data:
+		    {
+			},
+		    success: function (data) {
+	  			glorz.parent().parent().replaceWith(data);
+	  			grabIt();
+	  	    },
+		    error: function(data) {
+		
+		    }
+		});
+	}
+}
+
+/*
+$( "a" ).click(function( event ) {
+  event.preventDefault();
+  grabIt();
+  
+	
+	
+});
+*/
+
+</script>
+
+
+</body>
+</html>

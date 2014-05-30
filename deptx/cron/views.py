@@ -1080,6 +1080,66 @@ def hq_mail_outstanding(request):
     return render(request, 'cron/hq_mail_outstanding.html', {'helpMail_list':helpMail_list })
 
 @staff_member_required
+def hq_stats(request):
+    date_list = []
+    from datetime import date, timedelta as td
+    d1 = date(2013,12,1)
+    d2 = date(2014,5,31)
+    delta = d2 - d1
+    for i in range(delta.days + 1):
+        date_list.append(d1 + td(days=i))
+    
+    cron_list = Cron.objects.all()
+    return render(request, 'cron/hq_stats.html', {'cron_list':cron_list, 'date_list':date_list })
+
+@csrf_exempt
+def hq_stats_cron(request, cron_id):
+    
+    from datetime import date, timedelta as td
+    d1 = date(2013,12,1)
+    d2 = date(2014,5,31)
+    delta = d2 - d1
+    
+    cron = Cron.objects.get(id=cron_id)
+    #cron_list = Cron.objects.all()[:100]
+    #for cron in cron_list:
+        #c_log_list = ActionLog.objects.filter(cron=cron)
+        #m_log_list = ActionLog.objects.filter(mop__cron=cron)
+        #log_list = (c_log_list | m_log_list).order_by('createdAt')[:500]
+    cron.log_list = []
+    for i in range(delta.days + 1):
+        myDate = d1 + td(days=i)
+        myDate_list = []
+        date_c_log_list = ActionLog.objects.filter(cron=cron).filter(createdAt__year=myDate.year, createdAt__month=myDate.month, createdAt__day=myDate.day).exclude(action=ActionLog.ACTION_CRON_MESSAGE_RECEIVE)
+        date_m_log_list = ActionLog.objects.filter(mop__cron=cron).filter(createdAt__year=myDate.year, createdAt__month=myDate.month, createdAt__day=myDate.day).exclude(action=ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL).exclude(action=ActionLog.ACTION_MOP_RECEIVE_MAIL_PERFORMANCE)
+        #date_log_list = (date_c_log_list | date_m_log_list).order_by('createdAt')
+        #date_log_list = ActionLog.objects.filter(mop__cron=cron).filter(createdAt__year=myDate.year, createdAt__month=myDate.month, createdAt__day=myDate.day)
+        c_count = date_c_log_list.count()
+        m_count = date_m_log_list.count()
+        if c_count > 0 and m_count > 0:
+            cm = "cm"
+        elif c_count > 0:
+            cm = "c"
+        elif m_count > 0:
+            cm = "m"
+        else:
+            cm = ""
+        
+        myDate_list.append((c_count, m_count, cm))
+        cron.log_list.append(myDate_list)
+    
+    t = loader.get_template('cron/hq_stats_cron.html')
+    c = Context({"cron": cron})
+        
+    output = t.render(c)
+    with open("stats.html", "a") as myfile:
+        myfile.write(output)
+    return HttpResponse(output, mimetype='text/html')
+    #return render(request, 'cron/hq_stats_cron.html', {'cron':cron})
+
+
+
+@staff_member_required
 def hq_mail_noreply(request, id):
     helpMail = HelpMail.objects.get(id=id)
     helpMail.needsReply = False
