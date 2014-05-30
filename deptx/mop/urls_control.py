@@ -8,5 +8,6 @@ urlpatterns = patterns('',
     url(r'mail/$', views.control_mail, name='mop_control_mail'),
     url(r'mail/outstanding', views.control_mail_outstanding, name='mop_control_mail_outstanding'),
     url(r'mail/noreply/(\d+)/$', views.control_mail_noreply, name='mop_control_mail_noreply'),
-    url(r'mail/reply/(\d+)/$', views.control_mail_reply, name='mop_control_mail_reply'),      
+    url(r'mail/reply/(\d+)/$', views.control_mail_reply, name='mop_control_mail_reply'),
+    url(r'detail/$', views.control_detail, name='mop_control_detail'),      
 )

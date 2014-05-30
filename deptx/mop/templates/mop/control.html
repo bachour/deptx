@@ -29,10 +29,11 @@
 		<h1>MoPs</h1>
 		<input class="button" type="submit" value="next step" name="next step" /><br/>
 		<table>
-		<tr><th>MoP</th><th>Clearance</th><th>TRUST</th><th>Total TRUST</th><th>New Deal</th><th>Mail-Trust</th><th>Mail-Errors</th><th>Active</th><th>ActiveActive</th><th>Reported<br/>Correct</th><th>Reported<br/>Incorrect</th><th>Revoked</th><th>Limbo</th><th>Hacked</th></tr>
+		<tr><th>MoP</th><th>Last Activity</th><th>Clearance</th><th>TRUST</th><th>Total TRUST</th><th>New Deal</th><th>Mail-Trust</th><th>Mail-Errors</th><th>Active</th><th>ActiveActive</th><th>Reported<br/>Correct</th><th>Reported<br/>Incorrect</th><th>Revoked</th><th>Limbo</th><th>Hacked</th></tr>
 		{% for mopTracker in mopTracker_list %}
 			<tr style="text-align:center;color:{{mopTracker.get_clearance_display}}">
 			<td>{{mopTracker.mop.user.username}}{% if mopTracker.mop.user.is_staff %} (staff){% endif %}</td>
+			<td>{{mopTracker.modifiedAt}}</td>
 			<td>{{mopTracker.get_clearance_display}}</td>
 			<td>{{mopTracker.trust}}</td>
 			<td>{{mopTracker.totalTrust}}</td>

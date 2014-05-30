@@ -739,7 +739,7 @@ def control(request):
     for mopDocument in mopDocument_list:
         mopDocument.amount = RandomizedDocument.objects.filter(mopDocument=mopDocument).filter(active=True).count()
     
-    mopTracker_list = MopTracker.objects.all().order_by('-totalTrust', 'trust')
+    mopTracker_list = MopTracker.objects.all().order_by('-modifiedAt')
 
     for mopTracker in mopTracker_list:
 #         mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=mopTracker.mop)
@@ -837,6 +837,11 @@ def control_randomize(request, mopDocument_id):
     mopDocument = MopDocument.objects.get(id=mopDocument_id)
     documentcreator.create_single_document(mopDocument)
     return HttpResponseRedirect(reverse('mop_control'))
+
+@staff_member_required
+def control_detail(request):
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(type=MopDocumentInstance.TYPE_MOP)
+    return render(request, 'mop/control_detail.html', {'mopDocumentInstance_list':mopDocumentInstance_list })
 
 @staff_member_required
 def control_mail_outstanding(request):

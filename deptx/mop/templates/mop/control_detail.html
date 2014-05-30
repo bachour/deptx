@@ -1,0 +1,17 @@
+<table>
+<tr>
+<th>id</th><th>Template</th><th>Document</th><th>MoP</th><th>Status</th><th>Correct</th><th>Modified</th><th>Provenance</th>
+</tr>
+{% for mopDocumentInstance in mopDocumentInstance_list %}
+	<tr>
+	<td>{{mopDocumentInstance.id}}</td>
+	<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.mopDocument.name}}</td>
+	<td style="white-space:nowrap;">{{mopDocumentInstance.getDocumentSerial}}</td>
+	<td>{{mopDocumentInstance.mop.user.username}}</td>
+	<td>{{mopDocumentInstance.get_status_display}}</td>
+	<td>{{mopDocumentInstance.correct}}</td>
+	<td>{{mopDocumentInstance.modified}}</td>
+	<td>{{mopDocumentInstance.provenanceState}}</td>
+	</tr>
+{% endfor %}
+</table>
