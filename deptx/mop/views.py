@@ -758,6 +758,7 @@ def control(request):
 #         mopTracker.activeDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).count
 #         mopTracker.activeActiveDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).filter(randomizedDocument__active=True).count
 #         mopTracker.limboDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_LIMBO).count
+        mopTracker.lastAction = ActionLog.objects.filter(mop=mopTracker.mop).exclude(action__gte=160).latest('id')
         mopTracker.reportedCorrectDocs = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).count
         mopTracker.reportedCorrectDocsBlue = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_BLUE).count
         mopTracker.reportedCorrectDocsGreen = MopDocumentInstance.objects.filter(mop=mopTracker.mop).filter(status=MopDocumentInstance.STATUS_REPORTED).filter(correct=True).filter(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_GREEN).count

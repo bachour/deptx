@@ -1,6 +1,23 @@
 {% load staticfiles %}
+<html>
+<head>
+<script src="{% static "mop/js/sorttable.js" %}"></script>
 
-<div class="main" style="background-color:#eee">
+<style media="screen" type="text/css">
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):after { 
+    content: " \25B4\25BE" 
+}
+</style>
+</head>
+<body>
+<div class="main" style="background-color:#aaa">
 	<div class="content">
 		<h1>MoP Control Centre</h1>
 		<a href="{% url 'mop_control_mail' %}">send mopmail</a><br/>
@@ -28,25 +45,23 @@
 		<input class="button" type="submit" value="create document" name="create document" /><br/>
 		<h1>MoPs</h1>
 		<input class="button" type="submit" value="next step" name="next step" /><br/>
-		<table>
-		<tr><th>MoP</th><th>Last Activity</th><th>Clearance</th><th>TRUST</th><th>Total TRUST</th><th>New Deal</th><th>Mail-Trust</th><th>Mail-Errors</th><th>Active</th><th>ActiveActive</th><th>Reported<br/>Correct</th><th>Reported<br/>Incorrect</th><th>Revoked</th><th>Limbo</th><th>Hacked</th></tr>
+		<table class="sortable">
+		<tr><th>MoP</th><th>Last Activity</th><th>Activty</th><th>Clearance</th><th>TRUST<br/>(Credits)</th><th>TRUST<br/>(total)</th><th>+</th><th>B+</th><th>G+</th><th>Y+</th><th>O+</th><th>R+</th><th>-</th></tr>
 		{% for mopTracker in mopTracker_list %}
-			<tr style="text-align:center;color:{{mopTracker.get_clearance_display}}">
+			<tr style="color:{{mopTracker.get_clearance_display}}">
 			<td>{{mopTracker.mop.user.username}}{% if mopTracker.mop.user.is_staff %} (staff){% endif %}</td>
-			<td>{{mopTracker.modifiedAt}}</td>
+			<td style="white-space:nowrap;">{{mopTracker.lastAction.modifiedAt|date:"Y-m-d H:i"}}</td>
+			<td>{{mopTracker.lastAction.get_action_display}}</td>
 			<td>{{mopTracker.get_clearance_display}}</td>
-			<td>{{mopTracker.trust}}</td>
-			<td>{{mopTracker.totalTrust}}</td>
-			<td>{{mopTracker.newTrust}}</td>
-			<td>{{mopTracker.mailTrust}}</td>
-			<td>{{mopTracker.mailErrors}}</td>
-			<td>{{mopTracker.activeDocs}}</td>
-			<td>{{mopTracker.activeActiveDocs}}</td>
-			<td>{{mopTracker.reportedCorrectDocs}}: {{mopTracker.reportedCorrectDocsBlue}}-{{mopTracker.reportedCorrectDocsGreen}}-{{mopTracker.reportedCorrectDocsYellow}}-{{mopTracker.reportedCorrectDocsOrange}}-{{mopTracker.reportedCorrectDocsRed}}</td>
-			<td>{{mopTracker.reportedIncorrectDocs}}</td>
-			<td>{{mopTracker.revokedDocs}}</td>
-			<td>{{mopTracker.limboDocs}}</td>
-			<td>{{mopTracker.hackedDocs}}</td>
+			<td style="text-align:right;">{{mopTracker.trust}}</td>
+			<td style="text-align:right;">{{mopTracker.totalTrust}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedCorrectDocs}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedCorrectDocsBlue}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedCorrectDocsGreen}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedCorrectDocsYellow}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedCorrectDocsOrange}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedCorrectDocsRed}}</td>
+			<td style="text-align:right;">{{mopTracker.reportedIncorrectDocs}}</td>
 			</tr>
 		{% endfor %}
 		</table>
@@ -55,4 +70,5 @@
 		</form>
 	</div>
 </div>
-
+</body>
+</html>
