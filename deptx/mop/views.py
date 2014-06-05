@@ -542,11 +542,10 @@ def forms_blank(request):
     
     if request.user.mop.mopTracker.tutorial <= MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE:
         requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_REQUEST).order_by('serial')
-    elif request.user.mop.mopTracker.tutorial <= MopTracker.TUTORIAL_6_DONE:
+    elif request.user.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
         requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_SUBMIT).order_by('serial')
     else:
         requisition_list = Requisition.objects.all().order_by('serial')
-    
     
     requisition_list.allAcquired = True
     for requisition in requisition_list:
