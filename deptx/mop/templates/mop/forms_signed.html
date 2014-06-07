@@ -19,7 +19,11 @@
 	<tr>
 	<td class="nobox">
 	{% if reqInstance.blank.requisition.category == reqInstance.blank.requisition.CATEGORY_SUBMISSION %}
-		<a href="{% url 'mop_mail_compose' reqInstance.fullSerial reqInstance.data %}">mail</a></td>
+		{% if reqInstance.data %}
+			<a href="{% url 'mop_mail_compose' reqInstance.fullSerial reqInstance.data %}">mail</a></td>
+		{% else %}
+			<a href="{% url 'mop_mail_compose' reqInstance.fullSerial %}">mail</a></td>
+		{% endif %}
 	{% else %}
 		<a href="{% url 'mop_mail_compose' reqInstance.fullSerial %}">mail</a></td>
 	{% endif %}
