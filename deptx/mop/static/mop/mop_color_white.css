@@ -19,3 +19,7 @@ td {
 {
 	background-color:#fff;
 }
+
+.styled-select select {
+	color:black;
+}
