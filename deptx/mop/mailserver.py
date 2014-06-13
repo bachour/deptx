@@ -21,6 +21,9 @@ except:
 DELAY_SHORT = 0 * 60
 DELAY_MEDIUM = 1 * 60
 DELAY_LONG = 3 * 60 
+DELAY_SUPERLONG = 57 * 60
+
+SPECIAL_STATUS_HACK = "hallo"
 
 def delayedEnough(mail, delay):
     if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
@@ -58,20 +61,37 @@ def analyze_mail():
 def check_mail(mail):
         if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
             subject = "[MoP] %s: Help Request (Cron: %s)" % (mail.mop.user.username, mail.mop.cron.user.username)
-            email_tpl = loader.get_template('mop/mail/message_from_player.txt')
-            c = Context({'body':mail.requisitionInstance.data})
-            email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
-            email.send(fail_silently=False)
-            mail.unit = mail.requisitionInstance.blank.requisition.unit
-            mail.subject = Mail.SUBJECT_HELP
-            mail.processed = True
-            mail.needsReply = True
-            mail.save()
+            create_player_email(mail, subject)
             return
-        
+        elif mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_REPORT:
+            subject = "[MoP] %s: MOPAIN Report (Cron: %s)" % (mail.mop.user.username, mail.mop.cron.user.username)
+            create_player_email(mail, subject)
+            return    
         else:    
             newMail = prepareMail(mail)    
-            if mail.unit == None:
+            if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_APPLY_SPECIAL:
+                if not delayedEnough(mail, DELAY_SUPERLONG):
+                    return
+                #deny because already
+                if mail.mop.mopTracker.specialStatusAllowed:
+                    newMail.subject = Mail.SUBJECT_SPECIAL_DENIED
+                    newMail.bodyType = Mail.BODY_SPECIAL_ALREADY
+                    newMail.trust = -100
+                else:
+                    #deny because shit
+                    if not SPECIAL_STATUS_HACK in mail.requisitionInstance.data or not mail.mop.mopTracker.clearance >= Clearance.CLEARANCE_RED:
+                        newMail.subject = Mail.SUBJECT_SPECIAL_DENIED
+                        newMail.bodyType = Mail.BODY_SPECIAL_DENIED
+                        newMail.trust = -250
+                    #grant
+                    else:
+                        newMail.subject = Mail.SUBJECT_SPECIAL_GRANTED
+                        newMail.bodyType = Mail.BODY_SPECIAL_GRANTED
+                        newMail.trust = 500
+                        mail.mop.mopTracker.specialStatusAllowed = True
+                        mail.mop.mopTracker.save()
+            
+            elif mail.unit == None:
                 if not delayedEnough(mail, DELAY_SHORT):
                     return
                 newMail.subject = Mail.SUBJECT_ERROR
@@ -191,6 +211,7 @@ def check_mail(mail):
                     mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_ACTIVE
                     mail.mopDocumentInstance.save()
                     newMail.mopDocumentInstance = mail.mopDocumentInstance
+               
     
             mail.processed = True
             mail.save()
@@ -210,8 +231,11 @@ def check_mail(mail):
                 logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_FORM, mop=mail.mop, mail=newMail)
             elif newMail.subject == Mail.SUBJECT_REPORT_EVALUATION:
                 logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_REPORT, mop=mail.mop, mail=newMail)
+            elif newMail.subject == Mail.SUBJECT_SPECIAL_DENIED:
+                logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_SPECIAL_DENIED, mop=mail.mop, mail=newMail)
+            elif newMail.subject == Mail.SUBJECT_SPECIAL_GRANTED:
+                logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_SPECIAL_GRANTED, mop=mail.mop, mail=newMail)
            
-
 
 def requisitionBlankExists(mop, requisition):
     try:
@@ -291,6 +315,9 @@ def subjectMatchesRequisition(mail):
     elif mail.subject == Mail.SUBJECT_SUBMIT_DOCUMENT:
         if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SUBMISSION:
             return True
+    elif mail.subject == Mail.SUBJECT_EMPTY:
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_APPLY_SPECIAL:
+            return True
     return False
 
 def redundantDocument(mail):
@@ -353,6 +380,16 @@ def prepareMail(mail):
     newMail.replyTo = mail
     return newMail
 
+def create_player_email(mail, subject):
+    email_tpl = loader.get_template('mop/mail/message_from_player.txt')
+    c = Context({'body':mail.requisitionInstance.data})
+    email = EmailMessage(subject=subject, body=email_tpl.render(c), to=TO_ALL)
+    email.send(fail_silently=False)
+    mail.unit = mail.requisitionInstance.blank.requisition.unit
+    mail.subject = Mail.SUBJECT_HELP
+    mail.processed = True
+    mail.needsReply = True
+    mail.save()
 
 
     

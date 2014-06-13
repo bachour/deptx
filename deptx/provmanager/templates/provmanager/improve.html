@@ -61,7 +61,9 @@
     			var URL_CONTINUE = "{% url 'cron_case_outro' mission.serial case.serial %}";
     		{% endif %}
     	{% elif isMop %}
-    		{% if inactive %}
+    		{% if special %}
+    			var URL_CONTINUE = "{% url 'mop_special' %}";
+    		{% elif inactive %}
     			var URL_CONTINUE = "{% url 'mop_documents_archive' %}";
     		{% else %}
     			var URL_CONTINUE = "{% url 'mop_documents' %}";

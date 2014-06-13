@@ -9,6 +9,10 @@ class Clearance():
     CLEARANCE_YELLOW = 20
     CLEARANCE_ORANGE = 30
     CLEARANCE_RED = 40
+
+    #special clearance for special status
+    CLEARANCE_WHITE = 50
+    
     CLEARANCE_UV1 = 100
     CLEARANCE_UV2 = 102
     CLEARANCE_UV3 = 103
@@ -21,6 +25,7 @@ class Clearance():
         (CLEARANCE_YELLOW, "YELLOW"),
         (CLEARANCE_ORANGE, "ORANGE"),
         (CLEARANCE_RED, "RED"),
+        (CLEARANCE_WHITE, "WHITE"),
     )
     
     CHOICES_CLEARANCE_CRONDOCUMENT = (
@@ -162,6 +167,8 @@ class Clearance():
             img = "orchid-orange.png"
         elif self.clearance == Clearance.CLEARANCE_RED:
             img = "orchid-red.png"
+        elif self.clearance == Clearance.CLEARANCE_WHITE:
+            img = "orchid-white.png"
         elif self.clearance == Clearance.CLEARANCE_UV1:
             img = "orchid-ultraviolet1.png"
         elif self.clearance == Clearance.CLEARANCE_UV2:

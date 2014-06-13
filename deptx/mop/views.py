@@ -126,7 +126,7 @@ def logout_view(request):
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
     unit_list = Unit.objects.all().order_by('serial')
-    requisition_list = Requisition.objects.all().order_by('serial')
+    requisition_list = Requisition.objects.exclude(category=Requisition.CATEGORY_APPLY_SPECIAL).exclude(category=Requisition.CATEGORY_REPORT).order_by('serial')
     logging.log_action(ActionLog.ACTION_MOP_VIEW_GUIDEBOOK, mop=request.user.mop)
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
@@ -193,7 +193,7 @@ def getDocumentPoolForMop(mop):
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
 def documents(request):
-    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-randomizedDocument__dueAt')
+    mopDocumentInstance_list_all = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).exclude(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_WHITE).order_by('-randomizedDocument__dueAt')
     mopDocumentInstance_list = paginate(request, mopDocumentInstance_list_all)
     for documentInstance in mopDocumentInstance_list:
         try:
@@ -211,6 +211,16 @@ def documents_archive(request):
     logging.log_action(ActionLog.ACTION_MOP_VIEW_DOCUMENTS_ARCHIVE, mop=request.user.mop)
     return render(request, 'mop/documents_archive.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
+@login_required(login_url='mop_login')
+@user_passes_test(isMop, login_url='mop_login')
+def special(request):
+    specialDocument_list = RandomizedDocument.objects.filter(mopDocument__clearance=Clearance.CLEARANCE_WHITE)
+    mopDocumentInstance_list = []
+    for document in specialDocument_list:
+        mopDocumentInstance, created = MopDocumentInstance.objects.get_or_create(mop=request.user.mop, randomizedDocument=document)
+        mopDocumentInstance_list.append(mopDocumentInstance)
+    logging.log_action(ActionLog.ACTION_MOP_VIEW_SPECIAL, mop=request.user.mop)
+    return render(request, 'mop/special.html', {"mopDocumentInstance_list": mopDocumentInstance_list})
 
 @login_required(login_url='mop_login')
 @user_passes_test(isMop, login_url='mop_login')
@@ -235,10 +245,15 @@ def provenance(request, serial):
             documentInstance = None
         except MopDocumentInstance.DoesNotExist:
             documentInstance = None
+
+    if clearance == Clearance.CLEARANCE_WHITE and request.user.mop.mopTracker.hasSpecialStatus:
+        special = True
+    else:
+        special = False
     
     if documentInstance is None:
         return None
-    elif clearance <= request.user.mop.mopTracker.clearance:
+    elif clearance <= request.user.mop.mopTracker.clearance or special:
         if documentInstance.status == MopDocumentInstance.STATUS_ACTIVE:
             inactive = False
         else:
@@ -248,7 +263,7 @@ def provenance(request, serial):
         else:
             logging.log_prov(action=ProvLog.ACTION_OPEN, cronDocumentInstance=documentInstance)
         logging.log_action(ActionLog.ACTION_MOP_VIEW_PROVENANCE, mop=request.user.mop, mopDocumentInstance=documentInstance, mopDocumentInstanceCorrect=documentInstance.correct)
-        return render(request, 'mop/provenance.html', {'document': document, "inactive":inactive})
+        return render(request, 'mop/provenance.html', {'document': document, "inactive":inactive, "special":special})
     else:
         logging.log_action(ActionLog.ACTION_MOP_VIEW_PROVENANCE_NO_CLEARANCE, mop=request.user.mop, mopDocumentInstance=documentInstance)
         return render(request, 'mop/provenance_noclearance.html', {'document': document})
@@ -404,8 +419,12 @@ def mail_compose(request, fullSerial=None, documentSerial=None):
             #TODO code duplication between here and the else below
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
-            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).exclude(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_WHITE).order_by('-modifiedAt')
+            if request.user.mop.mopTracker.hasSpecialStatus:
+                form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING + Mail.CHOICES_SUBJECT_SENDING_SPECIAL 
+            else:
+                form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+            
             
             logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
             return render(request, 'mop/mail_compose.html', {'form' : form,})
@@ -426,6 +445,10 @@ def mail_compose(request, fullSerial=None, documentSerial=None):
                         subject = Mail.SUBJECT_SUBMIT_DOCUMENT
                     elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_HELP:
                         subject = Mail.SUBJECT_REQUEST_HELP
+                    elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_APPLY_SPECIAL:
+                        subject = Mail.SUBJECT_EMPTY
+                    elif requisitionInstance.blank.requisition.category == Requisition.CATEGORY_REPORT:
+                        subject = Mail.SUBJECT_SPECIAL
                     
                     if documentSerial is not None:
                         try:
@@ -443,8 +466,11 @@ def mail_compose(request, fullSerial=None, documentSerial=None):
                     break
         form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = requisitionInstance_list
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
-        form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).exclude(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_WHITE).order_by('-modifiedAt')
+        if request.user.mop.mopTracker.hasSpecialStatus:
+            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING + Mail.CHOICES_SUBJECT_SENDING_SPECIAL 
+        else:
+            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         if not withForm:
             logging.log_action(ActionLog.ACTION_MOP_VIEW_COMPOSE, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form,})
@@ -488,8 +514,11 @@ def mail_edit(request, serial):
         else:
             form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
             form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
-            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+            form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).exclude(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_WHITE).order_by('-modifiedAt')
+            if request.user.mop.mopTracker.hasSpecialStatus:
+                form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING + Mail.CHOICES_SUBJECT_SENDING_SPECIAL 
+            else:
+                form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
             logging.log_action(ActionLog.ACTION_MOP_VIEW_EDIT, mop=request.user.mop)
             return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
         
@@ -498,8 +527,11 @@ def mail_edit(request, serial):
         #TODO same with documents at all occurences
         form.fields["unit"].queryset = Unit.objects.all().order_by('serial')
         form.fields["requisitionInstance"].queryset = RequisitionInstance.objects.filter(blank__mop=request.user.mop).filter(used=False).order_by('-modifiedAt')
-        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).order_by('-modifiedAt')
-        form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
+        form.fields["mopDocumentInstance"].queryset = MopDocumentInstance.objects.filter(mop=request.user.mop).filter(status=MopDocumentInstance.STATUS_ACTIVE).exclude(randomizedDocument__mopDocument__clearance=Clearance.CLEARANCE_WHITE).order_by('-modifiedAt')
+        if request.user.mop.mopTracker.hasSpecialStatus:
+            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING + Mail.CHOICES_SUBJECT_SENDING_SPECIAL 
+        else:
+            form.fields["subject"].choices = Mail.CHOICES_SUBJECT_SENDING
         logging.log_action(ActionLog.ACTION_MOP_VIEW_EDIT, mop=request.user.mop)
         return render(request, 'mop/mail_compose.html', {'form' : form, 'mail':mail})
 
@@ -538,14 +570,16 @@ def forms_blank(request):
     for initial in initialRequisitions:
         RequisitionBlank.objects.get_or_create(mop=request.user.mop, requisition=initial)
             
-    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__serial')            
-    
+    blank_list = RequisitionBlank.objects.filter(mop=request.user.mop).order_by('requisition__serial')
+
     if request.user.mop.mopTracker.tutorial <= MopTracker.TUTORIAL_3_SENT_HOW_TO_CHECK_PROVENANCE:
         requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_REQUEST).order_by('serial')
     elif request.user.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
         requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_SUBMIT).order_by('serial')
     else:
-        requisition_list = Requisition.objects.all().order_by('serial')
+        requisition_list = Requisition.objects.exclude(category=Requisition.CATEGORY_APPLY_SPECIAL).order_by('serial')
+        if not request.user.mop.mopTracker.hasSpecialStatus:
+            requisition_list = requisition_list.exclude(category=Requisition.CATEGORY_REPORT)
     
     requisition_list.allAcquired = True
     for requisition in requisition_list:

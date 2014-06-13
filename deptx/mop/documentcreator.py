@@ -8,7 +8,7 @@ from random import randrange
 
 def remove_old_documents():
     output = []
-    randomizedDocument_list = RandomizedDocument.objects.filter(active=True)
+    randomizedDocument_list = RandomizedDocument.objects.filter(active=True).exclude(mopDocument__clearance=Clearance.CLEARANCE_WHITE)
     for randomizedDocument in randomizedDocument_list:
         if randomizedDocument.dueAt and randomizedDocument.dueAt < now():
             randomizedDocument.active = False

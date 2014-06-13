@@ -431,6 +431,7 @@ class Mail(models.Model):
     SUBJECT_REQUEST_DOCUMENT = 103
     SUBJECT_SUBMIT_DOCUMENT = 104
     SUBJECT_REQUEST_HELP = 105
+    SUBJECT_SPECIAL = 106
         
     SUBJECT_RECEIVE_FORM = 201
     SUBJECT_RECEIVE_DOCUMENT = 203
@@ -440,8 +441,13 @@ class Mail(models.Model):
     SUBJECT_INFORMATION = 212
     SUBJECT_REPORT_EVALUATION = 213
     SUBJECT_HELP = 214
+    SUBJECT_SPECIAL_DENIED = 215
+    SUBJECT_SPECIAL_GRANTED = 216
+    
     
     SUBJECT_UNCAUGHT_CASE = 301
+    
+    
     
     CHOICES_SUBJECT_SENDING = (
         (SUBJECT_EMPTY, "---------"),
@@ -449,6 +455,10 @@ class Mail(models.Model):
         (SUBJECT_REQUEST_DOCUMENT, "Requesting Document"),
         (SUBJECT_SUBMIT_DOCUMENT, "Submitting Document"),
         (SUBJECT_REQUEST_HELP, "Asking for Help"),
+    )
+    
+    CHOICES_SUBJECT_SENDING_SPECIAL = (
+        (SUBJECT_SPECIAL, "Special Status Communication"),
     )
     
     
@@ -460,10 +470,12 @@ class Mail(models.Model):
         (SUBJECT_INFORMATION, "Information"),
         (SUBJECT_REPORT_EVALUATION, "Evaluation Result"),
         (SUBJECT_HELP, "Help"),
-        (SUBJECT_UNCAUGHT_CASE, "dfjhsjdvnvewe;efhjk")
+        (SUBJECT_UNCAUGHT_CASE, "dfjhsjdvnvewe;efhjk"),
+        (SUBJECT_SPECIAL_DENIED, "Request Denied"),
+        (SUBJECT_SPECIAL_GRANTED, "Request Granted"),
     )
     
-    CHOICES_SUBJECT = CHOICES_SUBJECT_SENDING + CHOICES_SUBJECT_RECEIVING
+    CHOICES_SUBJECT = CHOICES_SUBJECT_SENDING + CHOICES_SUBJECT_SENDING_SPECIAL + CHOICES_SUBJECT_RECEIVING
     
     BODY_UNCAUGHT_CASE = -1
     #do not set a value to zero!!! bad for checking if value is set (e.g. in templates)
@@ -503,6 +515,10 @@ class Mail(models.Model):
     BODY_PERFORMANCE_PROMOTION = 123
     BODY_PERFORMANCE_DEMOTION = 124
     
+    BODY_SPECIAL_DENIED = 150
+    BODY_SPECIAL_GRANTED = 151
+    BODY_SPECIAL_ALREADY = 152
+    
     BODY_TUTORIAL_1_INTRO = 210
     BODY_TUTORIAL_2_DOCUMENT_REQUEST = 220
     BODY_TUTORIAL_3_TASK_COMPLETION = 230
@@ -538,6 +554,9 @@ class Mail(models.Model):
         (BODY_PERFORMANCE_REPORT_NEUTRAL, 'BODY_PERFORMANCE_REPORT_NEUTRAL'),
         (BODY_PERFORMANCE_PROMOTION, 'BODY_PROMOTION'),
         (BODY_PERFORMANCE_DEMOTION, 'BODY_DEOMOTION'),
+        (BODY_SPECIAL_DENIED, 'BODY_SPECIAL_DENIED'),
+        (BODY_SPECIAL_GRANTED, 'BODY_SPECIAL_GRANTED'),
+        (BODY_SPECIAL_ALREADY, 'BODY_SPECIAL_ALREADY'),
         (BODY_TUTORIAL_1_INTRO, 'BODY_TUTORIAL_1_INTRO'),
         (BODY_TUTORIAL_2_DOCUMENT_REQUEST, 'BODY_TUTORIAL_2_DOCUMENT_REQUEST'),
         (BODY_TUTORIAL_3_TASK_COMPLETION, 'BODY_TUTORIAL_3_TASK_COMPLETION'),
@@ -657,6 +676,12 @@ class Mail(models.Model):
             tutorialData['form_requisition'] = Requisition.objects.get(type=Requisition.TYPE_INITIAL, category=Requisition.CATEGORY_FORM)
         elif self.bodyType == self.BODY_TUTORIAL_5_CONCLUSION:
             template = loader.get_template('mop/mail/tutorial_5_conclusion.txt')
+        elif self.bodyType == self.BODY_SPECIAL_ALREADY:
+            template = loader.get_template('mop/mail/special_already.txt')
+        elif self.bodyType == self.BODY_SPECIAL_DENIED:
+            template = loader.get_template('mop/mail/special_denied.txt')
+        elif self.bodyType == self.BODY_SPECIAL_GRANTED:
+            template = loader.get_template('mop/mail/special_granted.txt')
         elif self.bodyType == self.BODY_MANUAL:
             text = self.body
         else:
