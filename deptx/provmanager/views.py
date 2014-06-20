@@ -241,7 +241,7 @@ def improve_saved_state(request, serial):
             try:
                 randomizedDocument = RandomizedDocument.objects.get(provenance=provenance)
                 documentInstance = MopDocumentInstance.objects.get(randomizedDocument=randomizedDocument, mop=request.user.mop)
-            except RandomizedDocument.DoesNotExist:
+            except:
                 pass
     try:
         json_load = json.loads(documentInstance.provenanceState)
