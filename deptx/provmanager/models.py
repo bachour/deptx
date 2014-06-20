@@ -39,5 +39,5 @@ class Provenance(models.Model):
             super(Provenance, self).save(*args, **kwargs)
     
     def __unicode__(self):
-        return "%s - %s - store: %d" % (self.get_type_display(), self.name, self.store_id)
+        return "%s - %s - store: %d (%s)" % (self.get_type_display(), self.name, self.store_id, self.serial)
    
