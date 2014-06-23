@@ -15,10 +15,10 @@
 	{% if reqBlank.requisition.category == reqBlank.requisition.CATEGORY_HELP %}
 		You can use this form to ask the {{reqBlank.requisition.unit.name}} for help if you have any problems at all. Don't hesitate, it does not cost any TRUST!<br/>
 		Just write what is worrying you, and send it to the {{reqBlank.requisition.unit.name}} ({{reqBlank.requisition.unit.serial}}) and they will get back to you as soon as possible!
-	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_APPLY_SPECIAL %}
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SPECIAL_APPLY %}
 		Outstanding employees of the Ministry of Provenance can apply for Special Status. Special Status requires a exemplary track record of diligent work and requires a clearance level of RED.<br/>
 		Justify in your own words why you deserve Special Status, and provide the identifier of a MOPAIN employee willing to vouch for you.
-	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_REPORT %}
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SPECIAL_REPORT %}
 		Direct communication channel to MOPAIN. Only to be used by employees of Special Status.
 	{% else %}
 		Please enter the identification code of the 
@@ -32,9 +32,9 @@
 <tr><th>
 	{% if reqBlank.requisition.category == reqBlank.requisition.CATEGORY_HELP %}
 		Your message
-	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_APPLY_SPECIAL %}
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SPECIAL_APPLY %}
 		Justification<br/>(your own words)
-	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_REPORT %}
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SPECIAL_REPORT %}
 		Your report
 	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_FORM %}
 		Identifier of Form you want to request
@@ -46,9 +46,9 @@
 </th><td>
 	{% if reqBlank.requisition.category == reqBlank.requisition.CATEGORY_HELP %}
 		<textarea cols="80" id="id_{{form.data.name}}" name="{{form.data.name}}" rows="10"></textarea>
-	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_APPLY_SPECIAL %}
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SPECIAL_APPLY %}
 		<textarea cols="80" id="id_{{form.data.name}}" name="{{form.data.name}}" rows="10"></textarea>
-	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_REPORT %}
+	{% elif reqBlank.requisition.category == reqBlank.requisition.CATEGORY_SPECIAL_REPORT %}
 		<textarea cols="80" id="id_{{form.data.name}}" name="{{form.data.name}}" rows="10"></textarea>
 	{% else %}
 		{% if form.data.value %}

@@ -63,13 +63,13 @@ def check_mail(mail):
             subject = "[MoP] %s: Help Request (Cron: %s)" % (mail.mop.user.username, mail.mop.cron.user.username)
             create_player_email(mail, subject)
             return
-        elif mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_REPORT:
+        elif mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SPECIAL_REPORT:
             subject = "[MoP] %s: MOPAIN Report (Cron: %s)" % (mail.mop.user.username, mail.mop.cron.user.username)
             create_player_email(mail, subject)
             return    
         else:    
             newMail = prepareMail(mail)    
-            if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_APPLY_SPECIAL:
+            if mail.requisitionInstance is not None and mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SPECIAL_APPLY:
                 if not delayedEnough(mail, DELAY_SUPERLONG):
                     return
                 #deny because already
@@ -316,7 +316,7 @@ def subjectMatchesRequisition(mail):
         if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SUBMISSION:
             return True
     elif mail.subject == Mail.SUBJECT_EMPTY:
-        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_APPLY_SPECIAL:
+        if mail.requisitionInstance.blank.requisition.category == Requisition.CATEGORY_SPECIAL_APPLY:
             return True
     return False
 

@@ -82,8 +82,8 @@ class Requisition(models.Model):
     CATEGORY_DOCUMENT = 2
     CATEGORY_SUBMISSION = 3
     CATEGORY_HELP = 4
-    CATEGORY_APPLY_SPECIAL = 5
-    CATEGORY_REPORT = 6
+    CATEGORY_SPECIAL_APPLY = 5
+    CATEGORY_SPECIAL_REPORT = 6
     
     CHOICES_CATEGORY = (
         (CATEGORY_FORM, "request form"),
@@ -91,8 +91,8 @@ class Requisition(models.Model):
         (CATEGORY_DOCUMENT, "request document"),
         (CATEGORY_SUBMISSION, "submit document"),
         (CATEGORY_HELP, "ask for help"),
-        (CATEGORY_APPLY_SPECIAL, "apply for special status"),
-        (CATEGORY_REPORT, "direct line to MOPAIN"),
+        (CATEGORY_SPECIAL_APPLY, "apply for special status"),
+        (CATEGORY_SPECIAL_REPORT, "direct line to MOPAIN"),
     )
     
     TYPE_NORMAL = 0
@@ -120,7 +120,7 @@ class Requisition(models.Model):
     
     @property
     def needsSpecial(self):
-        return self.category == self.CATEGORY_REPORT
+        return self.category == self.CATEGORY_SPECIAL_REPORT
     
     def get_category_acr(self):
         if self.category == self.CATEGORY_FORM:
