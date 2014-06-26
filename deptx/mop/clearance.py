@@ -147,6 +147,9 @@ class Clearance():
         elif self.clearance == self.CLEARANCE_RED:
             beginning = "QRST89"
             end = "MIXEDREALITYLAB"
+        elif self.clearance == self.CLEARANCE_WHITE:
+            beginning = "UVWXYZ"
+            end = "NARROWS"
         elif self.clearance >= self.CLEARANCE_UV1 and self.clearance <= self.CLEARANCE_UV5:
             #IMPORTANT: CronDocuments are based on a different ID-counter, so no MopDocuments should ever be UV (and all CronDocuments need to be UV)
             beginning = "UVWXYZ"
