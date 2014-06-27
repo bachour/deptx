@@ -14,6 +14,9 @@
 	{% if not hide.files %}
 		<a class="button" href="{% url 'mop_files' %}"><input class="button" type="submit" value="files" /></a>
 	{% endif %}
+	{% if user.mop.mopTracker.hasSpecialStatus %}
+		<a class="button" href="{% url 'mop_special' %}"><input class="button" type="submit" value="special" /></a>
+	{% endif %}
 </p>
 <p class="nav">
 	{% if not hide.compose %}
