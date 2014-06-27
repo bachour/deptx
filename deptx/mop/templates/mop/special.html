@@ -24,7 +24,7 @@ Your attempt has been logged.</strong></p>
 				<tr>
 					<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">view</a></td>
 					<td>{{mopDocumentInstance.randomizedDocument.mopDocument.unit.serial}}{{mopDocumentInstance.cronDocument.unit.serial}}</td>
-					<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.mopDocument.name}}</td>
+					<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.provenance.name}}</td>
 					<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.serial}}</td>
 					<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}"/></td>
 				</tr>
