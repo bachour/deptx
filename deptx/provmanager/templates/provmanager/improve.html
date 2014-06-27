@@ -41,10 +41,16 @@
     	var URL_CHECK = "{% url 'provmanager_prov_check' %}";
     	var URL_LOG = "{% url 'provmanager_prov_log_action' %}";
     	
-    	{% if inactive or special %}
+    	{% if inactive special %}
     		var INACTIVE = true;
     	{% else %}
     		var INACTIVE = false;
+    	{% endif %}
+    	
+    	{% if special %}
+    		var SPECIAL = true;
+    	{% else %}
+    		var SPECIAL = false;
     	{% endif %}
     	
     	{% if is_test %}
