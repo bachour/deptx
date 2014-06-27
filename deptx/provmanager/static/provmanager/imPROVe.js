@@ -1455,7 +1455,7 @@ function createButtons()
 	      });
 	
 	var buttonText;
-	if (INACTIVE)
+	if (SPECIAL || INACTIVE)
 		buttonText = SUBMIT_INACTIVE_TEXT;
 	else
 		buttonText = SUBMIT_ACTIVE_TEXT;
@@ -1890,7 +1890,7 @@ function guidePushed()
 
 function submitPushed()
 {
-	if (taskCompleted || INACTIVE)
+	if (taskCompleted || INACTIVE || SPECIAL)
 	{
 		window.location.href = URL_CONTINUE;
 		//validateSubmit();
