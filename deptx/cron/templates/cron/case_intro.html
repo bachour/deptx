@@ -5,75 +5,79 @@
 <h1>{{ case.name }}</h1>
 <h2>Background</h2>
 {{ text }}
-<h2>Required Documents:</h2>
-<table class="banner-1">
-	<tr>
-		<th></th>
-		<th></th>
-		<th>name</th>
-		<th>identification number</th>
-		<th>unit</th>
-		<th>level</th>
-		<th>Credits</th>
-	</tr>
-{% for cronDocument in cronDocument_list %}
-	<tr style='vertical-align:middle' {% if not cronDocument.available %}class='missing'{% endif %}>
-		<td>
-			{% if cronDocument.solved and cronDocument.provenance %}
-				<div style="position:relative; width:80px;">
-					<div style="position:absolute;top:50%;margin-top:-25px">
-						<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>
+{% if cronDocument_list %}
+	<h2>Required Documents:</h2>
+	<table class="banner-1">
+		<tr>
+			<th></th>
+			<th></th>
+			<th>name</th>
+			<th>identification number</th>
+			<th>unit</th>
+			<th>level</th>
+			<th>Credits</th>
+		</tr>
+	{% for cronDocument in cronDocument_list %}
+		<tr style='vertical-align:middle' {% if not cronDocument.available %}class='missing'{% endif %}>
+			<td>
+				{% if cronDocument.solved and cronDocument.provenance %}
+					<div style="position:relative; width:80px;">
+						<div style="position:absolute;top:50%;margin-top:-25px">
+							<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>
+						</div>
+						<div>
+							{% for i in cronDocument.getStarsForTemplate %}<img width="32px" src="{% static 'cron/images/hat.png' %}" />{% endfor %}
+						</div>
 					</div>
-					<div>
-						{% for i in cronDocument.getStarsForTemplate %}<img width="32px" src="{% static 'cron/images/hat.png' %}" />{% endfor %}
-					</div>
-				</div>
+				{% endif %}
+			</td>
+			<td>
+			{% if cronDocument.available or cheat %}
+				<a class='button' href="{% if cronDocument.provenance %}{% url "cron_provenance" mission.serial case.serial cronDocument.serial %}{% else %}{% url "cron_no_provenance" mission.serial case.serial cronDocument.serial %}{% endif %}">{% if cronDocument.solved %}view{% else %}inspect{% endif %}</a>
+			{% else %}
+				<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>
 			{% endif %}
-		</td>
-		<td>
-		{% if cronDocument.available or cheat %}
-			<a class='button' href="{% if cronDocument.provenance %}{% url "cron_provenance" mission.serial case.serial cronDocument.serial %}{% else %}{% url "cron_no_provenance" mission.serial case.serial cronDocument.serial %}{% endif %}">{% if cronDocument.solved %}view{% else %}inspect{% endif %}</a>
-		{% else %}
-			<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>
-		{% endif %}
-		</td>
-		<td>{% if not cronDocument.available %}??????{% else %}{{cronDocument.name}}{% endif %}</td>
-		<td>{{cronDocument.serial}}</td>
-		<td>{{cronDocument.unit.serial}}</td>
-		<td><img style="width:32px;" src="{{cronDocument.getBadgeUrl}}" /></td>
-		<td>{{cronDocument.getTrustRequested}}</td>
-	</tr>
-{% endfor %}
-</table>
-
-{% if not cronDocument_list.allAvailable and not caseInstance.allDocumentsSolved %}
-<p>In order to acquire missing documents: 
-<ol> 
-<li> Login to the Ministry of Provenance  <a target="_blank" href="http://www.mofp.net">Intranet</a>.</li>
-<li> Request the document following their standard procedures. Make sure you have gained enough Credits to be able to request the document. Your own clearance level <span style="color:white;">does not</span> matter when requesting documents, only when viewing them at MoP. You can request UV documents even when you have just started out.</li>
-<li> Then, compose a message and attach the document to it, but do NOT send it. </li>
-<li> Instead save it as a draft. </li>
-<li> When you have done so, return here and click the "Hack MoP Account" above.</li>
-</ol>
-Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>
-<br/>
-{% endif %}
-{% if not cronDocument_list.allMissing and not caseInstance.allDocumentsSolved %}
-	<p>If the document contains provenance data, you can now use our own Provenance Viewing tool to inspect provenance documents. Your mission is to examine the document and highlight any inconsistencies in the attributes of the node:</p>
-	<ol>
-	<li>Click the "inspect" link above.</li>
-	<li>Start by spreading out the nodes.</li>
-	<li>Try to arrange them in a way that helps you understand the sequence of events portrayed in the graph.</li>
-	<li>Find out if any attributes are inconsistent. Highlight them and then click "Submit report".</li>
-	<li>If you think there are no inconsistencies, make sure no attributes are selected and then click "Submit report".</li>
+			</td>
+			<td>{% if not cronDocument.available %}??????{% else %}{{cronDocument.name}}{% endif %}</td>
+			<td>{{cronDocument.serial}}</td>
+			<td>{{cronDocument.unit.serial}}</td>
+			<td><img style="width:32px;" src="{{cronDocument.getBadgeUrl}}" /></td>
+			<td>{{cronDocument.getTrustRequested}}</td>
+		</tr>
+	{% endfor %}
+	</table>
+	
+	{% if not cronDocument_list.allAvailable and not caseInstance.allDocumentsSolved %}
+	<p>In order to acquire missing documents: 
+	<ol> 
+	<li> Login to the Ministry of Provenance  <a target="_blank" href="http://www.mofp.net">Intranet</a>.</li>
+	<li> Request the document following their standard procedures. Make sure you have gained enough Credits to be able to request the document. Your own clearance level <span style="color:white;">does not</span> matter when requesting documents, only when viewing them at MoP. You can request UV documents even when you have just started out.</li>
+	<li> Then, compose a message and attach the document to it, but do NOT send it. </li>
+	<li> Instead save it as a draft. </li>
+	<li> When you have done so, return here and click the "Hack MoP Account" above.</li>
 	</ol>
+	Our hackers will access your MoP Draft folder to retrieve the document and bypass MoP mail monitoring systems.</p>
 	<br/>
-	<p>Should the document not contain any provenance data, then you should carefully examine the contents and help us understand what they mean.</p>
+	{% endif %}
+	{% if not cronDocument_list.allMissing and not caseInstance.allDocumentsSolved %}
+		<p>If the document contains provenance data, you can now use our own Provenance Viewing tool to inspect provenance documents. Your mission is to examine the document and highlight any inconsistencies in the attributes of the node:</p>
+		<ol>
+		<li>Click the "inspect" link above.</li>
+		<li>Start by spreading out the nodes.</li>
+		<li>Try to arrange them in a way that helps you understand the sequence of events portrayed in the graph.</li>
+		<li>Find out if any attributes are inconsistent. Highlight them and then click "Submit report".</li>
+		<li>If you think there are no inconsistencies, make sure no attributes are selected and then click "Submit report".</li>
+		</ol>
+		<br/>
+		<p>Should the document not contain any provenance data, then you should carefully examine the contents and help us understand what they mean.</p>
+	{% endif %}
+	<br/>
 {% endif %}
-<br/>
 {% if caseInstance.allDocumentsSolved %}
-	<p><strong style="color:white;">This case is ready for reporting! Great job!</strong></p>
-	<br/>
+	{% if cronDocument_list %}
+		<p><strong style="color:white;">This case is ready for reporting! Great job!</strong></p>
+		<br/>
+	{% endif %}
 	<p><a href="{% url 'cron_case_report' mission.serial case.serial %}">Continue to Report</a></p>
 {% elif caseInstance.isSolved %}
 	<p><a href="{% url 'cron_case_report' mission.serial case.serial %}">Continue to Report</a></p>
