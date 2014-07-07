@@ -7,7 +7,6 @@ from django.template import Context, loader
 from django.core.mail import EmailMessage
 from deptx.helpers import now
 from random import getrandbits
-
 from logger.models import ActionLog
 from logger import logging 
 from mop.models import MopTracker
@@ -23,7 +22,9 @@ DELAY_MEDIUM = 1 * 60
 DELAY_LONG = 3 * 60 
 DELAY_SUPERLONG = 57 * 60
 
-SPECIAL_STATUS_HACK = "hallo"
+SPECIAL_STATUS_HACK_1 = "agent"
+SPECIAL_STATUS_HACK_2 = "entity"
+SPECIAL_STATUS_HACK_3 = "actitivy"
 
 def delayedEnough(mail, delay):
     if mail.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
@@ -79,7 +80,7 @@ def check_mail(mail):
                     newMail.trust = -100
                 else:
                     #deny because shit
-                    if not SPECIAL_STATUS_HACK in mail.requisitionInstance.data or not mail.mop.mopTracker.clearance >= Clearance.CLEARANCE_RED:
+                    if not check_special_hack(mail.requisitionInstance.data) or not mail.mop.mopTracker.clearance >= Clearance.CLEARANCE_RED:
                         newMail.subject = Mail.SUBJECT_SPECIAL_DENIED
                         newMail.bodyType = Mail.BODY_SPECIAL_DENIED
                         newMail.trust = -250
@@ -391,5 +392,12 @@ def create_player_email(mail, subject):
     mail.needsReply = True
     mail.save()
 
+
+def check_special_hack(data):
+    data = data.lower()
+    if SPECIAL_STATUS_HACK_1 in data and SPECIAL_STATUS_HACK_2 in data and SPECIAL_STATUS_HACK_3 in data:
+        return True
+    else:
+        return False
 
     
