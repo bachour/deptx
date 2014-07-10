@@ -10,8 +10,8 @@ white-space: pre-wrap;       /* css-3 */
  word-wrap: break-word;
  
  width:640px;
- height:240px;
- overflow:scroll;
+ height:320px;
+ //overflow:scroll;
  background-color:black;
  color:#0e0;
  padding:10px;
@@ -29,5 +29,7 @@ white-space: pre-wrap;       /* css-3 */
 <br/>
 <pre id="textDiv"></pre>
 <br/>
-<a id="case_link" style="visibility:hidden;" href="{% url "cron_case_intro" cronDocument.case.mission.serial cronDocument.case.serial %}"> Return to case</a>
+{% if cronDocument %}
+	<a id="case_link" style="visibility:hidden;" href="{% url "cron_case_intro" cronDocument.case.mission.serial cronDocument.case.serial %}">Return to case</a>
+{% endif %}
 {% endblock %}

@@ -375,17 +375,22 @@ def unsolveDocuments(cron, mission):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
+def hack_document_no_serial(request, serial):
+    pass
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
 def hack_document(request, serial):
     mop_list = Mop.objects.filter(cron=request.user.cron).filter(active=True)
     try:
         cronDocument = CronDocument.objects.get(serial=serial)    
     except CronDocument.DoesNotExist:
-        raise Http404
+        cronDocument = None
     
     good_mop, mop_list = accessMopServer(request.user.cron, cronDocument, mop_list)
 
     output_tpl = loader.get_template('cron/hack_document_output.txt')
-    c = Context({"cronDocument":cronDocument, "good_mop":good_mop, "mop_list":mop_list})
+    c = Context({"serial":serial, "good_mop":good_mop, "mop_list":mop_list})
     output = output_tpl.render(c).replace("\n", "\\n")
     return render(request, 'cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
 
@@ -396,7 +401,7 @@ def accessMopServer(cron, cronDocument, mop_list):
             checked_mop_list.append(mop)
             for mail in mail_list:
                 if not mail.mopDocumentInstance == None:
-                    if mail.mopDocumentInstance.cronDocument == cronDocument:
+                    if cronDocument and mail.mopDocumentInstance.cronDocument == cronDocument:
                         cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
                         #Document gets removed
                         mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_HACKED
