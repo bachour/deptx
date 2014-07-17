@@ -282,18 +282,13 @@ def get_next_level_at(clearance):
 
 def proposed_clearance(totalTrust):
     if totalTrust >= BORDER_RED:
-        print "RED"
         return Clearance.CLEARANCE_RED
     elif totalTrust >= BORDER_ORANGE:
-        print "ORANGE"
         return Clearance.CLEARANCE_ORANGE
     elif totalTrust >= BORDER_YELLOW:
-        print "YELLOW"
         return Clearance.CLEARANCE_YELLOW
     elif totalTrust >= BORDER_GREEN:
-        print "GREEN"
         return Clearance.CLEARANCE_GREEN
     else:
-        print "BLUE"
         return Clearance.CLEARANCE_BLUE
 
