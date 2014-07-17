@@ -948,4 +948,56 @@ def save_manual_mail(mail):
     logging.log_action(ActionLog.ACTION_MOP_RECEIVE_MAIL_MANUAL, mop=mail.mop, mail=mail)
     if not mail.trust is None:
         mail.mop.mopTracker.addTrust(mail.trust, True)
+
+
+@staff_member_required
+def control_stats_documents_overview(request):
+    mopDocument_list = MopDocument.objects.all().order_by('clearance')
+    for mopDocument in mopDocument_list:
+        mopDocument.total = MopDocumentInstance.objects.filter(randomizedDocument__mopDocument=mopDocument).count()
+        mopDocument.modified = MopDocumentInstance.objects.filter(randomizedDocument__mopDocument=mopDocument).filter(modified=True).count()
+        mopDocument.correct = MopDocumentInstance.objects.filter(randomizedDocument__mopDocument=mopDocument).filter(correct=True).count()
+        try:
+            mopDocument.percentage = int(100.0 * mopDocument.correct / mopDocument.modified)
+        except:
+            pass
+        
+    return render(request, 'mop/control_documents_overview.html', {'mopDocument_list':mopDocument_list })
+
+@staff_member_required
+def control_stats_document_template(request, id):
+    mopDocument = MopDocument.objects.get(id=id)
+    randomizedDocument_list = RandomizedDocument.objects.filter(mopDocument=mopDocument)
+    for randomizedDocument in randomizedDocument_list:
+        randomizedDocument.total = MopDocumentInstance.objects.filter(randomizedDocument=randomizedDocument).count()
+        randomizedDocument.modified = MopDocumentInstance.objects.filter(randomizedDocument=randomizedDocument).filter(modified=True).count()
+        randomizedDocument.correct = MopDocumentInstance.objects.filter(randomizedDocument=randomizedDocument).filter(correct=True).count()
+        try:
+            randomizedDocument.percentage = int(100.0 * randomizedDocument.correct / randomizedDocument.modified)
+        except:
+            pass
+    return render(request, 'mop/control_documents_overview_template.html', {'randomizedDocument_list':randomizedDocument_list, 'mopDocument':mopDocument })
+
+
+@staff_member_required
+def control_stats_documents(request):
+    mopDocumentInstance_list = MopDocumentInstance.objects.all()
+    mopDocumentInstance_list = getDurations(mopDocumentInstance_list)
+    return render(request, 'mop/control_documents.html', {'mopDocumentInstance_list':mopDocumentInstance_list })
+
+
+def getDurations(mopDocumentInstance_list):
+    for mopDocumentInstance in mopDocumentInstance_list:
+        try:
+            provLogFirstOpen = ProvLog.objects.filter(mopDocumentInstance=mopDocumentInstance).filter(action=ProvLog.ACTION_OPEN)[0]
+        except:
+            provLogFirstOpen = None
+        try:
+            provLogLastSubmit = ProvLog.objects.filter(cronDocumentInstance=mopDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
+        except:
+            provLogLastSubmit = None
+        if not provLogFirstOpen is None and not provLogLastSubmit is None:
+            mopDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
+            mopDocumentInstance.seconds = int(mopDocumentInstance.duration.total_seconds())
+    return mopDocumentInstance_list
     

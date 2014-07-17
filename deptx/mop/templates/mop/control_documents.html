@@ -26,7 +26,6 @@ tr.research {
 <thead>
 <tr>
 	<th>Document</th>
-	<th>Prov</th>
 	<th>Cron</th>
 	<th>Solved</th>
 	<th>Wrong</th>
@@ -40,7 +39,6 @@ tr.research {
 		<tr>
 	{% endif %}
 		<td>{{cronDocumentInstance.cronDocument.name}}</td>
-		<td>{% if cronDocumentInstance.cronDocument.provenance.store_id %}<a href="{% url 'provmanager_view' cronDocumentInstance.cronDocument.provenance.id %}">prov</a>{% endif %}</td>
 		<td>{{cronDocumentInstance.cron.user.username}}</td>
 		<td>{{cronDocumentInstance.solved}}</td>
 		<td>{{cronDocumentInstance.failedAttempts}}</td>

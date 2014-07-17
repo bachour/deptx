@@ -1,0 +1,49 @@
+{% load staticfiles %}
+<html>
+<head>
+<script src="{% static "mop/js/sorttable.js" %}"></script>
+
+<style media="screen" type="text/css">
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):after { 
+    content: " \25B4\25BE" 
+}
+
+tr.prov {
+	background-color:LightGreen;
+}
+
+</style>
+</head>
+<body>
+<a href="{% url 'mop_control_stats_documents' %}">all documents</a>
+<table class="sortable">
+<tr>
+	<th>Document</th>
+	<th>Clearance</th>
+	<th>Instances</th>
+	<th>Modified</th>
+	<th>Correct</th>
+	<th>Percentage</th>
+</tr>
+	{% for mopDocument in mopDocument_list %}
+			<td><a href="{% url 'mop_control_stats_document_template' mopDocument.id %}">{{mopDocument.name}}</a></td>
+			<td>{{mopDocument.get_clearance_display}}</td>
+			<td>{{mopDocument.total}}</td>
+			<td>{{mopDocument.modified}}</td>
+			<td>{{mopDocument.correct}}</td>
+			<td>{{mopDocument.percentage}}%</td>
+			
+			
+		</tr>
+	{% endfor %}
+</table>
+
+</body>
+</html>

@@ -3,7 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.http import Http404
-
+from django.utils.dateformat import format
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
@@ -1253,30 +1253,45 @@ def hq_mail(request, cron=None):
         form = ControlHelpMailForm(initial={'cron':cron})
     return render(request, 'cron/hq_mail.html', {'form':form})
 
+@staff_member_required
+def hq_stats_documents_overview(request):
+    cronDocument_list = CronDocument.objects.all().order_by('case__mission__rank', 'case__rank')
+    for cronDocument in cronDocument_list:
+        cronDocument.total = CronDocumentInstance.objects.filter(cronDocument=cronDocument).count()
+        cronDocument.solved = CronDocumentInstance.objects.filter(cronDocument=cronDocument).filter(solved=True).count()
+        try:
+            cronDocument.percentage = int(100.0 * cronDocument.solved / cronDocument.total)
+        except:
+            pass
+        
+    return render(request, 'cron/hq_documents_overview.html', {'cronDocument_list':cronDocument_list })
 
 @staff_member_required
 def hq_stats_documents(request):
-    cron_list = Cron.objects.all()
-    cronDocument_list = CronDocument.objects.exclude(provenance=None).order_by('case__mission__rank', 'case__rank')
+    cronDocumentInstance_list = CronDocumentInstance.objects.exclude(cronDocument__provenance=None)
+    cronDocumentInstance_list = getDurations(cronDocumentInstance_list)
+    return render(request, 'cron/hq_documents.html', {'cronDocumentInstance_list':cronDocumentInstance_list })
+
+@staff_member_required
+def hq_stats_document(request, id):
+    cronDocument = CronDocument.objects.get(id=id)
+    cronDocumentInstance_list = CronDocumentInstance.objects.filter(cronDocument=cronDocument)
+    cronDocumentInstance_list = getDurations(cronDocumentInstance_list)
+    return render(request, 'cron/hq_documents.html', {'cronDocumentInstance_list':cronDocumentInstance_list, 'cronDocument':cronDocument })
+
+def getDurations(cronDocumentInstance_list):
+    for cronDocumentInstance in cronDocumentInstance_list:
+        try:
+            provLogFirstOpen = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_OPEN)[0]
+        except:
+            provLogFirstOpen = None
+        try:
+            provLogLastSubmit = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
+        except:
+            provLogLastSubmit = None
+        if not provLogFirstOpen is None and not provLogLastSubmit is None:
+            cronDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
+            cronDocumentInstance.seconds = int(cronDocumentInstance.duration.total_seconds())
+    return cronDocumentInstance_list
+
     
-    for cron in cron_list:
-        cron.cronDocumentInstance_list = []
-        for cronDocument in cronDocument_list:
-            try:
-                cronDocumentInstance = CronDocumentInstance.objects.get(cron=cron, cronDocument=cronDocument)
-            except:
-                cronDocumentInstance = None
-            if not cronDocumentInstance is None:
-                try:
-                    provLogFirstOpen = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_OPEN)[0]
-                except:
-                    provLogFirstOpen = None
-                try:
-                    provLogLastSubmit = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
-                except:
-                    provLogLastSubmit = None
-                if not provLogFirstOpen is None and not provLogLastSubmit is None:
-                    cronDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
-                
-            cron.cronDocumentInstance_list.append(cronDocumentInstance)
-    return render(request, 'cron/hq_documents.html', {'cron_list':cron_list, 'cronDocument_list':cronDocument_list })
