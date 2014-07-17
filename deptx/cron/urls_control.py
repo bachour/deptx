@@ -19,5 +19,7 @@ urlpatterns = patterns('',
     url(r'answers/$', views.hq_answers, name='cron_hq_answers'),
     url(r'stats/$', views.hq_stats, name='cron_hq_stats'),
     url(r'stats/(\d+)/$', views.hq_stats_cron, name='cron_hq_stats_cron'),
+    url(r'stats/documents/$', views.hq_stats_documents, name='cron_hq_stats_documents'),
+    
     
 )

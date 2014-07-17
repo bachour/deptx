@@ -135,9 +135,30 @@ def index(request):
         unread_count = HelpMail.objects.filter(cron=request.user.cron, isRead=False).count()
         logging.log_action(ActionLog.ACTION_CRON_VIEW_INDEX, cron=request.user.cron)         
         context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count }
+        
+        if missionInstance is None:
+            done = checkIfDone(request.user.cron)
+            if done:
+                return render(request, 'cron/index_done.html', context)
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
+
+def checkIfDone(cron):
+    try:
+        lastMission = Mission.objects.get(isLastMission=True)
+    except Mission.DoesNotExist:
+        return False
+    
+    try:
+        missionInstance = MissionInstance.objects.get(cron=cron, mission=lastMission)
+    except MissionInstance.DoesNotExist:
+        return False
+    
+    if missionInstance.progress == MissionInstance.PROGRESS_5_DONE:
+        return True
+    else:
+        return False
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -563,6 +584,9 @@ def provenance(request, mission_serial, case_serial, document_serial):
     case = Case.objects.get(serial=case_serial)
     cronDocument = CronDocument.objects.get(serial=document_serial)
     cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
+    if cronDocumentInstance.cronDocument.autoSolve and not cronDocumentInstance.solved:
+        cronDocumentInstance.solved = True
+        cronDocumentInstance.save()
 
     logging.log_action(ActionLog.ACTION_CRON_VIEW_PROVENANCE, cron=request.user.cron, cronDocumentInstance=cronDocumentInstance, cronDocumentInstanceCorrect=cronDocumentInstance.solved)
     logging.log_prov(action=ProvLog.ACTION_OPEN, cronDocumentInstance=cronDocumentInstance)
@@ -1229,3 +1253,30 @@ def hq_mail(request, cron=None):
         form = ControlHelpMailForm(initial={'cron':cron})
     return render(request, 'cron/hq_mail.html', {'form':form})
 
+
+@staff_member_required
+def hq_stats_documents(request):
+    cron_list = Cron.objects.all()
+    cronDocument_list = CronDocument.objects.exclude(provenance=None).order_by('case__mission__rank', 'case__rank')
+    
+    for cron in cron_list:
+        cron.cronDocumentInstance_list = []
+        for cronDocument in cronDocument_list:
+            try:
+                cronDocumentInstance = CronDocumentInstance.objects.get(cron=cron, cronDocument=cronDocument)
+            except:
+                cronDocumentInstance = None
+            if not cronDocumentInstance is None:
+                try:
+                    provLogFirstOpen = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_OPEN)[0]
+                except:
+                    provLogFirstOpen = None
+                try:
+                    provLogLastSubmit = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
+                except:
+                    provLogLastSubmit = None
+                if not provLogFirstOpen is None and not provLogLastSubmit is None:
+                    cronDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
+                
+            cron.cronDocumentInstance_list.append(cronDocumentInstance)
+    return render(request, 'cron/hq_documents.html', {'cron_list':cron_list, 'cronDocument_list':cronDocument_list })

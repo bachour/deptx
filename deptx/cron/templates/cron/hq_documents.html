@@ -1,0 +1,57 @@
+{% load staticfiles %}
+<html>
+<head>
+<script src="{% static "cron/js/sorttable.js" %}"></script>
+
+<style media="screen" type="text/css">
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):after { 
+    content: " \25B4\25BE" 
+}
+</style>
+</head>
+<body>
+<table class="sortable">
+
+<thead>
+<tr>
+	<th>Cron</th>
+	{% for cronDocument in cronDocument_list %}
+		<th>Solved</th>
+		<th>Wrong</th>
+		<th>Duration</th>
+	{% endfor %}
+</tr>
+</thead>
+<thead>
+<tr>
+	<td></td>
+	{% for cronDocument in cronDocument_list %}
+		<td colspan=3>{{cronDocument.serial}}<br/>{{cronDocument.name}}</td>
+	{% endfor %}
+</tr>
+</thead>
+
+{% for cron in cron_list %}
+	<tr>
+		<td>{{cron.user.username}}</td>
+		{% for cronDocumentInstance in cron.cronDocumentInstance_list %}
+			<td>{{cronDocumentInstance.solved}}</td>
+			<td>{{cronDocumentInstance.failedAttempts}}</td>
+			<td>{{cronDocumentInstance.duration}}</td>
+		{% endfor %}
+	</tr>
+{% endfor %}
+
+</table>
+
+
+
+</body>
+</html>

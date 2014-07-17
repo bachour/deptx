@@ -497,4 +497,3 @@ def prov_log_action(request):
         json_data = json.dumps({"message":message, "status":status})            
         return HttpResponse(json_data, mimetype="application/json") 
         
-  
