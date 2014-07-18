@@ -126,7 +126,9 @@ def logout_view(request):
 @user_passes_test(isMop, login_url='mop_login')
 def rules(request):
     unit_list = Unit.objects.all().order_by('serial')
-    requisition_list = Requisition.objects.exclude(category=Requisition.CATEGORY_SPECIAL_APPLY).exclude(category=Requisition.CATEGORY_SPECIAL_REPORT).order_by('serial')
+    requisition_list = Requisition.objects.all().order_by('serial')
+    if not request.user.mop.mopTracker.hasSpecialStatus:
+        requisition_list = requisition_list.exclude(needsSpecial=True)
     logging.log_action(ActionLog.ACTION_MOP_VIEW_GUIDEBOOK, mop=request.user.mop)
     return render(request, 'mop/rules.html', {"unit_list":unit_list, "requisition_list": requisition_list})
 
@@ -577,9 +579,9 @@ def forms_blank(request):
     elif request.user.mop.mopTracker.tutorial < MopTracker.TUTORIAL_6_DONE:
         requisition_list = Requisition.objects.filter(type=Requisition.TYPE_TUTORIAL_SUBMIT).order_by('serial')
     else:
-        requisition_list = Requisition.objects.exclude(category=Requisition.CATEGORY_SPECIAL_APPLY).order_by('serial')
+        requisition_list = Requisition.objects.all().order_by('serial')
         if not request.user.mop.mopTracker.hasSpecialStatus:
-            requisition_list = requisition_list.exclude(category=Requisition.CATEGORY_SPECIAL_REPORT)
+            requisition_list = requisition_list.exclude(needsSpecial=True)
     
     requisition_list.allAcquired = True
     for requisition in requisition_list:

@@ -113,14 +113,13 @@ class Requisition(models.Model):
     category = models.IntegerField(choices=CHOICES_CATEGORY)
     type = models.IntegerField(choices=CHOICES_TYPE, default=TYPE_NORMAL)
     
+    needsSpecial = models.BooleanField(default=False)
     
     
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
-    @property
-    def needsSpecial(self):
-        return self.category == self.CATEGORY_SPECIAL_REPORT
+
     
     def get_category_acr(self):
         if self.category == self.CATEGORY_FORM:
