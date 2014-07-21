@@ -132,9 +132,10 @@ def index(request):
                     mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
             else:
                 missionInstance = None
+        unsolved_count = countUnsolvedCases(missionInstance)
         unread_count = HelpMail.objects.filter(cron=request.user.cron, isRead=False).count()
         logging.log_action(ActionLog.ACTION_CRON_VIEW_INDEX, cron=request.user.cron)         
-        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count }
+        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count, "unsolved_count":unsolved_count }
         
         if missionInstance is None:
             done = checkIfDone(request.user.cron)
@@ -143,6 +144,29 @@ def index(request):
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
+
+def countUnsolvedCases(missionInstance):
+    case_list = Case.objects.filter(mission=missionInstance.mission).filter(isPublished=True)
+    noPre_list = case_list.filter(preCase=None)
+    pre_list = case_list.exclude(preCase=None)
+    solvedCounter = 0
+    caseCounter = 0
+    for case in noPre_list:
+        caseCounter += 1
+        caseInstance, created = CaseInstance.objects.get_or_create(case=case, cron=missionInstance.cron)
+        if caseInstance.isSolved():
+            solvedCounter += 1
+    for case in pre_list:
+        caseInstance, created = CaseInstance.objects.get_or_create(case=case, cron=missionInstance.cron)
+        if caseInstance.isSolved():
+            solvedCounter +=1
+            caseCounter += 1
+        else:
+            preInstance, created = CaseInstance.objects.get_or_create(case=case.preCase, cron=missionInstance.cron)
+            if preInstance.isSolved():
+                caseCounter += 1
+    return caseCounter - solvedCounter
+        
 
 def checkIfDone(cron):
     try:

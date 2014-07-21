@@ -10,8 +10,8 @@
       
 <br>
 <br>
-<h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}">{{missionInstance.mission.name}}</a>{% else %}There are no active missions currently.{% endif %}</h1>
-
+<h1>{% if missionInstance %}Your current mission: </br> <a href="{{mission_url}}">{{missionInstance.mission.name}}</a>{% if unsolved_count > 0 %} <span style="font-size:medium;">({{unsolved_count}} open case{% if unsolved_count > 1 %}s{% endif %})</span>{% endif %}{% else %}There are no active missions currently.{% endif %}</h1>
+<br/>
 
 <h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
 <h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
