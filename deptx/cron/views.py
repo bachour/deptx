@@ -146,6 +146,8 @@ def index(request):
         return login(request)
 
 def countUnsolvedCases(missionInstance):
+    if missionInstance == None:
+        return None
     case_list = Case.objects.filter(mission=missionInstance.mission).filter(isPublished=True)
     noPre_list = case_list.filter(preCase=None)
     pre_list = case_list.exclude(preCase=None)
