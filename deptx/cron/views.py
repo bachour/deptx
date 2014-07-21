@@ -239,14 +239,11 @@ def mission_cases(request, serial):
         unpublished = False
         for case in case_list:
             if case.isPublished:
-                try:
-                    preCase = Case.objects.get(preCase=case)
-                    preCaseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=preCase)
-                    preCaseCondition = preCaseInstance.isSolved()
-                except Case.DoesNotExist:
-                    preCase = None
-                    preCaseInstance = None
+                if case.preCase == None:
                     preCaseCondition = True
+                else:
+                    preCaseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case.preCase)
+                    preCaseCondition = preCaseInstance.isSolved()
                 if preCaseCondition:
                     caseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case)
                     if not caseInstance.isSolved():
