@@ -983,7 +983,7 @@ def control_stats_document_template(request, id):
 
 @staff_member_required
 def control_stats_documents(request):
-    mopDocumentInstance_list = MopDocumentInstance.objects.all()
+    mopDocumentInstance_list = MopDocumentInstance.objects.all()[:100]
     mopDocumentInstance_list = getDurations(mopDocumentInstance_list)
     return render(request, 'mop/control_documents.html', {'mopDocumentInstance_list':mopDocumentInstance_list })
 
@@ -995,11 +995,13 @@ def getDurations(mopDocumentInstance_list):
         except:
             provLogFirstOpen = None
         try:
-            provLogLastSubmit = ProvLog.objects.filter(cronDocumentInstance=mopDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
+            provLogLastSubmit = ProvLog.objects.filter(mopDocumentInstance=mopDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
         except:
             provLogLastSubmit = None
         if not provLogFirstOpen is None and not provLogLastSubmit is None:
             mopDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
             mopDocumentInstance.seconds = int(mopDocumentInstance.duration.total_seconds())
+            mopDocumentInstance.firstOpen = provLogFirstOpen
+            mopDocumentInstance.lastSubmit = provLogLastSubmit
     return mopDocumentInstance_list
     

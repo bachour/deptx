@@ -25,24 +25,44 @@ tr.research {
 <table class="sortable">
 <thead>
 <tr>
+	<th>Id</th>
+	<th>Type</th>
 	<th>Document</th>
+	<th>Template</th>
+	<th>Clearance</th>
+	<th>Inconsistencies</th>
 	<th>Cron</th>
-	<th>Solved</th>
-	<th>Wrong</th>
+	<th>Mop</th>
+	<th>Research</th>
+	<th>Prov</th>
 	<th>Duration</th>
+	<th>Opened</th>
+	<th>Submitted</th>
+	<th>Modified</th>
+	<th>Correct</th>
 </tr>
 </thead>
-{% for cronDocumentInstance in cronDocumentInstance_list %}
-	{% if cronDocumentInstance.cron.player %}
+{% for mopDocumentInstance in mopDocumentInstance_list %}
+	{% if mopDocumentInstance.mop.cron.player %}
 		<tr class="research">
 	{% else %}
 		<tr>
 	{% endif %}
-		<td>{{cronDocumentInstance.cronDocument.name}}</td>
-		<td>{{cronDocumentInstance.cron.user.username}}</td>
-		<td>{{cronDocumentInstance.solved}}</td>
-		<td>{{cronDocumentInstance.failedAttempts}}</td>
-		<td sorttable_customkey="{{cronDocumentInstance.seconds}}">{{cronDocumentInstance.duration}}</td>
+		<td>mop-{{mopDocumentInstance.id}}</td>
+		<td>mop</td>
+		<td>{{mopDocumentInstance.randomizedDocument.serial}}</td>
+		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}} ({{mopDocumentInstance.randomizedDocument.mopDocument.id}})</td>
+		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.get_clearance_display}}</td>
+		<td>{{mopDocumentInstance.randomizedDocument.provenance.incon}}</td>
+		<td>{{mopDocumentInstance.mop.cron.user.username}}</td>
+		<td>{{mopDocumentInstance.mop.user.username}}</td>
+		<td>{% if mopDocumentInstance.mop.cron.player %}True{% else %}False{% endif %}</td>
+		<td>{% if mopDocumentInstance.randomizedDocument.provenance.store_id %}<a href="{% url 'provmanager_view' mopDocumentInstance.randomizedDocument.provenance.id %}">prov</a>{% endif %}</td>
+		<td sorttable_customkey="{{mopDocumentInstance.seconds}}">{{mopDocumentInstance.duration}}</td>
+		<td>{{mopDocumentInstance.firstOpen.createdAt|date:"Y-m-d H:i:s"}}</td>
+		<td>{{mopDocumentInstance.lastSubmit.createdAt|date:"Y-m-d H:i:s"}}</td>
+		<td>{{mopDocumentInstance.modified}}</td>
+		<td>{{mopDocumentInstance.correct}}</td>
 	</tr>
 {% endfor %}
 </table>

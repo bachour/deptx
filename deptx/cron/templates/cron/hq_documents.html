@@ -25,12 +25,21 @@ tr.research {
 <table class="sortable">
 <thead>
 <tr>
+	<th>Id</th>
+	<th>Type</th>
 	<th>Document</th>
-	<th>Prov</th>
+	<th>Name</th>
+	<th>Clearance</th>
+	<th>Inconsistencies</th>
 	<th>Cron</th>
-	<th>Solved</th>
-	<th>Wrong</th>
+	<th>MoP</th>
+	<th>Research</th>
+	<th>Prov</th>
 	<th>Duration</th>
+	<th>Opened</th>
+	<th>Submitted</th>
+	<th>Solved</th>
+	<th>Attempts</th>
 </tr>
 </thead>
 {% for cronDocumentInstance in cronDocumentInstance_list %}
@@ -39,12 +48,21 @@ tr.research {
 	{% else %}
 		<tr>
 	{% endif %}
+		<td>cron-{{cronDocumentInstance.id}}</td>
+		<td>cron</td>
+		<td>{{cronDocumentInstance.cronDocument.serial}}</td>
 		<td>{{cronDocumentInstance.cronDocument.name}}</td>
-		<td>{% if cronDocumentInstance.cronDocument.provenance.store_id %}<a href="{% url 'provmanager_view' cronDocumentInstance.cronDocument.provenance.id %}">prov</a>{% endif %}</td>
+		<td>{{cronDocumentInstance.cronDocument.get_clearance_display}}</td>
+		<td>{{cronDocumentInstance.cronDocument.provenance.incon}}</td>
 		<td>{{cronDocumentInstance.cron.user.username}}</td>
+		<td>{% for mop in cronDocumentInstance.cron.mop_set.all %}{{mop.user.username}}{% endfor %}</td>
+		<td>{% if cronDocumentInstance.cron.player %}True{% else %}False{% endif %}</td>
+		<td>{% if cronDocumentInstance.cronDocument.provenance.store_id %}<a href="{% url 'provmanager_view' cronDocumentInstance.cronDocument.provenance.id %}">prov</a>{% endif %}</td>
+		<td sorttable_customkey="{{cronDocumentInstance.seconds}}">{{cronDocumentInstance.duration}}</td>
+		<td>{{cronDocumentInstance.firstOpen.createdAt|date:"Y-m-d H:i:s"}}</td>
+		<td>{{cronDocumentInstance.lastSubmit.createdAt|date:"Y-m-d H:i:s"}}</td>
 		<td>{{cronDocumentInstance.solved}}</td>
 		<td>{{cronDocumentInstance.failedAttempts}}</td>
-		<td sorttable_customkey="{{cronDocumentInstance.seconds}}">{{cronDocumentInstance.duration}}</td>
 	</tr>
 {% endfor %}
 </table>

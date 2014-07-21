@@ -1313,6 +1313,8 @@ def getDurations(cronDocumentInstance_list):
         if not provLogFirstOpen is None and not provLogLastSubmit is None:
             cronDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
             cronDocumentInstance.seconds = int(cronDocumentInstance.duration.total_seconds())
+            cronDocumentInstance.firstOpen = provLogFirstOpen
+            cronDocumentInstance.lastSubmit = provLogLastSubmit
     return cronDocumentInstance_list
 
     
