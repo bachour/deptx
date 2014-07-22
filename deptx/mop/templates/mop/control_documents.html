@@ -48,7 +48,7 @@ tr.research {
 	{% else %}
 		<tr>
 	{% endif %}
-		<td>mop-{{mopDocumentInstance.id}}</td>
+		<td>mop-{{mopDocumentInstance.id|stringformat:"06d"}}</td>
 		<td>mop</td>
 		<td>{{mopDocumentInstance.randomizedDocument.serial}}</td>
 		<td>{{mopDocumentInstance.randomizedDocument.mopDocument.name}} ({{mopDocumentInstance.randomizedDocument.mopDocument.id}})</td>

@@ -35,14 +35,17 @@ class Provenance(models.Model):
     @property
     def incon(self):
         attributes = []
-        json1 = json.loads(self.attribute1)
-        for j in json1:
-            attributes.append(nicer(j))
-        json2 = json.loads(self.attribute2)
-        for j in json2:
-            attributes.append(nicer(j))
-
-        return sorted(attributes)
+        try:
+            json1 = json.loads(self.attribute1)
+            for j in json1:
+                attributes.append(nicer(j))
+            json2 = json.loads(self.attribute2)
+            for j in json2:
+                attributes.append(nicer(j))
+    
+            return sorted(attributes)
+        except:
+            return "ERROR"
  
     
     def save(self, *args, **kwargs):

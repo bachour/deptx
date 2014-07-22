@@ -48,7 +48,7 @@ tr.research {
 	{% else %}
 		<tr>
 	{% endif %}
-		<td>cron-{{cronDocumentInstance.id}}</td>
+		<td>cron-{{cronDocumentInstance.id|stringformat:"06d"}}</td>
 		<td>cron</td>
 		<td>{{cronDocumentInstance.cronDocument.serial}}</td>
 		<td>{{cronDocumentInstance.cronDocument.name}}</td>

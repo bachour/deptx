@@ -983,7 +983,7 @@ def control_stats_document_template(request, id):
 
 @staff_member_required
 def control_stats_documents(request):
-    mopDocumentInstance_list = MopDocumentInstance.objects.all()[:100]
+    mopDocumentInstance_list = MopDocumentInstance.objects.all()
     mopDocumentInstance_list = getDurations(mopDocumentInstance_list)
     return render(request, 'mop/control_documents.html', {'mopDocumentInstance_list':mopDocumentInstance_list })
 
