@@ -1031,7 +1031,9 @@ def chat_sync(request):
     return HttpResponse(data, mimetype='application/json')
 
 def getAllDocumentStates(cron, case):
-    requiredDocuments = case.crondocument.all()
+    primaryDocuments = case.crondocument.all()
+    secondaryDocuments = case.crondocument2.all()
+    requiredDocuments = primaryDocuments | secondaryDocuments
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
 
                 

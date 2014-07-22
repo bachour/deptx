@@ -320,6 +320,7 @@ class CronDocument(AbstractDocument):
     clearance = models.IntegerField(choices=Clearance.CHOICES_CLEARANCE_CRONDOCUMENT, default=Clearance.CLEARANCE_UV1)
     hideSerial = models.BooleanField(default=False)
     autoSolve = models.BooleanField(default=False)
+    secondaryCase = models.ForeignKey(Case, related_name="crondocument2", blank=True, null=True)
 
 
     def __unicode__(self):
