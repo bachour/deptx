@@ -263,7 +263,7 @@ def getMinimumOrange(days):
 def getMinimumRed(days):
     return 80 * days    
 
-BORDER_RED = 8000
+BORDER_RED = 5000
 BORDER_ORANGE = 2500
 BORDER_YELLOW = 500
 BORDER_GREEN = 50

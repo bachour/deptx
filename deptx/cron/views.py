@@ -140,7 +140,7 @@ def index(request):
         if missionInstance is None:
             done = checkIfDone(request.user.cron)
             if done:
-                return render(request, 'cron/index.html', context)
+                return render(request, 'cron/index_done.html', context)
         return render(request, 'cron/index.html', context)
     else:
         return login(request)

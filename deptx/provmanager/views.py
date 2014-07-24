@@ -413,6 +413,8 @@ def prov_log_action(request):
         if provenance.type == Provenance.TYPE_CRON:
             documentInstance = CronDocumentInstance.objects.get(cronDocument=provenance.document, cron=request.user.cron)
             cronDocumentInstance = documentInstance
+            if cronDocumentInstance.cronDocument.autoSolve:
+                inactive = False
         elif provenance.type == Provenance.TYPE_MOP_INSTANCE:
             documentInstance = MopDocumentInstance.objects.get(randomizedDocument=provenance.randomizedDocument, mop=request.user.mop)
             mopDocumentInstance = documentInstance
