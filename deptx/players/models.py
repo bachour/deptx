@@ -30,7 +30,10 @@ class Player(models.Model):
     modifiedAt = ModificationDateTimeField()
     
     def __unicode__(self):
-        return "%s (%s)" % (self.name, self.cron.user.username)
+        try:
+            return "%s (%s)" % (self.name, self.cron.user.username)
+        except:
+            return "ERROR ERROR ERROR"
 
   
 class Cron(models.Model):
