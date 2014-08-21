@@ -1313,7 +1313,7 @@ def hq_stats_players(request):
         try:
             player.cron.cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=player.cron)
         except:
-            player.cron = None
+            pass
         try:
             player.mop = Mop.objects.get(cron=player.cron)
             player.mop.mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=player.mop)
