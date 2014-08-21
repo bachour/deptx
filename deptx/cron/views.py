@@ -1310,8 +1310,6 @@ def hq_stats_document(request, id):
 def hq_stats_players(request):
     player_list = Player.objects.all()
     for player in player_list:
-        if not player == None:
-            print player
         player.cron.cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=player.cron)
         try:
             player.mop = Mop.objects.get(cron=player.cron)
