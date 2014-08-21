@@ -40,6 +40,7 @@ tr.research {
 	<th>Submitted</th>
 	<th>Solved</th>
 	<th>Attempts</th>
+	<th>Provenance</th>
 </tr>
 </thead>
 {% for cronDocumentInstance in cronDocumentInstance_list %}
@@ -63,6 +64,7 @@ tr.research {
 		<td>{{cronDocumentInstance.lastSubmit.createdAt|date:"Y-m-d H:i:s"}}</td>
 		<td>{{cronDocumentInstance.solved}}</td>
 		<td>{{cronDocumentInstance.failedAttempts}}</td>
+		<td>{{cronDocumentInstance.provenanceState}}</td>
 	</tr>
 {% endfor %}
 </table>

@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     url(r'stats/documents/all/$', views.hq_stats_documents, name='cron_hq_stats_documents'),
     url(r'stats/documents/$', views.hq_stats_documents_overview, name='cron_hq_stats_documents_overview'),
     url(r'stats/document/(\d+)/$', views.hq_stats_document, name='cron_hq_stats_document'),
+    url(r'stats/players/$', views.hq_stats_players, name='cron_hq_stats_players'),
     
     
 )

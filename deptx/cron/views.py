@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-from players.models import Cron, Mop
+from players.models import Cron, Mop, Player
 from django.contrib.auth.forms import UserCreationForm
 from django.template import Context, Template, loader
 
@@ -1305,6 +1305,19 @@ def hq_stats_document(request, id):
     cronDocumentInstance_list = CronDocumentInstance.objects.filter(cronDocument=cronDocument)
     cronDocumentInstance_list = getDurations(cronDocumentInstance_list)
     return render(request, 'cron/hq_documents.html', {'cronDocumentInstance_list':cronDocumentInstance_list, 'cronDocument':cronDocument })
+
+@staff_member_required
+def hq_stats_players(request):
+    player_list = Player.objects.all()
+    for player in player_list:
+        player.cron.cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=player.cron)
+        try:
+            player.mop = Mop.objects.get(cron=player.cron)
+            player.mop.mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=player.mop)
+        except:
+            player.mop = None
+    return render(request, 'cron/hq_players.html', {'player_list':player_list})
+
 
 def getDurations(cronDocumentInstance_list):
     for cronDocumentInstance in cronDocumentInstance_list:
