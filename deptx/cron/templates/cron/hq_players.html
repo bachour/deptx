@@ -51,7 +51,7 @@ tr.research {
 		<td>{{player.town}}</td>
 		<td>{{player.country}}</td>
 		<td>{{player.cron.email}}</td>
-		{% if player.mop %}
+		{% if player.cron %}
 			<td>cron-{{player.cron.id|stringformat:"06d"}}</td>
 			<td>{{player.cron.user.username}}</td>
 			<td>{{player.cron.cronDocumentInstance_list|length}}</td>
