@@ -1310,6 +1310,7 @@ def hq_stats_document(request, id):
 def hq_stats_players(request):
     player_list = Player.objects.all()
     for player in player_list:
+        print player.cron
         try:
             player.cron.cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=player.cron)
         except:
