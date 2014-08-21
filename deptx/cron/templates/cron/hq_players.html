@@ -44,34 +44,36 @@ tr.research {
 </thead>
 {% for player in player_list %}
 	<tr>	
-		<td>player-{{player.id|stringformat:"06d"}}</td>
-		<td>{{player.name}}</td>
-		<td>{{player.get_gender_display}}</td>
-		<td>{{player.age}}</td>
-		<td>{{player.town}}</td>
-		<td>{{player.country}}</td>
-		<td>{{player.cron.email}}</td>
-		{% if player.cron %}
-			<td>cron-{{player.cron.id|stringformat:"06d"}}</td>
-			<td>{{player.cron.user.username}}</td>
-			<td>{{player.cron.cronDocumentInstance_list|length}}</td>
-		{% else %}
-			<td></td>
-			<td></td>
-			<td></td>
-		{% endif %}
-		{% if player.mop %}
-			<td>mop-{{player.mop.id|stringformat:"06d"}}</td>
-			<td>{{player.mop.user.username}}</td>
-			<td>{{player.mop.mopDocumentInstance_list|length}}</td>
-			<td>{{player.mop.mopTracker.get_clearance_display}}</td>
-			<td>{{player.mop.mopTracker.totalTrust}}</td>
-		{% else %}
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
+		{% if player %}
+			<td>player-{{player.id|stringformat:"06d"}}</td>
+			<td>{{player.name}}</td>
+			<td>{{player.get_gender_display}}</td>
+			<td>{{player.age}}</td>
+			<td>{{player.town}}</td>
+			<td>{{player.country}}</td>
+			<td>{{player.cron.email}}</td>
+			{% if player.cron %}
+				<td>cron-{{player.cron.id|stringformat:"06d"}}</td>
+				<td>{{player.cron.user.username}}</td>
+				<td>{{player.cron.cronDocumentInstance_list|length}}</td>
+			{% else %}
+				<td></td>
+				<td></td>
+				<td></td>
+			{% endif %}
+			{% if player.mop %}
+				<td>mop-{{player.mop.id|stringformat:"06d"}}</td>
+				<td>{{player.mop.user.username}}</td>
+				<td>{{player.mop.mopDocumentInstance_list|length}}</td>
+				<td>{{player.mop.mopTracker.get_clearance_display}}</td>
+				<td>{{player.mop.mopTracker.totalTrust}}</td>
+			{% else %}
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			{% endif %}
 		{% endif %}
 	</tr>
 {% endfor %}
