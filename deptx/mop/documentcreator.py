@@ -88,7 +88,7 @@ def create_random_from_list(mopDocument_list):
 def create_single_document(mopDocument):
     randomizedDocument = randomize_document(mopDocument)
     randomizedDocument.appearAt = now()
-    randomizedDocument.dueAt = now() + timedelta(days=2)
+    randomizedDocument.dueAt = now() + timedelta(days=1)
     randomizedDocument.save()
     return randomizedDocument.serial
     

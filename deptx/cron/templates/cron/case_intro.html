@@ -1,5 +1,23 @@
 {% extends 'cron/base.html' %}
 {% load staticfiles %}
+{% block header %}
+
+<script type="text/javascript">
+
+
+function getSerial(id) {
+	serial = document.getElementById(id).value;
+	if (serial!='') {
+		window.location.href="{% url 'cron_hack_document_no_serial' %}" + serial;
+	}
+	else {
+		alert('You must enter a document serial in order to start a hacking attempt.');
+	}
+}
+</script>
+
+
+{% endblock header %}
 {% block content %}
 
 <h1>{{ case.name }}</h1>
@@ -20,7 +38,7 @@
 	{% for cronDocument in cronDocument_list %}
 		<tr style='vertical-align:middle' {% if not cronDocument.available %}class='missing'{% endif %}>
 			<td>
-				{% if cronDocument.solved and cronDocument.provenance %}
+				{% if cronDocument.solved and cronDocument.provenance and not cronDocument.autoSolve %}
 					<div style="position:relative; width:80px;">
 						<div style="position:absolute;top:50%;margin-top:-25px">
 							<img src='{{MEDIA_URL}}content/solved.png'/ style='width:80px;'>
@@ -35,11 +53,20 @@
 			{% if cronDocument.available or cheat %}
 				<a class='button' href="{% if cronDocument.provenance %}{% url "cron_provenance" mission.serial case.serial cronDocument.serial %}{% else %}{% url "cron_no_provenance" mission.serial case.serial cronDocument.serial %}{% endif %}">{% if cronDocument.solved %}view{% else %}inspect{% endif %}</a>
 			{% else %}
-				<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>
+				{% if not cronDocument.hideSerial %}
+					<a class='button' href="{% url 'cron_hack_document' cronDocument.serial %}">hack MoP account</a>
+				{% else %}
+					<a class='button' onClick="getSerial('doc_{{cronDocument.id}}')">hack MoP account</a>
+				{% endif %}
 			{% endif %}
 			</td>
 			<td>{% if not cronDocument.available %}??????{% else %}{{cronDocument.name}}{% endif %}</td>
-			<td>{{cronDocument.serial}}</td>
+			<td>
+			{% if not cronDocument.hideSerial or cronDocument.available %}
+				{{cronDocument.serial}}
+			{% else %}
+				<input id='doc_{{cronDocument.id}}' type='text' placeholder='enter document serial' size=36 maxlength=25 style="font-size:80%;"/>
+			{% endif %}</td>
 			<td>{{cronDocument.unit.serial}}</td>
 			<td><img style="width:32px;" src="{{cronDocument.getBadgeUrl}}" /></td>
 			<td>{{cronDocument.getTrustRequested}}</td>

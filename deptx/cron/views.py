@@ -3,13 +3,13 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.http import Http404
-
+from django.utils.dateformat import format
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
-from players.models import Cron, Mop
+from players.models import Cron, Mop, Player
 from django.contrib.auth.forms import UserCreationForm
 from django.template import Context, Template, loader
 
@@ -132,12 +132,59 @@ def index(request):
                     mission_url = reverse('cron_mission_outro', args=(missionInstance.mission.serial,))
             else:
                 missionInstance = None
+        unsolved_count = countUnsolvedCases(missionInstance)
         unread_count = HelpMail.objects.filter(cron=request.user.cron, isRead=False).count()
         logging.log_action(ActionLog.ACTION_CRON_VIEW_INDEX, cron=request.user.cron)         
-        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count }
+        context = { "cron": request.user.cron, "user":request.user, "missionInstance":missionInstance, "mission_url":mission_url, "unread_count":unread_count, "unsolved_count":unsolved_count }
+        
+        if missionInstance is None:
+            done = checkIfDone(request.user.cron)
+            if done:
+                return render(request, 'cron/index_done.html', context)
         return render(request, 'cron/index.html', context)
     else:
         return login(request)
+
+def countUnsolvedCases(missionInstance):
+    if missionInstance == None:
+        return None
+    case_list = Case.objects.filter(mission=missionInstance.mission).filter(isPublished=True)
+    noPre_list = case_list.filter(preCase=None)
+    pre_list = case_list.exclude(preCase=None)
+    solvedCounter = 0
+    caseCounter = 0
+    for case in noPre_list:
+        caseCounter += 1
+        caseInstance, created = CaseInstance.objects.get_or_create(case=case, cron=missionInstance.cron)
+        if caseInstance.isSolved():
+            solvedCounter += 1
+    for case in pre_list:
+        caseInstance, created = CaseInstance.objects.get_or_create(case=case, cron=missionInstance.cron)
+        if caseInstance.isSolved():
+            solvedCounter +=1
+            caseCounter += 1
+        else:
+            preInstance, created = CaseInstance.objects.get_or_create(case=case.preCase, cron=missionInstance.cron)
+            if preInstance.isSolved():
+                caseCounter += 1
+    return caseCounter - solvedCounter
+        
+
+def checkIfDone(cron):
+    try:
+        lastMission = Mission.objects.get(isLastMission=True)
+    except Mission.DoesNotExist:
+        return False
+    
+    try:
+        missionInstance = MissionInstance.objects.get(cron=cron, mission=lastMission)
+    except MissionInstance.DoesNotExist:
+        return False
+    
+    if missionInstance.progress == MissionInstance.PROGRESS_5_DONE:
+        return True
+    else:
+        return False
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
@@ -218,14 +265,11 @@ def mission_cases(request, serial):
         unpublished = False
         for case in case_list:
             if case.isPublished:
-                try:
-                    preCase = Case.objects.get(preCase=case)
-                    preCaseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=preCase)
-                    preCaseCondition = preCaseInstance.isSolved()
-                except Case.DoesNotExist:
-                    preCase = None
-                    preCaseInstance = None
+                if case.preCase == None:
                     preCaseCondition = True
+                else:
+                    preCaseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case.preCase)
+                    preCaseCondition = preCaseInstance.isSolved()
                 if preCaseCondition:
                     caseInstance, created = CaseInstance.objects.get_or_create(cron=request.user.cron, case=case)
                     if not caseInstance.isSolved():
@@ -375,17 +419,22 @@ def unsolveDocuments(cron, mission):
 
 @login_required(login_url='cron_login')
 @user_passes_test(isCron, login_url='cron_login')
+def hack_document_no_serial(request, serial):
+    pass
+
+@login_required(login_url='cron_login')
+@user_passes_test(isCron, login_url='cron_login')
 def hack_document(request, serial):
     mop_list = Mop.objects.filter(cron=request.user.cron).filter(active=True)
     try:
         cronDocument = CronDocument.objects.get(serial=serial)    
     except CronDocument.DoesNotExist:
-        raise Http404
+        cronDocument = None
     
     good_mop, mop_list = accessMopServer(request.user.cron, cronDocument, mop_list)
 
     output_tpl = loader.get_template('cron/hack_document_output.txt')
-    c = Context({"cronDocument":cronDocument, "good_mop":good_mop, "mop_list":mop_list})
+    c = Context({"serial":serial, "good_mop":good_mop, "mop_list":mop_list})
     output = output_tpl.render(c).replace("\n", "\\n")
     return render(request, 'cron/hack_document.html', {'user':request.user, "cron": request.user.cron, "cronDocument":cronDocument, "output":output})
 
@@ -396,7 +445,7 @@ def accessMopServer(cron, cronDocument, mop_list):
             checked_mop_list.append(mop)
             for mail in mail_list:
                 if not mail.mopDocumentInstance == None:
-                    if mail.mopDocumentInstance.cronDocument == cronDocument:
+                    if cronDocument and mail.mopDocumentInstance.cronDocument == cronDocument:
                         cronDocumentInstance, created = CronDocumentInstance.objects.get_or_create(cron=cron, cronDocument=cronDocument)
                         #Document gets removed
                         mail.mopDocumentInstance.status = MopDocumentInstance.STATUS_HACKED
@@ -558,6 +607,9 @@ def provenance(request, mission_serial, case_serial, document_serial):
     case = Case.objects.get(serial=case_serial)
     cronDocument = CronDocument.objects.get(serial=document_serial)
     cronDocumentInstance = CronDocumentInstance.objects.get(cronDocument=cronDocument, cron=request.user.cron)
+    if cronDocumentInstance.cronDocument.autoSolve and not cronDocumentInstance.solved:
+        cronDocumentInstance.solved = True
+        cronDocumentInstance.save()
 
     logging.log_action(ActionLog.ACTION_CRON_VIEW_PROVENANCE, cron=request.user.cron, cronDocumentInstance=cronDocumentInstance, cronDocumentInstanceCorrect=cronDocumentInstance.solved)
     logging.log_prov(action=ProvLog.ACTION_OPEN, cronDocumentInstance=cronDocumentInstance)
@@ -979,7 +1031,9 @@ def chat_sync(request):
     return HttpResponse(data, mimetype='application/json')
 
 def getAllDocumentStates(cron, case):
-    requiredDocuments = case.crondocument.all()
+    primaryDocuments = case.crondocument.all()
+    secondaryDocuments = case.crondocument2.all()
+    requiredDocuments = primaryDocuments | secondaryDocuments
     availableDocumentInstances = CronDocumentInstance.objects.filter(cron=cron)
 
                 
@@ -1051,7 +1105,9 @@ def hq_case_intro(request, id):
     case = Case.objects.get(id=id)
     content = case.intro
     text = renderContent(content, request.user)
-    requiredDocuments = case.crondocument.all()
+    primaryDocuments = case.crondocument.all()
+    secondaryDocuments = case.crondocument2.all()
+    requiredDocuments = primaryDocuments | secondaryDocuments
     return render(request, 'cron/case_intro.html', {'text':text, 'mission':case.mission, 'case':case, 'cronDocument_list':requiredDocuments, 'cheat':True})
 
 @staff_member_required
@@ -1224,3 +1280,60 @@ def hq_mail(request, cron=None):
         form = ControlHelpMailForm(initial={'cron':cron})
     return render(request, 'cron/hq_mail.html', {'form':form})
 
+@staff_member_required
+def hq_stats_documents_overview(request):
+    cronDocument_list = CronDocument.objects.all().order_by('case__mission__rank', 'case__rank')
+    for cronDocument in cronDocument_list:
+        cronDocument.total = CronDocumentInstance.objects.filter(cronDocument=cronDocument).count()
+        cronDocument.solved = CronDocumentInstance.objects.filter(cronDocument=cronDocument).filter(solved=True).count()
+        try:
+            cronDocument.percentage = int(100.0 * cronDocument.solved / cronDocument.total)
+        except:
+            pass
+        
+    return render(request, 'cron/hq_documents_overview.html', {'cronDocument_list':cronDocument_list })
+
+@staff_member_required
+def hq_stats_documents(request):
+    cronDocumentInstance_list = CronDocumentInstance.objects.exclude(cronDocument__provenance=None)
+    cronDocumentInstance_list = getDurations(cronDocumentInstance_list)
+    return render(request, 'cron/hq_documents.html', {'cronDocumentInstance_list':cronDocumentInstance_list })
+
+@staff_member_required
+def hq_stats_document(request, id):
+    cronDocument = CronDocument.objects.get(id=id)
+    cronDocumentInstance_list = CronDocumentInstance.objects.filter(cronDocument=cronDocument)
+    cronDocumentInstance_list = getDurations(cronDocumentInstance_list)
+    return render(request, 'cron/hq_documents.html', {'cronDocumentInstance_list':cronDocumentInstance_list, 'cronDocument':cronDocument })
+
+@staff_member_required
+def hq_stats_players(request):
+    player_list = Player.objects.all()
+    for player in player_list:
+        player.cron.cronDocumentInstance_list = CronDocumentInstance.objects.filter(cron=player.cron)
+        try:
+            player.mop = Mop.objects.get(cron=player.cron)
+            player.mop.mopDocumentInstance_list = MopDocumentInstance.objects.filter(mop=player.mop)
+        except:
+            player.mop = None
+    return render(request, 'cron/hq_players.html', {'player_list':player_list})
+
+
+def getDurations(cronDocumentInstance_list):
+    for cronDocumentInstance in cronDocumentInstance_list:
+        try:
+            provLogFirstOpen = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_OPEN)[0]
+        except:
+            provLogFirstOpen = None
+        try:
+            provLogLastSubmit = ProvLog.objects.filter(cronDocumentInstance=cronDocumentInstance).filter(action=ProvLog.ACTION_SUBMIT).latest('id')
+        except:
+            provLogLastSubmit = None
+        if not provLogFirstOpen is None and not provLogLastSubmit is None:
+            cronDocumentInstance.duration = provLogLastSubmit.createdAt - provLogFirstOpen.createdAt
+            cronDocumentInstance.seconds = int(cronDocumentInstance.duration.total_seconds())
+            cronDocumentInstance.firstOpen = provLogFirstOpen
+            cronDocumentInstance.lastSubmit = provLogLastSubmit
+    return cronDocumentInstance_list
+
+    

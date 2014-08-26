@@ -47,6 +47,13 @@
     		var INACTIVE = false;
     	{% endif %}
     	
+    	{% if autoSolve %}
+    		var AUTOSOLVE = true;
+    	{% else %}
+    		var AUTOSOLVE = false;
+    	{% endif %}
+    	
+    	
     	{% if special %}
     		var SPECIAL = true;
     	{% else %}

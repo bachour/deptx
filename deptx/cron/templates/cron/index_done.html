@@ -1,0 +1,67 @@
+{% extends 'cron/base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<br/>
+<div align="center">
+<iframe width="853" height="480" src="//www.youtube.com/embed/y_swv4CvNCk?rel=0&autoplay=1" frameborder="0" class="box-border" allowfullscreen></iframe>
+</div>
+<br/>
+<br/>
+<hr/>
+<br/>
+<br/>
+<br/>
+<h3>View your <a href="{% url 'cron_profile' %}">Profile</a>.</h3>
+<h3>View your <a href="{% url 'cron_archive' %}">Archive</a>.</h3>
+<h3>View your <a href="{% url 'cron_messages' %}">Messages{% if unread_count > 0 %} ({{unread_count}} unread){% endif %}</a>.</h3>
+<br/>
+<h3>Go to the Ministry of Provenance <a href="http://mofp.net/" title="Ministry of Provenance" target="_blank">Intranet</a>.</h3>
+<br/>
+<br/>
+
+<table>
+<tr>
+<td>
+<img height="160px" src="{% static 'cron/images/cluster-mine.jpg' %}" alt="Jean Baker Message">
+<h5><a href="{% url 'cron_operation_cluster_mine' %}">Operation Cluster Mine</a></h5>
+<p>A hacking attempt at a MoP server has been concluded succesfully.</p>
+<br>
+</td>
+<td>
+<img height="160px" src="{% static 'cron/images/jean_baker_message_sm.jpg' %}" alt="Jean Baker Message">
+<h5><a href="{% url 'cron_intelligence_jean_baker_message'%}">A MoP message</a></h5>
+<p>An email from inside the MoP intranet with potentially interesting contents.</p>
+<br>
+</td>
+<td>
+<img height="160px" src="{% static 'cron/images/cr-001.jpg' %}" alt="The Cr0n Report">
+<h5><a href="{% url 'cron_intelligence_report_gc8'%}">The Cr0n Report</a></h5>
+<p>Maria Merchant reports from our secret underground bunker as the Agents prepare for action.</p>
+<br>
+</td>
+</tr>
+<tr>
+<td>
+<img height="160px" src="{% static 'cron/images/bk-001.jpg' %}" alt="Inside the Bunker">
+<h5><a href="{% url 'cron_intelligence_bunker' %}">Inside the Bunker</a></h5>
+<p>A record of the important evidence collected by our Agents so far.</p>
+<br>
+</td>
+<td>
+<img height="160px" src="{% static 'cron/images/mop-int.jpg' %}" alt="Message Intercepted">
+<h5><a href="{% url 'cron_intelligence_mop_message' %}">Message Intercepted</a></h5>
+<p>A secret  comunication from MoP Agent M was  intercepted by our Agents.</p>
+<br>
+</td>
+<td>
+<img height="160px" src="{% static 'cron/images/dm-001.jpg' %}" alt="Dr Moreau Recording">
+<h5><a href="{% url 'cron_intelligence_dr_moreau' %}">Dr Moreau Recording</a></h5>
+<p>A video of Dr Moreau talking about MoP's Sword and Shield project was recently discovered by our Agents.</p>
+<br>
+</td>
+</tr>
+</table>
+
+
+{% endblock %}

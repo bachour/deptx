@@ -4,7 +4,7 @@ from deptx.helpers import generateUUID, now, random_chars
 from deptx import friendly_id
 
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-
+import json
 
 class Provenance(models.Model):
     TYPE_NONE = 0
@@ -32,6 +32,22 @@ class Provenance(models.Model):
     createdAt = CreationDateTimeField()
     modifiedAt = ModificationDateTimeField()
     
+    @property
+    def incon(self):
+        attributes = []
+        try:
+            json1 = json.loads(self.attribute1)
+            for j in json1:
+                attributes.append(nicer(j))
+            json2 = json.loads(self.attribute2)
+            for j in json2:
+                attributes.append(nicer(j))
+    
+            return sorted(attributes)
+        except:
+            return "ERROR"
+ 
+    
     def save(self, *args, **kwargs):
         super(Provenance, self).save(*args, **kwargs)
         if self.id and not self.serial:
@@ -40,4 +56,10 @@ class Provenance(models.Model):
     
     def __unicode__(self):
         return "%s - %s - store: %d (%s)" % (self.get_type_display(), self.name, self.store_id, self.serial)
-   
+
+
+def nicer(j):
+    crap, n = j['node'].split(":",1)
+    crap, a = j['attribute'].split(":",1)
+    nice = n + "." + a
+    return nice.encode('ascii','ignore') 

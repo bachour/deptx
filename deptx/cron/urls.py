@@ -55,6 +55,9 @@ urlpatterns = patterns('',
     url(r'termination/$', views.terminate, name='cron_terminate'),
     url(r'termination/([-\w].+)', views.terminate_remote, name='cron_terminate_remote'),
     
+    url(r'hack/$', views.hack_document_no_serial, name='cron_hack_document_no_serial'),
     url(r'hack/([-\w]+)', views.hack_document, name='cron_hack_document'),
+    
+    
 
 )

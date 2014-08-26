@@ -1,0 +1,73 @@
+{% load staticfiles %}
+<html>
+<head>
+<script src="{% static "cron/js/sorttable.js" %}"></script>
+
+<style media="screen" type="text/css">
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):after { 
+    content: " \25B4\25BE" 
+}
+
+tr.research {
+	background-color:LightGreen;
+}
+
+</style>
+</head>
+<body>
+<table class="sortable">
+<thead>
+<tr>
+	<th>Id</th>
+	<th>Type</th>
+	<th>Document</th>
+	<th>Name</th>
+	<th>Clearance</th>
+	<th>Inconsistencies</th>
+	<th>Cron</th>
+	<th>MoP</th>
+	<th>Research</th>
+	<th>Prov</th>
+	<th>Duration</th>
+	<th>Opened</th>
+	<th>Submitted</th>
+	<th>Solved</th>
+	<th>Attempts</th>
+	<th>Provenance</th>
+</tr>
+</thead>
+{% for cronDocumentInstance in cronDocumentInstance_list %}
+	{% if cronDocumentInstance.cron.player %}
+		<tr class="research">
+	{% else %}
+		<tr>
+	{% endif %}
+		<td>cron-{{cronDocumentInstance.id|stringformat:"06d"}}</td>
+		<td>cron</td>
+		<td>{{cronDocumentInstance.cronDocument.serial}}</td>
+		<td>{{cronDocumentInstance.cronDocument.name}}</td>
+		<td>{{cronDocumentInstance.cronDocument.get_clearance_display}}</td>
+		<td>{{cronDocumentInstance.cronDocument.provenance.incon}}</td>
+		<td>{{cronDocumentInstance.cron.user.username}}</td>
+		<td>{% for mop in cronDocumentInstance.cron.mop_set.all %}{{mop.user.username}}{% endfor %}</td>
+		<td>{% if cronDocumentInstance.cron.player %}True{% else %}False{% endif %}</td>
+		<td>{% if cronDocumentInstance.cronDocument.provenance.store_id %}<a href="{% url 'provmanager_view' cronDocumentInstance.cronDocument.provenance.id %}">prov</a>{% endif %}</td>
+		<td sorttable_customkey="{{cronDocumentInstance.seconds}}">{{cronDocumentInstance.duration}}</td>
+		<td>{{cronDocumentInstance.firstOpen.createdAt|date:"Y-m-d H:i:s"}}</td>
+		<td>{{cronDocumentInstance.lastSubmit.createdAt|date:"Y-m-d H:i:s"}}</td>
+		<td>{{cronDocumentInstance.solved}}</td>
+		<td>{{cronDocumentInstance.failedAttempts}}</td>
+		<td>{{cronDocumentInstance.provenanceState}}</td>
+	</tr>
+{% endfor %}
+</table>
+
+</body>
+</html>
