@@ -23,11 +23,23 @@
 					<td class="nobox" style="text-align:center;" colspan=2>insufficient clearance</td>
 			{% elif mopDocumentInstance.modified %}
 				{% if mopDocumentInstance.requiredRequisition and mopDocumentInstance.modified %}
-					<td class="nobox" style="text-align:center;"><a href="{% url 'mop_forms_fill' mopDocumentInstance.requiredRequisition.requisition.serial mopDocumentInstance.getDocumentSerial %}">submit</a></td>
-					<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
+					{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT and not mopDocumentInstance.correct %}
+						<td class="nobox" style="text-align:center;">
+					{% else %}
+						<td class="nobox" style="text-align:center;"><a href="{% url 'mop_forms_fill' mopDocumentInstance.requiredRequisition.requisition.serial mopDocumentInstance.getDocumentSerial %}">submit</a></td>
+					{% endif %}
+					{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT and mopDocumentInstance.correct %}
+						<td class="nobox" style="text-align:center;">
+					{% else %}
+						<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
+					{% endif %}
 				{% else %}
 					<td class="nobox" style="text-align:center;">form missing</td>
-					<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
+					{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT and mopDocumentInstance.correct %}
+						<td class="nobox" style="text-align:center;">
+					{% else %}
+						<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
+					{% endif %}
 				{% endif %}
 			{% else %}
 				<td class="nobox" style="text-align:center">N/A</td>
@@ -42,7 +54,7 @@
 			{% endif %}
 			<td style="white-space:nowrap;">{{mopDocumentInstance.randomizedDocument.serial}}{{mopDocumentInstance.cronDocument.serial}}</td>
 			<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
-			<td style="text-align:center">{% if mopDocumentInstance.randomizedDocument.dueAt %}{{mopDocumentInstance.randomizedDocument.dueAt|naturaltime}}{% elif mopDocumentInstance.cronDocument %}N/A{% else %}N/A{% endif %}</td>
+			{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_6_DONE %}<td style="text-align:center">{% if mopDocumentInstance.randomizedDocument.dueAt %}{{mopDocumentInstance.randomizedDocument.dueAt|naturaltime}}{% elif mopDocumentInstance.cronDocument %}N/A{% else %}N/A{% endif %}</td>{% endif %}
 			</tr>
 		{% endif %}
 	{% endfor %}
