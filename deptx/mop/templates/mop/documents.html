@@ -24,12 +24,12 @@
 			{% elif mopDocumentInstance.modified %}
 				{% if mopDocumentInstance.requiredRequisition and mopDocumentInstance.modified %}
 					{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT and not mopDocumentInstance.correct %}
-						<td class="nobox" style="text-align:center;">
+						<td class="nobox" style="text-align:center;"></td>
 					{% else %}
 						<td class="nobox" style="text-align:center;"><a href="{% url 'mop_forms_fill' mopDocumentInstance.requiredRequisition.requisition.serial mopDocumentInstance.getDocumentSerial %}">submit</a></td>
 					{% endif %}
 					{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT and mopDocumentInstance.correct %}
-						<td class="nobox" style="text-align:center;">
+						<td class="nobox" style="text-align:center;">disabled<br/>(only for tutorial)</td>
 					{% else %}
 						<td class="nobox" style="text-align:center;"><a href="{% url 'mop_provenance' mopDocumentInstance.getDocumentSerial %}">review</a></td>
 					{% endif %}
@@ -56,6 +56,9 @@
 			<td><img class="minibadge" src="{{mopDocumentInstance.randomizedDocument.getBadgeUrl}}{{mopDocumentInstance.cronDocument.getBadgeUrl}}"/></td>
 			{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_6_DONE %}<td style="text-align:center">{% if mopDocumentInstance.randomizedDocument.dueAt %}{{mopDocumentInstance.randomizedDocument.dueAt|naturaltime}}{% elif mopDocumentInstance.cronDocument %}N/A{% else %}N/A{% endif %}</td>{% endif %}
 			</tr>
+		{% endif %}
+		{% if user.mop.mopTracker.tutorial == user.mop.mopTracker.TUTORIAL_4_SENT_HOW_TO_SUBMIT_DOCUMENT and mopDocumentInstance.correct %}
+			<p>Tutorial document correctly processed.<br/>Note: We are unable to provide instant feedback like this with later documents.</br>Please check your mail for further instructions on how to submit the document.</p>
 		{% endif %}
 	{% endfor %}
 	</table>
