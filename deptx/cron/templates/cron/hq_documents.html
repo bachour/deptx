@@ -47,9 +47,6 @@ tr.research {
 {% for cronDocumentInstance in cronDocumentInstance_list %}
 	{% if cronDocumentInstance.cron.player %}
 		<tr class="research">
-	{% else %}
-		<tr>
-	{% endif %}
 		<td>cron-{{cronDocumentInstance.id|stringformat:"06d"}}</td>
 		<td>cron</td>
 		<td>{{cronDocumentInstance.cronDocument.serial}}</td>
@@ -67,7 +64,8 @@ tr.research {
 		<td>{{cronDocumentInstance.solved}}</td>
 		<td>{{cronDocumentInstance.failedAttempts}}</td>
 		<td>{{cronDocumentInstance.provenanceState}}</td>
-	</tr>
+		</tr>
+	{% endif %}		
 {% endfor %}
 </table>
 
