@@ -34,7 +34,8 @@ tr.research {
 	<th>Cron</th>
 	<th>MoP</th>
 	<th>Research</th>
-	<th>Prov</th>
+	<th>View Prov</th>
+	<th>Prov Store</th>
 	<th>Duration</th>
 	<th>Opened</th>
 	<th>Submitted</th>
@@ -59,6 +60,7 @@ tr.research {
 		<td>{% for mop in cronDocumentInstance.cron.mop_set.all %}{{mop.user.username}}{% endfor %}</td>
 		<td>{% if cronDocumentInstance.cron.player %}True{% else %}False{% endif %}</td>
 		<td>{% if cronDocumentInstance.cronDocument.provenance.store_id %}<a href="{% url 'provmanager_view' cronDocumentInstance.cronDocument.provenance.id %}">prov</a>{% endif %}</td>
+		<td>{% if cronDocumentInstance.cronDocument.provenance.store_id %}<a href="{% url 'provmanager_improve' cronDocumentInstance.cronDocument.provenance.serial %}">prov</a>{% endif %}</td>
 		<td sorttable_customkey="{{cronDocumentInstance.seconds}}">{{cronDocumentInstance.duration}}</td>
 		<td>{{cronDocumentInstance.firstOpen.createdAt|date:"Y-m-d H:i:s"}}</td>
 		<td>{{cronDocumentInstance.lastSubmit.createdAt|date:"Y-m-d H:i:s"}}</td>
