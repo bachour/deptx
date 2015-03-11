@@ -14,5 +14,6 @@ urlpatterns = patterns('',
     url(r'stats/documents/all/$', views.control_stats_documents, name='mop_control_stats_documents'),
     url(r'stats/documents/$', views.control_stats_documents_overview, name='mop_control_stats_documents_overview'),
     url(r'stats/document/(\d+)/$', views.control_stats_document_template, name='mop_control_stats_document_template'),
+    url(r'stats/document/(\d+)/detail/$', views.control_stats_document_template_detail, name='mop_control_stats_document_template_detail'),
     
 )

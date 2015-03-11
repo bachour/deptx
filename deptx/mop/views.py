@@ -987,6 +987,14 @@ def control_stats_documents(request):
     mopDocumentInstance_list = getDurations(mopDocumentInstance_list)
     return render(request, 'mop/control_documents.html', {'mopDocumentInstance_list':mopDocumentInstance_list })
 
+@staff_member_required
+def control_stats_document_template_detail(request, id):
+    mopDocumentInstance_list = MopDocumentInstance.objects.filter(randomizedDocument__mopDocument__id=id)
+    mopDocumentInstance_list = getDurations(mopDocumentInstance_list)
+    return render(request, 'mop/control_documents.html', {'mopDocumentInstance_list':mopDocumentInstance_list })
+
+
+
 
 def getDurations(mopDocumentInstance_list):
     for mopDocumentInstance in mopDocumentInstance_list:
